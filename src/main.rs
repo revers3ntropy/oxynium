@@ -14,11 +14,11 @@ mod context;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 
-fn execute (input: &String) -> String {
-    let lexer = Lexer::new(input);
+fn execute (input: String) -> String {
+    let mut lexer = Lexer::new(input);
     let tokens = lexer.lex();
 
-    let parser = Parser::new(tokens);
+    let mut parser = Parser::new(tokens);
     let ast = parser.parse();
 
     let mut ctx = Context::new();
@@ -43,7 +43,7 @@ fn main() -> std::io::Result<()> {
     let default_input = &"1".to_owned();
     let input = m.get_one::<String>("input").unwrap_or(default_input);
 
-    let assembly = execute(input);
+    let assembly = execute(input.to_owned());
 
     let mut file = File::create(output_file)?;
     file.write_all(assembly.as_bytes())?;

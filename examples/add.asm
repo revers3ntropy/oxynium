@@ -1,6 +1,7 @@
 
 section .data
-    n dd 97
+    big_ dw 97
+    small_ dw 1
 section .text
     global main
     global _start
@@ -24,7 +25,7 @@ print_stack:
 
     push rdi
     push rax
-    push 4
+    push 2
 
     call print
 
@@ -39,13 +40,15 @@ exit:
 
 main:
 _start:
-    push n
+    push big_
     pop rax
-    add rax, 0x0
+
+    push small_
+    pop rbx
+
+    add rax, rbx
+
     push rax
 
     call print_stack
-
-    pop rax
-
     call exit

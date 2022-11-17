@@ -10,6 +10,6 @@ _start:
   mov rax, 60       ; exit(
   mov rdi, 0        ;   EXIT_SUCCESS
   syscall           ; );
-section .adhjudsvhbdshdvsa
+section .data
     msg     db "Hello, world!", 10
-    msglen: equ $ - msg
+    msglen  equ $ - msg
