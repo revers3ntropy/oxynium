@@ -46,7 +46,7 @@ impl BinOpNode {
 impl Node for BinOpNode {
     fn asm(&self, ctx: &mut Context) -> String {
         format!(
-            "{}\n{}\n   pop rax\n   pop rdx\n   {} rax, rdx\n   push rax",
+            "{}\n{}\n   pop rax\n   pop rbx\n   mov rdx, [rbx]\n   {} [rax], rdx\n   push rax",
             self.lhs.asm(ctx),
             self.rhs.asm(ctx),
             self.operator

@@ -1,7 +1,7 @@
 
             section .data
-                __data_1144646114 dw 1
-__data_3158769850 dw 99
+                __data_173056449 dw 1
+__data_2757973983 dw 99
             section .text
             global main
             global _start
@@ -40,11 +40,12 @@ __data_3158769850 dw 99
 
             main:
             _start:
-                push __data_3158769850
-push __data_1144646114
+                push __data_2757973983
+push __data_173056449
    pop rax
-   pop rdx
-   add rax, rdx
+   pop rbx
+   mov rdx, [rbx]
+   add [rax], rdx
    push rax
                 call print_stack
                 call exit

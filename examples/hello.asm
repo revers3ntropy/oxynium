@@ -1,6 +1,9 @@
-
 section .data
+    extern printf
+
     n dd 97
+    m dd 2
+
 section .text
     global main
     global _start
@@ -24,7 +27,7 @@ print_stack:
 
     push rdi
     push rax
-    push 4
+    push 2
 
     call print
 
@@ -41,11 +44,13 @@ main:
 _start:
     push n
     pop rax
-    add rax, 0x0
+
+    push m
+    pop rbx
+
+    mov rdx, [rbx]
+    add [rax], rdx
     push rax
 
     call print_stack
-
-    pop rax
-
     call exit
