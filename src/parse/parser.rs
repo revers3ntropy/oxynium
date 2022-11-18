@@ -50,7 +50,6 @@ impl Parser {
     }
 
     fn expression(&mut self) -> Box<dyn Node> {
-        println!("Expression on token #{}", self.tok_idx);
         let lhs = self.atom();
         let operand = self.try_advance();
         if let Some(op) = operand {
