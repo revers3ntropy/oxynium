@@ -1,10 +1,7 @@
 section .data
-__data_2487179251 dw 1
-__data_1964479442 dw 1
-__data_75432872 dw 1
-__data_2474713272 dw 1
-__data_3623990792 dw 1
-__data_3579571612 dw 1
+__data_34232671 dw 1
+__data_956928276 dw 1
+__data_3315380319 dw 1
 section .text
 global main
 global _start
@@ -35,27 +32,9 @@ mov rdi, 0
 syscall
 main:
 _start:
-push __data_3623990792
-push __data_1964479442
-push __data_2487179251
-push __data_2474713272
-push __data_75432872
-push __data_3579571612
-pop rax
-pop rbx
-mov rdx, [rbx]
-add [rax], rdx
-push rax
-pop rax
-pop rbx
-mov rdx, [rbx]
-add [rax], rdx
-push rax
-pop rax
-pop rbx
-mov rdx, [rbx]
-add [rax], rdx
-push rax
+push __data_3315380319
+push __data_956928276
+push __data_34232671
 pop rax
 pop rbx
 mov rdx, [rbx]

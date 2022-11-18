@@ -1,2 +1,7 @@
 /target
 .idea
+
+# testing
+out
+out.asm
+out.o

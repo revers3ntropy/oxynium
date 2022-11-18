@@ -17,6 +17,6 @@ printf "${GREEN}Program output:${NC}\n"
 
 ./out
 
-rm ./out
+#rm ./out
 
 printf "\n"
