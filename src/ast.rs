@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use crate::context::Context;
 
-const STD_ASM: &str = include_str!("./std.asm");
+const STD_ASM: &str = include_str!("../std/std.asm");
 
 pub(crate) trait Node: Debug {
     fn asm(&self, ctx: &mut Context) -> String;
