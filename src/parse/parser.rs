@@ -1,5 +1,8 @@
-use crate::ast::{BinOpNode, IntNode, Node, ProgramNode};
-use crate::token::{Token, TokenType};
+use crate::ast::arith_bin_op_node::ArithmeticBinOpNode;
+use crate::ast::exec_root_node::ExecRootNode;
+use crate::ast::int_node::IntNode;
+use crate::ast::node::Node;
+use crate::parse::token::{Token, TokenType};
 
 pub(crate) struct Parser {
     tokens: Vec<Token>,
@@ -14,9 +17,20 @@ impl Parser {
         }
     }
 
-    pub fn parse(&mut self) -> ProgramNode {
+    pub fn parse(&mut self) -> ExecRootNode {
         println!("Parsing tokens: {:?}", self.tokens);
-        ProgramNode::new(self.expression())
+
+        if self.tokens.len() == 0 {
+            return ExecRootNode::new(None);
+        }
+
+        let res = ExecRootNode::new(Some(self.expression()));
+
+        if self.tok_idx < self.tokens.len() {
+            panic!("Unexpected token: {:?}", self.tokens[self.tok_idx]);
+        }
+
+        res
     }
 
     fn advance(&mut self) -> Token {
@@ -39,12 +53,18 @@ impl Parser {
         println!("Expression on token #{}", self.tok_idx);
         let lhs = self.atom();
         let operand = self.try_advance();
-        if let Some(Token { token_type: TokenType::Plus, .. }) = operand {
-            let rhs = self.expression();
-            Box::new(BinOpNode::new(lhs, "add".to_owned(), rhs))
-        } else {
-            lhs
+        if let Some(op) = operand {
+            if let TokenType::Plus = op.token_type {
+                let rhs = self.expression();
+                return Box::new(ArithmeticBinOpNode::new(lhs, "add".to_owned(), rhs));
+            }
+            if let TokenType::Sub = op.token_type {
+                let rhs = self.expression();
+                return Box::new(ArithmeticBinOpNode::new(lhs, "sub".to_owned(), rhs));
+            }
         }
+
+        lhs
     }
 
     fn atom(&mut self) -> Box<dyn Node> {

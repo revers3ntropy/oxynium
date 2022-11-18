@@ -2,26 +2,24 @@ use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 use clap::{ arg, Command };
-use crate::ast::Node;
-use crate::context::Context;
 
-mod lexer;
-mod parser;
-mod token;
+mod parse;
 mod ast;
 mod context;
 mod post_process;
 
-use crate::lexer::Lexer;
-use crate::parser::Parser;
+use crate::parse::lexer::Lexer;
+use crate::parse::parser::Parser;
 use crate::post_process::post_process;
+use crate::ast::node::Node;
+use crate::context::Context;
 
 fn execute (input: String) -> String {
     let mut lexer = Lexer::new(input);
     let tokens = lexer.lex();
 
     let mut parser = Parser::new(tokens);
-    let ast = parser.parse();
+    let mut ast = parser.parse();
 
     let mut ctx = Context::new();
 

@@ -1,20 +1,34 @@
-use std::collections::{ HashMap };
+use std::collections::{HashMap};
 
 
 pub(crate) struct Context {
-    pub(crate) declarations: HashMap<String, String>,
+    pub declarations: HashMap<String, String>,
+    symbols: Vec<String>,
+    symbol_count: u64
 }
 
 impl Context {
     pub fn new() -> Context {
         Context {
             declarations: HashMap::new(),
+            symbols: Vec::new(),
+            symbol_count: 0
         }
     }
 
+    pub fn reserve_symbol(&mut self, symbol: String) -> String {
+        self.symbols.push(symbol.clone());
+        symbol
+    }
+
+    pub fn reserve_anon_symbol(&mut self) -> String {
+        let symbol = format!("__data_{}", self.symbol_count);
+        self.symbol_count += 1;
+        self.reserve_symbol(symbol)
+    }
+
     pub fn declare(&mut self, ty: String) -> String {
-        // generate random name
-        let name = format!("__data_{}", rand::random::<u32>());
+        let name = self.reserve_anon_symbol();
         self.declarations.insert(name.clone(), ty);
         name
     }

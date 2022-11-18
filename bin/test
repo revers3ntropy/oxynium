@@ -9,6 +9,7 @@ tests=0
 
 current_spec_name=""
 current_spec_num_tests=0
+current_spec_has_failed=0
 
 function setup () {
   cargo build -r
@@ -17,6 +18,7 @@ function setup () {
 function describe () {
     current_spec_name="$1"
     current_spec_num_tests=0
+    current_spec_has_failed=0
 }
 
 function expect() {
@@ -26,27 +28,49 @@ function expect() {
     tests=$((tests+1))
     current_spec_num_tests=$((current_spec_num_tests+1))
 
-    rm ./out.asm
-    rm ./out.o
-    rm ./out;
-
     {
+        rm ./out.asm
+        rm ./out.o
+        rm ./out
+    } 2> /dev/null
+
+
+    errors=$({
       # compile, link and assemble the program
       ./target/release/r-entropy-script "$code"
-      nasm -f elf64 out.asm
-      ld -s -o out out.o
 
-    } &> /dev/null
+      if test -f "./out.asm"; then
+          nasm -f elf64 out.asm
 
-    output=$(./out)
+          if test -f "./out.o"; then
+            ld -s -o out out.o
+          fi
+      fi
+    } 2>&1 > /dev/null)
+
+    output="ERROR_NOT_ASSIGNED"
+    if test -f "./out"; then
+        output=$(./out)
+    else
+        output="ERROR_NO_OUTPUT"
+    fi
 
     if [ "$output" != "$expected" ]; then
         fails=$((fails+1))
+
+        if [ "$current_spec_has_failed" -eq 0 ]; then
+            echo -e "${RED}$current_spec_name FAILED${NC}"
+        fi
+        current_spec_has_failed=1
+
         # shellcheck disable=SC2059
-        printf "${RED}${current_spec_name} Failed (#${current_spec_num_tests}):${NC}\n"
-        printf "Executing '%s'\n" "$code"
-        printf "Expected: '%s'\n" "$expected"
-        printf "Got:      '%s'\n" "$output"
+        printf "${RED}#${current_spec_num_tests}${NC}\n"
+        printf "    Executing: '%s'\n" "$code"
+        printf "    Expected:  '%s'\n" "$expected"
+        printf "    Got:       '%s'\n\n" "$output"
+        if [ "$errors" != "" ]; then
+            printf "    Errors:   '%s'\n\n" "$errors"
+        fi
     fi
 }
 

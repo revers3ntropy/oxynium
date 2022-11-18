@@ -1,7 +1,8 @@
 #[derive(Clone, Debug)]
 pub(crate) enum TokenType {
     Int,
-    Plus
+    Plus,
+    Sub
 }
 
 #[derive(Debug)]

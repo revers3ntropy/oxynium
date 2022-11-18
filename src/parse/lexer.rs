@@ -1,4 +1,4 @@
-use crate::token::{Token, TokenType};
+use crate::parse::token::{Token, TokenType};
 
 pub(crate) struct Lexer {
     input: String
@@ -18,8 +18,11 @@ impl Lexer {
             match c {
                 '+' => {
                     tokens.push(Token::new(TokenType::Plus, None));
-                    let new_input= self.input[1..].to_owned();
-                    self.input =  new_input;
+                    self.input = self.input[1..].to_owned();
+                },
+                '-' => {
+                    tokens.push(Token::new(TokenType::Sub, None));
+                    self.input = self.input[1..].to_owned();
                 },
                 '0'..='9' => {
                     // build a number while we can
