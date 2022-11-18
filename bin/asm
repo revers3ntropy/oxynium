@@ -1,0 +1,9 @@
+#!/bin/bash
+
+nasm -f elf64 "$1" -o "$1.o"
+
+ld -s -o out "$1.o"
+
+./out
+
+printf "\n"
