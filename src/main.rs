@@ -10,9 +10,11 @@ mod parser;
 mod token;
 mod ast;
 mod context;
+mod post_process;
 
 use crate::lexer::Lexer;
 use crate::parser::Parser;
+use crate::post_process::post_process;
 
 fn execute (input: String) -> String {
     let mut lexer = Lexer::new(input);
@@ -23,7 +25,7 @@ fn execute (input: String) -> String {
 
     let mut ctx = Context::new();
 
-    ast.asm(&mut ctx)
+    post_process(ast.asm(&mut ctx))
 }
 
 fn main() -> std::io::Result<()> {

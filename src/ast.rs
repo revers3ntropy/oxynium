@@ -1,6 +1,8 @@
 use std::fmt::Debug;
 use crate::context::Context;
 
+const STD_ASM: &str = include_str!("./std.asm");
+
 pub(crate) trait Node: Debug {
     fn asm(&self, ctx: &mut Context) -> String;
 }
@@ -82,37 +84,7 @@ impl Node for ProgramNode {
             global main
             global _start
 
-            print:
-                pop rbx
-
-                pop rdx
-                pop rsi
-                mov rax, 1
-                mov rdi, 1
-
-                push rbx
-
-                syscall
-                ret
-
-            print_stack:
-                pop rdi
-                pop rax
-
-                push rdi
-                push rax
-                push 2
-
-                call print
-
-                ;cmp rsp, rbp
-                ;jg print_stack
-                ret
-
-            exit:
-                mov rax, 60
-                mov rdi, 0
-                syscall
+            {}
 
             main:
             _start:
@@ -120,7 +92,6 @@ impl Node for ProgramNode {
                 call print_stack
                 call exit
 
-
-        ", decls, res)
+        ", decls, STD_ASM, res)
     }
 }

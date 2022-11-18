@@ -1,16 +1,10 @@
-
-section .data
-    big_ dw 97
-    small_ dw 1
-section .text
-    global main
-    global _start
-
 print:
     pop rbx
 
     pop rdx
     pop rsi
+    mov rax, '0'
+    add [rsi], rax
     mov rax, 1
     mov rdi, 1
 
@@ -25,7 +19,7 @@ print_stack:
 
     push rdi
     push rax
-    push 2
+    push 1
 
     call print
 
@@ -37,18 +31,3 @@ exit:
     mov rax, 60
     mov rdi, 0
     syscall
-
-main:
-_start:
-    push big_
-    pop rax
-
-    push small_
-    pop rbx
-
-    add rax, rbx
-
-    push rax
-
-    call print_stack
-    call exit
