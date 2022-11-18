@@ -1,5 +1,5 @@
 use std::collections::{HashMap};
-
+use crate::ast::ANON_DATA_PREFIX;
 
 pub(crate) struct Context {
     pub declarations: HashMap<String, String>,
@@ -22,7 +22,7 @@ impl Context {
     }
 
     pub fn reserve_anon_symbol(&mut self) -> String {
-        let symbol = format!("__data_{}", self.symbol_count);
+        let symbol = format!("{}{}", ANON_DATA_PREFIX, self.symbol_count);
         self.symbol_count += 1;
         self.reserve_symbol(symbol)
     }
