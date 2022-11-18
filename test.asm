@@ -1,6 +1,6 @@
 section .data
-    n dd 2
-      dd 1
+    n dq 2
+      dq 1
 section .text
 
 print_fraction:
