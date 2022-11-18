@@ -35,7 +35,14 @@ impl Lexer {
                     }
                     tokens.push(Token::new(TokenType::Int, Some(number)));
                 },
-                _ => {}
+                _ => {
+                    if c.is_whitespace() {
+                        let new_input= self.input[1..].to_owned();
+                        self.input =  new_input;
+                    } else {
+                        panic!("Unexpected character: {}", c);
+                    }
+                }
             }
         }
 

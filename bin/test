@@ -1,0 +1,76 @@
+#!/bin/bash
+
+GREEN="\033[0;32m"
+RED='\033[0;31m'
+NC='\033[0m'
+
+fails=0
+tests=0
+
+current_spec_name=""
+current_spec_num_tests=0
+
+function setup () {
+  cargo build -r
+}
+
+function describe () {
+    current_spec_name="$1"
+    current_spec_num_tests=0
+}
+
+function expect() {
+    code="$1"
+    expected="$2"
+
+    tests=$((tests+1))
+    current_spec_num_tests=$((current_spec_num_tests+1))
+
+    rm ./out.asm
+    rm ./out.o
+    rm ./out;
+
+    {
+      # compile, link and assemble the program
+      ./target/release/r-entropy-script "$code"
+      nasm -f elf64 out.asm
+      ld -s -o out out.o
+
+    } &> /dev/null
+
+    output=$(./out)
+
+    if [ "$output" != "$expected" ]; then
+        fails=$((fails+1))
+        # shellcheck disable=SC2059
+        printf "${RED}${current_spec_name} Failed (#${current_spec_num_tests}):${NC}\n"
+        printf "Executing '%s'\n" "$code"
+        printf "Expected: '%s'\n" "$expected"
+        printf "Got:      '%s'\n" "$output"
+    fi
+}
+
+function results() {
+    if [ "$fails" -eq 0 ]; then
+        # shellcheck disable=SC2059
+        printf "${GREEN}  ${tests}/${tests} tests passed!${NC}\n"
+    else
+        # shellcheck disable=SC2059
+        printf "${RED}  ${fails}/${tests} tests failed${NC}\n"
+    fi
+}
+
+start=$(date +"%s.%3N")
+
+setup
+
+for f in ./spec/*; do
+  # shellcheck disable=SC1090
+  source "$f";
+done
+
+results
+
+end=$(date +"%s.%3N")
+runtime=$(echo "$end - $start" | bc -l)
+echo "Test total time: $runtime s"
