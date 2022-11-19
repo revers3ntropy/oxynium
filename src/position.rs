@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub(crate) struct Position {
     pub file: String,
     pub idx: i64,
@@ -37,5 +38,16 @@ impl Position {
 
     pub fn str(&self) -> String {
         format!("'{}' {}:{}", self.file, self.line, self.col)
+    }
+}
+
+impl Clone for Position {
+    fn clone(&self) -> Position {
+        Position {
+            file: self.file.clone(),
+            idx: self.idx,
+            line: self.line,
+            col: self.col,
+        }
     }
 }

@@ -3,6 +3,7 @@ use crate::ast::exec_root_node::ExecRootNode;
 use crate::ast::int_node::IntNode;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
+use crate::error::syntax_error;
 
 pub(crate) struct Parser {
     tokens: Vec<Token>,
@@ -97,12 +98,16 @@ impl Parser {
     fn atom(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
         let tok = self.advance(Some(&mut res));
-        res.success(match tok.token_type {
+        match tok.token_type {
             TokenType::Int => {
                 let value = tok.literal.unwrap();
-                Box::new(IntNode::new(value.parse::<i64>().unwrap()))
+                res.success(Box::new(IntNode::new(value.parse::<i64>().unwrap())))
             }
-            _ => panic!("Unexpected token: {:?}", tok)
-        })
+            _ => res.failure(
+                syntax_error("Expected int".to_owned()),
+                Some(tok.start),
+                Some(tok.end),
+            )
+        }
     }
 }
