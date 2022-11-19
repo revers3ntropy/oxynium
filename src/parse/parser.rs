@@ -53,11 +53,11 @@ impl Parser {
         let lhs = self.atom();
         let operand = self.try_advance();
         if let Some(op) = operand {
-            if let TokenType::Plus = op.token_type {
+            if op.token_type == TokenType::Plus {
                 let rhs = self.expression();
                 return Box::new(ArithmeticBinOpNode::new(lhs, "add".to_owned(), rhs));
             }
-            if let TokenType::Sub = op.token_type {
+            if op.token_type == TokenType::Sub {
                 let rhs = self.expression();
                 return Box::new(ArithmeticBinOpNode::new(lhs, "sub".to_owned(), rhs));
             }

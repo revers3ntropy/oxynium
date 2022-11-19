@@ -5,11 +5,11 @@ pub(crate) fn  post_process(asm: String) -> String{
 
     let mut indent = 4;
 
-    let indent_re: Regex = Regex::new("^(section ?.[a-zA-Z]+)|([a-zA-Z_-]+:)$").unwrap();
+    let indent_re: Regex = Regex::new("^(section ?.[a-zA-Z0-9]+)|([a-zA-Z0-9_-]+:)$").unwrap();
 
     for line in asm.lines() {
         // remove whitespace
-        let new_line = line.trim();
+        let new_line = line.split(";").nth(0).unwrap_or("").trim();
 
         if new_line == "" {
             continue;
@@ -19,7 +19,8 @@ pub(crate) fn  post_process(asm: String) -> String{
 
         if should_unindent {
             indent -= 4;
-            output += "\n";
+            // new line before labels and sections
+            //output += "\n";
         }
 
         output += &(" ".repeat(indent).to_owned() + new_line + "\n");

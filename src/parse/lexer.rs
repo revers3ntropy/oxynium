@@ -24,6 +24,10 @@ impl Lexer {
                     tokens.push(Token::new(TokenType::Sub, None));
                     self.input = self.input[1..].to_owned();
                 },
+                '*' => {
+                    tokens.push(Token::new(TokenType::Astrix, None));
+                    self.input = self.input[1..].to_owned();
+                },
                 '0'..='9' => {
                     // build a number while we can
                     let mut number = String::new();

@@ -1,8 +1,9 @@
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) enum TokenType {
     Int,
     Plus,
-    Sub
+    Sub,
+    Astrix
 }
 
 #[derive(Debug)]
