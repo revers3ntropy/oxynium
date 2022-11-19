@@ -3,11 +3,11 @@ use crate::context::Context;
 
 #[derive(Debug)]
 pub(crate) struct IntNode {
-    value: i32
+    value: i64
 }
 
 impl IntNode {
-    pub fn new(value: i32) -> IntNode {
+    pub fn new(value: i64) -> IntNode {
         IntNode {
             value
         }

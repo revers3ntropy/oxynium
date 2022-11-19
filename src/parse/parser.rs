@@ -71,7 +71,7 @@ impl Parser {
         return match tok.token_type {
             TokenType::Int => {
                 let value = tok.literal.unwrap();
-                Box::new(IntNode::new(value.parse::<i32>().unwrap()))
+                Box::new(IntNode::new(value.parse::<i64>().unwrap()))
             }
             _ => panic!("Unexpected token: {:?}", tok)
         }
