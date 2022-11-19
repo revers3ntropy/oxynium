@@ -7,11 +7,12 @@ mod parse;
 mod ast;
 mod context;
 mod post_process;
+mod error;
+mod position;
 
 use crate::parse::lexer::Lexer;
 use crate::parse::parser::Parser;
 use crate::post_process::post_process;
-use crate::ast::node::Node;
 use crate::context::Context;
 
 fn execute (input: String) -> String {
@@ -21,9 +22,13 @@ fn execute (input: String) -> String {
     let mut parser = Parser::new(tokens);
     let mut ast = parser.parse();
 
+    if ast.error.is_some() {
+        return ast.error.unwrap().str();
+    }
+
     let mut ctx = Context::new();
 
-    post_process(ast.asm(&mut ctx))
+    post_process(ast.node.unwrap().asm(&mut ctx))
 }
 
 fn main() -> std::io::Result<()> {
