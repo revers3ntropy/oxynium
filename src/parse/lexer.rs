@@ -26,16 +26,16 @@ impl Lexer {
        }
     }
 
-    fn advance (&mut self) -> char {
+    fn advance(&mut self) -> Option<char> {
+        self.position.advance(self.current_char);
+
         if self.position.idx >= self.input.len() as i64 {
-            return '\0';
+            self.current_char = None;
+            return None;
         }
-        if self.position.idx < 0 {
-            panic!("Lexer idx less than 0");
-        }
-        self.position.advance(self.input.chars().nth(self.position.idx as usize));
-        let current_char = self.input.chars().nth(self.position.idx as usize).unwrap();
-        self.current_char = Some(current_char);
+
+        let current_char = self.input.chars().nth(self.position.idx as usize);
+        self.current_char = current_char;
         current_char
     }
 
@@ -46,20 +46,16 @@ impl Lexer {
             return tokens;
         }
 
+        self.advance();
+
         while let Some(c) = self.current_char {
             match c {
-                ' ' => self.advance(),
                 '0'..='9' => {
                     // build a number while we can
                     let mut number = String::new();
-                    while let Some(next) = self.input.chars().nth(0) {
-                        if next.is_numeric() {
-                            number.push(next);
-                            let new_input= self.input[1..].to_owned();
-                            self.input =  new_input;
-                        } else {
-                            break;
-                        }
+                    while self.current_char.is_some() && self.current_char.unwrap().is_numeric() {
+                        number.push(self.current_char.unwrap());
+                        self.advance();
                     }
                     tokens.push(Token::new(
                         TokenType::Int,
@@ -69,7 +65,19 @@ impl Lexer {
                     ));
                 },
                 _ => {
-                    panic!("Unexpected character: {}", c);
+                    if c.is_whitespace() {
+                        self.advance();
+                    } else if SINGLE_CHAR_TOKENS.contains_key(&c.to_string()) {
+                        tokens.push(Token::new(
+                            SINGLE_CHAR_TOKENS[&c.to_string()],
+                            None,
+                            self.position.clone(),
+                            self.position.clone()
+                        ));
+                        self.advance();
+                    } else {
+                        panic!("Unexpected character: {}", c)
+                    }
                 }
             }
         }

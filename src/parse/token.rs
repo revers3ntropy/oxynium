@@ -1,6 +1,6 @@
 use crate::position::Position;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub(crate) enum TokenType {
     Int,
     Plus,

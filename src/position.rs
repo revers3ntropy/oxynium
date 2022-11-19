@@ -24,7 +24,7 @@ impl Position {
         self.idx += 1;
         self.col += 1;
 
-        if current_char.unwrap_or(' ') == '\n' {
+        if current_char.is_some() && current_char.unwrap() == '\n' {
             self.line += 1;
             self.col = 0;
         }
