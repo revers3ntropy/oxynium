@@ -69,23 +69,21 @@ impl Parser {
 
     fn expression(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
-        let lhs = res.register(self.atom());
+        let mut lhs = res.register(self.atom());
         if res.error.is_some() {
             return res;
         }
 
-        let operand = self.try_peak();
-
-        if let Some(op) = operand {
+        while let Some(op) = self.try_peak() {
             if op.token_type == TokenType::Plus || op.token_type == TokenType::Sub {
                 self.advance(Some(&mut res));
 
-                let rhs = res.register(self.expression());
+                let rhs = res.register(self.atom());
                 if res.error.is_some() {
                     return res;
                 }
 
-                return res.success(Box::new(ArithmeticBinOpNode::new(
+                lhs = Some(Box::new(ArithmeticBinOpNode::new(
                     lhs.unwrap(),
                     (if op.token_type == TokenType::Plus { "add"  } else { "sub" }).to_owned(),
                     rhs.unwrap()

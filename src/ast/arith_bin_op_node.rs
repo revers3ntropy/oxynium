@@ -20,8 +20,15 @@ impl ArithmeticBinOpNode {
 
 impl Node for ArithmeticBinOpNode {
     fn asm(&mut self, ctx: &mut Context) -> String {
-        format!(
-            "{}\n{}\n   pop rax\n   pop rbx\n   mov rdx, [rbx]\n   {} [rax], rdx\n   push rax",
+        format!("
+                {}
+                {}
+                pop rax
+                pop rbx
+                mov rbx, [rbx]
+                {} [rax], rbx
+                push rax
+            ",
             self.rhs.asm(ctx),
             self.lhs.asm(ctx),
             self.operator
