@@ -52,7 +52,13 @@ function expect() {
     if test -f "./out"; then
         # remove any \0 characters from output
         # stops 'warning: command substitution: ignored null byte in input'
-        output=$(./out | tr -d '\000')
+        o=$(./out | tr -d '\000')
+        # trim last character, which is a newline
+        if [ ${#o} -gt 0 ]; then
+            output=${o::-1}
+        else
+            output=""
+        fi
     else
         output="ERROR_NO_OUTPUT"
     fi

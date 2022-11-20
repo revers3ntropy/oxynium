@@ -2,6 +2,7 @@ use crate::ast::Node;
 use crate::error::Error;
 use crate::position::Position;
 
+#[derive(Debug)]
 pub(crate) struct ParseResults {
     pub node: Option<Box<dyn Node>>,
     pub error: Option<Error>,
@@ -64,12 +65,12 @@ impl ParseResults {
         self.register(res)
     }
 
-    pub fn success(mut self, node: Box<dyn Node>) -> ParseResults {
+    pub fn success(&mut self, node: Box<dyn Node>) -> &ParseResults {
         self.node = Some(node);
         self
     }
 
-    pub fn failure(mut self, mut error: Error, start: Option<Position>, end: Option<Position>) -> ParseResults {
+    pub fn failure(&mut self, mut error: Error, start: Option<Position>, end: Option<Position>) -> &ParseResults {
         error.set_pos(
             start.unwrap_or(Position::unknown()),
             end.unwrap_or(Position::unknown())

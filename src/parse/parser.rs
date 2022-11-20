@@ -6,6 +6,7 @@ use crate::ast::term_bin_op_node::TermBinOpNode;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
 use crate::error::syntax_error;
+use crate::position::Position;
 
 pub(crate) struct Parser {
     tokens: Vec<Token>,
@@ -26,7 +27,8 @@ impl Parser {
         let mut res = ParseResults::new();
 
         if self.tokens.len() == 0 {
-            return res.success(Box::new(ExecRootNode::new(None)));
+            res.success(Box::new(ExecRootNode::new(None)));
+            return res;
         }
 
         let expr = res.register(self.expression());
@@ -39,7 +41,8 @@ impl Parser {
             panic!("Unexpected token: {:?}", self.tokens[self.tok_idx]);
         }
 
-        res.success(Box::new(root_node))
+        res.success(Box::new(root_node));
+        res
     }
 
     fn advance(&mut self, res: Option<&mut ParseResults>) -> Token {
@@ -61,6 +64,33 @@ impl Parser {
         }
         self.tok_idx += 1;
         Some(self.tokens[self.tok_idx-1].clone())
+    }
+
+    fn consume(&mut self, res: &mut ParseResults, tok_type: TokenType) {
+        if let Some(tok) = self.try_peak() {
+            if tok.token_type == tok_type {
+                self.advance(Some(res));
+                return;
+            }
+
+            let err = syntax_error(format!(
+                "Expected token type: {:?}, got: {:?}",
+                tok_type,
+                tok.token_type
+            ));
+            res.failure(err,
+                Some(tok.start.clone()),
+                Some(tok.end.clone())
+            );
+        }
+
+        res.failure(syntax_error(format!(
+            "Unexpected EOF, expected {:?}",
+            tok_type
+        )),
+            Some(self.tokens[self.tok_idx-1].start.clone()),
+            Some(self.tokens[self.tok_idx-1].end.clone())
+        );
     }
 
     fn try_peak(&self) -> Option<Token> {
@@ -87,10 +117,11 @@ impl Parser {
                 if res.error.is_some() {
                     return res;
                 }
-                return res.success(Box::new(ArithmeticUnaryOpNode::new(
+                res.success(Box::new(ArithmeticUnaryOpNode::new(
                     ArithUnaryOp::Minus,
                     exp.unwrap()
                 )));
+                return res;
             }
         }
 
@@ -161,13 +192,30 @@ impl Parser {
         match tok.token_type {
             TokenType::Int => {
                 let value = tok.literal.unwrap();
-                res.success(Box::new(IntNode::new(value.parse::<i64>().unwrap())))
+                res.success(Box::new(IntNode::new(value.parse::<i64>().unwrap())));
+                res
+            },
+            TokenType::LParen => {
+                let expr = res.register(self.expression());
+                if res.error.is_some() {
+                    return res;
+                }
+                println!("after expr {:?}", self.try_peak());
+                self.consume(&mut res, TokenType::RParen);
+                if res.error.is_some() {
+                    return res;
+                }
+                res.success(expr.unwrap());
+                res
+            },
+            _ => {
+                res.failure(
+                    syntax_error("Expected int or '('".to_owned()),
+                    Some(tok.start),
+                    Some(tok.end),
+                );
+                res
             }
-            _ => res.failure(
-                syntax_error("Expected int".to_owned()),
-                Some(tok.start),
-                Some(tok.end),
-            )
         }
     }
 }

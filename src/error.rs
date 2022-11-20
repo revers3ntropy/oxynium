@@ -1,5 +1,6 @@
 use crate::position::{Position};
 
+#[derive(Debug, Clone)]
 pub(crate) struct Error {
     pub name: String,
     pub message: String,
