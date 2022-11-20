@@ -1,4 +1,4 @@
-use crate::ast::node::Node;
+use crate::ast::Node;
 use crate::error::Error;
 use crate::position::Position;
 

@@ -1,4 +1,4 @@
-use crate::ast::node::Node;
+use crate::ast::Node;
 use crate::context::Context;
 
 #[derive(Debug)]
@@ -20,11 +20,20 @@ impl TermBinOpNode {
 
 impl Node for TermBinOpNode {
     fn asm(&mut self, ctx: &mut Context) -> String {
-        format!(
-            "{}\n{}\n   pop rax\n   pop rbx\n   mov rdx, [rbx]\n   {} [rax], rdx\n   push rax",
-            self.rhs.asm(ctx),
-            self.lhs.asm(ctx),
-            self.operator
+        format!("
+                {}
+                {}
+                pop rcx
+                pop rbx
+                mov rbx, [rbx]
+                mov rax, [rcx]
+                {} rbx
+                mov [rcx], rax
+                push rcx
+            ",
+                self.rhs.asm(ctx),
+                self.lhs.asm(ctx),
+                self.operator
         )
     }
 }

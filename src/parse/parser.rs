@@ -1,6 +1,7 @@
 use crate::ast::arith_bin_op_node::ArithmeticBinOpNode;
 use crate::ast::exec_root_node::ExecRootNode;
 use crate::ast::int_node::IntNode;
+use crate::ast::term_bin_op_node::TermBinOpNode;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
 use crate::error::syntax_error;
@@ -68,7 +69,11 @@ impl Parser {
         Some(self.tokens[self.tok_idx].clone())
     }
 
-    fn expression(&mut self) -> ParseResults {
+    fn expression (&mut self) -> ParseResults {
+        self.arithmetic_expr()
+    }
+
+    fn term(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
         let mut lhs = res.register(self.atom());
         if res.error.is_some() {
@@ -76,21 +81,52 @@ impl Parser {
         }
 
         while let Some(op) = self.try_peak() {
-            if op.token_type == TokenType::Plus || op.token_type == TokenType::Sub {
-                self.advance(Some(&mut res));
-
-                let rhs = res.register(self.atom());
-                if res.error.is_some() {
-                    return res;
-                }
-
-                lhs = Some(Box::new(ArithmeticBinOpNode::new(
-                    lhs.unwrap(),
-                    (if op.token_type == TokenType::Plus { "add"  } else { "sub" }).to_owned(),
-                    rhs.unwrap()
-                )))
+            if !(op.token_type == TokenType::Astrix || op.token_type == TokenType::FSlash) {
+                break;
             }
+            self.advance(Some(&mut res));
+
+            let rhs = res.register(self.atom());
+            if res.error.is_some() {
+                return res;
+            }
+
+            lhs = Some(Box::new(TermBinOpNode::new(
+                lhs.unwrap(),
+                (if op.token_type == TokenType::Astrix { "imul"  } else { "idiv" }).to_owned(),
+                rhs.unwrap()
+            )));
         }
+
+        ParseResults::from_node(lhs.unwrap())
+    }
+
+    fn arithmetic_expr(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+        let mut lhs = res.register(self.term());
+        if res.error.is_some() {
+            return res;
+        }
+
+        while let Some(op) = self.try_peak() {
+            if !(op.token_type == TokenType::Plus || op.token_type == TokenType::Sub) {
+                break;
+            }
+            self.advance(Some(&mut res));
+
+            let rhs = res.register(self.term());
+            if res.error.is_some() {
+                return res;
+            }
+
+            lhs = Some(Box::new(ArithmeticBinOpNode::new(
+                lhs.unwrap(),
+                (if op.token_type == TokenType::Plus { "add"  } else { "sub" }).to_owned(),
+                rhs.unwrap()
+            )));
+        }
+
+        println!("Arithmetic expression: {:?}", lhs);
 
         ParseResults::from_node(lhs.unwrap())
     }
