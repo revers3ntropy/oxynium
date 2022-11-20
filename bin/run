@@ -18,5 +18,3 @@ printf "${GREEN}Program output:${NC}\n"
 #rm ./out
 rm out.o
 #rm out.asm
-
-printf "\n"

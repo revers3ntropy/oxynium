@@ -1,4 +1,5 @@
 use crate::ast::arith_bin_op_node::ArithmeticBinOpNode;
+use crate::ast::arith_unary_op_node::{ArithmeticUnaryOpNode, ArithUnaryOp};
 use crate::ast::exec_root_node::ExecRootNode;
 use crate::ast::int_node::IntNode;
 use crate::ast::term_bin_op_node::TermBinOpNode;
@@ -20,7 +21,7 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> ParseResults {
-        println!("Parsing tokens: {:?}", self.tokens);
+        //println!("Parsing tokens: {:?}", self.tokens);
 
         let mut res = ParseResults::new();
 
@@ -73,9 +74,32 @@ impl Parser {
         self.arithmetic_expr()
     }
 
+    fn unary_expr(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        if let Some(tok) = self.try_peak() {
+            if tok.token_type == TokenType::Plus {
+                return self.atom();
+            }
+            if tok.token_type == TokenType::Sub {
+                self.advance(None);
+                let exp = res.register(self.unary_expr());
+                if res.error.is_some() {
+                    return res;
+                }
+                return res.success(Box::new(ArithmeticUnaryOpNode::new(
+                    ArithUnaryOp::Minus,
+                    exp.unwrap()
+                )));
+            }
+        }
+
+        self.atom()
+    }
+
     fn term(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
-        let mut lhs = res.register(self.atom());
+        let mut lhs = res.register(self.unary_expr());
         if res.error.is_some() {
             return res;
         }
@@ -86,7 +110,7 @@ impl Parser {
             }
             self.advance(Some(&mut res));
 
-            let rhs = res.register(self.atom());
+            let rhs = res.register(self.unary_expr());
             if res.error.is_some() {
                 return res;
             }

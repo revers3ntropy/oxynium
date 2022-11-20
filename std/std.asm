@@ -144,6 +144,17 @@ print_stack: ; [value: any, cb: *] => []
 
     ret
 
+print_nl:
+    ; print NL
+    mov rax, 13
+    push rax
+    call print_char
+    ; print CR
+    mov rax, 10
+    push rax
+    call print_char
+    ret
+
 exit:
     mov rax, 60
     mov rdi, 0

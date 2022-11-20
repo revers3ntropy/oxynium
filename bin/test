@@ -36,6 +36,7 @@ function expect() {
 
     errors=$({
       # compile, link and assemble the program
+      export RUST_BACKTRACE=1
       ./target/release/r-entropy-script "$code"
 
       if test -f "./out.asm"; then

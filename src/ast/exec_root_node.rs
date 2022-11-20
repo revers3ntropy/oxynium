@@ -40,6 +40,7 @@ impl Node for ExecRootNode {
                 _start:
                     {}
                     call print_stack
+                    call print_nl
                     call exit
 
             ", decls, STD_ASM, res)
