@@ -10,14 +10,13 @@ nasm -f elf64 out.asm
 
 ld -s -o out out.o
 
-#rm out.asm
-rm out.o
-
 # shellcheck disable=SC2059
 printf "${GREEN}Program output:${NC}\n"
 
 ./out
 
 #rm ./out
+rm out.o
+#rm out.asm
 
 printf "\n"

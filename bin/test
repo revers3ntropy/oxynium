@@ -34,7 +34,6 @@ function expect() {
         rm ./out
     } 2> /dev/null
 
-
     errors=$({
       # compile, link and assemble the program
       ./target/release/r-entropy-script "$code"
@@ -48,9 +47,11 @@ function expect() {
       fi
     } 2>&1 > /dev/null)
 
-    output="ERROR_NOT_ASSIGNED"
+    output="BASH_ERROR_NOT_ASSIGNED"
     if test -f "./out"; then
-        output=$(./out)
+        # remove any \0 characters from output
+        # stops 'warning: command substitution: ignored null byte in input'
+        output=$(./out | tr -d '\000')
     else
         output="ERROR_NO_OUTPUT"
     fi
