@@ -6,7 +6,6 @@ use crate::ast::term_bin_op_node::TermBinOpNode;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
 use crate::error::syntax_error;
-use crate::position::Position;
 
 pub(crate) struct Parser {
     tokens: Vec<Token>,

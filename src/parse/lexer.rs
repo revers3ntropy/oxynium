@@ -15,15 +15,15 @@ const SINGLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
 pub(crate) struct Lexer {
     input: String,
     position: Position,
-    current_char: Option<char>,
+    current_char: Option<char>
 }
 
 impl Lexer {
-    pub fn new(input: String) -> Lexer {
+    pub fn new(input: String, file_name: String) -> Lexer {
        Lexer {
            input,
-           position: Position::new("".to_owned(), -1, 0, -1),
-           current_char: None,
+           position: Position::new(file_name, -1, 0, -1),
+           current_char: None
        }
     }
 
