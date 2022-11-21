@@ -37,6 +37,19 @@ print_char: ; [ascii_code: int, cb: *] => []
     push rbx ; push callback pointer
     ret
 
+print_string: ; [string: str*, length: int*, cb: *] => []
+    pop rbx ; pop cb
+    pop rdx ; pop length
+    pop rsi ; pop string
+
+    mov rax, 1
+    mov rdi, 1
+
+    syscall
+
+    push rbx ; push callback pointer
+    ret
+
 print_int: ; [number: int, cb: *] => []
            ; prints an 8 byte integer in base 10
            ; src: https://www.javatpoint.com/binary-to-decimal-number-in-c
@@ -132,9 +145,9 @@ print_int: ; [number: int, cb: *] => []
             ret
 
 hello_world:
-    mov rax, 'H'
-    push rax
-    call print_char
+    push __CONST_hello_world
+    push __CONST_hello_world_len
+    call print_string
     ret
 
 print_stack: ; [value: any, cb: *] => []

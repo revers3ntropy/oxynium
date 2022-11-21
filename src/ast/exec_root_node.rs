@@ -2,6 +2,7 @@ use crate::ast::Node;
 use crate::context::Context;
 
 const STD_ASM: &str = include_str!("../../std/std.asm");
+const CONSTS_ASM: &str = include_str!("../../std/constants.asm");
 
 #[derive(Debug)]
 pub struct ExecRootNode {
@@ -30,6 +31,7 @@ impl Node for ExecRootNode {
             format!("
                 section .data
                     {}
+                    {}
                 section .text
                 global main
                 global _start
@@ -43,11 +45,12 @@ impl Node for ExecRootNode {
                     call print_nl
                     call exit
 
-            ", decls, STD_ASM, res)
+            ", decls, CONSTS_ASM, STD_ASM, res)
 
         } else {
             format!("
                 section .data
+                    {}
                 section .text
                 global main
                 global _start
@@ -55,7 +58,7 @@ impl Node for ExecRootNode {
                 main:
                 _start:
                     call exit
-            ", STD_ASM)
+            ", CONSTS_ASM, STD_ASM)
         }
     }
 }
