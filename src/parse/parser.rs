@@ -1,13 +1,15 @@
 use crate::ast::arith_bin_op_node::ArithmeticBinOpNode;
 use crate::ast::arith_unary_op_node::{ArithmeticUnaryOpNode, ArithUnaryOp};
 use crate::ast::exec_root_node::ExecRootNode;
+use crate::ast::fn_call_node::FnCallNode;
 use crate::ast::int_node::IntNode;
+use crate::ast::Node;
 use crate::ast::term_bin_op_node::TermBinOpNode;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
 use crate::error::syntax_error;
 
-pub(crate) struct Parser {
+pub struct Parser {
     tokens: Vec<Token>,
     tok_idx: usize
 }
@@ -108,10 +110,10 @@ impl Parser {
 
         if let Some(tok) = self.try_peak() {
             if tok.token_type == TokenType::Plus {
-                return self.atom();
+                return self.compound(None);
             }
             if tok.token_type == TokenType::Sub {
-                self.advance(None);
+                self.advance(Some(&mut res));
                 let exp = res.register(self.unary_expr());
                 if res.error.is_some() {
                     return res;
@@ -124,7 +126,7 @@ impl Parser {
             }
         }
 
-        self.atom()
+        self.compound(None)
     }
 
     fn term(&mut self) -> ParseResults {
@@ -204,6 +206,24 @@ impl Parser {
         ParseResults::from_node(lhs.unwrap())
     }
 
+    fn compound(&mut self, base_option: Option<Box<dyn Node>>) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        let base;
+        if base_option.is_some() {
+            base = base_option.unwrap();
+        } else {
+            let atom = res.register(self.atom());
+            if res.error.is_some() {
+                return res;
+            }
+            base = atom.unwrap();
+        }
+
+        res.success(base);
+        res
+    }
+
     fn atom(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
         let tok = self.advance(Some(&mut res));
@@ -224,6 +244,16 @@ impl Parser {
                     return res;
                 }
                 res.success(expr.unwrap());
+                res
+            },
+            TokenType::Identifier => {
+                self.consume(&mut res, TokenType::LParen);
+                if res.error.is_some() { return res; }
+
+                res.success(Box::new(FnCallNode::new(tok.literal.unwrap())));
+
+                self.consume(&mut res, TokenType::RParen);
+                if res.error.is_some() { return res; }
                 res
             },
             _ => {

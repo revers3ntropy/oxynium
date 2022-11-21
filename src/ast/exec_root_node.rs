@@ -4,7 +4,7 @@ use crate::context::Context;
 const STD_ASM: &str = include_str!("../../std/std.asm");
 
 #[derive(Debug)]
-pub(crate) struct ExecRootNode {
+pub struct ExecRootNode {
     statement: Option<Box<dyn Node>>
 }
 

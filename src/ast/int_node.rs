@@ -2,7 +2,7 @@ use crate::ast::Node;
 use crate::context::Context;
 
 #[derive(Debug)]
-pub(crate) struct IntNode {
+pub struct IntNode {
     value: i64
 }
 

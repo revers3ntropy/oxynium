@@ -1,7 +1,7 @@
 use std::collections::{HashMap};
 use crate::ast::ANON_DATA_PREFIX;
 
-pub(crate) struct Context {
+pub struct Context {
     pub declarations: HashMap<String, String>,
     symbols: Vec<String>,
     symbol_count: u64

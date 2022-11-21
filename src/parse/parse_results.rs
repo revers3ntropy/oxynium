@@ -3,7 +3,7 @@ use crate::error::Error;
 use crate::position::Position;
 
 #[derive(Debug)]
-pub(crate) struct ParseResults {
+pub struct ParseResults {
     pub node: Option<Box<dyn Node>>,
     pub error: Option<Error>,
 

@@ -2,7 +2,7 @@ use crate::ast::Node;
 use crate::context::Context;
 
 #[derive(Debug)]
-pub(crate) struct TermBinOpNode {
+pub struct TermBinOpNode {
     lhs: Box<dyn Node>,
     operator: String,
     rhs: Box<dyn Node>,

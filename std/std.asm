@@ -131,6 +131,12 @@ print_int: ; [number: int, cb: *] => []
         __print_int_end_end:
             ret
 
+hello_world:
+    mov rax, 'H'
+    push rax
+    call print_char
+    ret
+
 print_stack: ; [value: any, cb: *] => []
              ; prints the last element on the stack as a digit
              ; assuming size 8 bytes

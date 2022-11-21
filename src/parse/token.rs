@@ -1,7 +1,7 @@
 use crate::position::Position;
 
 #[derive(Clone, Debug, PartialEq, Copy)]
-pub(crate) enum TokenType {
+pub enum TokenType {
     Int,
     Plus,
     Sub,
@@ -9,11 +9,12 @@ pub(crate) enum TokenType {
     FSlash,
     LParen,
     RParen,
-    Ampersand
+    Ampersand,
+    Identifier,
 }
 
 #[derive(Debug)]
-pub(crate) struct Token {
+pub struct Token {
     pub token_type: TokenType,
     pub literal: Option<String>,
     pub start: Position,

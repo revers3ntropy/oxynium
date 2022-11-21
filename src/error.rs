@@ -1,7 +1,7 @@
 use crate::position::{Position};
 
 #[derive(Debug, Clone)]
-pub(crate) struct Error {
+pub struct Error {
     pub name: String,
     pub message: String,
     pub start: Position,
@@ -35,10 +35,10 @@ impl Error {
     }
 }
 
-pub(crate) fn syntax_error(message: String) -> Error {
+pub fn syntax_error(message: String) -> Error {
     Error::new("SyntaxError".to_string(), message)
 }
 
-pub(crate) fn illegal_char_error(char: char) -> Error {
+pub fn illegal_char_error(char: char) -> Error {
     syntax_error(format!("Illegal character: {}", char))
 }

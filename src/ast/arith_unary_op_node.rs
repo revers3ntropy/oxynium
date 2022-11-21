@@ -2,12 +2,12 @@ use crate::ast::Node;
 use crate::context::Context;
 
 #[derive(Debug)]
-pub(crate) enum ArithUnaryOp {
+pub enum ArithUnaryOp {
     Minus
 }
 
 #[derive(Debug)]
-pub(crate) struct ArithmeticUnaryOpNode {
+pub struct ArithmeticUnaryOpNode {
     operator: ArithUnaryOp,
     rhs: Box<dyn Node>
 }

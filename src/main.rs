@@ -2,7 +2,6 @@ extern crate core;
 
 use std::env;
 use std::fs::File;
-use std::io::{Error, ErrorKind};
 use std::io::prelude::*;
 use clap::{ arg, Command };
 

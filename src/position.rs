@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub(crate) struct Position {
+pub struct Position {
     pub file: String,
     pub idx: i64,
     pub line: i64,
