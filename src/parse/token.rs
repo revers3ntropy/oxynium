@@ -8,7 +8,8 @@ pub(crate) enum TokenType {
     Astrix,
     FSlash,
     LParen,
-    RParen
+    RParen,
+    Ampersand
 }
 
 #[derive(Debug)]

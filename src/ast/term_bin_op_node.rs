@@ -5,15 +5,17 @@ use crate::context::Context;
 pub(crate) struct TermBinOpNode {
     lhs: Box<dyn Node>,
     operator: String,
-    rhs: Box<dyn Node>
+    rhs: Box<dyn Node>,
+    output_register: String
 }
 
 impl TermBinOpNode {
-    pub fn new(lhs: Box<dyn Node>, operator: String, rhs: Box<dyn Node>) -> TermBinOpNode {
+    pub fn new(lhs: Box<dyn Node>, operator: String, rhs: Box<dyn Node>, output_register: String) -> TermBinOpNode {
         TermBinOpNode {
             lhs,
             operator,
-            rhs
+            rhs,
+            output_register
         }
     }
 }
@@ -27,13 +29,15 @@ impl Node for TermBinOpNode {
                 pop rbx
                 mov rbx, [rbx]
                 mov rax, [rcx]
+                cqo ; extend rax to rdx:rax
                 {} rbx
-                mov [rcx], rax
+                mov [rcx], {}
                 push rcx
             ",
                 self.rhs.asm(ctx),
                 self.lhs.asm(ctx),
-                self.operator
+                self.operator,
+                self.output_register
         )
     }
 }

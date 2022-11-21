@@ -136,21 +136,40 @@ impl Parser {
         }
 
         while let Some(op) = self.try_peak() {
-            if !(op.token_type == TokenType::Astrix || op.token_type == TokenType::FSlash) {
-                break;
-            }
-            self.advance(Some(&mut res));
+            match op.token_type {
+                TokenType::Astrix | TokenType::FSlash => {
+                    self.advance(Some(&mut res));
 
-            let rhs = res.register(self.unary_expr());
-            if res.error.is_some() {
-                return res;
-            }
+                    let rhs = res.register(self.unary_expr());
+                    if res.error.is_some() {
+                        return res;
+                    }
 
-            lhs = Some(Box::new(TermBinOpNode::new(
-                lhs.unwrap(),
-                (if op.token_type == TokenType::Astrix { "imul"  } else { "idiv" }).to_owned(),
-                rhs.unwrap()
-            )));
+                    lhs = Some(Box::new(TermBinOpNode::new(
+                        lhs.unwrap(),
+                        (if op.token_type == TokenType::Astrix { "imul"  } else { "idiv" }).to_owned(),
+                        rhs.unwrap(),
+                        "rax".to_owned()
+                    )));
+                }
+                TokenType::Ampersand => {
+                    self.advance(Some(&mut res));
+
+                    let rhs = res.register(self.unary_expr());
+                    if res.error.is_some() {
+                        return res;
+                    }
+                    lhs = Some(Box::new(TermBinOpNode::new(
+                        lhs.unwrap(),
+                        "idiv".to_owned(),
+                        rhs.unwrap(),
+                        "rdx".to_owned()
+                    )));
+                }
+                _ => {
+                    break;
+                }
+            }
         }
 
         ParseResults::from_node(lhs.unwrap())

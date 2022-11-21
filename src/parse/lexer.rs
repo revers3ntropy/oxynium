@@ -9,6 +9,7 @@ const SINGLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
     "/" => TokenType::FSlash,
     "(" => TokenType::LParen,
     ")" => TokenType::RParen,
+    "%" => TokenType::Ampersand
 };
 
 pub(crate) struct Lexer {
