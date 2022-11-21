@@ -1,5 +1,9 @@
-/target
+# IDE
 .idea
+
+# Build
+/target
+/res
 
 # testing
 out
@@ -10,3 +14,7 @@ out
 /*.rs
 /*.py
 /*.s
+
+# OS
+.DS_Store
+._*

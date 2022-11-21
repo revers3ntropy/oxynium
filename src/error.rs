@@ -38,7 +38,3 @@ impl Error {
 pub fn syntax_error(message: String) -> Error {
     Error::new("SyntaxError".to_string(), message)
 }
-
-pub fn illegal_char_error(char: char) -> Error {
-    syntax_error(format!("Illegal character: {}", char))
-}
