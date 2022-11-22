@@ -11,7 +11,8 @@ pub enum TokenType {
     RParen,
     Ampersand,
     Identifier,
-    Comma
+    Comma,
+    EndStatement,
 }
 
 #[derive(Debug)]

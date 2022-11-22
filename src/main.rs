@@ -23,7 +23,7 @@ struct CompileResults {
     asm: Option<String>
 }
 
-fn execute (input: String, file_name: String) -> CompileResults {
+fn execute (input: String, file_name: String, exec_mode: bool) -> CompileResults {
     let mut lexer = Lexer::new(input, file_name);
     let tokens = lexer.lex();
 
@@ -38,6 +38,7 @@ fn execute (input: String, file_name: String) -> CompileResults {
     }
 
     let mut ctx = Context::new();
+    ctx.exec_mode = exec_mode;
 
     let asm = post_process(ast.node.unwrap().asm(&mut ctx));
     CompileResults {
@@ -85,14 +86,13 @@ fn main() -> std::io::Result<()> {
     let args = get_cli_args();
 
 
-
     if !args.input.is_empty() && !args.eval.is_empty() {
         let _ = e.write("Cannot specify both 'input' and 'eval' options\n".as_bytes());
         return Ok(());
     }
 
     if !args.eval.is_empty() {
-        let res = execute(args.eval, "CLI".to_owned());
+        let res = execute(args.eval, "CLI".to_owned(), true);
 
         if res.error.is_some() {
             let _ = e.write(format!("{}\n", res.error.unwrap()).as_bytes());
@@ -115,15 +115,15 @@ fn main() -> std::io::Result<()> {
         let mut input = String::new();
         input_file.read_to_string(&mut input)?;
 
-        let CompileResults { error, asm } = execute(input, args.input.clone());
+        let res = execute(input, args.input.clone(), false);
 
-        if error.is_some() {
-            let _ = e.write(format!("{}\n", error.unwrap()).as_bytes());
+        if res.error.is_some() {
+            let _ = e.write(format!("{}\n", res.error.unwrap()).as_bytes());
             return Ok(());
         }
 
         let mut file = File::create(args.out)?;
-        file.write_all(asm.unwrap().as_bytes())?;
+        file.write_all(res.asm.unwrap().as_bytes())?;
 
         return Ok(());
     }

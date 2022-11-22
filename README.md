@@ -4,7 +4,6 @@ Tested on Ubuntu.
 
 ## Requirements
 
-- Rust
 - nasm
 - ld
 
@@ -42,13 +41,13 @@ e.g. `./res -e "(1+1)*2"` instead of `./res -e (1+1)*2`
 # Build
 $ bin/build
 
-# Run
-$ bin/run "1+1"
+# Compile, assemble, link and run file
+$ bin/run <file>
 
-# Run, showing Rust's compilation logs
+# Compile, assemble, link and print expression
 $ bin/exec "1+1"
 
-# Test
+# Run test suite
 $ bin/test
 
 # Assemble a file

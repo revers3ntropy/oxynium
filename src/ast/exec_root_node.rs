@@ -25,40 +25,45 @@ impl Node for ExecRootNode {
             let res = statement.asm(ctx);
 
             let decls = &ctx.declarations.iter().map(|(k, v)| {
-                format!("{} {}", k, v)
+                format!("{k} {v}")
             }).collect::<Vec<String>>().join("\n");
+
+            let end_statements: &str;
+            if ctx.exec_mode {
+                end_statements = "
+                    call print_stack
+                    call print_nl
+                ";
+            } else {
+                end_statements = "";
+            }
 
             format!("
                 section .data
-                    {}
-                    {}
+                    {decls}
+                    {CONSTS_ASM}
                 section .text
-                global main
-                global _start
+                    global _start
 
-                {}
+                {STD_ASM}
 
-                main:
                 _start:
-                    {}
-                    call print_stack
-                    call print_nl
+                    mov rbp, rsp
+                    {res}
+                    {end_statements}
                     call exit
-
-            ", decls, CONSTS_ASM, STD_ASM, res)
+            ")
 
         } else {
             format!("
                 section .data
-                    {}
+                    {CONSTS_ASM}
                 section .text
-                global main
-                global _start
-                    {}
-                main:
+                    global _start
+                    {STD_ASM}
                 _start:
                     call exit
-            ", CONSTS_ASM, STD_ASM)
+            ")
         }
     }
 }

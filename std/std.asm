@@ -19,30 +19,6 @@ print_digit: ; [number: int, cb: *] => []
     push rbx ; push callback pointer
     ret
 
-add_ints: ; [a: int*, b: int*, cb: *] => [sum: int*]
-    pop rdx ; pop cb
-
-    pop rax
-    pop rbx
-    mov rbx, [rbx]
-    add [rax], rbx
-    push rax
-
-    push rdx ; push callback pointer
-    ret
-
-sub_ints: ; [a: int*, b: int*, cb: *] => [sum: int*]
-    pop rdx ; pop cb
-
-    pop rax
-    pop rbx
-    mov rbx, [rbx]
-    sub [rax], rbx
-    push rax
-
-    push rdx ; push callback pointer
-    ret
-
 print_char: ; [ascii_code: int, cb: *] => []
     pop rbx ; pop cb
     pop rax ; pop number
@@ -190,6 +166,30 @@ print_nl:
     mov rax, 10
     push rax
     call print_char
+    ret
+
+add_ints: ; [a: int*, b: int*, cb: *] => [sum: int*]
+    pop rdx ; pop cb
+
+    pop rax
+    pop rbx
+    mov rbx, [rbx]
+    add [rax], rbx
+    push rax
+
+    push rdx ; push callback pointer
+    ret
+
+sub_ints: ; [a: int*, b: int*, cb: *] => [sum: int*]
+    pop rdx ; pop cb
+
+    pop rax
+    pop rbx
+    mov rbx, [rbx]
+    sub [rax], rbx
+    push rax
+
+    push rdx ; push callback pointer
     ret
 
 exit:

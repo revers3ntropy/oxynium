@@ -9,19 +9,17 @@ NC='\033[0m'
     rm ./out
 } 2> /dev/null
 
-errors=$({
-  # compile, link and assemble the program
-  export RUST_BACKTRACE=1
-  cargo run -- -e "$@"
+# compile, link and assemble the program
+export RUST_BACKTRACE=1
+cargo run -- "$@"
 
-  if test -f "./out.asm"; then
-      nasm -f elf64 out.asm
+if test -f "./out.asm"; then
+  nasm -f elf64 out.asm
 
-      if test -f "./out.o"; then
-        ld -s -o out out.o
-      fi
+  if test -f "./out.o"; then
+    ld -s -o out out.o
   fi
-} &> /dev/null)
+fi
 
 output="BASH_ERROR_NOT_ASSIGNED"
 if test -f "./out"; then

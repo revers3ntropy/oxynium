@@ -4,7 +4,8 @@ use crate::ast::ANON_DATA_PREFIX;
 pub struct Context {
     pub declarations: HashMap<String, String>,
     symbols: Vec<String>,
-    symbol_count: u64
+    symbol_count: u64,
+    pub exec_mode: bool
 }
 
 impl Context {
@@ -12,7 +13,8 @@ impl Context {
         Context {
             declarations: HashMap::new(),
             symbols: Vec::new(),
-            symbol_count: 0
+            symbol_count: 0,
+            exec_mode: false
         }
     }
 

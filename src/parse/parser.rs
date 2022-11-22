@@ -4,6 +4,7 @@ use crate::ast::exec_root_node::ExecRootNode;
 use crate::ast::fn_call_node::FnCallNode;
 use crate::ast::int_node::IntNode;
 use crate::ast::Node;
+use crate::ast::statements_node::StatementsNode;
 use crate::ast::term_bin_op_node::TermBinOpNode;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
@@ -32,7 +33,7 @@ impl Parser {
             return res;
         }
 
-        let expr = res.register(self.expression());
+        let expr = res.register(self.statements());
         if res.error.is_some() {
             return res;
         }
@@ -91,6 +92,30 @@ impl Parser {
             return None;
         }
         Some(self.tokens[self.tok_idx].clone())
+    }
+
+    fn statements(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+        let mut statements = Vec::new();
+
+        while let Some(tok) = self.try_peak() {
+            if tok.token_type == TokenType::EndStatement {
+                self.advance(Some(&mut res));
+            } else {
+                let expr = res.register(self.expression());
+                if res.error.is_some() {
+                    return res;
+                }
+                statements.push(expr.unwrap());
+            }
+        }
+
+        res.success(Box::new(StatementsNode::new(statements)));
+        res
+    }
+
+    fn statement (&mut self) -> ParseResults {
+        self.expression()
     }
 
     fn expression (&mut self) -> ParseResults {
