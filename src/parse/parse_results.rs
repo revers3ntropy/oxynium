@@ -23,26 +23,6 @@ impl ParseResults {
         }
     }
 
-    pub fn from_node(node: Box<dyn Node>) -> ParseResults {
-        ParseResults {
-            node: Some(node),
-            error: None,
-            reverse_count: 0,
-            last_registered_advance_count: 0,
-            advance_count: 0
-        }
-    }
-
-    pub fn from_error(error: Error) -> ParseResults {
-        ParseResults {
-            node: None,
-            error: Some(error),
-            reverse_count: 0,
-            last_registered_advance_count: 0,
-            advance_count: 0
-        }
-    }
-
     pub fn register_advancement(&mut self) {
         self.advance_count += 1;
         self.advance_count = 0;

@@ -19,6 +19,30 @@ print_digit: ; [number: int, cb: *] => []
     push rbx ; push callback pointer
     ret
 
+add_ints: ; [a: int*, b: int*, cb: *] => [sum: int*]
+    pop rdx ; pop cb
+
+    pop rax
+    pop rbx
+    mov rbx, [rbx]
+    add [rax], rbx
+    push rax
+
+    push rdx ; push callback pointer
+    ret
+
+sub_ints: ; [a: int*, b: int*, cb: *] => [sum: int*]
+    pop rdx ; pop cb
+
+    pop rax
+    pop rbx
+    mov rbx, [rbx]
+    sub [rax], rbx
+    push rax
+
+    push rdx ; push callback pointer
+    ret
+
 print_char: ; [ascii_code: int, cb: *] => []
     pop rbx ; pop cb
     pop rax ; pop number
@@ -50,7 +74,7 @@ print_string: ; [string: str*, length: int*, cb: *] => []
     push rbx ; push callback pointer
     ret
 
-print_int: ; [number: int, cb: *] => []
+print_int: ; [number: int*, cb: *] => []
            ; prints an 8 byte integer in base 10
            ; src: https://www.javatpoint.com/binary-to-decimal-number-in-c
            ;   while (num > 0) {
@@ -62,6 +86,7 @@ print_int: ; [number: int, cb: *] => []
 
     pop r14 ; pop cb
     pop r15 ; pop num
+    mov r15, [r15]
 
     push r14 ; push cb
 
@@ -157,7 +182,6 @@ print_stack: ; [value: any, cb: *] => []
     pop rax
     push rdi
 
-    mov rax, [rax]
     push rax
     call print_int
 

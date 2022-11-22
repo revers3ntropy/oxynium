@@ -1,0 +1,39 @@
+#!/bin/bash
+
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+{
+    rm ./out.asm
+    rm ./out.o
+    rm ./out
+} 2> /dev/null
+
+errors=$({
+  # compile, link and assemble the program
+  export RUST_BACKTRACE=1
+  cargo run "$@"
+
+  if test -f "./out.asm"; then
+      nasm -f elf64 out.asm
+
+      if test -f "./out.o"; then
+        ld -s -o out out.o
+      fi
+  fi
+} &> /dev/null)
+
+output="BASH_ERROR_NOT_ASSIGNED"
+if test -f "./out"; then
+    # remove any \0 characters from output
+    # stops 'warning: command substitution: ignored null byte in input'
+    output=$(./out | tr -d '\000')
+else
+    output="ERROR_NO_OUTPUT"
+fi
+
+if [ "$errors" != "" ]; then
+    printf "    Errors:   '%s'\n\n" "$errors"
+fi
+
+echo "$output"

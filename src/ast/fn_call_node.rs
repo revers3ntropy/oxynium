@@ -3,19 +3,32 @@ use crate::context::Context;
 
 #[derive(Debug)]
 pub struct FnCallNode {
-    identifier: String
+    identifier: String,
+    args: Vec<Box<dyn Node>>
 }
 
 impl FnCallNode {
-    pub fn new(identifier: String) -> FnCallNode {
+    pub fn new(identifier: String, args: Vec<Box<dyn Node>>) -> FnCallNode {
         FnCallNode {
-            identifier
+            identifier,
+            args
         }
     }
 }
 
 impl Node for FnCallNode {
-    fn asm(&mut self, _: &mut Context) -> String {
-        format!("call {}", self.identifier)
+    fn asm(&mut self, ctx: &mut Context) -> String {
+        let mut asm = String::new();
+
+        for arg in self.args.iter_mut().rev() {
+            asm.push_str(&arg.asm(ctx));
+            asm.push_str("\n");
+        }
+
+        asm.push_str(&format!("
+            call {}
+        ", self.identifier));
+
+        asm
     }
 }

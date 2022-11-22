@@ -31,9 +31,9 @@ e.g. `./res "(1+1)*2"` instead of `./res (1+1)*2`
 
 ### Options
 
-| Command            | Description               |
-|--------------------|---------------------------|
-| `-o`, `--output`   | Output assembly file path |
+| Command            | Description               | Default    |
+|--------------------|---------------------------|------------|
+| `-o`, `--output`   | Output assembly file path | `out.asm`  |
 
 ## Commands
 
@@ -42,6 +42,9 @@ e.g. `./res "(1+1)*2"` instead of `./res (1+1)*2`
 $ bin/build
 
 # Run
+$ bin/run "1+1"
+
+# Run, showing Rust's compilation logs
 $ bin/exec "1+1"
 
 # Test
