@@ -14,6 +14,7 @@ out
 /*.rs
 /*.py
 /*.s
+/*.res
 
 # OS
 .DS_Store

@@ -61,7 +61,7 @@ print_char: ; [ascii_code: int, cb: *] => []
     push rbx ; push callback pointer
     ret
 
-print_string: ; [string: str*, length: int*, cb: *] => []
+print: ; [string: str*, length: int*, cb: *] => []
     pop rbx ; pop cb
     pop rdx ; pop length
     pop rsi ; pop string
@@ -168,12 +168,6 @@ print_int: ; [number: int*, cb: *] => []
 
         __print_int_end_end:
             ret
-
-hello_world:
-    push __CONST_hello_world
-    push __CONST_hello_world_len
-    call print_string
-    ret
 
 print_stack: ; [value: any, cb: *] => []
              ; prints the last element on the stack as a digit

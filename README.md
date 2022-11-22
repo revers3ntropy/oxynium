@@ -12,28 +12,29 @@ Tested on Ubuntu.
 See `spec/*` for more examples
 
 ```shell
-$ bin/exec "1+1"
+$ bin/run "1+1"
 2
 ```
 ```shell
-$ bin/exec "hello_world()"
+$ bin/run "hello_world()"
 Hello, world!
 ```
 
 ## Usage
 
 ```shell
-$ ./res [input] [options]
+$ ./res [input_file?] [options]
 ```
 
 Quote the input to escape shell expansion, 
-e.g. `./res "(1+1)*2"` instead of `./res (1+1)*2`
+e.g. `./res -e "(1+1)*2"` instead of `./res -e (1+1)*2`
 
 ### Options
 
-| Command            | Description               | Default    |
-|--------------------|---------------------------|------------|
-| `-o`, `--output`   | Output assembly file path | `out.asm`  |
+| Command          | Description                            | Default   |
+|------------------|----------------------------------------|-----------|
+| `-o`, `--output` | Output assembly file path              | `out.asm` |
+| `-e`, `--eval`   | Evaluate and print a single expression |           |
 
 ## Commands
 

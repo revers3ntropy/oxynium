@@ -59,14 +59,6 @@ impl Parser {
         self.tokens[self.tok_idx-1].clone()
     }
 
-    fn try_advance(&mut self) -> Option<Token> {
-        if self.tok_idx >= self.tokens.len() {
-            return None;
-        }
-        self.tok_idx += 1;
-        Some(self.tokens[self.tok_idx-1].clone())
-    }
-
     fn consume(&mut self, res: &mut ParseResults, tok_type: TokenType) {
         if let Some(tok) = self.try_peak() {
             if tok.token_type == tok_type {

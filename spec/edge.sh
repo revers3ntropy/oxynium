@@ -1,8 +1,8 @@
 describe "Edge Cases"
 
-expect "" ""
-expect " " ""
-expect "
+expect_exec "" ""
+expect_exec " " ""
+expect_exec "
 
 
  " ""

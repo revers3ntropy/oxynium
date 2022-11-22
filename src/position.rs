@@ -32,10 +32,6 @@ impl Position {
         self
     }
 
-    pub fn is_unknown(&self) -> bool {
-        self.idx == -2
-    }
-
     pub fn str(&self) -> String {
         format!("'{}' {}:{}", self.file, self.line, self.col)
     }

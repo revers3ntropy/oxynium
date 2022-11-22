@@ -21,7 +21,7 @@ function describe () {
     current_spec_has_failed=0
 }
 
-function expect() {
+function expect_exec() {
     code="$1"
     expected="$2"
 
@@ -36,8 +36,10 @@ function expect() {
 
     errors=$({
       # compile, link and assemble the program
+      echo "$code" > in.res
+
       export RUST_BACKTRACE=1
-      ./target/release/r-entropy-script "$code"
+      ./target/release/r-entropy-script in.res
 
       if test -f "./out.asm"; then
           nasm -f elf64 out.asm
