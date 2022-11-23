@@ -20,7 +20,7 @@ impl Node for StatementsNode {
         for statement in self.statements.iter_mut() {
             asm.push_str(&statement.asm(ctx));
             asm.push('\n');
-        }
+        };
         asm
     }
 }

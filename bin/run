@@ -21,17 +21,8 @@ if test -f "./out.asm"; then
   fi
 fi
 
-output="BASH_ERROR_NOT_ASSIGNED"
 if test -f "./out"; then
-    # remove any \0 characters from output
-    # stops 'warning: command substitution: ignored null byte in input'
-    output=$(./out | tr -d '\000')
+    ./out
 else
-    output="ERROR_NO_OUTPUT"
+    echo "No output file!"
 fi
-
-if [ "$errors" != "" ]; then
-    printf "    Errors:   '%s'\n\n" "$errors"
-fi
-
-echo "$output"

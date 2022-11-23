@@ -60,11 +60,9 @@ print_int: ; [number: int*, cb: *] => []
            ;        base = base * 2;
            ;    }
 
-    pop r14 ; pop cb
+    pop r8 ; pop cb
     pop r15 ; pop num
     mov r15, [r15]
-
-    push r14 ; push cb
 
     mov r12, 1 ; base
     mov r13, 0 ; remainder
@@ -76,7 +74,8 @@ print_int: ; [number: int*, cb: *] => []
 
     cmp r15, 0 ; if num == 0, skip loop
     jne __print_int_loop
-    push r15
+    mov rax, 0
+    push rax
     call print_digit
     jmp __print_int_end
 
@@ -123,7 +122,7 @@ print_int: ; [number: int*, cb: *] => []
     __print_int_end: ; do the actual printing off the stack
         pop rax ; clean up stack
 
-        cmp r11, 1 ; if is negative
+        cmp r11, 1 ; r11 is 1 if negative
         je __print_int_end_print_negative
         jmp __print_int_end_print_loop
 
@@ -143,6 +142,7 @@ print_int: ; [number: int*, cb: *] => []
             jmp __print_int_end_print_loop
 
         __print_int_end_end:
+            push r8
             ret
 
 print_stack: ; [value: any, cb: *] => []

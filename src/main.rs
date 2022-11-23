@@ -51,7 +51,8 @@ fn execute (input: String, file_name: String, exec_mode: bool) -> CompileResults
 struct Args {
     input: String,
     out: String,
-    eval: String
+    eval: String,
+    exec_mode: bool
 }
 
 fn get_cli_args () -> Args {
@@ -59,6 +60,7 @@ fn get_cli_args () -> Args {
         .args(&[
             arg!(-o --out <FILE> "Where to put assembly output"),
             arg!(-e --eval <EXPR> "Compiles and prints a single expression"),
+            arg!(-x --exec "Should print final expression"),
             arg!([input] "Input code to evaluate"),
         ]);
     let args: Vec<String> = env::args().collect();
@@ -69,6 +71,7 @@ fn get_cli_args () -> Args {
         out: m.get_one::<String>("out").unwrap_or(&String::from("out.asm")).to_string(),
         input: m.get_one::<String>("input").unwrap_or(&String::from("")).to_string(),
         eval: m.get_one::<String>("eval").unwrap_or(&String::from("")).to_string(),
+        exec_mode: m.get_one::<bool>("exec").unwrap_or(&false).to_owned()
     }
 }
 
@@ -115,7 +118,7 @@ fn main() -> std::io::Result<()> {
         let mut input = String::new();
         input_file.read_to_string(&mut input)?;
 
-        let res = execute(input, args.input.clone(), false);
+        let res = execute(input, args.input.clone(), args.exec_mode);
 
         if res.error.is_some() {
             let _ = e.write(format!("{}\n", res.error.unwrap()).as_bytes());

@@ -39,7 +39,7 @@ function expect_exec() {
       echo "$code" > in.res
 
       export RUST_BACKTRACE=1
-      ./target/release/r-entropy-script in.res
+      ./target/release/r-entropy-script -x in.res
 
       if test -f "./out.asm"; then
           nasm -f elf64 out.asm
@@ -54,13 +54,7 @@ function expect_exec() {
     if test -f "./out"; then
         # remove any \0 characters from output
         # stops 'warning: command substitution: ignored null byte in input'
-        o=$(./out | tr -d '\000')
-        # trim last character, which is a newline
-        if [ ${#o} -gt 0 ]; then
-            output=${o::-1}
-        else
-            output=""
-        fi
+        output=$(./out | tr -d '\000')
     else
         output="ERROR_NO_OUTPUT"
     fi
