@@ -157,6 +157,13 @@ print_stack: ; [value: any, cb: *] => []
 
     ret
 
+clear_stack: ; [cb: *] => []
+             ; resets the stack pointer to the beginning of the stack
+    pop rax
+    mov rsp, rbp
+    push rax
+    ret
+
 print_nl:
     ; print NL
     mov rax, 13

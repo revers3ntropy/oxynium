@@ -18,8 +18,10 @@ impl Node for StatementsNode {
     fn asm(&mut self, ctx: &mut Context) -> String {
         let mut asm = String::new();
         for statement in self.statements.iter_mut() {
-            asm.push_str(&statement.asm(ctx));
             asm.push('\n');
+            asm.push_str("call clear_stack");
+            asm.push('\n');
+            asm.push_str(&statement.asm(ctx));
         };
         asm
     }
