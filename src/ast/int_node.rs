@@ -16,7 +16,7 @@ impl IntNode {
 
 impl Node for IntNode {
     fn asm(&mut self, ctx: &mut Context) -> String {
-        let data = format!("dq {}", self.value.to_string());
+        let data = format!("dq {}", self.value);
         let reference = ctx.declare(data);
         format!("push {}", reference)
     }

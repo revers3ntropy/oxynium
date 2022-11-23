@@ -14,6 +14,7 @@ const SINGLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
     "%" => TokenType::Ampersand,
     "," => TokenType::Comma,
     ";" => TokenType::EndStatement,
+    "=" => TokenType::Equals,
 };
 
 pub struct Lexer {

@@ -14,6 +14,7 @@ pub enum TokenType {
     Comma,
     EndStatement,
     String,
+    Equals,
 }
 
 #[derive(Debug)]

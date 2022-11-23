@@ -1,5 +1,6 @@
 use crate::ast::arith_bin_op_node::ArithmeticBinOpNode;
 use crate::ast::arith_unary_op_node::{ArithmeticUnaryOpNode, ArithUnaryOp};
+use crate::ast::const_decl::ConstDecl;
 use crate::ast::exec_root_node::ExecRootNode;
 use crate::ast::fn_call_node::FnCallNode;
 use crate::ast::int_node::IntNode;
@@ -116,12 +117,79 @@ impl Parser {
         res
     }
 
+    fn peak_matches(&self, tok_type: TokenType, value: Option<String>) -> bool {
+        if let Some(tok) = self.try_peak() {
+            if tok.token_type == tok_type {
+                if let Some(value) = value {
+                    if tok.literal.is_some() && tok.literal.unwrap() == value {
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     fn statement (&mut self) -> ParseResults {
+        if self.peak_matches(TokenType::Identifier, Some("const".to_string())) {
+            self.advance(None);
+            return self.const_decl();
+        }
         self.expression()
     }
 
     fn expression (&mut self) -> ParseResults {
         self.arithmetic_expr()
+    }
+
+    fn const_decl(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+        let name;
+
+        if self.peak_matches(TokenType::Identifier, None) {
+            name = Some(self.advance(Some(&mut res)).literal.unwrap());
+        } else {
+            res.failure(syntax_error("Expected identifier".to_string()),
+                Some(self.tokens[self.tok_idx-1].start.clone()),
+                Some(self.tokens[self.tok_idx-1].end.clone())
+            );
+            return res;
+        }
+
+        if self.peak_matches(TokenType::Equals, None) {
+            self.advance(Some(&mut res));
+        } else {
+            res.failure(syntax_error("Expected '='".to_string()),
+                Some(self.tokens[self.tok_idx-1].start.clone()),
+                Some(self.tokens[self.tok_idx-1].end.clone())
+            );
+            return res;
+        }
+
+        if let Some(tok) = self.try_peak() {
+            if tok.token_type == TokenType::Int {
+                self.advance(Some(&mut res));
+                let value = tok.literal.unwrap().parse::<i64>().unwrap();
+                res.success(Box::new(ConstDecl::new(name.unwrap(), value)));
+                return res;
+            } else if tok.token_type == TokenType::String {
+                self.advance(Some(&mut res));
+                res.success(Box::new(ConstDecl::new(name.unwrap(), tok.literal.unwrap())));
+                return res;
+            }
+            res.failure(syntax_error("Expected int or str".to_string()),
+                Some(self.tokens[self.tok_idx-1].start.clone()),
+                Some(self.tokens[self.tok_idx-1].end.clone())
+            );
+            return res;
+        }
+        res.failure(syntax_error("Unexpected EOF".to_string()),
+            Some(self.tokens[self.tok_idx-1].start.clone()),
+            Some(self.tokens[self.tok_idx-1].end.clone())
+        );
+        return res;
     }
 
     fn unary_expr(&mut self) -> ParseResults {

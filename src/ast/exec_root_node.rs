@@ -40,8 +40,8 @@ impl Node for ExecRootNode {
 
             format!("
                 section .data
-                    {decls}
                     {CONSTS_ASM}
+                    {decls}
                 section .text
                     global _start
 
