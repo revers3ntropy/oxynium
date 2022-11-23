@@ -6,6 +6,7 @@ use crate::ast::int_node::IntNode;
 use crate::ast::Node;
 use crate::ast::statements_node::StatementsNode;
 use crate::ast::str_node::StrNode;
+use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::term_bin_op_node::TermBinOpNode;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
@@ -240,6 +241,62 @@ impl Parser {
         res
     }
 
+    fn function_call(&mut self, fn_identifier_tok: Token) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        self.consume(&mut res, TokenType::LParen);
+        if res.error.is_some() { return res; }
+
+        if let Some(t) = self.try_peak() {
+            // fn(), no arguments
+            if t.token_type == TokenType::RParen {
+                self.advance(Some(&mut res));
+                res.success(Box::new(FnCallNode::new(fn_identifier_tok.literal.unwrap(), Vec::new())));
+                return res;
+            }
+        }
+
+        let mut args = Vec::new();
+
+        while true {
+            let parameter = res.register(self.expression());
+            if res.error.is_some() {
+                return res;
+            }
+
+            args.push(parameter.unwrap());
+
+            if let Some(t) = self.try_peak() {
+                if t.token_type == TokenType::RParen {
+                    break;
+                }  else if t.token_type == TokenType::Comma {
+                    self.advance(Some(&mut res));
+                } else {
+                    res.failure(
+                        syntax_error("Expected ',' or ')'".to_owned()),
+                        Some(fn_identifier_tok.start),
+                        Some(fn_identifier_tok.end)
+                    );
+                    return res;
+                }
+
+            } else {
+                res.failure(
+                    syntax_error("Expected ',' or ')', got EOF".to_owned()),
+                    Some(fn_identifier_tok.start),
+                    Some(fn_identifier_tok.end)
+                );
+                return res;
+            }
+        }
+
+        self.consume(&mut res, TokenType::RParen);
+        if res.error.is_some() { return res; }
+
+        res.success(Box::new(FnCallNode::new(fn_identifier_tok.literal.unwrap(), args)));
+        res
+    }
+
     fn atom(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
         let tok = self.advance(Some(&mut res));
@@ -268,56 +325,13 @@ impl Parser {
                 res
             },
             TokenType::Identifier => {
-                self.consume(&mut res, TokenType::LParen);
-                if res.error.is_some() { return res; }
-
-                if let Some(t) = self.try_peak() {
-                    // fn(), no arguments
-                    if t.token_type == TokenType::RParen {
-                        self.advance(Some(&mut res));
-                        res.success(Box::new(FnCallNode::new(tok.literal.unwrap(), Vec::new())));
-                        return res;
+                if let Some(next) = self.try_peak() {
+                    if next.token_type == TokenType::LParen {
+                        return self.function_call(tok);
                     }
                 }
 
-                let mut args = Vec::new();
-
-                while true {
-                    let parameter = res.register(self.expression());
-                    if res.error.is_some() {
-                        return res;
-                    }
-
-                    args.push(parameter.unwrap());
-
-                    if let Some(t) = self.try_peak() {
-                        if t.token_type == TokenType::RParen {
-                            break;
-                        }  else if t.token_type == TokenType::Comma {
-                            self.advance(Some(&mut res));
-                        } else {
-                            res.failure(
-                                syntax_error("Expected ',' or ')'".to_owned()),
-                                 Some(tok.start),
-                                 Some(tok.end)
-                            );
-                            return res;
-                        }
-
-                    } else {
-                        res.failure(
-                            syntax_error("Expected ',' or ')', got EOF".to_owned()),
-                            Some(tok.start),
-                            Some(tok.end)
-                        );
-                        return res;
-                    }
-                }
-
-                self.consume(&mut res, TokenType::RParen);
-                if res.error.is_some() { return res; }
-
-                res.success(Box::new(FnCallNode::new(tok.literal.unwrap(), args)));
+                res.success(Box::new(SymbolAccess::new(tok.literal.unwrap())));
                 res
             },
             _ => {
