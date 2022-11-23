@@ -1,0 +1,2 @@
+const true = 1;
+const false = 0;
