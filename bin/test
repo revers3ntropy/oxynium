@@ -28,7 +28,7 @@ function describe () {
     tests_started=1
 }
 
-function expect_exec() {
+function expect() {
     code="$1"
     expected="$2"
 
@@ -86,7 +86,6 @@ function expect_exec() {
 }
 
 function results() {
-    describe ""
 
     if [ "$fails" -eq 0 ]; then
         # shellcheck disable=SC2059
@@ -107,6 +106,9 @@ for f in ./spec/*; do
   # shellcheck disable=SC1090
   source "$f";
 done
+
+# show last 'all passing' message
+describe ""
 
 end=$(date +"%s.%3N")
 runtime=$(echo "$end - $start" | bc -l)
