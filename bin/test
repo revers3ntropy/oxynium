@@ -43,10 +43,10 @@ function expect_exec() {
 
     errors=$({
       # compile, link and assemble the program
-      echo "$code" > in.res
+      echo "$code" > in.oxy
 
       export RUST_BACKTRACE=1
-      ./target/release/r-entropy-script -x in.res
+      ./target/release/oxynium -x in.oxy
 
       if test -f "./out.asm"; then
           nasm -f elf64 out.asm

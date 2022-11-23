@@ -3,7 +3,6 @@ use crate::context::Context;
 use crate::error::Error;
 
 const STD_ASM: &str = include_str!("../../std/std.asm");
-const CONSTS_ASM: &str = include_str!("../../std/constants.asm");
 
 #[derive(Debug)]
 pub struct ExecRootNode {
@@ -41,7 +40,6 @@ impl Node for ExecRootNode {
 
             Ok(format!("
                 section .data
-                    {CONSTS_ASM}
                     {decls}
                 section .text
                     global _start
@@ -59,7 +57,6 @@ impl Node for ExecRootNode {
         } else {
             Ok(format!("
                 section .data
-                    {CONSTS_ASM}
                 section .text
                     global _start
                     {STD_ASM}

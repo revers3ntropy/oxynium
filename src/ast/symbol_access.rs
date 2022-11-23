@@ -17,6 +17,7 @@ impl SymbolAccess {
 
 impl Node for SymbolAccess {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
+        println!("{}, {}", ctx.symbol_exists(&self.identifier), self.identifier);
         if !ctx.symbol_exists(&self.identifier) {
             return Err(unknown_symbol(format!("Symbol '{}' does not exist", self.identifier)));
         }

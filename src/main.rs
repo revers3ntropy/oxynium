@@ -18,13 +18,16 @@ use crate::parse::parser::Parser;
 use crate::post_process::post_process;
 use crate::context::Context;
 
+const STD_OXY: &str = include_str!("../std/std.oxy");
+
+
 struct CompileResults {
     error: Option<String>,
     asm: Option<String>
 }
 
 fn execute (input: String, file_name: String, exec_mode: bool) -> CompileResults {
-    let mut lexer = Lexer::new(input, file_name);
+    let mut lexer = Lexer::new((String::from(STD_OXY) + &*input).clone(), file_name);
     let tokens = lexer.lex();
 
     let mut parser = Parser::new(tokens);

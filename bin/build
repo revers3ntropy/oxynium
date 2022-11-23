@@ -4,7 +4,7 @@ start=$(date +"%s.%3N")
 
 cargo build -r
 
-mv ./target/release/r-entropy-script ./res
+mv ./target/release/oxynium ./res
 
 end=$(date +"%s.%3N")
 runtime=$(echo "$end - $start" | bc -l)
