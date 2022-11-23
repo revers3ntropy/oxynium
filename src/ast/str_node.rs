@@ -1,5 +1,6 @@
 use crate::ast::Node;
 use crate::context::Context;
+use crate::error::Error;
 
 #[derive(Debug)]
 pub struct StrNode {
@@ -15,9 +16,9 @@ impl StrNode {
 }
 
 impl Node for StrNode {
-    fn asm(&mut self, ctx: &mut Context) -> String {
+    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
         let data = format!("dq \"{}\", 0", self.value);
         let reference = ctx.declare(data);
-        format!("push {}", reference)
+        Ok(format!("push {}", reference))
     }
 }

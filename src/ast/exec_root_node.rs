@@ -1,5 +1,6 @@
 use crate::ast::Node;
 use crate::context::Context;
+use crate::error::Error;
 
 const STD_ASM: &str = include_str!("../../std/std.asm");
 const CONSTS_ASM: &str = include_str!("../../std/constants.asm");
@@ -18,11 +19,11 @@ impl ExecRootNode {
 }
 
 impl Node for ExecRootNode {
-    fn asm(&mut self, ctx: &mut Context) -> String {
+    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
         println!("Generating assembly for program: {:?}", self);
         if let Some(statement) = &mut self.statement {
 
-            let res = statement.asm(ctx);
+            let res = statement.asm(ctx)?;
 
             let decls = &ctx.declarations.iter().map(|(k, v)| {
                 format!("{k} {v}")
@@ -38,7 +39,7 @@ impl Node for ExecRootNode {
                 end_statements = "";
             }
 
-            format!("
+            Ok(format!("
                 section .data
                     {CONSTS_ASM}
                     {decls}
@@ -53,10 +54,10 @@ impl Node for ExecRootNode {
                     {end_statements}
                     call clear_stack
                     call exit
-            ")
+            "))
 
         } else {
-            format!("
+            Ok(format!("
                 section .data
                     {CONSTS_ASM}
                 section .text
@@ -64,7 +65,7 @@ impl Node for ExecRootNode {
                     {STD_ASM}
                 _start:
                     call exit
-            ")
+            "))
         }
     }
 }

@@ -1,5 +1,6 @@
 use crate::ast::Node;
 use crate::context::Context;
+use crate::error::Error;
 
 #[derive(Debug)]
 pub struct ConstDecl <T> {
@@ -17,18 +18,19 @@ impl <T> ConstDecl <T> {
 }
 
 impl Node for ConstDecl <i64> {
-    fn asm(&mut self, ctx: &mut Context) -> String {
+    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
         let data = format!("dq {}", self.value);
         ctx.declare_symbol(self.identifier.clone(), data);
-        "".to_owned()
+        Ok("".to_owned())
     }
 }
 
 impl Node for ConstDecl <String> {
-    fn asm(&mut self, ctx: &mut Context) -> String {
+    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
+        ctx.reserve_symbol(self.identifier.clone());
         // ', 0' is a null terminator
         let data = format!("dq \"{}\", 0", self.value);
         ctx.declare_symbol(self.identifier.clone(), data);
-        "".to_owned()
+        Ok("".to_owned())
     }
 }

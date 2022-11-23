@@ -1,5 +1,6 @@
 use crate::ast::Node;
 use crate::context::Context;
+use crate::error::Error;
 
 #[derive(Debug)]
 pub enum ArithUnaryOp {
@@ -22,8 +23,8 @@ impl ArithmeticUnaryOpNode {
 }
 
 impl Node for ArithmeticUnaryOpNode {
-    fn asm(&mut self, ctx: &mut Context) -> String {
-        match self.operator {
+    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
+        Ok(match self.operator {
             ArithUnaryOp::Minus => {
                 format!("
                     {}
@@ -33,9 +34,9 @@ impl Node for ArithmeticUnaryOpNode {
                     mov [rcx], rax
                     push rcx
                 ",
-                    self.rhs.asm(ctx)
+                    self.rhs.asm(ctx)?
                 )
             }
-        }
+        })
     }
 }

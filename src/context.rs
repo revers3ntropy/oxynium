@@ -38,4 +38,8 @@ impl Context {
     pub fn declare_symbol(&mut self, symbol: String, ty: String) {
         self.declarations.insert(symbol, ty);
     }
+
+    pub fn symbol_exists(&self, symbol: &String) -> bool {
+        self.declarations.contains_key(symbol)
+    }
 }

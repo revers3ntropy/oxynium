@@ -1,5 +1,6 @@
 use crate::ast::Node;
 use crate::context::Context;
+use crate::error::Error;
 
 #[derive(Debug)]
 pub struct FnCallNode {
@@ -17,11 +18,11 @@ impl FnCallNode {
 }
 
 impl Node for FnCallNode {
-    fn asm(&mut self, ctx: &mut Context) -> String {
+    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
         let mut asm = String::new();
 
         for arg in self.args.iter_mut().rev() {
-            asm.push_str(&arg.asm(ctx));
+            asm.push_str(&arg.asm(ctx)?);
             asm.push_str("\n");
         }
 
@@ -29,6 +30,6 @@ impl Node for FnCallNode {
             call {}
         ", self.identifier));
 
-        asm
+        Ok(asm)
     }
 }

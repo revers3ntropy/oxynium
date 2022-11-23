@@ -40,7 +40,15 @@ fn execute (input: String, file_name: String, exec_mode: bool) -> CompileResults
     let mut ctx = Context::new();
     ctx.exec_mode = exec_mode;
 
-    let asm = post_process(ast.node.unwrap().asm(&mut ctx));
+    let compile_res = ast.node.unwrap().asm(&mut ctx);
+    if compile_res.is_err() {
+        return CompileResults {
+            error: Some(compile_res.err().unwrap().str()),
+            asm: None
+        };
+    }
+
+    let asm = post_process(compile_res.unwrap());
     CompileResults {
         error: None,
         asm: Some(asm)

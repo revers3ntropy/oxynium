@@ -1,5 +1,6 @@
 use crate::ast::Node;
 use crate::context::Context;
+use crate::error::Error;
 
 #[derive(Debug)]
 pub struct TermBinOpNode {
@@ -21,8 +22,8 @@ impl TermBinOpNode {
 }
 
 impl Node for TermBinOpNode {
-    fn asm(&mut self, ctx: &mut Context) -> String {
-        format!("
+    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
+        Ok(format!("
                 {}
                 {}
                 pop rcx
@@ -34,10 +35,10 @@ impl Node for TermBinOpNode {
                 mov [rcx], {}
                 push rcx
             ",
-                self.rhs.asm(ctx),
-                self.lhs.asm(ctx),
+                self.rhs.asm(ctx)?,
+                self.lhs.asm(ctx)?,
                 self.operator,
                 self.output_register
-        )
+        ))
     }
 }

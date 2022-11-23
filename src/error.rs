@@ -38,3 +38,7 @@ impl Error {
 pub fn syntax_error(message: String) -> Error {
     Error::new("SyntaxError".to_string(), message)
 }
+
+pub fn unknown_symbol(message: String) -> Error {
+    Error::new("UnknownSymbol".to_string(), message)
+}

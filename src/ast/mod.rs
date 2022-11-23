@@ -13,7 +13,8 @@ pub const ANON_DATA_PREFIX: &str = "__ANON_DATA_";
 
 use std::fmt::Debug;
 use crate::context::Context;
+use crate::error::Error;
 
 pub trait Node: Debug {
-    fn asm(&mut self, ctx: &mut Context) -> String;
+    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error>;
 }
