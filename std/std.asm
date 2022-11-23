@@ -37,7 +37,7 @@ print_char: ; [ascii_code: int, cb: *] => []
     push rbx ; push callback pointer
     ret
 
-print: ; [string: str*, length: int*, cb: *] => []
+print_str: ; [string: str*, length: int*, cb: *] => []
     pop rbx ; pop cb
     pop rdx ; pop length
     pop rsi ; pop string
@@ -49,6 +49,32 @@ print: ; [string: str*, length: int*, cb: *] => []
 
     push rbx ; push callback pointer
     ret
+
+
+print: ; [string: str*, cb: *] => []
+       ; prints characters until null byte is reached
+    pop rbx ; pop cb
+    pop rsi ; pop string
+    mov rax, rsi ; copy string pointer
+
+    mov rdx, 0 ; string length
+
+    ; find length of string
+    __print_find_length:
+        mov rcx, [rax]
+        cmp rcx, 0
+        je __print_end_length
+        inc rdx
+        inc rax
+        jmp __print_find_length
+
+    __print_end_length:
+        mov rax, 1
+        mov rdi, 1
+        syscall
+        push rbx
+        call print_nl
+        ret
 
 print_int: ; [number: int*, cb: *] => []
            ; prints an 8 byte integer in base 10
@@ -148,14 +174,22 @@ print_int: ; [number: int*, cb: *] => []
 print_stack: ; [value: any, cb: *] => []
              ; prints the last element on the stack as a digit
              ; assuming size 8 bytes
+    ; check if we are not already at base of stack
+    mov rax, rsp
+    cmp rax, rbp
+    je __print_stack_end
+
     pop rdi
     pop rax
     push rdi
 
     push rax
     call print_int
-
     ret
+
+    __print_stack_end:
+        push rax
+        ret
 
 clear_stack: ; [cb: *] => []
              ; resets the stack pointer to the beginning of the stack

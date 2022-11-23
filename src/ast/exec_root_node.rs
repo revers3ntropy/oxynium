@@ -51,6 +51,7 @@ impl Node for ExecRootNode {
                     mov rbp, rsp
                     {res}
                     {end_statements}
+                    call clear_stack
                     call exit
             ")
 

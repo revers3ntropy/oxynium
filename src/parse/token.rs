@@ -13,6 +13,7 @@ pub enum TokenType {
     Identifier,
     Comma,
     EndStatement,
+    String,
 }
 
 #[derive(Debug)]

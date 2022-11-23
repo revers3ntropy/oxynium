@@ -67,10 +67,15 @@ impl Lexer {
                     self.position.clone(),
                     self.position.clone()
                 ));
+
             } else if char::is_alphabetic(c) {
                 tokens.push(self.make_identifier());
+
             } else if c.is_whitespace() {
                 self.advance();
+            } else if c == '"' {
+                tokens.push(self.make_string());
+
             } else if SINGLE_CHAR_TOKENS.contains_key(&c.to_string()) {
                 tokens.push(Token::new(
                     SINGLE_CHAR_TOKENS[&c.to_string()],
@@ -79,6 +84,7 @@ impl Lexer {
                     self.position.clone()
                 ));
                 self.advance();
+
             } else {
                 panic!("Unexpected character: {}", c)
             }
@@ -99,6 +105,23 @@ impl Lexer {
         Token::new(
             TokenType::Identifier,
             Some(identifier),
+            start,
+            self.position.clone()
+        )
+    }
+
+    fn make_string(&mut self) -> Token {
+        let mut string = String::new();
+        let start = self.position.clone();
+        self.advance();
+        while self.current_char.is_some() && self.current_char.unwrap() != '"' {
+            string.push(self.current_char.unwrap());
+            self.advance();
+        }
+        self.advance();
+        Token::new(
+            TokenType::String,
+            Some(string),
             start,
             self.position.clone()
         )

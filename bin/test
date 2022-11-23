@@ -10,15 +10,22 @@ tests=0
 current_spec_name=""
 current_spec_num_tests=0
 current_spec_has_failed=0
+tests_started=0
 
 function setup () {
   cargo build -r
 }
 
 function describe () {
+    if [ $tests_started -eq 1 ]; then
+        if [ "$current_spec_has_failed" -eq 0 ]; then
+            printf "${GREEN}All passed in %s${NC}\n" "$current_spec_name"
+        fi
+    fi
     current_spec_name="$1"
     current_spec_num_tests=0
     current_spec_has_failed=0
+    tests_started=1
 }
 
 function expect_exec() {
@@ -79,6 +86,8 @@ function expect_exec() {
 }
 
 function results() {
+    describe ""
+
     if [ "$fails" -eq 0 ]; then
         # shellcheck disable=SC2059
         printf "${GREEN}  ${tests}/${tests} tests passed!${NC}\n"

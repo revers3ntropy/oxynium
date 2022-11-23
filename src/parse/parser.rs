@@ -5,6 +5,7 @@ use crate::ast::fn_call_node::FnCallNode;
 use crate::ast::int_node::IntNode;
 use crate::ast::Node;
 use crate::ast::statements_node::StatementsNode;
+use crate::ast::str_node::StrNode;
 use crate::ast::term_bin_op_node::TermBinOpNode;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
@@ -102,7 +103,7 @@ impl Parser {
             if tok.token_type == TokenType::EndStatement {
                 self.advance(Some(&mut res));
             } else {
-                let expr = res.register(self.expression());
+                let expr = res.register(self.statement());
                 if res.error.is_some() {
                     return res;
                 }
@@ -246,6 +247,11 @@ impl Parser {
             TokenType::Int => {
                 let value = tok.literal.unwrap();
                 res.success(Box::new(IntNode::new(value.parse::<i64>().unwrap())));
+                res
+            },
+            TokenType::String => {
+                let value = tok.literal.unwrap();
+                res.success(Box::new(StrNode::new(value)));
                 res
             },
             TokenType::LParen => {
