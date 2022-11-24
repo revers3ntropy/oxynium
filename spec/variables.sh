@@ -16,3 +16,17 @@ expect '
     const a = "Some String";
     print(a)
 ' $'Some String\r'
+
+
+describe 'Declaring Variables'
+
+expect '
+  var a = 1;
+  var b = 6;
+  print_int(a + b)
+' '7'
+
+
+describe 'Mutating Variables'
+
+expect 'var a = 1; a = 2; print_int(a)' '2'

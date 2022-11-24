@@ -36,6 +36,7 @@ impl Context {
     }
 
     pub fn declare_symbol(&mut self, symbol: String, ty: String) {
+        self.reserve_symbol(symbol.clone());
         self.declarations.insert(symbol, ty);
     }
 

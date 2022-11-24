@@ -1,0 +1,7 @@
+describe 'Loops'
+
+expect '
+loop {
+
+}
+' ''

@@ -8,6 +8,8 @@ pub mod statements_node;
 pub mod str_node;
 pub mod symbol_access;
 pub mod const_decl;
+pub mod glob_var_decl;
+pub mod mutate_var;
 
 pub const ANON_DATA_PREFIX: &str = "__ANON_DATA_";
 

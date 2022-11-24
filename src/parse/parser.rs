@@ -3,7 +3,9 @@ use crate::ast::arith_unary_op_node::{ArithmeticUnaryOpNode, ArithUnaryOp};
 use crate::ast::const_decl::ConstDecl;
 use crate::ast::exec_root_node::ExecRootNode;
 use crate::ast::fn_call_node::FnCallNode;
+use crate::ast::glob_var_decl::GlobVarDecl;
 use crate::ast::int_node::IntNode;
+use crate::ast::mutate_var::MutateVar;
 use crate::ast::Node;
 use crate::ast::statements_node::StatementsNode;
 use crate::ast::str_node::StrNode;
@@ -90,6 +92,21 @@ impl Parser {
         );
     }
 
+    fn peak_matches(&self, tok_type: TokenType, value: Option<String>) -> bool {
+        if let Some(tok) = self.try_peak() {
+            if tok.token_type == tok_type {
+                if let Some(value) = value {
+                    if tok.literal.is_some() && tok.literal.unwrap() == value {
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     fn try_peak(&self) -> Option<Token> {
         if self.tok_idx >= self.tokens.len() {
             return None;
@@ -117,25 +134,14 @@ impl Parser {
         res
     }
 
-    fn peak_matches(&self, tok_type: TokenType, value: Option<String>) -> bool {
-        if let Some(tok) = self.try_peak() {
-            if tok.token_type == tok_type {
-                if let Some(value) = value {
-                    if tok.literal.is_some() && tok.literal.unwrap() == value {
-                        return true;
-                    }
-                } else {
-                    return true;
-                }
-            }
-        }
-        false
-    }
-
     fn statement (&mut self) -> ParseResults {
         if self.peak_matches(TokenType::Identifier, Some("const".to_string())) {
             self.advance(None);
             return self.const_decl();
+        }
+        if self.peak_matches(TokenType::Identifier, Some("var".to_string())) {
+            self.advance(None);
+            return self.var_decl();
         }
         self.expression()
     }
@@ -163,7 +169,7 @@ impl Parser {
         } else {
             res.failure(syntax_error("Expected '='".to_string()),
                 Some(self.tokens[self.tok_idx-1].start.clone()),
-                Some(self.tokens[self.tok_idx-1].end.clone())
+                Some(self.tokens[self.tok_idx].end.clone())
             );
             return res;
         }
@@ -188,6 +194,50 @@ impl Parser {
         res.failure(syntax_error("Unexpected EOF".to_string()),
             Some(self.tokens[self.tok_idx-1].start.clone()),
             Some(self.tokens[self.tok_idx-1].end.clone())
+        );
+        return res;
+    }
+
+    fn var_decl(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+        let name;
+
+        if self.peak_matches(TokenType::Identifier, None) {
+            name = Some(self.advance(Some(&mut res)).literal.unwrap());
+        } else {
+            res.failure(syntax_error("Expected identifier".to_string()),
+                        Some(self.tokens[self.tok_idx-1].start.clone()),
+                        Some(self.tokens[self.tok_idx-1].end.clone())
+            );
+            return res;
+        }
+
+        if self.peak_matches(TokenType::Equals, None) {
+            self.advance(Some(&mut res));
+        } else {
+            res.failure(syntax_error("Expected '='".to_string()),
+                        Some(self.tokens[self.tok_idx-1].start.clone()),
+                        Some(self.tokens[self.tok_idx].end.clone())
+            );
+            return res;
+        }
+
+        if let Some(tok) = self.try_peak() {
+            if tok.token_type == TokenType::Int {
+                self.advance(Some(&mut res));
+                let value = tok.literal.unwrap().parse::<i64>().unwrap();
+                res.success(Box::new(GlobVarDecl::new(name.unwrap(), value)));
+                return res;
+            }
+            res.failure(syntax_error("Expected int".to_string()),
+                        Some(self.tokens[self.tok_idx-1].start.clone()),
+                        Some(self.tokens[self.tok_idx-1].end.clone())
+            );
+            return res;
+        }
+        res.failure(syntax_error("Unexpected EOF".to_string()),
+                    Some(self.tokens[self.tok_idx-1].start.clone()),
+                    Some(self.tokens[self.tok_idx-1].end.clone())
         );
         return res;
     }
@@ -365,6 +415,21 @@ impl Parser {
         res
     }
 
+    fn assign(&mut self, id_tok: Token) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        self.consume(&mut res, TokenType::Equals);
+
+        let value = res.register(self.expression());
+        if res.error.is_some() {
+            return res;
+        }
+
+        res.success(Box::new(MutateVar::new(id_tok.literal.unwrap(), value.unwrap())));
+
+        res
+    }
+
     fn atom(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
         let tok = self.advance(Some(&mut res));
@@ -396,6 +461,9 @@ impl Parser {
                 if let Some(next) = self.try_peak() {
                     if next.token_type == TokenType::LParen {
                         return self.function_call(tok);
+                    }
+                    if next.token_type == TokenType::Equals {
+                        return self.assign(tok);
                     }
                 }
 
