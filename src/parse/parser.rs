@@ -8,6 +8,7 @@ use crate::ast::glob_var_decl::GlobVarDecl;
 use crate::ast::int_node::IntNode;
 use crate::ast::mutate_var::MutateVar;
 use crate::ast::break_node::BreakNode;
+use crate::ast::if_node::IfNode;
 use crate::ast::Node;
 use crate::ast::statements_node::StatementsNode;
 use crate::ast::str_node::StrNode;
@@ -189,6 +190,11 @@ impl Parser {
         if self.peak_matches(TokenType::Identifier, Some("for".to_string())) {
             self.advance(&mut res);
             res.node = res.register(self.for_loop());
+            return res;
+        }
+        if self.peak_matches(TokenType::Identifier, Some("if".to_string())) {
+            self.advance(&mut res);
+            res.node = res.register(self.if_expr());
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("break".to_string())) {
@@ -532,20 +538,37 @@ impl Parser {
     }
 
     fn for_loop(&mut self) -> ParseResults {
-
         let mut res = ParseResults::new();
 
         self.consume(&mut res, TokenType::LBrace);
         if res.error.is_some() { return res; }
 
         let statements = res.register(self.statements());
-
         if res.error.is_some() { return res; }
 
         self.consume(&mut res, TokenType::RBrace);
         if res.error.is_some() { return res; }
 
         res.success(Box::new(ForLoopNode::new(statements.unwrap())));
+        res
+    }
+
+    fn if_expr(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        let comparison = res.register(self.expression());
+        if res.error.is_some() { return res; }
+
+        self.consume(&mut res, TokenType::LBrace);
+        if res.error.is_some() { return res; }
+
+        let statements = res.register(self.statements());
+        if res.error.is_some() { return res; }
+
+        self.consume(&mut res, TokenType::RBrace);
+        if res.error.is_some() { return res; }
+
+        res.success(Box::new(IfNode::new(comparison.unwrap(), statements.unwrap())));
         res
     }
 }

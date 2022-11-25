@@ -12,6 +12,7 @@ pub mod glob_var_decl;
 pub mod mutate_var;
 pub mod for_loop;
 pub mod break_node;
+pub mod if_node;
 
 pub const ANON_DATA_PREFIX: &str = "__ANON_DATA_";
 
