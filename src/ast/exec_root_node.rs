@@ -19,7 +19,7 @@ impl ExecRootNode {
 
 impl Node for ExecRootNode {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
-        // println!("Generating assembly for program: {:?}", self);
+        //println!("Generating assembly for program: {:?}", self.statement);
         if let Some(statement) = &mut self.statement {
 
             let res = statement.asm(ctx)?;

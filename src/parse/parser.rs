@@ -3,9 +3,11 @@ use crate::ast::arith_unary_op_node::{ArithmeticUnaryOpNode, ArithUnaryOp};
 use crate::ast::const_decl::ConstDecl;
 use crate::ast::exec_root_node::ExecRootNode;
 use crate::ast::fn_call_node::FnCallNode;
+use crate::ast::for_loop::ForLoopNode;
 use crate::ast::glob_var_decl::GlobVarDecl;
 use crate::ast::int_node::IntNode;
 use crate::ast::mutate_var::MutateVar;
+use crate::ast::break_node::BreakNode;
 use crate::ast::Node;
 use crate::ast::statements_node::StatementsNode;
 use crate::ast::str_node::StrNode;
@@ -52,23 +54,27 @@ impl Parser {
         res
     }
 
-    fn advance(&mut self, res: Option<&mut ParseResults>) -> Token {
+    fn advance(&mut self, res: &mut ParseResults) -> Token {
         if self.tok_idx >= self.tokens.len() {
             panic!("Unexpected end of input at token {}", self.tok_idx);
         }
 
-        if let Some(res) = res {
-            res.register_advancement();
-        }
+        res.register_advancement();
 
         self.tok_idx += 1;
         self.tokens[self.tok_idx-1].clone()
     }
 
+    fn reverse (&mut self, amount: usize) -> Option<Token> {
+        self.tok_idx -= amount;
+        // Can't go backwards and not have a token there
+        self.try_peak()
+    }
+
     fn consume(&mut self, res: &mut ParseResults, tok_type: TokenType) {
         if let Some(tok) = self.try_peak() {
             if tok.token_type == tok_type {
-                self.advance(Some(res));
+                self.advance(res);
                 return;
             }
 
@@ -114,34 +120,81 @@ impl Parser {
         Some(self.tokens[self.tok_idx].clone())
     }
 
-    fn statements(&mut self) -> ParseResults {
-        let mut res = ParseResults::new();
-        let mut statements = Vec::new();
-
-        while let Some(tok) = self.try_peak() {
-            if tok.token_type == TokenType::EndStatement {
-                self.advance(Some(&mut res));
-            } else {
-                let expr = res.register(self.statement());
-                if res.error.is_some() {
-                    return res;
-                }
-                statements.push(expr.unwrap());
-            }
+    fn clear_end_statements (&mut self, res: &mut ParseResults) {
+        while self.peak_matches(TokenType::EndStatement, None) {
+            self.advance(res);
         }
+    }
+
+    fn statements(&mut self) -> ParseResults {
+
+        let mut res = ParseResults::new();
+        let mut statements: Vec<Box<dyn Node>> = Vec::new();
+        self.clear_end_statements(&mut res);
+
+        let first_stmt = res.register(self.statement());
+
+        if res.error.is_some() {
+            return res;
+        }
+        if first_stmt.is_none() {
+            return res;
+        }
+
+        statements.push(first_stmt.unwrap());
+
+        let mut more_statements = true;
+
+        while true {
+            let mut nl_count = 0;
+            // @ts-ignore
+            while self.peak_matches(TokenType::EndStatement, None) {
+                self.advance(&mut res);
+                nl_count += 1;
+            }
+            if nl_count == 0 {
+                more_statements = false;
+            }
+            if !more_statements {
+                break;
+            }
+
+            let statement = res.try_register(self.statement());
+            if res.error.is_some() { return res; }
+            if statement.is_none() {
+                self.reverse(res.reverse_count);
+                continue;
+            }
+            statements.push(statement.unwrap());
+        }
+
+        self.clear_end_statements(&mut res);
 
         res.success(Box::new(StatementsNode::new(statements)));
         res
     }
 
     fn statement (&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
         if self.peak_matches(TokenType::Identifier, Some("const".to_string())) {
-            self.advance(None);
-            return self.const_decl();
+            self.advance(&mut res);
+            res.node = res.register(self.const_decl());
+            return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("var".to_string())) {
-            self.advance(None);
-            return self.var_decl();
+            self.advance(&mut res);
+            res.node = res.register(self.var_decl());
+            return res;
+        }
+        if self.peak_matches(TokenType::Identifier, Some("for".to_string())) {
+            self.advance(&mut res);
+            res.node = res.register(self.for_loop());
+            return res;
+        }
+        if self.peak_matches(TokenType::Identifier, Some("break".to_string())) {
+            self.advance(&mut res);
+            res.success(Box::new(BreakNode::new()));
+            return res;
         }
         self.expression()
     }
@@ -155,7 +208,7 @@ impl Parser {
         let name;
 
         if self.peak_matches(TokenType::Identifier, None) {
-            name = Some(self.advance(Some(&mut res)).literal.unwrap());
+            name = Some(self.advance(&mut res).literal.unwrap());
         } else {
             res.failure(syntax_error("Expected identifier".to_string()),
                 Some(self.tokens[self.tok_idx-1].start.clone()),
@@ -165,7 +218,7 @@ impl Parser {
         }
 
         if self.peak_matches(TokenType::Equals, None) {
-            self.advance(Some(&mut res));
+            self.advance(&mut res);
         } else {
             res.failure(syntax_error("Expected '='".to_string()),
                 Some(self.tokens[self.tok_idx-1].start.clone()),
@@ -176,12 +229,12 @@ impl Parser {
 
         if let Some(tok) = self.try_peak() {
             if tok.token_type == TokenType::Int {
-                self.advance(Some(&mut res));
+                self.advance(&mut res);
                 let value = tok.literal.unwrap().parse::<i64>().unwrap();
                 res.success(Box::new(ConstDecl::new(name.unwrap(), value)));
                 return res;
             } else if tok.token_type == TokenType::String {
-                self.advance(Some(&mut res));
+                self.advance(&mut res);
                 res.success(Box::new(ConstDecl::new(name.unwrap(), tok.literal.unwrap())));
                 return res;
             }
@@ -203,7 +256,7 @@ impl Parser {
         let name;
 
         if self.peak_matches(TokenType::Identifier, None) {
-            name = Some(self.advance(Some(&mut res)).literal.unwrap());
+            name = Some(self.advance(&mut res).literal.unwrap());
         } else {
             res.failure(syntax_error("Expected identifier".to_string()),
                         Some(self.tokens[self.tok_idx-1].start.clone()),
@@ -213,7 +266,7 @@ impl Parser {
         }
 
         if self.peak_matches(TokenType::Equals, None) {
-            self.advance(Some(&mut res));
+            self.advance(&mut res);
         } else {
             res.failure(syntax_error("Expected '='".to_string()),
                         Some(self.tokens[self.tok_idx-1].start.clone()),
@@ -224,7 +277,7 @@ impl Parser {
 
         if let Some(tok) = self.try_peak() {
             if tok.token_type == TokenType::Int {
-                self.advance(Some(&mut res));
+                self.advance(&mut res);
                 let value = tok.literal.unwrap().parse::<i64>().unwrap();
                 res.success(Box::new(GlobVarDecl::new(name.unwrap(), value)));
                 return res;
@@ -250,7 +303,7 @@ impl Parser {
                 return self.compound(None);
             }
             if tok.token_type == TokenType::Sub {
-                self.advance(Some(&mut res));
+                self.advance(&mut res);
                 let exp = res.register(self.unary_expr());
                 if res.error.is_some() {
                     return res;
@@ -276,7 +329,7 @@ impl Parser {
         while let Some(op) = self.try_peak() {
             match op.token_type {
                 TokenType::Astrix | TokenType::FSlash => {
-                    self.advance(Some(&mut res));
+                    self.advance(&mut res);
 
                     let rhs = res.register(self.unary_expr());
                     if res.error.is_some() {
@@ -291,7 +344,7 @@ impl Parser {
                     )));
                 }
                 TokenType::Ampersand => {
-                    self.advance(Some(&mut res));
+                    self.advance(&mut res);
 
                     let rhs = res.register(self.unary_expr());
                     if res.error.is_some() {
@@ -323,7 +376,7 @@ impl Parser {
             if !(op.token_type == TokenType::Plus || op.token_type == TokenType::Sub) {
                 break;
             }
-            self.advance(Some(&mut res));
+            self.advance(&mut res);
 
             let rhs = res.register(self.term());
             if res.error.is_some() {
@@ -368,7 +421,7 @@ impl Parser {
         if let Some(t) = self.try_peak() {
             // fn(), no arguments
             if t.token_type == TokenType::RParen {
-                self.advance(Some(&mut res));
+                self.advance(&mut res);
                 res.success(Box::new(FnCallNode::new(fn_identifier_tok.literal.unwrap(), Vec::new())));
                 return res;
             }
@@ -388,7 +441,7 @@ impl Parser {
                 if t.token_type == TokenType::RParen {
                     break;
                 }  else if t.token_type == TokenType::Comma {
-                    self.advance(Some(&mut res));
+                    self.advance(&mut res);
                 } else {
                     res.failure(
                         syntax_error("Expected ',' or ')'".to_owned()),
@@ -421,9 +474,7 @@ impl Parser {
         self.consume(&mut res, TokenType::Equals);
 
         let value = res.register(self.expression());
-        if res.error.is_some() {
-            return res;
-        }
+        if res.error.is_some() { return res; }
 
         res.success(Box::new(MutateVar::new(id_tok.literal.unwrap(), value.unwrap())));
 
@@ -432,7 +483,7 @@ impl Parser {
 
     fn atom(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
-        let tok = self.advance(Some(&mut res));
+        let tok = self.advance(&mut res);
         match tok.token_type {
             TokenType::Int => {
                 let value = tok.literal.unwrap();
@@ -449,7 +500,6 @@ impl Parser {
                 if res.error.is_some() {
                     return res;
                 }
-                println!("after expr {:?}", self.try_peak());
                 self.consume(&mut res, TokenType::RParen);
                 if res.error.is_some() {
                     return res;
@@ -479,5 +529,23 @@ impl Parser {
                 res
             }
         }
+    }
+
+    fn for_loop(&mut self) -> ParseResults {
+
+        let mut res = ParseResults::new();
+
+        self.consume(&mut res, TokenType::LBrace);
+        if res.error.is_some() { return res; }
+
+        let statements = res.register(self.statements());
+
+        if res.error.is_some() { return res; }
+
+        self.consume(&mut res, TokenType::RBrace);
+        if res.error.is_some() { return res; }
+
+        res.success(Box::new(ForLoopNode::new(statements.unwrap())));
+        res
     }
 }

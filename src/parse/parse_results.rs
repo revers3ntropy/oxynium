@@ -7,9 +7,9 @@ pub struct ParseResults {
     pub node: Option<Box<dyn Node>>,
     pub error: Option<Error>,
 
-    pub reverse_count: i64,
-    pub last_registered_advance_count: i64,
-    pub advance_count: i64,
+    pub reverse_count: usize,
+    pub last_registered_advance_count: usize,
+    pub advance_count: usize,
 }
 
 impl ParseResults {
@@ -24,8 +24,8 @@ impl ParseResults {
     }
 
     pub fn register_advancement(&mut self) {
-        self.advance_count += 1;
-        self.advance_count = 0;
+        self.advance_count = 1;
+        self.last_registered_advance_count += 1;
     }
 
     pub fn register(&mut self, res: ParseResults) -> Option<Box<dyn Node>> {
@@ -35,6 +35,14 @@ impl ParseResults {
             self.error = res.error;
         }
         res.node
+    }
+
+    pub fn try_register (&mut self, res: ParseResults) -> Option<Box<dyn Node>> {
+        if res.error.is_some() {
+            self.reverse_count += res.advance_count;
+            return None;
+        }
+        self.register(res)
     }
 
     pub fn success(&mut self, node: Box<dyn Node>) -> &ParseResults {

@@ -15,6 +15,8 @@ pub enum TokenType {
     EndStatement,
     String,
     Equals,
+    LBrace,
+    RBrace
 }
 
 #[derive(Debug)]
