@@ -2,21 +2,31 @@ use crate::position::Position;
 
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub enum TokenType {
-    Int,
-    Plus,
-    Sub,
-    Astrix,
-    FSlash,
-    LParen,
-    RParen,
-    Ampersand,
-    Identifier,
-    Comma,
-    EndStatement,
-    String,
-    Equals,
-    LBrace,
-    RBrace
+    Int,          // 123
+    Plus,         // +
+    Sub,          // -
+    Astrix,       // *
+    FSlash,       // /
+    LParen,       // (
+    RParen,       // )
+    Ampersand,    // &
+    Percent,      // %
+    Identifier,   // foo
+    Comma,        // ,
+    EndStatement, // ;
+    String,       // "foo"
+    Equals,       // =
+    DblEquals,    // ==
+    LBrace,       // {
+    RBrace,       // }
+    Or,           // ||
+    And,          // &&
+    Not,          // !
+    GT,           // >
+    LT,           // <
+    GTE,          // >=
+    LTE,          // <=
+    NotEquals,    // !=
 }
 
 #[derive(Debug)]

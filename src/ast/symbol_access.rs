@@ -4,20 +4,12 @@ use crate::error::{Error, unknown_symbol};
 
 #[derive(Debug)]
 pub struct SymbolAccess {
-    identifier: String
-}
-
-impl SymbolAccess {
-    pub fn new(identifier: String) -> SymbolAccess {
-        SymbolAccess {
-            identifier
-        }
-    }
+    pub identifier: String
 }
 
 impl Node for SymbolAccess {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
-        if !ctx.symbol_exists(&self.identifier) {
+        if !ctx.has_id(&self.identifier) {
             return Err(unknown_symbol(format!("Symbol '{}' does not exist", self.identifier)));
         }
         Ok(format!("

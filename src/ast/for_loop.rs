@@ -4,15 +4,7 @@ use crate::error::Error;
 
 #[derive(Debug)]
 pub struct ForLoopNode {
-    statements: Box<dyn Node>
-}
-
-impl ForLoopNode {
-    pub fn new(statements: Box<dyn Node>) -> ForLoopNode {
-        ForLoopNode {
-            statements
-        }
-    }
+    pub statements: Box<dyn Node>
 }
 
 impl Node for ForLoopNode {

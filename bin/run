@@ -11,13 +11,14 @@ NC='\033[0m'
 
 # compile, link and assemble the program
 export RUST_BACKTRACE=1
+bin/compile_std
 cargo run -- "$@"
 
 if test -f "./out.asm"; then
   nasm -f elf64 out.asm
 
   if test -f "./out.o"; then
-    ld -s -o out out.o
+    ld -s -o out out.o std.o
   fi
 fi
 

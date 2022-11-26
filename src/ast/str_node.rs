@@ -4,21 +4,13 @@ use crate::error::Error;
 
 #[derive(Debug)]
 pub struct StrNode {
-    value: String
-}
-
-impl StrNode {
-    pub fn new(value: String) -> StrNode {
-        StrNode {
-            value
-        }
-    }
+    pub value: String
 }
 
 impl Node for StrNode {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
         let data = format!("dq \"{}\", 0", self.value);
-        let reference = ctx.declare(data);
+        let reference = ctx.declare_anon_data(data, true);
         Ok(format!("push {}", reference))
     }
 }

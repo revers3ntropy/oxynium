@@ -14,6 +14,7 @@ tests_started=0
 
 function setup () {
   cargo build -r
+  bin/compile_std
 }
 
 function describe () {
@@ -46,13 +47,13 @@ function expect() {
       echo "$code" > in.oxy
 
       export RUST_BACKTRACE=1
-      ./target/release/oxynium -x in.oxy
+      ./target/release/oxynium -x=1 in.oxy
 
       if test -f "./out.asm"; then
           nasm -f elf64 out.asm
 
           if test -f "./out.o"; then
-            ld -s -o out out.o
+            ld -s -o out out.o std.o
           fi
       fi
     } 2>&1 > /dev/null)

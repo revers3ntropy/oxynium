@@ -177,7 +177,7 @@ print_stack: ; [value: any, cb: *] => []
     ; check if we are not already at base of stack
     mov rax, rsp
     cmp rax, rbp
-    je __print_stack_end
+    jge __print_stack_end
 
     pop rdi
     pop rax

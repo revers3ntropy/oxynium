@@ -4,17 +4,8 @@ use crate::error::Error;
 
 #[derive(Debug)]
 pub struct MutateVar {
-    identifier: String,
-    value: Box<dyn Node>
-}
-
-impl MutateVar {
-    pub fn new(identifier: String, value: Box<dyn Node>) -> MutateVar {
-        MutateVar {
-            identifier,
-            value
-        }
-    }
+    pub identifier: String,
+    pub value: Box<dyn Node>
 }
 
 impl Node for MutateVar {

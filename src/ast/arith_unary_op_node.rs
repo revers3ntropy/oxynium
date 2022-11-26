@@ -1,31 +1,18 @@
 use crate::ast::Node;
 use crate::context::Context;
 use crate::error::Error;
-
-#[derive(Debug)]
-pub enum ArithUnaryOp {
-    Minus
-}
+use crate::parse::token::{Token, TokenType};
 
 #[derive(Debug)]
 pub struct ArithmeticUnaryOpNode {
-    operator: ArithUnaryOp,
-    rhs: Box<dyn Node>
-}
-
-impl ArithmeticUnaryOpNode {
-    pub fn new(operator: ArithUnaryOp, rhs: Box<dyn Node>) -> ArithmeticUnaryOpNode {
-        ArithmeticUnaryOpNode {
-            operator,
-            rhs
-        }
-    }
+    pub(crate) operator: Token,
+    pub(crate) rhs: Box<dyn Node>
 }
 
 impl Node for ArithmeticUnaryOpNode {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
-        Ok(match self.operator {
-            ArithUnaryOp::Minus => {
+        Ok(match self.operator.token_type {
+            TokenType::Sub => {
                 format!("
                     {}
                     pop rcx
@@ -37,6 +24,7 @@ impl Node for ArithmeticUnaryOpNode {
                     self.rhs.asm(ctx)?
                 )
             }
+            _ => panic!("Invalid arithmetic unary operator: {:?}", self.operator)
         })
     }
 }

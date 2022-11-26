@@ -1,6 +1,7 @@
 use crate::parse::token::{Token, TokenType};
 use crate::position::Position;
 use phf::phf_map;
+use crate::error::{Error, syntax_error};
 
 static IDENTIFIER_CHARS: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
 
@@ -11,12 +12,25 @@ const SINGLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
     "/" => TokenType::FSlash,
     "(" => TokenType::LParen,
     ")" => TokenType::RParen,
-    "%" => TokenType::Ampersand,
+    "%" => TokenType::Percent,
+    "&" => TokenType::Ampersand,
     "," => TokenType::Comma,
     ";" => TokenType::EndStatement,
     "=" => TokenType::Equals,
+    "=="=> TokenType::DblEquals,
     "{" => TokenType::LBrace,
     "}" => TokenType::RBrace,
+    "!" => TokenType::Not,
+    ">" => TokenType::GT,
+    "<" => TokenType::LT,
+};
+
+const DOUBLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
+    "||" => TokenType::Or,
+    "&&" => TokenType::And,
+    ">=" => TokenType::GTE,
+    "<=" => TokenType::LTE,
+    "!=" => TokenType::NotEquals,
 };
 
 pub struct Lexer {
@@ -47,11 +61,11 @@ impl Lexer {
         current_char
     }
 
-    pub fn lex(&mut self) -> Vec<Token> {
+    pub fn lex(&mut self) -> Result<Vec<Token>, Error> {
         let mut tokens = Vec::new();
 
         if self.input.len() == 0 {
-            return tokens;
+            return Ok(tokens);
         }
 
         self.advance();
@@ -76,6 +90,7 @@ impl Lexer {
 
             } else if c.is_whitespace() {
                 self.advance();
+
             } else if c == '"' {
                 tokens.push(self.make_string());
 
@@ -88,12 +103,34 @@ impl Lexer {
                 ));
                 self.advance();
 
+            } else if DOUBLE_CHAR_TOKENS.contains_key(&(
+                c.to_string() +
+                    &self.input.chars()
+                        .nth((self.position.idx + 1) as usize)
+                        .unwrap_or('\0')
+                        .to_string()
+            )) {
+                tokens.push(Token::new(
+                    DOUBLE_CHAR_TOKENS[&(
+                        c.to_string() +
+                            &self.input.chars()
+                                .nth((self.position.idx + 1) as usize)
+                                .unwrap_or('\0')
+                                .to_string())
+                        ],
+                    None,
+                    self.position.clone(),
+                    self.position.clone()
+                ));
+                self.advance();
+                self.advance();
+
             } else {
-                panic!("Unexpected character: {}", c)
+                return Err(syntax_error(format!("Unexpected character '{}'", c)));
             }
         }
 
-        tokens
+        Ok(tokens)
     }
 
     fn make_identifier(&mut self) -> Token {

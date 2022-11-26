@@ -1,10 +1,9 @@
-use crate::ast::arith_bin_op_node::ArithmeticBinOpNode;
-use crate::ast::arith_unary_op_node::{ArithmeticUnaryOpNode, ArithUnaryOp};
-use crate::ast::const_decl::ConstDecl;
-use crate::ast::exec_root_node::ExecRootNode;
+use crate::ast::bin_op_node::BinOpNode;
+use crate::ast::arith_unary_op_node::{ArithmeticUnaryOpNode};
+use crate::ast::const_decl::{ConstDeclNode, EmptyConstDeclNode};
+use crate::ast::exec_root_node::{EmptyExecRootNode, ExecRootNode};
 use crate::ast::fn_call_node::FnCallNode;
 use crate::ast::for_loop::ForLoopNode;
-use crate::ast::glob_var_decl::GlobVarDecl;
 use crate::ast::int_node::IntNode;
 use crate::ast::mutate_var::MutateVar;
 use crate::ast::break_node::BreakNode;
@@ -13,7 +12,6 @@ use crate::ast::Node;
 use crate::ast::statements_node::StatementsNode;
 use crate::ast::str_node::StrNode;
 use crate::ast::symbol_access::SymbolAccess;
-use crate::ast::term_bin_op_node::TermBinOpNode;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
 use crate::error::syntax_error;
@@ -32,20 +30,16 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> ParseResults {
-        //println!("Parsing tokens: {:?}", self.tokens);
-
         let mut res = ParseResults::new();
 
         if self.tokens.len() == 0 {
-            res.success(Box::new(ExecRootNode::new(None)));
+            res.success(Box::new(EmptyExecRootNode { }));
             return res;
         }
 
         let expr = res.register(self.statements());
-        if res.error.is_some() {
-            return res;
-        }
-        let root_node = ExecRootNode::new(expr);
+        if res.error.is_some() { return res; }
+        let root_node = ExecRootNode { statements: expr.unwrap() };
 
         if self.tok_idx < self.tokens.len() {
             panic!("Unexpected token: {:?}", self.tokens[self.tok_idx]);
@@ -55,15 +49,9 @@ impl Parser {
         res
     }
 
-    fn advance(&mut self, res: &mut ParseResults) -> Token {
-        if self.tok_idx >= self.tokens.len() {
-            panic!("Unexpected end of input at token {}", self.tok_idx);
-        }
-
+    fn advance(&mut self, res: &mut ParseResults) {
         res.register_advancement();
-
         self.tok_idx += 1;
-        self.tokens[self.tok_idx-1].clone()
     }
 
     fn reverse (&mut self, amount: usize) -> Option<Token> {
@@ -127,6 +115,36 @@ impl Parser {
         }
     }
 
+    fn bin_op <Fa, Fb>(&mut self, mut func_a: Fa, ops: Vec<TokenType>, mut func_b: Fb) -> ParseResults
+        where Fa: FnMut(&mut Self) -> ParseResults
+            , Fb: FnMut(&mut Self) -> ParseResults
+    {
+        let mut res = ParseResults::new();
+        let mut left = res.register(func_a(self));
+        if res.error.is_some() { return res; }
+
+        while
+            self.try_peak().is_some() &&
+            ops.contains(&self.try_peak().unwrap().token_type)
+        {
+            let op_tok = self.try_peak();
+            self.advance(&mut res);
+
+            let right = res.register(func_b(self));
+
+            if res.error.is_some() { return res; }
+            left = Some(Box::new(BinOpNode {
+                lhs: left.unwrap(),
+                operator: op_tok.unwrap(),
+                rhs: right.unwrap()
+            }));
+        }
+
+        if res.error.is_some() { return res; }
+        res.success(left.unwrap());
+        res
+    }
+
     fn statements(&mut self) -> ParseResults {
 
         let mut res = ParseResults::new();
@@ -146,7 +164,7 @@ impl Parser {
 
         let mut more_statements = true;
 
-        while true {
+        loop {
             let mut nl_count = 0;
             // @ts-ignore
             while self.peak_matches(TokenType::EndStatement, None) {
@@ -171,7 +189,7 @@ impl Parser {
 
         self.clear_end_statements(&mut res);
 
-        res.success(Box::new(StatementsNode::new(statements)));
+        res.success(Box::new(StatementsNode { statements }));
         res
     }
 
@@ -179,12 +197,12 @@ impl Parser {
         let mut res = ParseResults::new();
         if self.peak_matches(TokenType::Identifier, Some("const".to_string())) {
             self.advance(&mut res);
-            res.node = res.register(self.const_decl());
+            res.node = res.register(self.var_decl(false));
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("var".to_string())) {
             self.advance(&mut res);
-            res.node = res.register(self.var_decl());
+            res.node = res.register(self.var_decl(true));
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("for".to_string())) {
@@ -199,22 +217,48 @@ impl Parser {
         }
         if self.peak_matches(TokenType::Identifier, Some("break".to_string())) {
             self.advance(&mut res);
-            res.success(Box::new(BreakNode::new()));
+            res.success(Box::new(BreakNode { }));
             return res;
         }
         self.expression()
     }
 
     fn expression (&mut self) -> ParseResults {
-        self.arithmetic_expr()
+        let mut res = ParseResults::new();
+        self.clear_end_statements(&mut res);
+        if res.error.is_some() { return res; }
+        self.bin_op(
+            |this| this.comparison_expr(),
+            vec![TokenType::And, TokenType::Or],
+            |this| this.comparison_expr(),
+        )
     }
 
-    fn const_decl(&mut self) -> ParseResults {
+    fn comparison_expr (&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        let node = res.register(self.bin_op(
+            |this| this.arithmetic_expr(),
+            vec![
+                TokenType::DblEquals, TokenType::NotEquals,
+                TokenType::GT, TokenType::GTE,
+                TokenType::LTE, TokenType::LT
+            ],
+            |this| this.arithmetic_expr(),
+        ));
+
+        if res.error.is_some() { return res; }
+        res.success(node.unwrap());
+        res
+    }
+
+    fn var_decl(&mut self, is_var: bool) -> ParseResults {
         let mut res = ParseResults::new();
         let name;
 
         if self.peak_matches(TokenType::Identifier, None) {
-            name = Some(self.advance(&mut res).literal.unwrap());
+            name = Some(self.try_peak().unwrap().literal.unwrap());
+            self.advance(&mut res);
         } else {
             res.failure(syntax_error("Expected identifier".to_string()),
                 Some(self.tokens[self.tok_idx-1].start.clone()),
@@ -226,10 +270,9 @@ impl Parser {
         if self.peak_matches(TokenType::Equals, None) {
             self.advance(&mut res);
         } else {
-            res.failure(syntax_error("Expected '='".to_string()),
-                Some(self.tokens[self.tok_idx-1].start.clone()),
-                Some(self.tokens[self.tok_idx].end.clone())
-            );
+            res.success(Box::new(EmptyConstDeclNode {
+                identifier: name.unwrap()
+            }));
             return res;
         }
 
@@ -237,11 +280,17 @@ impl Parser {
             if tok.token_type == TokenType::Int {
                 self.advance(&mut res);
                 let value = tok.literal.unwrap().parse::<i64>().unwrap();
-                res.success(Box::new(ConstDecl::new(name.unwrap(), value)));
+                res.success(Box::new(ConstDeclNode {
+                    identifier: name.unwrap(),
+                    value
+                }));
                 return res;
             } else if tok.token_type == TokenType::String {
                 self.advance(&mut res);
-                res.success(Box::new(ConstDecl::new(name.unwrap(), tok.literal.unwrap())));
+                res.success(Box::new(ConstDeclNode {
+                    identifier: name.unwrap(),
+                    value: tok.literal.unwrap()
+                }));
                 return res;
             }
             res.failure(syntax_error("Expected int or str".to_string()),
@@ -257,67 +306,18 @@ impl Parser {
         return res;
     }
 
-    fn var_decl(&mut self) -> ParseResults {
-        let mut res = ParseResults::new();
-        let name;
-
-        if self.peak_matches(TokenType::Identifier, None) {
-            name = Some(self.advance(&mut res).literal.unwrap());
-        } else {
-            res.failure(syntax_error("Expected identifier".to_string()),
-                        Some(self.tokens[self.tok_idx-1].start.clone()),
-                        Some(self.tokens[self.tok_idx-1].end.clone())
-            );
-            return res;
-        }
-
-        if self.peak_matches(TokenType::Equals, None) {
-            self.advance(&mut res);
-        } else {
-            res.failure(syntax_error("Expected '='".to_string()),
-                        Some(self.tokens[self.tok_idx-1].start.clone()),
-                        Some(self.tokens[self.tok_idx].end.clone())
-            );
-            return res;
-        }
-
-        if let Some(tok) = self.try_peak() {
-            if tok.token_type == TokenType::Int {
-                self.advance(&mut res);
-                let value = tok.literal.unwrap().parse::<i64>().unwrap();
-                res.success(Box::new(GlobVarDecl::new(name.unwrap(), value)));
-                return res;
-            }
-            res.failure(syntax_error("Expected int".to_string()),
-                        Some(self.tokens[self.tok_idx-1].start.clone()),
-                        Some(self.tokens[self.tok_idx-1].end.clone())
-            );
-            return res;
-        }
-        res.failure(syntax_error("Unexpected EOF".to_string()),
-                    Some(self.tokens[self.tok_idx-1].start.clone()),
-                    Some(self.tokens[self.tok_idx-1].end.clone())
-        );
-        return res;
-    }
-
     fn unary_expr(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
 
         if let Some(tok) = self.try_peak() {
-            if tok.token_type == TokenType::Plus {
-                return self.compound(None);
-            }
-            if tok.token_type == TokenType::Sub {
+            if tok.token_type == TokenType::Not {
                 self.advance(&mut res);
-                let exp = res.register(self.unary_expr());
-                if res.error.is_some() {
-                    return res;
-                }
-                res.success(Box::new(ArithmeticUnaryOpNode::new(
-                    ArithUnaryOp::Minus,
-                    exp.unwrap()
-                )));
+                let node = res.register(self.unary_expr());
+                if res.error.is_some() { return res; }
+                res.success(Box::new(ArithmeticUnaryOpNode {
+                    operator: tok,
+                    rhs: node.unwrap()
+                }));
                 return res;
             }
         }
@@ -325,79 +325,40 @@ impl Parser {
         self.compound(None)
     }
 
-    fn term(&mut self) -> ParseResults {
+    fn factor(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
-        let mut lhs = res.register(self.unary_expr());
-        if res.error.is_some() {
-            return res;
-        }
+        let tok = self.try_peak();
 
-        while let Some(op) = self.try_peak() {
-            match op.token_type {
-                TokenType::Astrix | TokenType::FSlash => {
-                    self.advance(&mut res);
-
-                    let rhs = res.register(self.unary_expr());
-                    if res.error.is_some() {
-                        return res;
-                    }
-
-                    lhs = Some(Box::new(TermBinOpNode::new(
-                        lhs.unwrap(),
-                        (if op.token_type == TokenType::Astrix { "imul"  } else { "idiv" }).to_owned(),
-                        rhs.unwrap(),
-                        "rax".to_owned()
-                    )));
-                }
-                TokenType::Ampersand => {
-                    self.advance(&mut res);
-
-                    let rhs = res.register(self.unary_expr());
-                    if res.error.is_some() {
-                        return res;
-                    }
-                    lhs = Some(Box::new(TermBinOpNode::new(
-                        lhs.unwrap(),
-                        "idiv".to_owned(),
-                        rhs.unwrap(),
-                        "rdx".to_owned()
-                    )));
-                }
-                _ => break,
+        if let Some(t) = tok {
+            if t.token_type == TokenType::Sub {
+                self.advance(&mut res);
+                let factor = res.register(self.factor());
+                if res.error.is_some() { return res; }
+                res.success(Box::new(ArithmeticUnaryOpNode {
+                    operator: t,
+                    rhs: factor.unwrap()
+                }));
+                return res;
             }
         }
 
-        res.success(lhs.unwrap());
-        res
+        self.unary_expr()
+    }
+
+    fn term(&mut self) -> ParseResults {
+        self.bin_op(
+            |this| this.factor(),
+            vec![TokenType::Astrix, TokenType::FSlash, TokenType::Percent],
+            |this| this.factor(),
+        )
     }
 
     fn arithmetic_expr(&mut self) -> ParseResults {
-        let mut res = ParseResults::new();
-        let mut lhs = res.register(self.term());
-        if res.error.is_some() {
-            return res;
-        }
-
-        while let Some(op) = self.try_peak() {
-            if !(op.token_type == TokenType::Plus || op.token_type == TokenType::Sub) {
-                break;
-            }
-            self.advance(&mut res);
-
-            let rhs = res.register(self.term());
-            if res.error.is_some() {
-                return res;
-            }
-
-            lhs = Some(Box::new(ArithmeticBinOpNode::new(
-                lhs.unwrap(),
-                (if op.token_type == TokenType::Plus { "add"  } else { "sub" }).to_owned(),
-                rhs.unwrap()
-            )));
-        }
-
-        res.success(lhs.unwrap());
-        res
+        self.bin_op(
+            |this| this.term(),
+            vec![TokenType::Plus, TokenType::Sub],
+            |this| this.term(),
+        )
     }
 
     fn compound(&mut self, base_option: Option<Box<dyn Node>>) -> ParseResults {
@@ -408,9 +369,7 @@ impl Parser {
             base = base_option.unwrap();
         } else {
             let atom = res.register(self.atom());
-            if res.error.is_some() {
-                return res;
-            }
+            if res.error.is_some() { return res; }
             base = atom.unwrap();
         }
 
@@ -428,14 +387,17 @@ impl Parser {
             // fn(), no arguments
             if t.token_type == TokenType::RParen {
                 self.advance(&mut res);
-                res.success(Box::new(FnCallNode::new(fn_identifier_tok.literal.unwrap(), Vec::new())));
+                res.success(Box::new(FnCallNode {
+                    identifier: fn_identifier_tok.literal.unwrap(),
+                    args: Vec::new()
+                }));
                 return res;
             }
         }
 
         let mut args = Vec::new();
 
-        while true {
+        loop {
             let parameter = res.register(self.expression());
             if res.error.is_some() {
                 return res;
@@ -470,7 +432,10 @@ impl Parser {
         self.consume(&mut res, TokenType::RParen);
         if res.error.is_some() { return res; }
 
-        res.success(Box::new(FnCallNode::new(fn_identifier_tok.literal.unwrap(), args)));
+        res.success(Box::new(FnCallNode {
+            identifier: fn_identifier_tok.literal.unwrap(),
+            args
+        }));
         res
     }
 
@@ -482,38 +447,53 @@ impl Parser {
         let value = res.register(self.expression());
         if res.error.is_some() { return res; }
 
-        res.success(Box::new(MutateVar::new(id_tok.literal.unwrap(), value.unwrap())));
+        res.success(Box::new(MutateVar {
+            identifier: id_tok.literal.unwrap(),
+            value: value.unwrap()
+        }));
 
         res
     }
 
     fn atom(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
-        let tok = self.advance(&mut res);
+        if res.error.is_some() { return res; }
+
+        let token_option = self.try_peak();
+        if token_option.is_none() {
+            res.failure(syntax_error("Unexpected EOF".to_string()),
+                        Some(self.tokens[self.tok_idx-1].start.clone()),
+                        Some(self.tokens[self.tok_idx-1].end.clone())
+            );
+            return res;
+        }
+        let tok = token_option.unwrap();
         match tok.token_type {
             TokenType::Int => {
+                self.advance(&mut res);
                 let value = tok.literal.unwrap();
-                res.success(Box::new(IntNode::new(value.parse::<i64>().unwrap())));
-                res
+                res.success(Box::new(IntNode {
+                    value: value.parse::<i64>().unwrap()
+                }));
             },
             TokenType::String => {
+                self.advance(&mut res);
                 let value = tok.literal.unwrap();
-                res.success(Box::new(StrNode::new(value)));
-                res
+                res.success(Box::new(StrNode { value }));
             },
             TokenType::LParen => {
+                self.advance(&mut res);
+
                 let expr = res.register(self.expression());
-                if res.error.is_some() {
-                    return res;
-                }
+                if res.error.is_some() { return res; }
+
                 self.consume(&mut res, TokenType::RParen);
-                if res.error.is_some() {
-                    return res;
-                }
+                if res.error.is_some() { return res; }
+
                 res.success(expr.unwrap());
-                res
             },
             TokenType::Identifier => {
+                self.advance(&mut res);
                 if let Some(next) = self.try_peak() {
                     if next.token_type == TokenType::LParen {
                         return self.function_call(tok);
@@ -523,8 +503,9 @@ impl Parser {
                     }
                 }
 
-                res.success(Box::new(SymbolAccess::new(tok.literal.unwrap())));
-                res
+                res.success(Box::new(SymbolAccess {
+                    identifier: tok.literal.unwrap()
+                }));
             },
             _ => {
                 res.failure(
@@ -532,9 +513,9 @@ impl Parser {
                     Some(tok.start),
                     Some(tok.end),
                 );
-                res
             }
-        }
+        };
+        res
     }
 
     fn for_loop(&mut self) -> ParseResults {
@@ -549,7 +530,9 @@ impl Parser {
         self.consume(&mut res, TokenType::RBrace);
         if res.error.is_some() { return res; }
 
-        res.success(Box::new(ForLoopNode::new(statements.unwrap())));
+        res.success(Box::new(ForLoopNode {
+            statements: statements.unwrap()
+        }));
         res
     }
 
@@ -568,7 +551,10 @@ impl Parser {
         self.consume(&mut res, TokenType::RBrace);
         if res.error.is_some() { return res; }
 
-        res.success(Box::new(IfNode::new(comparison.unwrap(), statements.unwrap())));
+        res.success(Box::new(IfNode {
+            comparison: comparison.unwrap(),
+            body: statements.unwrap()
+        }));
         res
     }
 }

@@ -4,17 +4,8 @@ use crate::error::Error;
 
 #[derive(Debug)]
 pub struct FnCallNode {
-    identifier: String,
-    args: Vec<Box<dyn Node>>
-}
-
-impl FnCallNode {
-    pub fn new(identifier: String, args: Vec<Box<dyn Node>>) -> FnCallNode {
-        FnCallNode {
-            identifier,
-            args
-        }
-    }
+    pub identifier: String,
+    pub args: Vec<Box<dyn Node>>
 }
 
 impl Node for FnCallNode {

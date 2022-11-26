@@ -4,7 +4,7 @@ use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use clap::{arg, Command};
+use clap::{arg, ArgMatches, Command};
 
 mod parse;
 mod ast;
@@ -18,43 +18,89 @@ use crate::parse::parser::Parser;
 use crate::post_process::post_process;
 use crate::context::Context;
 
-const STD_OXY: &str = include_str!("../std/std.oxy");
-
+const STD_DOXY: &str = include_str!("../std/std.doxy");
 
 struct CompileResults {
     error: Option<String>,
-    asm: Option<String>
+    asm: Option<String>,
+    ctx: Context
 }
 
-fn execute (input: String, file_name: String, exec_mode: bool) -> CompileResults {
-    let mut lexer = Lexer::new((String::from(STD_OXY) + &*input).clone(), file_name);
+fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
+    let mut lexer = Lexer::new(STD_DOXY.to_owned(), "std.doxy".to_owned());
     let tokens = lexer.lex();
+    if tokens.is_err() {
+        return CompileResults {
+            error: Some(tokens.err().unwrap().str()),
+            asm: None,
+            ctx
+        };
+    }
 
-    let mut parser = Parser::new(tokens);
+    let mut parser = Parser::new(tokens.unwrap());
     let ast = parser.parse();
 
     if ast.error.is_some() {
         return CompileResults {
             error: Some(ast.error.unwrap().str()),
-            asm: None
+            asm: None,
+            ctx
         };
     }
 
-    let mut ctx = Context::new();
+    let _ = ast.node.unwrap().asm(&mut ctx);
+
+    println!("{:?}", ctx.get_global_vars());
+
+    CompileResults {
+        error: None,
+        asm: None,
+        ctx
+    }
+}
+
+fn execute (input: String, file_name: String, exec_mode: u8) -> CompileResults {
+    let ctx_res = setup_ctx_with_doxy(Context::new());
+    if ctx_res.error.is_some() { return ctx_res; }
+    let mut ctx = ctx_res.ctx;
+
+    let mut lexer = Lexer::new(input.clone(), file_name);
+    let tokens = lexer.lex();
+    if tokens.is_err() {
+        return CompileResults {
+            error: Some(tokens.err().unwrap().str()),
+            asm: None,
+            ctx
+        };
+    }
+
+    let mut parser = Parser::new(tokens.unwrap());
+    let ast = parser.parse();
+
+    if ast.error.is_some() {
+        return CompileResults {
+            error: Some(ast.error.unwrap().str()),
+            asm: None,
+            ctx
+        };
+    }
+
     ctx.exec_mode = exec_mode;
 
     let compile_res = ast.node.unwrap().asm(&mut ctx);
     if compile_res.is_err() {
         return CompileResults {
             error: Some(compile_res.err().unwrap().str()),
-            asm: None
+            asm: None,
+            ctx
         };
     }
 
     let asm = post_process(compile_res.unwrap());
     CompileResults {
         error: None,
-        asm: Some(asm)
+        asm: Some(asm),
+        ctx
     }
 }
 
@@ -63,33 +109,55 @@ struct Args {
     input: String,
     out: String,
     eval: String,
-    exec_mode: bool
+    exec_mode: u8
+}
+
+fn get_int_cli_arg (m: ArgMatches, name: &str, default: u8) -> u8 {
+    let res = m.get_one::<String>(name)
+        .unwrap_or(&String::from(default.to_string()))
+        .to_string()
+        .parse::<u8>();
+
+    if res.is_err() {
+        let mut e = std::io::stderr();
+        let _ = e.write(format!(
+            "warning: arg '{name}' must be an integer, using default value {default}"
+        ).as_bytes());
+    }
+
+    res.unwrap_or(default)
 }
 
 fn get_cli_args () -> Args {
+    let mut e = std::io::stderr();
+
     let cmd = Command::new("res")
         .args(&[
-            arg!(-o --out <FILE> "Where to put assembly output"),
-            arg!(-e --eval <EXPR> "Compiles and prints a single expression"),
-            arg!(-x --exec "Should print final expression"),
+            arg!(-o --out [FILE] "Where to put assembly output"),
+            arg!(-e --eval [EXPR] "Compiles and prints a single expression"),
+            arg!(-x --exec_mode [INT] "Exec mode"),
             arg!([input] "Input code to evaluate"),
         ]);
     let args: Vec<String> = env::args().collect();
     let matches = cmd.try_get_matches_from(args);
+    if matches.is_err() {
+        let _ = e.write(format!("{}", matches.err().unwrap()).as_bytes());
+        std::process::exit(1);
+    }
     let m = matches.expect("Failed to parse arguments");
 
     Args {
         out: m.get_one::<String>("out").unwrap_or(&String::from("out.asm")).to_string(),
         input: m.get_one::<String>("input").unwrap_or(&String::from("")).to_string(),
         eval: m.get_one::<String>("eval").unwrap_or(&String::from("")).to_string(),
-        exec_mode: m.get_one::<bool>("exec").unwrap_or(&false).to_owned()
+        exec_mode: get_int_cli_arg(m, "exec_mode", 0)
     }
 }
 
 fn print_usage () {
     println!("Usage: res [options] [input]");
     println!("Options:");
-    println!("  -o, --out  <FILE>  Where to put NASM output");
+    println!("  -o, --out  <FILE>  Where to put assembly output");
     println!("  -e, --eval <EXP>   Compiles and prints a single expression");
 }
 
@@ -99,14 +167,13 @@ fn main() -> std::io::Result<()> {
 
     let args = get_cli_args();
 
-
     if !args.input.is_empty() && !args.eval.is_empty() {
         let _ = e.write("Cannot specify both 'input' and 'eval' options\n".as_bytes());
         return Ok(());
     }
 
     if !args.eval.is_empty() {
-        let res = execute(args.eval, "CLI".to_owned(), true);
+        let res = execute(args.eval, "CLI".to_owned(), 1);
 
         if res.error.is_some() {
             let _ = e.write(format!("{}\n", res.error.unwrap()).as_bytes());

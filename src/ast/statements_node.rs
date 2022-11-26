@@ -4,15 +4,7 @@ use crate::error::Error;
 
 #[derive(Debug)]
 pub struct StatementsNode {
-    statements: Vec<Box<dyn Node>>
-}
-
-impl StatementsNode {
-    pub fn new(statements: Vec<Box<dyn Node>>) -> StatementsNode {
-        StatementsNode {
-            statements
-        }
-    }
+    pub statements: Vec<Box<dyn Node>>
 }
 
 impl Node for StatementsNode {

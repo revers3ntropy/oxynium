@@ -12,6 +12,7 @@ NC='\033[0m'
 errors=$({
   # compile, link and assemble the program
   export RUST_BACKTRACE=1
+  bin/compiler_std
   cargo run -- -e "$@"
 
   if test -f "./out.asm"; then

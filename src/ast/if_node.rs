@@ -4,17 +4,8 @@ use crate::error::Error;
 
 #[derive(Debug)]
 pub struct IfNode {
-    comparison: Box<dyn Node>,
-    body: Box<dyn Node>
-}
-
-impl IfNode {
-    pub fn new(comparison: Box<dyn Node>, body: Box<dyn Node>) -> IfNode {
-        IfNode {
-            comparison,
-            body
-        }
-    }
+    pub comparison: Box<dyn Node>,
+    pub body: Box<dyn Node>
 }
 
 impl Node for IfNode {

@@ -1,46 +1,68 @@
 use std::collections::{HashMap};
-use crate::ast::ANON_DATA_PREFIX;
+use crate::ast::ANON_PREFIX;
+
+#[derive(Debug)]
+pub struct Symbol {
+    pub name: String,
+    pub data: Option<String>,
+    pub constant: bool,
+}
 
 pub struct Context {
-    pub declarations: HashMap<String, String>,
-    symbols: Vec<String>,
+    // all global_vars are also in declarations
+    declarations: HashMap<String, Symbol>,
+    global_vars: Vec<String>,
     anon_symbol_count: u64,
-    pub exec_mode: bool
+    pub exec_mode: u8
 }
 
 impl Context {
     pub fn new() -> Context {
         Context {
             declarations: HashMap::new(),
-            symbols: Vec::new(),
+            global_vars: Vec::new(),
             anon_symbol_count: 0,
-            exec_mode: false
+            exec_mode: 0
         }
     }
 
-    pub fn reserve_symbol(&mut self, symbol: String) -> String {
-        self.symbols.push(symbol.clone());
+    pub fn get_anon_id(&mut self) -> String {
+        let symbol = format!("{}{}", ANON_PREFIX, self.anon_symbol_count);
+        self.anon_symbol_count += 1;
         symbol
     }
 
-    pub fn reserve_anon_symbol(&mut self) -> String {
-        let symbol = format!("{}{}", ANON_DATA_PREFIX, self.anon_symbol_count);
-        self.anon_symbol_count += 1;
-        self.reserve_symbol(symbol)
+    pub fn declare(&mut self, symbol: Symbol) {
+        self.declarations.insert(symbol.name.clone(), symbol);
     }
 
-    pub fn declare(&mut self, ty: String) -> String {
-        let name = self.reserve_anon_symbol();
-        self.declarations.insert(name.clone(), ty);
-        name
+    pub fn declare_glob_var(&mut self, symbol: Symbol) {
+        let name = symbol.name.clone();
+        self.global_vars.push(name.clone());
+        self.declarations.insert(name.clone(), symbol);
     }
 
-    pub fn declare_symbol(&mut self, symbol: String, ty: String) {
-        self.reserve_symbol(symbol.clone());
-        self.declarations.insert(symbol, ty);
+    pub fn has_id(&self, id: &str) -> bool {
+        self.declarations.contains_key(id)
     }
 
-    pub fn symbol_exists(&self, symbol: &String) -> bool {
-        self.declarations.contains_key(symbol)
+    pub fn get_global_vars(&mut self) -> Vec<&Symbol> {
+        let mut symbols = Vec::new();
+        for name in &self.global_vars {
+            symbols.push(self.declarations.get(name).unwrap());
+        }
+        symbols
+    }
+
+    pub fn declare_anon_data(&mut self, data: String, constant: bool) -> String {
+        let name = self.get_anon_id();
+        let symbol = Symbol {
+            name: name.clone(),
+            data: Some(data),
+            constant
+        };
+        self.global_vars.push(name.clone());
+        self.declare(symbol);
+        name.clone()
     }
 }

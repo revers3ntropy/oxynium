@@ -7,14 +7,6 @@ pub struct BreakNode {
 
 }
 
-impl BreakNode {
-    pub fn new() -> BreakNode {
-        BreakNode {
-
-        }
-    }
-}
-
 impl Node for BreakNode {
     fn asm(&mut self, _: &mut Context) -> Result<String, Error> {
         Ok(format!("

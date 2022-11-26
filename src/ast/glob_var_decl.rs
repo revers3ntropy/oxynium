@@ -1,26 +1,21 @@
 use crate::ast::Node;
-use crate::context::Context;
+use crate::context::{Context, Symbol};
 use crate::error::Error;
 
 #[derive(Debug)]
 pub struct GlobVarDecl<T> {
-    identifier: String,
-    value: T
-}
-
-impl <T> GlobVarDecl<T> {
-    pub fn new(identifier: String, value: T) -> GlobVarDecl<T> {
-        GlobVarDecl {
-            identifier,
-            value
-        }
-    }
+    pub identifier: String,
+    pub value: T
 }
 
 impl Node for GlobVarDecl<i64> {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
         let data = format!("dq {}", self.value);
-        ctx.declare_symbol(self.identifier.clone(), data);
+        ctx.declare(Symbol {
+            name: self.identifier.clone(),
+            data: Some(data),
+            constant: false
+        });
         Ok("".to_owned())
     }
 }
