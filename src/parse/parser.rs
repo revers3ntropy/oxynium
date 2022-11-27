@@ -1,21 +1,23 @@
-use crate::ast::bin_op_node::BinOpNode;
-use crate::ast::unary_op_node::{UnaryOpNode};
+use crate::ast::bin_op::BinOpNode;
+use crate::ast::unary_op::{UnaryOpNode};
 use crate::ast::const_decl::{ConstDeclNode, EmptyConstDeclNode};
-use crate::ast::exec_root_node::{EmptyExecRootNode, ExecRootNode};
-use crate::ast::fn_call_node::FnCallNode;
+use crate::ast::exec_root::{EmptyExecRootNode, ExecRootNode};
+use crate::ast::fn_call::FnCallNode;
 use crate::ast::for_loop::ForLoopNode;
-use crate::ast::int_node::IntNode;
+use crate::ast::int::IntNode;
 use crate::ast::mutate_var::MutateVar;
-use crate::ast::break_node::BreakNode;
-use crate::ast::if_node::IfNode;
+use crate::ast::r#break::BreakNode;
+use crate::ast::r#if::IfNode;
 use crate::ast::Node;
-use crate::ast::statements_node::StatementsNode;
-use crate::ast::str_node::StrNode;
+use crate::ast::statements::StatementsNode;
+use crate::ast::str::StrNode;
 use crate::ast::symbol_access::SymbolAccess;
+use crate::ast::type_expr::TypeNode;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
 use crate::error::syntax_error;
 use crate::parse::lexer::token_type_str;
+use crate::position::Position;
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -67,11 +69,11 @@ impl Parser {
         self.try_peak()
     }
 
-    fn consume(&mut self, res: &mut ParseResults, tok_type: TokenType) {
+    fn consume(&mut self, res: &mut ParseResults, tok_type: TokenType) -> Token {
         if let Some(tok) = self.try_peak() {
             if tok.token_type == tok_type {
                 self.advance(res);
-                return;
+                return tok;
             }
 
             let err = syntax_error(format!(
@@ -92,6 +94,8 @@ impl Parser {
             Some(self.tokens[self.tok_idx-1].start.clone()),
             Some(self.tokens[self.tok_idx-1].end.clone())
         );
+        Token::new(TokenType::EndStatement, None,
+                   Position::unknown(), Position::unknown())
     }
 
     fn peak_matches(&self, tok_type: TokenType, value: Option<String>) -> bool {
@@ -204,12 +208,12 @@ impl Parser {
         let mut res = ParseResults::new();
         if self.peak_matches(TokenType::Identifier, Some("const".to_string())) {
             self.advance(&mut res);
-            res.node = res.register(self.var_decl(false));
+            res.node = res.register(self.var_decl(true));
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("var".to_string())) {
             self.advance(&mut res);
-            res.node = res.register(self.var_decl(true));
+            res.node = res.register(self.var_decl(false));
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("for".to_string())) {
@@ -259,7 +263,7 @@ impl Parser {
         res
     }
 
-    fn var_decl(&mut self, is_var: bool) -> ParseResults {
+    fn var_decl(&mut self, is_const: bool) -> ParseResults {
         let mut res = ParseResults::new();
         let name;
 
@@ -277,8 +281,15 @@ impl Parser {
         if self.peak_matches(TokenType::Equals, None) {
             self.advance(&mut res);
         } else {
+            self.consume(&mut res, TokenType::Colon);
+            if res.error.is_some() { return res; }
+
+            let type_ = res.register(self.type_expr());
+            if res.error.is_some() { return res; }
+
             res.success(Box::new(EmptyConstDeclNode {
-                identifier: name.unwrap()
+                identifier: name.unwrap(),
+                type_: type_.unwrap()
             }));
             return res;
         }
@@ -289,14 +300,16 @@ impl Parser {
                 let value = tok.literal.unwrap().parse::<i64>().unwrap();
                 res.success(Box::new(ConstDeclNode {
                     identifier: name.unwrap(),
-                    value
+                    value,
+                    is_const
                 }));
                 return res;
             } else if tok.token_type == TokenType::String {
                 self.advance(&mut res);
                 res.success(Box::new(ConstDeclNode {
                     identifier: name.unwrap(),
-                    value: tok.literal.unwrap()
+                    value: tok.literal.unwrap(),
+                    is_const
                 }));
                 return res;
             }
@@ -560,6 +573,18 @@ impl Parser {
         res.success(Box::new(IfNode {
             comparison: comparison.unwrap(),
             body: statements.unwrap()
+        }));
+        res
+    }
+
+    fn type_expr(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        let type_tok = self.consume(&mut res, TokenType::Identifier);
+        if res.error.is_some() { return res; }
+
+        res.success(Box::new(TypeNode {
+            identifier: type_tok.literal.unwrap()
         }));
         res
     }

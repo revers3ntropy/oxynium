@@ -1,6 +1,6 @@
 describe 'Function Declarations'
 
-: "
+
 expect '
 fn a();
 ' ''
@@ -8,4 +8,3 @@ fn a();
 expect '
 fn a(a, b, c);
 ' ''
-"

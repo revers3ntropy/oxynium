@@ -5,18 +5,19 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use clap::{arg, ArgMatches, Command};
+use crate::ast::types::built_in::{BOOL, INT};
 
 mod parse;
 mod ast;
 mod context;
 mod error;
 mod position;
-mod format_asm;
+mod post_process;
 
 use crate::parse::lexer::Lexer;
 use crate::parse::parser::Parser;
-use crate::context::Context;
-use crate::format_asm::post_process::post_process;
+use crate::context::{Context, Symbol};
+use crate::post_process::format_asm::post_process;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
@@ -27,6 +28,21 @@ struct CompileResults {
 }
 
 fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
+
+    // declare the built in types
+    ctx.declare(Symbol {
+        name: "Int".to_string(),
+        data: None,
+        constant: true,
+        type_: Box::new(INT)
+    });
+    ctx.declare(Symbol {
+        name: "Bool".to_string(),
+        data: None,
+        constant: true,
+        type_: Box::new(BOOL)
+    });
+
     let mut lexer = Lexer::new(STD_DOXY.to_owned(), "std.doxy".to_owned());
     let tokens = lexer.lex();
     if tokens.is_err() {
@@ -48,9 +64,25 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
         };
     }
 
-    let _ = ast.node.unwrap().asm(&mut ctx);
+    let mut node = ast.node.unwrap();
+    let type_check_res = node.type_check(&mut ctx);
+    if type_check_res.is_err() {
+        return CompileResults {
+            error: Some(type_check_res.err().unwrap().str()),
+            asm: None,
+            ctx
+        };
+    }
+    let asm_error = node.asm(&mut ctx);
+    if asm_error.is_err() {
+        return CompileResults {
+            error: Some(asm_error.err().unwrap().str()),
+            asm: None,
+            ctx
+        };
+    }
 
-    // println!("{:?}", ctx.get_symbol_ids());
+    println!("{:?}", ctx.get_all_ids());
 
     CompileResults {
         error: None,
@@ -87,7 +119,16 @@ fn execute (input: String, file_name: String, exec_mode: u8) -> CompileResults {
 
     ctx.exec_mode = exec_mode;
 
-    let compile_res = ast.node.unwrap().asm(&mut ctx);
+    let mut root_node = ast.node.unwrap();
+    let type_check_res = root_node.type_check(&mut ctx);
+    if type_check_res.is_err() {
+        return CompileResults {
+            error: Some(type_check_res.err().unwrap().str()),
+            asm: None,
+            ctx
+        };
+    }
+    let compile_res = root_node.asm(&mut ctx);
     if compile_res.is_err() {
         return CompileResults {
             error: Some(compile_res.err().unwrap().str()),

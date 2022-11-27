@@ -1,4 +1,6 @@
 use crate::ast::Node;
+use crate::ast::types::built_in::VOID;
+use crate::ast::types::Type;
 use crate::context::Context;
 use crate::error::Error;
 
@@ -22,5 +24,11 @@ impl Node for IfNode {
             {body}
             {after_lbl}:
         "))
+    }
+
+    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
+        self.body.type_check(ctx)?;
+        self.comparison.type_check(ctx)?;
+        Ok(Box::new(VOID))
     }
 }

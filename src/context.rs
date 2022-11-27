@@ -1,11 +1,13 @@
 use std::collections::{HashMap};
 use crate::ast::ANON_PREFIX;
+use crate::ast::types::Type;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Symbol {
     pub name: String,
     pub data: Option<String>,
     pub constant: bool,
+    pub type_: Box<Type>
 }
 
 pub struct Context {
@@ -50,16 +52,25 @@ impl Context {
         self.declarations.insert(name.clone(), symbol);
     }
 
-    pub fn has_id(&self, id: &str) -> bool {
-        self.declarations.contains_key(id)
+    pub fn has_with_id(&self, id: &str) -> bool {
+        self.declarations.get(id).is_some()
     }
 
-    pub fn declare_anon_data(&mut self, data: String, constant: bool) -> String {
+    pub fn get_from_id(&self, id: &str) -> &Symbol {
+        self.declarations.get(id).unwrap()
+    }
+
+    pub fn get_all_ids(&self) -> Vec<String> {
+        self.declarations.keys().map(|s| s.to_string()).collect()
+    }
+
+    pub fn declare_anon_data(&mut self, data: String, constant: bool, type_: Box<Type>) -> String {
         let name = self.get_anon_id();
         let symbol = Symbol {
             name: name.clone(),
             data: Some(data),
-            constant
+            constant,
+            type_
         };
         self.global_vars.push(name.clone());
         self.declare(symbol);

@@ -1,4 +1,6 @@
 use crate::ast::Node;
+use crate::ast::types::built_in::VOID;
+use crate::ast::types::Type;
 use crate::context::Context;
 use crate::error::{Error, syntax_error};
 
@@ -16,5 +18,9 @@ impl Node for BreakNode {
         Ok(format!("
             jmp {}
         ", labels.unwrap().1))
+    }
+
+    fn type_check(&mut self, _: &mut Context) -> Result<Box<Type>, Error> {
+        Ok(Box::new(VOID))
     }
 }

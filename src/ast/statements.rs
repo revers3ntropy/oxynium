@@ -1,4 +1,6 @@
 use crate::ast::Node;
+use crate::ast::types::built_in::VOID;
+use crate::ast::types::Type;
 use crate::context::Context;
 use crate::error::Error;
 
@@ -21,5 +23,12 @@ impl Node for StatementsNode {
             asm.push_str(&stmt.clone());
         };
         Ok(asm)
+    }
+
+    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
+        for statement in self.statements.iter_mut() {
+            statement.type_check(ctx)?;
+        }
+        Ok(Box::new(VOID))
     }
 }

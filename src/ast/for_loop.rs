@@ -1,4 +1,6 @@
 use crate::ast::Node;
+use crate::ast::types::built_in::VOID;
+use crate::ast::types::Type;
 use crate::context::Context;
 use crate::error::Error;
 
@@ -22,5 +24,10 @@ impl Node for ForLoopNode {
                 jmp {start_lbl}
             {end_lbl}:
         "))
+    }
+
+    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
+        self.statements.type_check(ctx)?;
+        Ok(Box::new(VOID))
     }
 }

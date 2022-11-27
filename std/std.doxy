@@ -1,2 +1,8 @@
-const true;
-const false;
+const true: Bool;
+const false: Bool;
+
+fn print(value: Str);
+fn print_int(value: Int);
+fn print_nl();
+fn exit();
+fn throw();

@@ -1,6 +1,6 @@
+use phf::phf_map;
 use crate::parse::token::{Token, TokenType};
 use crate::position::Position;
-use phf::phf_map;
 use crate::error::{Error, syntax_error};
 
 static IDENTIFIER_CHARS: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
@@ -22,6 +22,7 @@ const SINGLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
     "!" => TokenType::Not,
     ">" => TokenType::GT,
     "<" => TokenType::LT,
+    ":" => TokenType::Colon,
 };
 
 const DOUBLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
@@ -60,6 +61,7 @@ pub fn token_type_str(token_type: &TokenType) -> String {
         TokenType::GTE => ">=",
         TokenType::LTE => "<=",
         TokenType::NotEquals => "!=",
+        TokenType::Colon => ":",
     }.to_string()
 }
 

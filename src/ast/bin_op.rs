@@ -1,6 +1,8 @@
 use crate::ast::Node;
+use crate::ast::types::built_in::{BOOL, INT};
+use crate::ast::types::{Type};
 use crate::context::Context;
-use crate::error::Error;
+use crate::error::{Error, type_error};
 use crate::parse::token::{Token, TokenType};
 
 #[derive(Debug)]
@@ -99,5 +101,35 @@ impl Node for BinOpNode {
             },
             _ => panic!("Invalid operator: {:?}", self.operator)
         }
+    }
+
+    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
+
+        let t = match self.operator.token_type {
+            TokenType::Percent
+            | TokenType::Plus
+            | TokenType::Sub
+            | TokenType::Astrix
+            | TokenType::FSlash
+            | TokenType::DblEquals
+            | TokenType::NotEquals
+            | TokenType::GT
+            | TokenType::LT
+            | TokenType::GTE
+            | TokenType::LTE
+                => Box::new(INT),
+            _ => Box::new(BOOL),
+        };
+
+        let lhs_type = self.lhs.type_check(ctx)?;
+        if !t.contains(lhs_type.as_ref()) {
+            return Err(type_error(t.as_ref(), lhs_type.as_ref()))
+        }
+        let rhs_type = self.rhs.type_check(ctx)?;
+        if !t.contains(rhs_type.as_ref()) {
+            return Err(type_error(t.as_ref(), rhs_type.as_ref()))
+        }
+
+        return Ok(t);
     }
 }

@@ -1,12 +1,14 @@
 use crate::ast::Node;
+use crate::ast::types::built_in::{BOOL, INT};
+use crate::ast::types::Type;
 use crate::context::Context;
-use crate::error::Error;
+use crate::error::{Error, type_error};
 use crate::parse::token::{Token, TokenType};
 
 #[derive(Debug)]
 pub struct UnaryOpNode {
-    pub(crate) operator: Token,
-    pub(crate) rhs: Box<dyn Node>
+    pub operator: Token,
+    pub rhs: Box<dyn Node>
 }
 
 impl Node for UnaryOpNode {
@@ -27,8 +29,8 @@ impl Node for UnaryOpNode {
             TokenType::Not => {
                 format!("
                     {}
-                    pop rbx ; *rhs
-                    mov rbx, [rbx] ; rhs
+                    pop rbx
+                    mov rbx, [rbx]
                     mov rax, 0
                     cmp rbx, 0
                     setle al
@@ -40,5 +42,19 @@ impl Node for UnaryOpNode {
             }
             _ => panic!("Invalid arithmetic unary operator: {:?}", self.operator)
         })
+    }
+
+    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
+        let t = match self.operator.token_type {
+            TokenType::Sub => Box::new(INT),
+            _ => Box::new(BOOL),
+        };
+
+        let value_type = self.rhs.type_check(ctx)?;
+        if !t.contains(value_type.as_ref()) {
+            return Err(type_error(t.as_ref(), value_type.as_ref()))
+        }
+
+        Ok(t)
     }
 }

@@ -27,6 +27,7 @@ pub enum TokenType {
     GTE,          // >=
     LTE,          // <=
     NotEquals,    // !=
+    Colon,        // :
 }
 
 #[derive(Debug)]
