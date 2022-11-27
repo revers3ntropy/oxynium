@@ -1,7 +1,7 @@
 pub mod exec_root_node;
 pub mod int_node;
 pub mod bin_op_node;
-pub mod arith_unary_op_node;
+pub mod unary_op_node;
 pub mod fn_call_node;
 pub mod statements_node;
 pub mod str_node;

@@ -1,5 +1,5 @@
 use crate::ast::bin_op_node::BinOpNode;
-use crate::ast::arith_unary_op_node::{ArithmeticUnaryOpNode};
+use crate::ast::unary_op_node::{UnaryOpNode};
 use crate::ast::const_decl::{ConstDeclNode, EmptyConstDeclNode};
 use crate::ast::exec_root_node::{EmptyExecRootNode, ExecRootNode};
 use crate::ast::fn_call_node::FnCallNode;
@@ -321,7 +321,7 @@ impl Parser {
                 self.advance(&mut res);
                 let node = res.register(self.unary_expr());
                 if res.error.is_some() { return res; }
-                res.success(Box::new(ArithmeticUnaryOpNode {
+                res.success(Box::new(UnaryOpNode {
                     operator: tok,
                     rhs: node.unwrap()
                 }));
@@ -341,7 +341,7 @@ impl Parser {
                 self.advance(&mut res);
                 let factor = res.register(self.factor());
                 if res.error.is_some() { return res; }
-                res.success(Box::new(ArithmeticUnaryOpNode {
+                res.success(Box::new(UnaryOpNode {
                     operator: t,
                     rhs: factor.unwrap()
                 }));

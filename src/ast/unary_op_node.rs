@@ -4,12 +4,12 @@ use crate::error::Error;
 use crate::parse::token::{Token, TokenType};
 
 #[derive(Debug)]
-pub struct ArithmeticUnaryOpNode {
+pub struct UnaryOpNode {
     pub(crate) operator: Token,
     pub(crate) rhs: Box<dyn Node>
 }
 
-impl Node for ArithmeticUnaryOpNode {
+impl Node for UnaryOpNode {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
         Ok(match self.operator.token_type {
             TokenType::Sub => {
@@ -20,6 +20,20 @@ impl Node for ArithmeticUnaryOpNode {
                     neg rax
                     mov [rcx], rax
                     push rcx
+                ",
+                    self.rhs.asm(ctx)?
+                )
+            }
+            TokenType::Not => {
+                format!("
+                    {}
+                    pop rbx ; *rhs
+                    mov rbx, [rbx] ; rhs
+                    mov rax, 0
+                    cmp rbx, 0
+                    setle al
+                    push rax
+                    push rsp
                 ",
                     self.rhs.asm(ctx)?
                 )
