@@ -7,8 +7,8 @@ pub enum TokenType {
     Sub,          // -
     Astrix,       // *
     FSlash,       // /
-    LParen,       // (
-    RParen,       // )
+    OpenParen,    // (
+    CloseParen,   // )
     Ampersand,    // &
     Percent,      // %
     Identifier,   // foo
@@ -17,8 +17,8 @@ pub enum TokenType {
     String,       // "foo"
     Equals,       // =
     DblEquals,    // ==
-    LBrace,       // {
-    RBrace,       // }
+    OpenBrace,    // {
+    CloseBrace,   // }
     Or,           // ||
     And,          // &&
     Not,          // !

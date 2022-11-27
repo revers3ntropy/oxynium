@@ -11,9 +11,9 @@ pub struct MutateVar {
 impl Node for MutateVar {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
         Ok(format!("
-           {0}
+           {}
            pop rax
-           mov rbx, {1}
+           mov rbx, {}
            mov rax, [rax]
            mov [rbx], rax
         ",

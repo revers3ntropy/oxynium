@@ -1,6 +1,6 @@
 use regex::Regex;
 
-pub fn  post_process(asm: String) -> String{
+pub fn post_process(asm: String) -> String {
     let mut output = String::new();
 
     let mut indent = 4;

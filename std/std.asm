@@ -237,3 +237,8 @@ exit:
     mov rax, 60
     mov rdi, 0
     syscall
+
+throw:
+    mov rax, 60
+    mov rdi, 1
+    syscall

@@ -13,7 +13,7 @@ pub struct BinOpNode {
 impl Node for BinOpNode {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
         match self.operator.token_type {
-            TokenType::Plus | TokenType::Sub => {
+            TokenType::Plus | TokenType::Sub | TokenType::And | TokenType::Or => {
                 Ok(format!("
                     {}
                     {}
@@ -28,7 +28,8 @@ impl Node for BinOpNode {
                    match self.operator.token_type {
                        TokenType::Plus => "add",
                        TokenType::Sub => "sub",
-                       _ => panic!("Invalid arithmetic binary operator: {:?}", self.operator)
+                       TokenType::And => "and",
+                       _ => "or",
                    }
                 ))
             },
@@ -47,8 +48,10 @@ impl Node for BinOpNode {
                     ",
                       self.rhs.asm(ctx)?,
                       self.lhs.asm(ctx)?,
-                      if self.operator.token_type == TokenType::Astrix
-                          { "imul"  } else { "idiv" }
+                      match self.operator.token_type {
+                          TokenType::Astrix => "imul",
+                          _ => "idiv",
+                      }
                 ))
             },
             TokenType::Percent => {
@@ -66,6 +69,29 @@ impl Node for BinOpNode {
                     ",
                        self.rhs.asm(ctx)?,
                        self.lhs.asm(ctx)?,
+                ))
+            },
+            TokenType::GT | TokenType::LT => {
+                Ok(format!("
+                        {}
+                        {}
+                        pop rcx ; *lhs
+                        pop rbx ; *rhs
+                        mov rbx, [rbx] ; rhs
+                        mov rdx, [rcx] ; lhs
+                        cmp rdx, rbx   ; lhs - rhs
+                        mov rax, 0
+                        {} al
+                        push rax
+                        push rsp
+                ",
+                       self.rhs.asm(ctx)?,
+                       self.lhs.asm(ctx)?,
+                       match self.operator.token_type {
+                           TokenType::GT => "setg",
+                           TokenType::LT => "setl",
+                           _ => "err"
+                       }
                 ))
             },
             _ => panic!("Invalid operator: {:?}", self.operator)

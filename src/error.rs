@@ -25,13 +25,22 @@ impl Error {
     }
 
     pub fn str(&self) -> String {
-        format!(
-            "{}: {} at {} to {}",
-            self.name,
-            self.message,
-            self.start.str(),
-            self.end.str()
-        )
+        if self.start.str() == self.end.str() {
+            format!(
+                "{}: {} at {}",
+                self.name,
+                self.message,
+                self.start.str()
+            )
+        } else {
+            format!(
+                "{}: {} at {} to {}",
+                self.name,
+                self.message,
+                self.start.str(),
+                self.end.str()
+            )
+        }
     }
 }
 

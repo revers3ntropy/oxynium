@@ -10,16 +10,16 @@ const SINGLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
     "-" => TokenType::Sub,
     "*" => TokenType::Astrix,
     "/" => TokenType::FSlash,
-    "(" => TokenType::LParen,
-    ")" => TokenType::RParen,
+    "(" => TokenType::OpenParen,
+    ")" => TokenType::CloseParen,
     "%" => TokenType::Percent,
     "&" => TokenType::Ampersand,
     "," => TokenType::Comma,
     ";" => TokenType::EndStatement,
     "=" => TokenType::Equals,
     "=="=> TokenType::DblEquals,
-    "{" => TokenType::LBrace,
-    "}" => TokenType::RBrace,
+    "{" => TokenType::OpenBrace,
+    "}" => TokenType::CloseBrace,
     "!" => TokenType::Not,
     ">" => TokenType::GT,
     "<" => TokenType::LT,
@@ -32,6 +32,36 @@ const DOUBLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
     "<=" => TokenType::LTE,
     "!=" => TokenType::NotEquals,
 };
+
+pub fn token_type_str(token_type: &TokenType) -> String {
+    match token_type {
+        TokenType::Int => "<int>",
+        TokenType::Plus => "+",
+        TokenType::Sub => "-",
+        TokenType::Astrix => "*",
+        TokenType::FSlash => "/",
+        TokenType::OpenParen => "(",
+        TokenType::CloseParen => ")",
+        TokenType::Ampersand => "&",
+        TokenType::Percent => "%",
+        TokenType::Identifier => "<identifier>",
+        TokenType::Comma => ",",
+        TokenType::EndStatement => ";",
+        TokenType::String => "<string>",
+        TokenType::Equals => "=",
+        TokenType::DblEquals => "==",
+        TokenType::OpenBrace => "{",
+        TokenType::CloseBrace => "}",
+        TokenType::Or => "||",
+        TokenType::And => "&&",
+        TokenType::Not => "!",
+        TokenType::GT => ">",
+        TokenType::LT => "<",
+        TokenType::GTE => ">=",
+        TokenType::LTE => "<=",
+        TokenType::NotEquals => "!=",
+    }.to_string()
+}
 
 pub struct Lexer {
     input: String,
@@ -46,19 +76,6 @@ impl Lexer {
            position: Position::new(file_name, -1, 0, -1),
            current_char: None
        }
-    }
-
-    fn advance(&mut self) -> Option<char> {
-        self.position.advance(self.current_char);
-
-        if self.position.idx >= self.input.len() as i64 {
-            self.current_char = None;
-            return None;
-        }
-
-        let current_char = self.input.chars().nth(self.position.idx as usize);
-        self.current_char = current_char;
-        current_char
     }
 
     pub fn lex(&mut self) -> Result<Vec<Token>, Error> {
@@ -94,15 +111,6 @@ impl Lexer {
             } else if c == '"' {
                 tokens.push(self.make_string());
 
-            } else if SINGLE_CHAR_TOKENS.contains_key(&c.to_string()) {
-                tokens.push(Token::new(
-                    SINGLE_CHAR_TOKENS[&c.to_string()],
-                    None,
-                    self.position.clone(),
-                    self.position.clone()
-                ));
-                self.advance();
-
             } else if DOUBLE_CHAR_TOKENS.contains_key(&(
                 c.to_string() +
                     &self.input.chars()
@@ -125,12 +133,34 @@ impl Lexer {
                 self.advance();
                 self.advance();
 
+            } else if SINGLE_CHAR_TOKENS.contains_key(&c.to_string()) {
+                tokens.push(Token::new(
+                    SINGLE_CHAR_TOKENS[&c.to_string()],
+                    None,
+                    self.position.clone(),
+                    self.position.clone()
+                ));
+                self.advance();
+
             } else {
                 return Err(syntax_error(format!("Unexpected character '{}'", c)));
             }
         }
 
         Ok(tokens)
+    }
+
+    fn advance(&mut self) -> Option<char> {
+        self.position.advance(self.current_char);
+
+        if self.position.idx >= self.input.len() as i64 {
+            self.current_char = None;
+            return None;
+        }
+
+        let current_char = self.input.chars().nth(self.position.idx as usize);
+        self.current_char = current_char;
+        current_char
     }
 
     fn make_identifier(&mut self) -> Token {

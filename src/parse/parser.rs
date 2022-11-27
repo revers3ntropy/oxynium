@@ -15,6 +15,7 @@ use crate::ast::symbol_access::SymbolAccess;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
 use crate::error::syntax_error;
+use crate::parse::lexer::token_type_str;
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -42,7 +43,13 @@ impl Parser {
         let root_node = ExecRootNode { statements: expr.unwrap() };
 
         if self.tok_idx < self.tokens.len() {
-            panic!("Unexpected token: {:?}", self.tokens[self.tok_idx]);
+            res.failure(
+                syntax_error(format!("Unexpected token {:?}",
+                                     token_type_str(&self.tokens[self.tok_idx].token_type))),
+                Some(self.tokens[self.tok_idx].start.clone()),
+                Some(self.tokens[self.tok_idx].end.clone())
+            );
+            return res;
         }
 
         res.success(Box::new(root_node));
@@ -380,12 +387,12 @@ impl Parser {
     fn function_call(&mut self, fn_identifier_tok: Token) -> ParseResults {
         let mut res = ParseResults::new();
 
-        self.consume(&mut res, TokenType::LParen);
+        self.consume(&mut res, TokenType::OpenParen);
         if res.error.is_some() { return res; }
 
         if let Some(t) = self.try_peak() {
             // fn(), no arguments
-            if t.token_type == TokenType::RParen {
+            if t.token_type == TokenType::CloseParen {
                 self.advance(&mut res);
                 res.success(Box::new(FnCallNode {
                     identifier: fn_identifier_tok.literal.unwrap(),
@@ -399,20 +406,19 @@ impl Parser {
 
         loop {
             let parameter = res.register(self.expression());
-            if res.error.is_some() {
-                return res;
-            }
+            if res.error.is_some() { return res; }
 
             args.push(parameter.unwrap());
 
             if let Some(t) = self.try_peak() {
-                if t.token_type == TokenType::RParen {
+                if t.token_type == TokenType::CloseParen {
                     break;
                 }  else if t.token_type == TokenType::Comma {
                     self.advance(&mut res);
                 } else {
                     res.failure(
-                        syntax_error("Expected ',' or ')'".to_owned()),
+                        syntax_error(format!("Expected ',' or ')', got '{}'",
+                                             token_type_str(&t.token_type))),
                         Some(fn_identifier_tok.start),
                         Some(fn_identifier_tok.end)
                     );
@@ -429,7 +435,7 @@ impl Parser {
             }
         }
 
-        self.consume(&mut res, TokenType::RParen);
+        self.consume(&mut res, TokenType::CloseParen);
         if res.error.is_some() { return res; }
 
         res.success(Box::new(FnCallNode {
@@ -481,13 +487,13 @@ impl Parser {
                 let value = tok.literal.unwrap();
                 res.success(Box::new(StrNode { value }));
             },
-            TokenType::LParen => {
+            TokenType::OpenParen => {
                 self.advance(&mut res);
 
                 let expr = res.register(self.expression());
                 if res.error.is_some() { return res; }
 
-                self.consume(&mut res, TokenType::RParen);
+                self.consume(&mut res, TokenType::CloseParen);
                 if res.error.is_some() { return res; }
 
                 res.success(expr.unwrap());
@@ -495,7 +501,7 @@ impl Parser {
             TokenType::Identifier => {
                 self.advance(&mut res);
                 if let Some(next) = self.try_peak() {
-                    if next.token_type == TokenType::LParen {
+                    if next.token_type == TokenType::OpenParen {
                         return self.function_call(tok);
                     }
                     if next.token_type == TokenType::Equals {
@@ -521,13 +527,13 @@ impl Parser {
     fn for_loop(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
 
-        self.consume(&mut res, TokenType::LBrace);
+        self.consume(&mut res, TokenType::OpenBrace);
         if res.error.is_some() { return res; }
 
         let statements = res.register(self.statements());
         if res.error.is_some() { return res; }
 
-        self.consume(&mut res, TokenType::RBrace);
+        self.consume(&mut res, TokenType::CloseBrace);
         if res.error.is_some() { return res; }
 
         res.success(Box::new(ForLoopNode {
@@ -542,13 +548,13 @@ impl Parser {
         let comparison = res.register(self.expression());
         if res.error.is_some() { return res; }
 
-        self.consume(&mut res, TokenType::LBrace);
+        self.consume(&mut res, TokenType::OpenBrace);
         if res.error.is_some() { return res; }
 
         let statements = res.register(self.statements());
         if res.error.is_some() { return res; }
 
-        self.consume(&mut res, TokenType::RBrace);
+        self.consume(&mut res, TokenType::CloseBrace);
         if res.error.is_some() { return res; }
 
         res.success(Box::new(IfNode {

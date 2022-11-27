@@ -9,12 +9,18 @@ pub struct ForLoopNode {
 
 impl Node for ForLoopNode {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
+        let start_lbl = ctx.get_anon_label();
+        let end_lbl = ctx.get_anon_label();
+
+        ctx.loop_labels_push(start_lbl.clone(), end_lbl.clone());
         let body = self.statements.asm(ctx)?;
+        ctx.loop_labels_pop();
+
         Ok(format!("
-            loop_start:
+            {start_lbl}:
                 {body}
-                jmp loop_start
-            loop_end:
+                jmp {start_lbl}
+            {end_lbl}:
         "))
     }
 }

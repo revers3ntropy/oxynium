@@ -67,6 +67,13 @@ function expect() {
         output="ERROR_NO_OUTPUT"
     fi
 
+    # remove new lines from output, leaving just '\r's
+    output=$(echo "$output" | tr -d '\n')
+
+    # replace \r with \r\n in expected and output
+    expected=$(echo "$expected" | tr '\r' '\n')
+    output=$(echo "$output" | tr '\r' '\n')
+
     if [ "$output" != "$expected" ]; then
         fails=$((fails+1))
 

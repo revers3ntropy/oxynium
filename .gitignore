@@ -15,6 +15,7 @@ out
 /*.py
 /*.s
 /*.oxy
+/*.out
 
 # OS
 .DS_Store

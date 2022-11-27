@@ -15,8 +15,8 @@ impl Node for StatementsNode {
             if stmt.is_empty() {
                 continue;
             }
-            asm.push('\n');
-            asm.push_str("call clear_stack");
+            // asm.push('\n');
+            // asm.push_str("call clear_stack");
             asm.push('\n');
             asm.push_str(&stmt.clone());
         };

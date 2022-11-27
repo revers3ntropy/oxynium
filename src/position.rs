@@ -33,7 +33,7 @@ impl Position {
     }
 
     pub fn str(&self) -> String {
-        format!("'{}' {}:{}", self.file, self.line, self.col)
+        format!("'{}' {}:{}", self.file, self.line+1, self.col+1)
     }
 }
 

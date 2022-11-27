@@ -9,14 +9,14 @@ use clap::{arg, ArgMatches, Command};
 mod parse;
 mod ast;
 mod context;
-mod post_process;
 mod error;
 mod position;
+mod format_asm;
 
 use crate::parse::lexer::Lexer;
 use crate::parse::parser::Parser;
-use crate::post_process::post_process;
 use crate::context::Context;
+use crate::format_asm::post_process::post_process;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
@@ -50,7 +50,7 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
 
     let _ = ast.node.unwrap().asm(&mut ctx);
 
-    println!("{:?}", ctx.get_global_vars());
+    // println!("{:?}", ctx.get_symbol_ids());
 
     CompileResults {
         error: None,
