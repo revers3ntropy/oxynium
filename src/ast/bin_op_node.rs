@@ -71,7 +71,7 @@ impl Node for BinOpNode {
                        self.lhs.asm(ctx)?,
                 ))
             },
-            TokenType::GT | TokenType::LT => {
+            TokenType::GT | TokenType::LT | TokenType::LTE | TokenType::GTE | TokenType::DblEquals | TokenType::NotEquals => {
                 Ok(format!("
                         {}
                         {}
@@ -80,17 +80,20 @@ impl Node for BinOpNode {
                         mov rbx, [rbx] ; rhs
                         mov rdx, [rcx] ; lhs
                         cmp rdx, rbx   ; lhs - rhs
-                        mov rax, 0
-                        {} al
+                        mov rax, 0     ; al is first byte of rax,
+                        {} al          ; so clear rax and put into al
                         push rax
                         push rsp
                 ",
                        self.rhs.asm(ctx)?,
                        self.lhs.asm(ctx)?,
                        match self.operator.token_type {
+                           TokenType::DblEquals => "sete",
+                           TokenType::NotEquals => "setne",
                            TokenType::GT => "setg",
                            TokenType::LT => "setl",
-                           _ => "err"
+                           TokenType::GTE => "setge",
+                           _ => "setle",
                        }
                 ))
             },

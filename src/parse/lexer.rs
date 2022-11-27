@@ -17,7 +17,6 @@ const SINGLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
     "," => TokenType::Comma,
     ";" => TokenType::EndStatement,
     "=" => TokenType::Equals,
-    "=="=> TokenType::DblEquals,
     "{" => TokenType::OpenBrace,
     "}" => TokenType::CloseBrace,
     "!" => TokenType::Not,
@@ -31,6 +30,7 @@ const DOUBLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
     ">=" => TokenType::GTE,
     "<=" => TokenType::LTE,
     "!=" => TokenType::NotEquals,
+    "=="=> TokenType::DblEquals,
 };
 
 pub fn token_type_str(token_type: &TokenType) -> String {

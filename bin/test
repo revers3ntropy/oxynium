@@ -20,7 +20,7 @@ function setup () {
 function describe () {
     if [ $tests_started -eq 1 ]; then
         if [ "$current_spec_has_failed" -eq 0 ]; then
-            printf "${GREEN}All passed in %s${NC}\n" "$current_spec_name"
+            printf "${GREEN}✔ %s${NC}\n" "$current_spec_name"
         fi
     fi
     current_spec_name="$1"
