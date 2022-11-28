@@ -29,12 +29,8 @@ function describe () {
     tests_started=1
 }
 
-function expect() {
+function execute() {
     code="$1"
-    expected="$2"
-
-    tests=$((tests+1))
-    current_spec_num_tests=$((current_spec_num_tests+1))
 
     {
         rm ./out.asm
@@ -58,6 +54,11 @@ function expect() {
       fi
     } 2>&1 > /dev/null)
 
+    if [ "$errors" != "" ]; then
+        echo "$errors"
+        return 0
+    fi
+
     output="BASH_ERROR_NOT_ASSIGNED"
     if test -f "./out"; then
         # remove any \0 characters from output
@@ -67,29 +68,61 @@ function expect() {
         output="ERROR_NO_OUTPUT"
     fi
 
-    # remove new lines from output, leaving just '\r's
     output=$(echo "$output" | tr -d '\n')
+    echo "$output"
+}
 
-    # replace \r with \r\n in expected and output
+function test_failed() {
+    code="$1"
+    expected="$2"
+    output="$3"
+    fails=$((fails+1))
+
+    if [ "$current_spec_has_failed" -eq 0 ]; then
+        echo -e "${RED}$current_spec_name FAILED${NC}"
+    fi
+    current_spec_has_failed=1
+
+    # shellcheck disable=SC2059
+    printf "${RED}#${current_spec_num_tests}${NC}\n"
+    printf "    Executing: '%s'\n" "$code"
+    printf "    Expected:  '%s'\n" "$expected"
+    printf "    Got:       '%s'\n\n" "$output"
+    if [ "$errors" != "" ]; then
+        printf "    Errors:   '%s'\n\n" "$errors"
+    fi
+}
+
+function expect() {
+    code="$1"
+    expected="$2"
+
+    tests=$((tests+1))
+    current_spec_num_tests=$((current_spec_num_tests+1))
+
+    output=$(execute "$code")
+    # replace \r with \r\n in expected
     expected=$(echo "$expected" | tr '\r' '\n')
     output=$(echo "$output" | tr '\r' '\n')
 
     if [ "$output" != "$expected" ]; then
-        fails=$((fails+1))
+        test_failed "$code" "$expected" "$output"
+    fi
+}
 
-        if [ "$current_spec_has_failed" -eq 0 ]; then
-            echo -e "${RED}$current_spec_name FAILED${NC}"
-        fi
-        current_spec_has_failed=1
+function expect_err() {
+    code="$1"
+    expected="$2"
 
-        # shellcheck disable=SC2059
-        printf "${RED}#${current_spec_num_tests}${NC}\n"
-        printf "    Executing: '%s'\n" "$code"
-        printf "    Expected:  '%s'\n" "$expected"
-        printf "    Got:       '%s'\n\n" "$output"
-        if [ "$errors" != "" ]; then
-            printf "    Errors:   '%s'\n\n" "$errors"
-        fi
+    tests=$((tests+1))
+    current_spec_num_tests=$((current_spec_num_tests+1))
+
+    output=$(execute "$code")
+    split_arr=(${output//:/ })
+    output_err="${split_arr[0]}"
+
+    if [ "$expected" != "$output_err" ]; then
+        test_failed "$code" "Error: '$expected'" "$output"
     fi
 }
 

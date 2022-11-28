@@ -30,11 +30,18 @@ e.g. `res -e "(1+1)*2"` instead of `./res -e (1+1)*2`
 
 ### Options
 
-| Command          | Description                            | Default     |
-|------------------|----------------------------------------|-------------|
-| `-o`, `--output` | Output assembly file path              | `'out.asm'` |
-| `-e`, `--eval`   | Evaluate and print a single expression |             |
-| `-x`, `--exec`   | Prints final expression                | `false`     |
+| Command          | Type | Description                            | Default     |
+|------------------|------|----------------------------------------|-------------|
+| `-o`, `--output` | Str  | Output assembly file path              | `'out.asm'` |
+| `-e`, `--eval`   | Str  | Evaluate and print a single expression |             |
+| `-x`, `--exec`   | Int  | Exec mode                              | `0`         |
+
+#### Exec Mode
+`0`: Compile to application
+
+`1`: Print last expression
+
+`2`: Compile as library
 
 ## Commands
 

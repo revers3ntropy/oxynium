@@ -1,5 +1,4 @@
 use std::fmt::Display;
-use crate::ast::types::Type;
 use crate::position::{Position};
 
 #[derive(Debug, Clone)]
@@ -55,6 +54,8 @@ pub fn unknown_symbol(message: String) -> Error {
 }
 
 pub fn type_error (expected: &dyn Display, got: &dyn Display) -> Error {
-    Error::new("TypeError".to_string(),
-               format!("expected '{expected}', got '{got}'"))
+    Error::new(
+        "TypeError".to_string(),
+        format!("expected '{expected}', got '{got}'")
+    )
 }

@@ -109,8 +109,6 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
         };
     }
 
-    println!("{:?}", ctx.get_all_ids());
-
     CompileResults {
         error: None,
         asm: None,
