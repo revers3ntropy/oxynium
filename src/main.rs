@@ -281,7 +281,7 @@ fn main() -> std::io::Result<()> {
         return Ok(());
     }
 
-    if args.exec_mode != 2 && !Path::new(&args.std_path).exists() {
+    if args.exec_mode != 1 && !Path::new(&args.std_path).exists() {
         let _ = e.write(format!("STD file '{}' does not exist or is not accessible\n", args.std_path).as_bytes());
         return Ok(());
     }

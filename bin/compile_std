@@ -10,7 +10,7 @@
 
 # compile, link and assemble the program
 export RUST_BACKTRACE=1
-cargo run -- -x=1 std/std.oxy
+cargo run -- std/std.oxy -x=1
 
 rm oxy-out.o
 mv oxy-out.asm std.asm
