@@ -18,9 +18,9 @@ if [ "$(which cargo)" == "" ]; then
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 fi
 
+bin/compile_std
 bin/test
 bin/build
-bin/compile_std
 
 if test -f "/usr/local/bin/oxy"; then
     echo "Warning: oxy is already installed and will be overwritten"
