@@ -1,0 +1,35 @@
+#!/bin/bash
+
+git clone https://github.com/revers3ntropy/oxynium.git
+cd oxynium || exit
+
+if [ "$(which nasm)" == "" ]; then
+    echo "nasm is not installed, installing nasm..."
+    sudo apt-get -y install nasm
+fi
+
+if [ "$(which ld)" == "" ]; then
+    echo "ld is not installed, installing binutils..."
+    sudo apt-get -y install binutils
+fi
+
+if [ "$(which cargo)" == "" ]; then
+    echo "Cargo is not installed, installing Rust..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+fi
+
+bin/test
+bin/build
+bin/compile_std
+
+if test -f "/usr/local/bin/oxy"; then
+    echo "Warning: oxy is already installed and will be overwritten"
+fi
+
+sudo mv ./res /usr/local/bin/oxy
+sudo mv ./std.asm /usr/local/bin/oxy-std.asm
+
+cd ..
+sudo rm -rf ./oxynium
+
+echo "oxynium has been installed successfully!"

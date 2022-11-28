@@ -10,13 +10,15 @@ pub struct Symbol {
     pub type_: Box<Type>
 }
 
+#[derive(Debug)]
 pub struct Context {
     // all global_vars are also in declarations
     declarations: HashMap<String, Symbol>,
     global_vars: Vec<String>,
     loop_label_stack: Vec<(String, String)>,
     anon_symbol_count: u64,
-    pub exec_mode: u8
+    pub exec_mode: u8,
+    pub std_asm_path: String,
 }
 
 impl Context {
@@ -26,7 +28,8 @@ impl Context {
             global_vars: Vec::new(),
             loop_label_stack: Vec::new(),
             anon_symbol_count: 0,
-            exec_mode: 0
+            exec_mode: 0,
+            std_asm_path: String::from("std.asm"),
         }
     }
 

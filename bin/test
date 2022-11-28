@@ -43,15 +43,7 @@ function execute() {
       echo "$code" > in.oxy
 
       export RUST_BACKTRACE=1
-      ./target/release/oxynium -x=1 in.oxy
-
-      if test -f "./out.asm"; then
-          nasm -f elf64 out.asm
-
-          if test -f "./out.o"; then
-            ld -s -o out out.o std.o
-          fi
-      fi
+      ./target/release/oxynium --std std.asm -x=1 in.oxy
     } 2>&1 > /dev/null)
 
     if [ "$errors" != "" ]; then

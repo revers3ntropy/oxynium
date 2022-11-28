@@ -37,7 +37,7 @@ impl Node for ExecRootNode {
         }
 
         Ok(format!("
-            %include \"std.asm\"
+            %include \"{}\"
             section .data
                 {decls}
             section .text
@@ -51,7 +51,7 @@ impl Node for ExecRootNode {
                 {end_statements}
                 call clear_stack
                 call exit
-        "))
+        ", ctx.std_asm_path))
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {

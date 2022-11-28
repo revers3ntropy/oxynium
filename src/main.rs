@@ -14,13 +14,15 @@ mod error;
 mod position;
 mod post_process;
 
-use crate::parse::lexer::Lexer;
+use crate::parse::lexer::{Lexer, token_type_str};
 use crate::parse::parser::Parser;
 use crate::context::{Context, Symbol};
+use std::process::Command as Exec;
 use crate::post_process::format_asm::post_process;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
+#[derive(Debug)]
 struct CompileResults {
     error: Option<String>,
     asm: Option<String>,
@@ -116,10 +118,11 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
     }
 }
 
-fn execute (input: String, file_name: String, exec_mode: u8) -> CompileResults {
+fn compile (input: String, file_name: String, exec_mode: u8, std_path: String) -> CompileResults {
     let ctx_res = setup_ctx_with_doxy(Context::new());
     if ctx_res.error.is_some() { return ctx_res; }
     let mut ctx = ctx_res.ctx;
+    ctx.std_asm_path = std_path;
 
     let mut lexer = Lexer::new(input.clone(), file_name);
     let tokens = lexer.lex();
@@ -170,12 +173,49 @@ fn execute (input: String, file_name: String, exec_mode: u8) -> CompileResults {
     }
 }
 
+fn compile_and_assemble(input: String, file_name: String, exec_mode: u8, std_path: String) -> Result<(), String> {
+    let compile_res = compile(input, file_name, exec_mode, std_path);
+
+    if let Some(e) = compile_res.error {
+        return Err(e);
+    }
+
+    let file = File::create("oxy-out.asm");
+    if file.is_err() { return Err("Could not create temporary assembly file".to_string()); }
+    file.unwrap().write_all(compile_res.asm.unwrap().as_bytes())
+        .expect("Could not write assembly output");
+
+    let nasm_out =Exec::new("nasm")
+        .arg("-f")
+        .arg("elf64")
+        .arg("oxy-out.asm")
+        .output()
+        .expect("Could not assemble");
+    if !nasm_out.status.success() {
+        return Err(String::from_utf8(nasm_out.stderr).unwrap());
+    }
+
+    let ls_out = Exec::new("ld")
+        .arg("-s")
+        .arg("-o")
+        .arg("out")
+        .arg("oxy-out.o")
+        .output()
+        .expect("Could not assemble");
+    if !ls_out.status.success() {
+        return Err(String::from_utf8(ls_out.stderr).unwrap());
+    }
+
+    Ok(())
+}
+
 #[derive(Debug)]
 struct Args {
     input: String,
     out: String,
     eval: String,
-    exec_mode: u8
+    exec_mode: u8,
+    std_path: String
 }
 
 fn get_int_cli_arg (m: ArgMatches, name: &str, default: u8) -> u8 {
@@ -201,6 +241,7 @@ fn get_cli_args () -> Args {
         .args(&[
             arg!(-o --out [FILE] "Where to put assembly output"),
             arg!(-e --eval [EXPR] "Compiles and prints a single expression"),
+            arg!(-s --std [PATH] "Path to STD assembly file"),
             arg!(-x --exec_mode [INT] "Exec mode"),
             arg!([input] "Input code to evaluate"),
         ]);
@@ -216,6 +257,8 @@ fn get_cli_args () -> Args {
         out: m.get_one::<String>("out").unwrap_or(&String::from("out.asm")).to_string(),
         input: m.get_one::<String>("input").unwrap_or(&String::from("")).to_string(),
         eval: m.get_one::<String>("eval").unwrap_or(&String::from("")).to_string(),
+        std_path: m.get_one::<String>("std")
+            .unwrap_or(&String::from("/usr/local/bin/oxy-std.asm")).to_string(),
         exec_mode: get_int_cli_arg(m, "exec_mode", 0)
     }
 }
@@ -238,17 +281,21 @@ fn main() -> std::io::Result<()> {
         return Ok(());
     }
 
+    if !Path::new(&args.std_path).exists() {
+        let _ = e.write(format!("STD file '{}' does not exist or is not accessible\n", args.std_path).as_bytes());
+        return Ok(());
+    }
+
     if !args.eval.is_empty() {
-        let res = execute(args.eval, "CLI".to_owned(), 1);
-
-        if res.error.is_some() {
-            let _ = e.write(format!("{}\n", res.error.unwrap()).as_bytes());
-            return Ok(());
+        let res = compile_and_assemble(
+            args.eval,
+            "CLI".to_owned(),
+            1,
+            args.std_path
+        );
+        if res.is_err() {
+            let _ = e.write(format!("{}\n", res.err().unwrap()).as_bytes());
         }
-
-        let mut file = File::create(args.out)?;
-        file.write_all(res.asm.unwrap().as_bytes())?;
-
         return Ok(());
     }
 
@@ -262,16 +309,15 @@ fn main() -> std::io::Result<()> {
         let mut input = String::new();
         input_file.read_to_string(&mut input)?;
 
-        let res = execute(input, args.input.clone(), args.exec_mode);
-
-        if res.error.is_some() {
-            let _ = e.write(format!("{}\n", res.error.unwrap()).as_bytes());
-            return Ok(());
+        let res = compile_and_assemble(
+            input,
+            "CLI".to_owned(),
+            args.exec_mode,
+            args.std_path
+        );
+        if res.is_err() {
+            let _ = e.write(format!("{}\n", res.err().unwrap()).as_bytes());
         }
-
-        let mut file = File::create(args.out)?;
-        file.write_all(res.asm.unwrap().as_bytes())?;
-
         return Ok(());
     }
 
