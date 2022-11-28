@@ -76,6 +76,48 @@ print: ; [string: str*, cb: *] => []
         call print_nl
         ret
 
+print_true: ; [cb: *] => []
+    push 'e'
+    push 'u'
+    push 'r'
+    push 't'
+    call print_char
+    call print_char
+    call print_char
+    call print_char
+    ret
+
+print_false: ; [cb: *] => []
+    push 'e'
+    push 's'
+    push 'l'
+    push 'a'
+    push 'f'
+    call print_char
+    call print_char
+    call print_char
+    call print_char
+    call print_char
+    ret
+
+print_bool: ; [bool: int*, cb: *] => []
+    pop rbx ; pop cb
+    pop rsi ; pop bool
+
+    mov rax, [rsi]
+    cmp rax, 0
+    je __print_bool_false
+    call print_true
+    jmp __print_bool_end
+
+    __print_bool_false:
+        call print_false
+
+    __print_bool_end:
+        push rbx
+        call print_nl
+        ret
+
 print_int: ; [number: int*, cb: *] => []
            ; prints an 8 byte integer in base 10
            ; src: https://www.javatpoint.com/binary-to-decimal-number-in-c
@@ -170,26 +212,6 @@ print_int: ; [number: int*, cb: *] => []
         __print_int_end_end:
             push r8
             ret
-
-print_stack: ; [value: any, cb: *] => []
-             ; prints the last element on the stack as a digit
-             ; assuming size 8 bytes
-    ; check if we are not already at base of stack
-    mov rax, rsp
-    cmp rax, rbp
-    jge __print_stack_end
-
-    pop rdi
-    pop rax
-    push rdi
-
-    push rax
-    call print_int
-    ret
-
-    __print_stack_end:
-        push rax
-        ret
 
 clear_stack: ; [cb: *] => []
              ; resets the stack pointer to the beginning of the stack

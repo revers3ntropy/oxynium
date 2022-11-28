@@ -19,21 +19,11 @@ impl Node for ExecRootNode {
             format!("{} {}", k.name, k.data.as_ref().unwrap())
         }).collect::<Vec<String>>().join("\n");
 
-        if ctx.exec_mode == 2 {
+        if ctx.exec_mode == 1 {
             return Ok(format!("
                 section .data
                     {decls}
             "));
-        }
-
-        let end_statements: &str;
-        if ctx.exec_mode == 1 {
-            end_statements = "
-                call print_stack
-                call print_nl
-            ";
-        } else {
-            end_statements = "";
         }
 
         Ok(format!("
@@ -48,7 +38,6 @@ impl Node for ExecRootNode {
             _start:
                 mov rbp, rsp
                 {res}
-                {end_statements}
                 call clear_stack
                 call exit
         ", ctx.std_asm_path))
@@ -65,7 +54,7 @@ pub struct EmptyExecRootNode {}
 
 impl Node for EmptyExecRootNode {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
-        if ctx.exec_mode == 2 {
+        if ctx.exec_mode == 1 {
             Ok(format!("
                 section .text
             "))

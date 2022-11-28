@@ -290,7 +290,7 @@ fn main() -> std::io::Result<()> {
         let res = compile_and_assemble(
             args.eval,
             "CLI".to_owned(),
-            1,
+            args.exec_mode,
             args.std_path
         );
         if res.is_err() {

@@ -10,6 +10,7 @@ tests=0
 current_spec_name=""
 current_spec_num_tests=0
 current_spec_has_failed=0
+current_spec_file=""
 tests_started=0
 
 function setup () {
@@ -43,7 +44,7 @@ function execute() {
       echo "$code" > in.oxy
 
       export RUST_BACKTRACE=1
-      ./target/release/oxynium --std std.asm -x=1 in.oxy
+      ./target/release/oxynium --std std.asm in.oxy
     } 2>&1 > /dev/null)
 
     if [ "$errors" != "" ]; then
@@ -71,7 +72,7 @@ function test_failed() {
     fails=$((fails+1))
 
     if [ "$current_spec_has_failed" -eq 0 ]; then
-        echo -e "${RED}$current_spec_name FAILED${NC}"
+        echo -e "${RED}❌ $current_spec_name ($current_spec_file)${NC}"
     fi
     current_spec_has_failed=1
 
@@ -118,6 +119,18 @@ function expect_err() {
     fi
 }
 
+function expect_expr_int() {
+    code="$1"
+    expected="$2"
+    expect "print_int($code)" "$expected"
+}
+
+function expect_expr_bool() {
+    code="$1"
+    expected="$2"
+    expect "print_bool($code)" "$expected"
+}
+
 function results() {
 
     if [ "$fails" -eq 0 ]; then
@@ -136,6 +149,7 @@ start=$(date +"%s.%3N")
 setup
 
 for f in ./spec/*; do
+  current_spec_file="$f"
   # shellcheck disable=SC1090
   source "$f";
 done

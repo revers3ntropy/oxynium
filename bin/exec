@@ -16,18 +16,9 @@ errors=$({
   cargo run -- --std std.asm -e "$@"
 })
 
-output="BASH_ERROR_NOT_ASSIGNED"
-if test -f "./out"; then
-    # remove any \0 characters from output
-    # stops 'warning: command substitution: ignored null byte in input'
-    output=$(./out | tr -d '\000')
-else
-    output="ERROR_NO_OUTPUT"
-fi
-
 if [ "$errors" != "" ]; then
     printf "%s'\n\n" "$errors"
+    return 1
 fi
-
 printf "${GREEN}Program output:${NC}\n"
-echo "$output"
+./out

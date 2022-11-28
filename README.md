@@ -46,9 +46,7 @@ e.g. `res -e "(1+1)*2"` instead of `./res -e (1+1)*2`
 #### Exec Mode
 `0`: Compile to application
 
-`1`: Print last expression
-
-`2`: Compile as library
+`1`: Compile as library
 
 ## Commands
 
