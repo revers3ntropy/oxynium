@@ -19,7 +19,7 @@ use crate::ast::type_expr::TypeNode;
 use crate::ast::type_wrapper::TypeWrapperNode;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
-use crate::error::{Error, syntax_error};
+use crate::error::{Error, numeric_overflow, syntax_error};
 use crate::parse::lexer::token_type_str;
 use crate::position::Position;
 
@@ -499,9 +499,18 @@ impl Parser {
         match tok.token_type {
             TokenType::Int => {
                 self.advance(&mut res);
-                let value = tok.literal.unwrap();
+                let int_str = tok.literal.unwrap();
+                let int_res = int_str.parse::<i64>();
+                if int_res.is_err() {
+                    res.failure(
+                        numeric_overflow(format!("Invalid integer literal: '{}'", int_str)),
+                        Some(tok.start),
+                        Some(tok.end)
+                    );
+                    return res;
+                }
                 res.success(Box::new(IntNode {
-                    value: value.parse::<i64>().unwrap()
+                    value: int_res.unwrap()
                 }));
             },
             TokenType::String => {

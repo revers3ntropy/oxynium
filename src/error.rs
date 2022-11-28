@@ -53,6 +53,10 @@ pub fn unknown_symbol(message: String) -> Error {
     Error::new("UnknownSymbol".to_string(), message)
 }
 
+pub fn numeric_overflow(message: String) -> Error {
+    Error::new("NumericOverflow".to_string(), message)
+}
+
 pub fn type_error (expected: &dyn Display, got: &dyn Display) -> Error {
     Error::new(
         "TypeError".to_string(),

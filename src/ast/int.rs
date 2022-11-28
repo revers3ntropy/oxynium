@@ -11,7 +11,11 @@ pub struct IntNode {
 impl Node for IntNode {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
         let data = format!("dq {}", self.value);
-        let reference = ctx.declare_anon_data(data, true, ctx.get_from_id("Int").type_.clone());
+        let reference = ctx.declare_anon_data(
+            data,
+            true,
+            ctx.get_from_id("Int").type_.clone()
+        );
         Ok(format!("push {}", reference))
     }
 

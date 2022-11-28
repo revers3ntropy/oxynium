@@ -1,11 +1,18 @@
+![example workflow](https://github.com/revers3ntropy/oxynium/actions/workflows/tests.yml/badge.svg)
+
 # Simple Compiler in Rust
 
 Tested on Ubuntu.
 
 ## Requirements
 
-- nasm
-- ld
+- nasm (try `sudo apt-get -y install nasm`)
+- ld (try `sudo apt-get -y install binutils`)
+
+## Dev Requirements
+
+- cargo (try `sudo apt-get -y install cargo`)
+- rustc (try `sudo apt-get -y install rustc`)
 
 ## Examples
 See `spec/*` for more examples
