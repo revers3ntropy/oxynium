@@ -1,5 +1,4 @@
 use crate::ast::Node;
-use crate::ast::types::built_in::VOID;
 use crate::ast::types::Type;
 use crate::context::Context;
 use crate::error::{Error, type_error, unknown_symbol};
@@ -38,6 +37,6 @@ impl Node for MutateVar {
         if !symbol.type_.contains(assign_type.as_ref()) {
             return Err(type_error(symbol.type_.as_ref(), assign_type.as_ref()));
         }
-        Ok(Box::new(VOID))
+        Ok(ctx.get_from_id("Void").type_.clone())
     }
 }

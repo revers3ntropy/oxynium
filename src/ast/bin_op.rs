@@ -1,5 +1,4 @@
 use crate::ast::Node;
-use crate::ast::types::built_in::{BOOL, INT};
 use crate::ast::types::{Type};
 use crate::context::Context;
 use crate::error::{Error, type_error};
@@ -117,8 +116,8 @@ impl Node for BinOpNode {
             | TokenType::LT
             | TokenType::GTE
             | TokenType::LTE
-                => Box::new(INT),
-            _ => Box::new(BOOL),
+                => ctx.get_from_id("Int").type_.clone(),
+            _ => ctx.get_from_id("Bool").type_.clone(),
         };
 
         let lhs_type = self.lhs.type_check(ctx)?;

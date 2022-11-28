@@ -1,5 +1,4 @@
 use crate::ast::Node;
-use crate::ast::types::built_in::VOID;
 use crate::ast::types::Type;
 use crate::context::Context;
 use crate::error::{Error, type_error, unknown_symbol};
@@ -36,11 +35,11 @@ impl Node for FnCallNode {
             return Err(unknown_symbol(format!("undefined function {}", self.identifier)));
         }
 
-        let mut call_signature_children = vec![Box::new(VOID)];
+        let mut call_signature_children = vec![ctx.get_from_id("Void").type_.clone()];
         call_signature_children.append(&mut args);
         let call_signature_type = Box::new(Type {
-            id: 0,
-            name: "",
+            id: 999,
+            name: format!("{}", self.identifier),
             children: call_signature_children
         });
 
@@ -48,6 +47,6 @@ impl Node for FnCallNode {
         if !fn_type.contains(&call_signature_type) {
             return Err(type_error(fn_type.as_ref(), call_signature_type.as_ref()));
         }
-        Ok(Box::new(VOID))
+        Ok(ctx.get_from_id("Void").type_.clone())
     }
 }

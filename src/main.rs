@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use clap::{arg, ArgMatches, Command};
-use crate::ast::types::built_in::{BOOL, INT};
+use crate::ast::types::Type;
 
 mod parse;
 mod ast;
@@ -28,19 +28,46 @@ struct CompileResults {
 }
 
 fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
-
     // declare the built in types
     ctx.declare(Symbol {
         name: "Int".to_string(),
         data: None,
         constant: true,
-        type_: Box::new(INT)
+        type_: Box::new(Type {
+            id: 0,
+            name: "Int".to_string(),
+            children: vec![]
+        })
     });
     ctx.declare(Symbol {
         name: "Bool".to_string(),
         data: None,
         constant: true,
-        type_: Box::new(BOOL)
+        type_: Box::new(Type {
+            id: 1,
+            name: "Bool".to_string(),
+            children: vec![]
+        })
+    });
+    ctx.declare(Symbol {
+        name: "Str".to_string(),
+        data: None,
+        constant: true,
+        type_: Box::new(Type {
+            id: 2,
+            name: "Str".to_string(),
+            children: vec![]
+        })
+    });
+    ctx.declare(Symbol {
+        name: "Void".to_string(),
+        data: None,
+        constant: true,
+        type_: Box::new(Type {
+            id: 3,
+            name: "Void".to_string(),
+            children: vec![]
+        })
     });
 
     let mut lexer = Lexer::new(STD_DOXY.to_owned(), "std.doxy".to_owned());

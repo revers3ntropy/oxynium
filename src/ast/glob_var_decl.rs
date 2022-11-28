@@ -1,5 +1,4 @@
 use crate::ast::Node;
-use crate::ast::types::built_in::VOID;
 use crate::ast::types::Type;
 use crate::context::{Context, Symbol};
 use crate::error::Error;
@@ -12,7 +11,11 @@ pub struct GlobVarDecl<T> {
 }
 
 impl Node for GlobVarDecl<i64> {
-    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
+    fn asm(&mut self, _: &mut Context) -> Result<String, Error> {
+        Ok("".to_owned())
+    }
+
+    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
         let data = format!("dq {}", self.value);
         ctx.declare(Symbol {
             name: self.identifier.clone(),
@@ -20,10 +23,6 @@ impl Node for GlobVarDecl<i64> {
             constant: false,
             type_: self.type_.clone()
         });
-        Ok("".to_owned())
-    }
-
-    fn type_check(&mut self, _: &mut Context) -> Result<Box<Type>, Error> {
-        Ok(Box::new(VOID))
+        Ok(ctx.get_from_id("Void").type_.clone())
     }
 }

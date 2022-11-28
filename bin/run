@@ -1,5 +1,6 @@
 #!/bin/bash
 
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
@@ -25,5 +26,5 @@ fi
 if test -f "./out"; then
     ./out
 else
-    echo "No output file!"
+    printf "${RED}No output file!${NC}\n"
 fi

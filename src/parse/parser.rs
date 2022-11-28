@@ -1,8 +1,11 @@
+use std::collections::HashMap;
+use std::ops::Deref;
 use crate::ast::bin_op::BinOpNode;
 use crate::ast::unary_op::{UnaryOpNode};
 use crate::ast::const_decl::{ConstDeclNode, EmptyConstDeclNode};
 use crate::ast::exec_root::{EmptyExecRootNode, ExecRootNode};
 use crate::ast::fn_call::FnCallNode;
+use crate::ast::fn_declaration::FnDeclarationNode;
 use crate::ast::for_loop::ForLoopNode;
 use crate::ast::int::IntNode;
 use crate::ast::mutate_var::MutateVar;
@@ -13,9 +16,10 @@ use crate::ast::statements::StatementsNode;
 use crate::ast::str::StrNode;
 use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::type_expr::TypeNode;
+use crate::ast::type_wrapper::TypeWrapperNode;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
-use crate::error::syntax_error;
+use crate::error::{Error, syntax_error};
 use crate::parse::lexer::token_type_str;
 use crate::position::Position;
 
@@ -229,6 +233,11 @@ impl Parser {
         if self.peak_matches(TokenType::Identifier, Some("break".to_string())) {
             self.advance(&mut res);
             res.success(Box::new(BreakNode { }));
+            return res;
+        }
+        if self.peak_matches(TokenType::Identifier, Some("fn".to_string())) {
+            self.advance(&mut res);
+            res.node = res.register(self.fn_expr());
             return res;
         }
         self.expression()
@@ -585,6 +594,89 @@ impl Parser {
 
         res.success(Box::new(TypeNode {
             identifier: type_tok.literal.unwrap()
+        }));
+        res
+    }
+
+    fn parameter(&mut self) -> Result<(String, Box<dyn Node>), Error> {
+        let mut res = ParseResults::new();
+
+        let identifier = self.consume(&mut res, TokenType::Identifier);
+        if res.error.is_some() { return Err(res.error.unwrap()); }
+
+        self.consume(&mut res, TokenType::Colon);
+        if res.error.is_some() { return Err(res.error.unwrap()); }
+
+        let type_expr = res.register(self.type_expr());
+        if res.error.is_some() { return Err(res.error.unwrap()); }
+
+        Ok((identifier.literal.unwrap(), type_expr.unwrap()))
+    }
+
+    fn parameters(&mut self) -> Result<HashMap<String, Box<dyn Node>>, Error> {
+        let mut res = ParseResults::new();
+
+        let mut parameters = HashMap::new();
+
+        if self.peak_matches(TokenType::CloseParen, None) {
+            return Ok(parameters);
+        }
+
+        let (identifier, type_expr) = self.parameter()?;
+        parameters.insert(identifier, type_expr);
+
+        while let Some(next) = self.try_peak() {
+            if next.token_type == TokenType::CloseParen {
+                return Ok(parameters);
+            }
+
+            self.consume(&mut res, TokenType::Comma);
+            if res.error.is_some() { return Err(res.error.unwrap()); }
+
+            let (identifier, type_expr) = self.parameter()?;
+            parameters.insert(identifier, type_expr);
+        }
+
+        let mut e = syntax_error("Expected ',' or ')', got EOF".to_owned());
+        e.set_pos(self.tokens[self.tok_idx - 1].start.clone(),
+            self.tokens[self.tok_idx - 1].end.clone());
+        Err(e)
+    }
+
+    fn fn_expr(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        let id_tok = self.consume(&mut res,TokenType::Identifier);
+        if res.error.is_some() { return res; }
+        let identifier = id_tok.literal.unwrap();
+
+        self.consume(&mut res, TokenType::OpenParen);
+        if res.error.is_some() { return res; }
+
+        let params = self.parameters();
+        if params.is_err() {
+            res.failure(params.err().unwrap(), None, None);
+            return res;
+        }
+
+        self.consume(&mut res, TokenType::CloseParen);
+        if res.error.is_some() { return res; }
+
+        let mut ret_type: Box<dyn Node> = Box::new(TypeWrapperNode {
+            identifier: "Void".to_string()
+        });
+
+        if self.peak_matches(TokenType::Colon, None) {
+            self.advance(&mut res);
+            let ret_type_option = res.register(self.type_expr());
+            if res.error.is_some() { return res; }
+            ret_type = ret_type_option.unwrap();
+        }
+
+        res.success(Box::new(FnDeclarationNode {
+            identifier,
+            ret_type,
+            params: params.unwrap()
         }));
         res
     }

@@ -1,8 +1,8 @@
 const true: Bool;
 const false: Bool;
 
-fn print(value: Str);
-fn print_int(value: Int);
-fn print_nl();
-fn exit();
-fn throw();
+fn print(msg :Str): Void;
+fn print_int(i: Int): Void;
+fn print_nl(): Void;
+fn exit(): Void;
+fn throw(): Void;

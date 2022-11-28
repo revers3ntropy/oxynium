@@ -14,6 +14,8 @@ pub mod r#break;
 pub mod r#if;
 pub mod types;
 pub mod type_expr;
+pub mod fn_declaration;
+pub mod type_wrapper;
 
 use std::fmt::Debug;
 use crate::ast::types::Type;

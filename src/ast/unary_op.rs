@@ -1,5 +1,4 @@
 use crate::ast::Node;
-use crate::ast::types::built_in::{BOOL, INT};
 use crate::ast::types::Type;
 use crate::context::Context;
 use crate::error::{Error, type_error};
@@ -46,8 +45,8 @@ impl Node for UnaryOpNode {
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
         let t = match self.operator.token_type {
-            TokenType::Sub => Box::new(INT),
-            _ => Box::new(BOOL),
+            TokenType::Sub => ctx.get_from_id("Int").type_.clone(),
+            _ => ctx.get_from_id("Bool").type_.clone(),
         };
 
         let value_type = self.rhs.type_check(ctx)?;

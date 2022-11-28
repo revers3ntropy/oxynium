@@ -1,5 +1,4 @@
 use crate::ast::Node;
-use crate::ast::types::built_in::{INT, STR, VOID};
 use crate::ast::types::Type;
 use crate::context::{Context, Symbol};
 use crate::error::Error;
@@ -21,9 +20,9 @@ impl Node for ConstDeclNode<i64> {
             name: self.identifier.clone(),
             data: Some(format!("dq {}", self.value)),
             constant: self.is_const,
-            type_: Box::new(INT)
+            type_: ctx.get_from_id("Int").type_.clone()
         });
-        Ok(Box::new(INT))
+        Ok(ctx.get_from_id("Int").type_.clone())
     }
 }
 
@@ -38,9 +37,9 @@ impl Node for ConstDeclNode<String> {
             // ', 0' is a null terminator
             data: Some(format!("dq \"{}\", 0", self.value)),
             constant: true,
-            type_: Box::new(STR)
+            type_: ctx.get_from_id("Str").type_.clone()
         });
-        Ok(Box::new(STR))
+        Ok(ctx.get_from_id("Str").type_.clone())
     }
 }
 
@@ -64,6 +63,6 @@ impl Node for EmptyConstDeclNode {
             constant: true,
             type_
         });
-        Ok(Box::new(VOID))
+        Ok(ctx.get_from_id("Void").type_.clone())
     }
 }

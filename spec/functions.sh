@@ -1,10 +1,6 @@
 describe 'Function Declarations'
 
-
-expect '
-fn a();
-' ''
-
-expect '
-fn a(a, b, c);
-' ''
+expect 'fn a()' ''
+expect 'fn a(a: Int, b: Bool, c: Str)' ''
+expect 'fn a(): Void' ''
+expect 'fn a(a: Int): Str' ''

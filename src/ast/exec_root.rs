@@ -1,5 +1,4 @@
 use crate::ast::Node;
-use crate::ast::types::built_in::VOID;
 use crate::ast::types::Type;
 use crate::context::Context;
 use crate::error::Error;
@@ -57,7 +56,7 @@ impl Node for ExecRootNode {
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
         self.statements.type_check(ctx)?;
-        Ok(Box::new(VOID))
+        Ok(ctx.get_from_id("Void").type_.clone())
     }
 }
 
@@ -81,7 +80,7 @@ impl Node for EmptyExecRootNode {
         }
     }
 
-    fn type_check(&mut self, _: &mut Context) -> Result<Box<Type>, Error> {
-        Ok(Box::new(VOID))
+    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
+        Ok(ctx.get_from_id("Void").type_.clone())
     }
 }

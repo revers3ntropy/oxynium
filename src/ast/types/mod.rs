@@ -1,12 +1,10 @@
 use std::fmt::Debug;
 use std::fmt::Display;
 
-pub mod built_in;
-
 #[derive(Clone)]
 pub struct Type {
     pub id: u64,
-    pub name: &'static str,
+    pub name: String,
     // For atomic types, this is empty.
     // For types with parameters, this is a list of the parameters.
     // eg. for functions, the first element is the return type
@@ -19,23 +17,34 @@ impl Type {
         if self.children.is_empty() {
             return self.id == t.id;
         }
-        for child in self.children.iter() {
-            if !child.contains(t) {
+        if t.children.len() != self.children.len() {
+            return false;
+        }
+        for i in 0..self.children.iter().len() {
+            if !self.children[i].contains(t.children[i].as_ref()) {
                 return false;
             }
         }
         true
     }
+
+    pub fn str(&self) -> String {
+        if self.children.is_empty() {
+            format!("{}", self.name)
+        } else {
+            format!("{}<{:?}>", self.name, self.children)
+        }
+    }
 }
 
 impl Debug for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name)
+        write!(f, "{}", self.str())
     }
 }
 
 impl Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name)
+        write!(f, "{}", self.str())
     }
 }
