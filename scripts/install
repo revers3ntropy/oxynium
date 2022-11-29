@@ -19,7 +19,6 @@ if [ "$(which cargo)" == "" ]; then
 fi
 
 bin/compile_std
-bin/test
 bin/build
 
 if test -f "/usr/local/bin/oxy"; then

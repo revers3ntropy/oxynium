@@ -268,6 +268,8 @@ fn print_usage () {
     println!("Options:");
     println!("  -o, --out  <FILE>  Where to put assembly output");
     println!("  -e, --eval <EXP>   Compiles and prints a single expression");
+    println!("  -s, --std  <PATH>  Path to STD assembly file");
+    println!("  -x, --exec_mode <INT>  Exec mode");
 }
 
 fn main() -> std::io::Result<()> {

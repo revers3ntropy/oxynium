@@ -6,47 +6,49 @@ Tested on Ubuntu.
 
 ## Requirements
 
-- nasm (try `sudo apt-get -y install nasm`)
-- ld (try `sudo apt-get -y install binutils`)
+- nasm
+- ld
 
 ## Dev Requirements
 
-- cargo (try `sudo apt-get -y install cargo`)
-- rustc (try `sudo apt-get -y install rustc`)
+- cargo
+- rustc
 
 ## Examples
 See `spec/*` for more examples
 
 ```shell
-$ bin/exec "1+1"
-2
+$ oxy -e 'print("Hello, World!")' && ./out
+Hello, world!
 ```
+
 ```shell
-$ bin/exec 'print("Hello, World!")'
+$ oxy hello_world.oxy && ./out
 Hello, world!
 ```
 
 ## Usage
 
 ```shell
-$ res [input_file?] [options]
+$ oxy [input_file?] [options]
 ```
 
 Quote the input to escape shell expansion, 
-e.g. `res -e "(1+1)*2"` instead of `./res -e (1+1)*2`
+e.g. `oxy -e "(1+1)*2"` instead of `oxy -e (1+1)*2`
 
 ### Options
 
-| Command          | Type | Description                            | Default     |
-|------------------|------|----------------------------------------|-------------|
-| `-o`, `--output` | Str  | Output assembly file path              | `'out.asm'` |
-| `-e`, `--eval`   | Str  | Evaluate and print a single expression |             |
-| `-x`, `--exec`   | Int  | Exec mode                              | `0`         |
+| Command             | Type | Description                 | Default                      |
+|---------------------|------|-----------------------------|------------------------------|
+| `-o`, `--output`    | Str  | Output assembly file path   | `'out.asm'`                  |
+| `-e`, `--eval`      | Str  | Pass the program on the CLI |                              |
+| `-x`, `--exec_mode` | Int  | Exec mode                   | `0`                          |
+| `-s`, `--std`       | Str  | Path to STD asm file        | `/usr/local/bin/oxy-std.asm` |
 
 #### Exec Mode
-`0`: Compile to application
+`0` Compile to application
 
-`1`: Compile as library
+`1` Compile as library
 
 ## Commands
 
