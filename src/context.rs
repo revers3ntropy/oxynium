@@ -63,10 +63,6 @@ impl Context {
         self.declarations.get(id).unwrap()
     }
 
-    pub fn get_all_ids(&self) -> Vec<String> {
-        self.declarations.keys().map(|s| s.to_string()).collect()
-    }
-
     pub fn declare_anon_data(&mut self, data: String, constant: bool, type_: Box<Type>) -> String {
         let name = self.get_anon_id();
         let symbol = Symbol {

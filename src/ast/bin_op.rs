@@ -104,7 +104,7 @@ impl Node for BinOpNode {
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
 
-        let t = match self.operator.token_type {
+        let operand_types = match self.operator.token_type {
             TokenType::Percent
             | TokenType::Plus
             | TokenType::Sub
@@ -121,14 +121,22 @@ impl Node for BinOpNode {
         };
 
         let lhs_type = self.lhs.type_check(ctx)?;
-        if !t.contains(lhs_type.as_ref()) {
-            return Err(type_error(t.as_ref(), lhs_type.as_ref()))
+        if !operand_types.contains(lhs_type.as_ref()) {
+            return Err(type_error(operand_types.as_ref(), lhs_type.as_ref()))
         }
         let rhs_type = self.rhs.type_check(ctx)?;
-        if !t.contains(rhs_type.as_ref()) {
-            return Err(type_error(t.as_ref(), rhs_type.as_ref()))
+        if !operand_types.contains(rhs_type.as_ref()) {
+            return Err(type_error(operand_types.as_ref(), rhs_type.as_ref()))
         }
 
-        return Ok(t);
+        return Ok(match self.operator.token_type {
+            TokenType::Percent
+            | TokenType::Plus
+            | TokenType::Sub
+            | TokenType::Astrix
+            | TokenType::FSlash
+            => ctx.get_from_id("Int").type_.clone(),
+            _ => ctx.get_from_id("Bool").type_.clone(),
+        });
     }
 }

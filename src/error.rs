@@ -63,3 +63,7 @@ pub fn type_error (expected: &dyn Display, got: &dyn Display) -> Error {
         format!("expected '{expected}', got '{got}'")
     )
 }
+
+pub fn type_error_unstructured(message: String) -> Error {
+    Error::new("TypeError".to_string(), message)
+}

@@ -1,7 +1,7 @@
 use crate::ast::Node;
 use crate::ast::types::Type;
 use crate::context::{Context, Symbol};
-use crate::error::Error;
+use crate::error::{Error, type_error_unstructured};
 
 #[derive(Debug)]
 pub struct ConstDeclNode<T> {
@@ -16,6 +16,9 @@ impl Node for ConstDeclNode<i64> {
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
+        if ctx.has_with_id(self.identifier.clone().as_str()) {
+            //return Err(type_error_unstructured(format!("Symbol {} is already defined", self.identifier)))
+        }
         ctx.declare_glob_var(Symbol {
             name: self.identifier.clone(),
             data: Some(format!("dq {}", self.value)),
@@ -32,6 +35,9 @@ impl Node for ConstDeclNode<String> {
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
+        if ctx.has_with_id(self.identifier.clone().as_str()) {
+            //return Err(type_error_unstructured(format!("Symbol {} is already defined", self.identifier)))
+        }
         ctx.declare_glob_var(Symbol {
             name: self.identifier.clone(),
             // ', 0' is a null terminator
@@ -42,7 +48,6 @@ impl Node for ConstDeclNode<String> {
         Ok(ctx.get_from_id("Str").type_.clone())
     }
 }
-
 
 #[derive(Debug)]
 pub struct EmptyConstDeclNode {
@@ -56,6 +61,9 @@ impl Node for EmptyConstDeclNode {
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
+        if ctx.has_with_id(self.identifier.clone().as_str()) {
+            //return Err(type_error_unstructured(format!("Symbol {} is already defined", self.identifier)))
+        }
         let type_ = self.type_.type_check(ctx)?.clone();
         ctx.declare(Symbol {
             name: self.identifier.clone(),

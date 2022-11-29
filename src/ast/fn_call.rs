@@ -39,7 +39,7 @@ impl Node for FnCallNode {
         call_signature_children.append(&mut args);
         let call_signature_type = Box::new(Type {
             id: 999,
-            name: format!("{}", self.identifier),
+            name: "Fn".to_string(),
             children: call_signature_children
         });
 

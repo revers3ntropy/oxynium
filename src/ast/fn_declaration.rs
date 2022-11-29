@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use crate::ast::Node;
 use crate::ast::types::Type;
 use crate::context::{Context, Symbol};
-use crate::error::Error;
+use crate::error::{Error, type_error_unstructured};
 
 #[derive(Debug)]
 pub struct FnDeclarationNode {
@@ -17,6 +17,9 @@ impl Node for FnDeclarationNode {
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
+        if ctx.has_with_id(self.identifier.clone().as_str()) {
+            return Err(type_error_unstructured(format!("Symbol {} is already defined", self.identifier)))
+        }
         let ret_type = self.ret_type.type_check(ctx);
 
         let mut children = vec![ret_type?];

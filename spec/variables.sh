@@ -34,3 +34,6 @@ expect '
     a = 2;
     print_int(a)
 ' '2'
+
+expect_err 'print_int = 1' 'TypeError'
+expect_err 'true = 1' 'TypeError'

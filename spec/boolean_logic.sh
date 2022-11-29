@@ -41,3 +41,12 @@ expect_expr_bool '!!false' 'false'
 expect_expr_bool '!(true && true)' 'false'
 expect_expr_bool '!(true && false)' 'true'
 expect_expr_bool '!(false && true)' 'true'
+
+describe 'Types for Boolean Bin Ops'
+
+expect_err '1 && true' 'TypeError'
+expect_err 'true && ""' 'TypeError'
+expect_err 'false && false && ""' 'TypeError'
+expect_err 'false || false || ""' 'TypeError'
+expect_err 'false || 1' 'TypeError'
+expect_err '1 || false' 'TypeError'
