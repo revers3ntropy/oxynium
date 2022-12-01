@@ -2,7 +2,9 @@
 
 nasm -f elf64 "$1" -o "$1.o"
 
-ld -s -o out "$1.o"
+# ld -o out "$1.o" -lc -e _start -dynamic-linker /lib/ld-linux.so.2
+
+gcc -o out "$1.o" -nostdlib -no-pie -e _start -static
 
 ./out
 

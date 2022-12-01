@@ -16,6 +16,7 @@ pub mod types;
 pub mod type_expr;
 pub mod fn_declaration;
 pub mod type_wrapper;
+pub mod r#continue;
 
 use std::fmt::Debug;
 use crate::ast::types::Type;

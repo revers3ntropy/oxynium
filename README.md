@@ -7,7 +7,7 @@ Tested on Ubuntu.
 ## Requirements
 
 - nasm
-- ld
+- gcc
 
 ## Dev Requirements
 

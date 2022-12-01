@@ -12,6 +12,7 @@ use crate::ast::mutate_var::MutateVar;
 use crate::ast::r#break::BreakNode;
 use crate::ast::r#if::IfNode;
 use crate::ast::Node;
+use crate::ast::r#continue::ContinueNode;
 use crate::ast::statements::StatementsNode;
 use crate::ast::str::StrNode;
 use crate::ast::symbol_access::SymbolAccess;
@@ -233,6 +234,11 @@ impl Parser {
         if self.peak_matches(TokenType::Identifier, Some("break".to_string())) {
             self.advance(&mut res);
             res.success(Box::new(BreakNode { }));
+            return res;
+        }
+        if self.peak_matches(TokenType::Identifier, Some("continue".to_string())) {
+            self.advance(&mut res);
+            res.success(Box::new(ContinueNode { }));
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("fn".to_string())) {

@@ -21,6 +21,18 @@ for {
 ' $'hello\rthere'
 
 expect '
+var i = 0;
+for {
+    i = i + 1;
+    if i < 5 {
+        continue;
+    };
+    print_int(i);
+    break;
+};
+' $'5'
+
+expect '
 const n = 9;
 var i = 0;
 for {

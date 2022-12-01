@@ -189,21 +189,28 @@ fn compile_and_assemble(input: String, file_name: String, exec_mode: u8, std_pat
         .arg("-f")
         .arg("elf64")
         .arg("oxy-out.asm")
+        .arg("-o")
+        .arg("oxy-out.o")
         .output()
         .expect("Could not assemble");
     if !nasm_out.status.success() {
         return Err(String::from_utf8(nasm_out.stderr).unwrap());
     }
 
-    let ls_out = Exec::new("ld")
-        .arg("-s")
-        .arg("-o")
-        .arg("out")
-        .arg("oxy-out.o")
-        .output()
-        .expect("Could not assemble");
-    if !ls_out.status.success() {
-        return Err(String::from_utf8(ls_out.stderr).unwrap());
+    if exec_mode == 0 {
+        let ls_out = Exec::new("gcc")
+            .arg("-Wall")
+            .arg("-no-pie")
+            .arg("oxy-out.o")
+            .arg("-e")
+            .arg("main")
+            .arg("-o")
+            .arg("out")
+            .output()
+            .expect("Could not assemble");
+        if !ls_out.status.success() {
+            return Err(String::from_utf8(ls_out.stderr).unwrap());
+        }
     }
 
     Ok(())

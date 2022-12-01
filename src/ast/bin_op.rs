@@ -21,7 +21,13 @@ impl Node for BinOpNode {
                     pop rax
                     pop rbx
                     mov rbx, [rbx]
-                    {} [rax], rbx
+                    mov rax, [rax]
+                    {} rax, rbx
+                    push rax
+                    mov rdi, 8
+                    call malloc WRT ..plt
+                    pop rdx
+                    mov [rax], rdx
                     push rax
                 ",
                    self.rhs.asm(ctx)?,
@@ -44,8 +50,12 @@ impl Node for BinOpNode {
                         mov rax, [rcx]
                         cqo ; extend rax to rdx:rax
                         {} rbx
-                        mov [rcx], rax
-                        push rcx
+                        push rax
+                        mov rdi, 8
+                        call malloc WRT ..plt
+                        pop rdx
+                        mov [rax], rdx
+                        push rax
                     ",
                       self.rhs.asm(ctx)?,
                       self.lhs.asm(ctx)?,
@@ -65,8 +75,12 @@ impl Node for BinOpNode {
                         mov rax, [rcx]
                         cqo ; extend rax to rdx:rax
                         idiv rbx
-                        mov [rcx], rdx
-                        push rcx
+                        push rdx
+                        mov rdi, 8
+                        call malloc WRT ..plt
+                        pop rdx
+                        mov [rax], rdx
+                        push rax
                     ",
                        self.rhs.asm(ctx)?,
                        self.lhs.asm(ctx)?,
@@ -84,7 +98,11 @@ impl Node for BinOpNode {
                         mov rax, 0     ; al is first byte of rax,
                         {} al          ; so clear rax and put into al
                         push rax
-                        push rsp
+                        mov rdi, 8
+                        call malloc WRT ..plt
+                        pop rdx
+                        mov [rax], rdx
+                        push rax
                 ",
                        self.rhs.asm(ctx)?,
                        self.lhs.asm(ctx)?,

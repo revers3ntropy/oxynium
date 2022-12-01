@@ -15,6 +15,7 @@ pub struct Context {
     // all global_vars are also in declarations
     declarations: HashMap<String, Symbol>,
     global_vars: Vec<String>,
+    // Vec<(start of loop label, end of loop label)>
     loop_label_stack: Vec<(String, String)>,
     anon_symbol_count: u64,
     pub exec_mode: u8,

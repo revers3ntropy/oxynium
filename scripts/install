@@ -8,9 +8,9 @@ if [ "$(which nasm)" == "" ]; then
     sudo apt-get -y install nasm
 fi
 
-if [ "$(which ld)" == "" ]; then
-    echo "ld is not installed, installing binutils..."
-    sudo apt-get -y install binutils
+if [ "$(which gcc)" == "" ]; then
+    echo "gcc is not installed, installing build-essential..."
+    sudo apt-get install build-essential
 fi
 
 if [ "$(which cargo)" == "" ]; then
@@ -31,4 +31,4 @@ sudo mv ./std.asm /usr/local/bin/oxy-std.asm
 cd ..
 sudo rm -rf ./oxynium
 
-echo "oxynium has been installed successfully!"
+echo "Oxynium has been installed successfully!"

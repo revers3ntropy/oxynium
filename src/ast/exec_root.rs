@@ -21,6 +21,7 @@ impl Node for ExecRootNode {
 
         if ctx.exec_mode == 1 {
             return Ok(format!("
+                section	.note.GNU-stack
                 section .data
                     {decls}
             "));
@@ -28,14 +29,16 @@ impl Node for ExecRootNode {
 
         Ok(format!("
             %include \"{}\"
+            section	.note.GNU-stack
             section .data
                 {decls}
             section .text
-                global _start
+                global main
+                extern malloc
 
             {STD_ASM}
 
-            _start:
+            main:
                 mov rbp, rsp
                 {res}
                 call clear_stack
@@ -56,14 +59,15 @@ impl Node for EmptyExecRootNode {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
         if ctx.exec_mode == 1 {
             Ok(format!("
-                section .text
+                section	.note.GNU-stack
             "))
         } else {
             Ok(format!("
+                section	.note.GNU-stack
                 section .text
-                    global _start
+                    global main
                     {STD_ASM}
-                _start:
+                main:
                     call exit
             "))
         }
