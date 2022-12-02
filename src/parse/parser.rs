@@ -594,9 +594,28 @@ impl Parser {
         self.consume(&mut res, TokenType::CloseBrace);
         if res.error.is_some() { return res; }
 
+        let mut else_body: Option<Box<dyn Node>> = None;
+
+        if self.peak_matches(TokenType::Identifier, Some("else".to_string())) {
+            self.advance(&mut res);
+            if self.peak_matches(TokenType::OpenBrace, None) {
+                self.advance(&mut res);
+                let else_expr_option = res.register(self.statements());
+                if res.error.is_some() { return res; }
+                else_body = Some(else_expr_option.unwrap());
+                self.consume(&mut res, TokenType::CloseBrace);
+                if res.error.is_some() { return res; }
+            } else {
+                let else_expr_option = res.register(self.statement());
+                if res.error.is_some() { return res; }
+                else_body = Some(else_expr_option.unwrap());
+            }
+        }
+
         res.success(Box::new(IfNode {
             comparison: comparison.unwrap(),
-            body: statements.unwrap()
+            body: statements.unwrap(),
+            else_body
         }));
         res
     }

@@ -41,7 +41,7 @@ impl Node for ExecRootNode {
             main:
                 mov rbp, rsp
                 {res}
-                call clear_stack
+                call __$clear_stack
                 call exit
         ", ctx.std_asm_path))
     }

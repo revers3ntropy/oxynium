@@ -1,4 +1,4 @@
-print_digit: ; [number: int, cb: *] => []
+__$print_digit: ; [number: int, cb: *] => []
     pop rbx ; pop cb
     pop rax ; pop number
 
@@ -19,7 +19,7 @@ print_digit: ; [number: int, cb: *] => []
     push rbx ; push callback pointer
     ret
 
-print_char: ; [ascii_code: int, cb: *] => []
+__$print_char: ; [ascii_code: int, cb: *] => []
     pop rbx ; pop cb
     pop rax ; pop number
 
@@ -60,15 +60,15 @@ print: ; [string: str*, cb: *] => []
     mov rdx, 0 ; string length
 
     ; find length of string
-    __print_find_length:
+    __$print_find_length:
         mov rcx, [rax]
         cmp rcx, 0
-        je __print_end_length
+        je __$print_end_length
         inc rdx
         inc rax
-        jmp __print_find_length
+        jmp __$print_find_length
 
-    __print_end_length:
+    __$print_end_length:
         mov rax, 1
         mov rdi, 1
         syscall
@@ -81,10 +81,10 @@ print_true: ; [cb: *] => []
     push 'u'
     push 'r'
     push 't'
-    call print_char
-    call print_char
-    call print_char
-    call print_char
+    call __$print_char
+    call __$print_char
+    call __$print_char
+    call __$print_char
     ret
 
 print_false: ; [cb: *] => []
@@ -93,11 +93,11 @@ print_false: ; [cb: *] => []
     push 'l'
     push 'a'
     push 'f'
-    call print_char
-    call print_char
-    call print_char
-    call print_char
-    call print_char
+    call __$print_char
+    call __$print_char
+    call __$print_char
+    call __$print_char
+    call __$print_char
     ret
 
 print_bool: ; [bool: int*, cb: *] => []
@@ -106,14 +106,14 @@ print_bool: ; [bool: int*, cb: *] => []
 
     mov rax, [rsi]
     cmp rax, 0
-    je __print_bool_false
+    je __$print_bool_false
     call print_true
-    jmp __print_bool_end
+    jmp __$print_bool_end
 
-    __print_bool_false:
+    __$print_bool_false:
         call print_false
 
-    __print_bool_end:
+    __$print_bool_end:
         push rbx
         call print_nl
         ret
@@ -138,24 +138,24 @@ print_int: ; [number: int*, cb: *] => []
     mov r11, 0 ; is negative
 
     cmp r15, 0 ; if num < 0
-    jl __print_int_negative
+    jl __$print_int_negative
 
     cmp r15, 0 ; if num == 0, skip loop
-    jne __print_int_loop
+    jne __$print_int_loop
     mov rax, 0
     push rax
-    call print_digit
-    jmp __print_int_end
+    call __$print_digit
+    jmp __$print_int_end
 
-    __print_int_negative:
+    __$print_int_negative:
         neg r15 ; make num positive
         mov r11, 1 ; set is negative flag
-        jmp __print_int_loop
+        jmp __$print_int_loop
 
-    __print_int_loop:
+    __$print_int_loop:
         ; while number > 0
         cmp r15, 0
-        jle __print_int_end
+        jle __$print_int_end
 
         ; digit_count++
         inc r14
@@ -185,35 +185,35 @@ print_int: ; [number: int*, cb: *] => []
         imul rax, 2
         mov r12, rax
 
-        jmp __print_int_loop
+        jmp __$print_int_loop
 
-    __print_int_end: ; do the actual printing off the stack
+    __$print_int_end: ; do the actual printing off the stack
         pop rax ; clean up stack
 
         cmp r11, 1 ; r11 is 1 if negative
-        je __print_int_end_print_negative
-        jmp __print_int_end_print_loop
+        je __$print_int_end_print_negative
+        jmp __$print_int_end_print_loop
 
-        __print_int_end_print_negative:
+        __$print_int_end_print_negative:
             mov rax, '-'
             push rax
-            call print_char
+            call __$print_char
 
-        __print_int_end_print_loop:
+        __$print_int_end_print_loop:
                 ; print digits in reverse of reverse order
                 ; (i.e. print digits in correct order)
                 ; by popping and printing 'digit_count' stack items
             cmp r14, 0
-            jle __print_int_end_end
+            jle __$print_int_end_end
             dec r14
-            call print_digit
-            jmp __print_int_end_print_loop
+            call __$print_digit
+            jmp __$print_int_end_print_loop
 
-        __print_int_end_end:
+        __$print_int_end_end:
             push r8
             ret
 
-clear_stack: ; [cb: *] => []
+__$clear_stack: ; [cb: *] => []
              ; resets the stack pointer to the beginning of the stack
     pop rax
     mov rsp, rbp
@@ -224,11 +224,11 @@ print_nl:
     ; print NL
     mov rax, 13
     push rax
-    call print_char
+    call __$print_char
     ; print CR
     mov rax, 10
     push rax
-    call print_char
+    call __$print_char
     ret
 
 add_ints: ; [a: int*, b: int*, cb: *] => [sum: int*]
