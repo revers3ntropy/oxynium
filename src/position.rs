@@ -33,7 +33,11 @@ impl Position {
     }
 
     pub fn str(&self) -> String {
-        format!("'{}' {}:{}", self.file, self.line+1, self.col+1)
+        if self.idx == -2 {
+            "<unknown>".to_string()
+        } else {
+            format!("'{}' {}:{}", self.file, self.line+1, self.col+1)
+        }
     }
 }
 

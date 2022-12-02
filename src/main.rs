@@ -7,7 +7,7 @@ mod error;
 mod position;
 mod post_process;
 
-use std::env;
+use std::{env, fs};
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
@@ -219,6 +219,11 @@ fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result
         }
     }
 
+    if !args.keep {
+        fs::remove_file(asm_out_file).expect("Could not remove assembly file");
+        fs::remove_file(o_out_file).expect("Could not remove object file");
+    }
+
     Ok(())
 }
 
@@ -229,10 +234,11 @@ struct Args {
     eval: String,
     exec_mode: u8,
     std_path: String,
-    //keep: bool
+    allow_overrides: bool,
+    keep: bool
 }
 
-fn get_int_cli_arg (m: ArgMatches, name: &str, default: u8) -> u8 {
+fn get_int_cli_arg (m: &ArgMatches, name: &str, default: u8) -> u8 {
     let res = m.get_one::<String>(name)
         .unwrap_or(&String::from(default.to_string()))
         .to_string()
@@ -257,6 +263,7 @@ fn get_cli_args () -> Args {
             arg!(-e --eval      [EXPR] "Compiles and prints a single expression"),
             arg!(-s --std       [PATH] "Path to STD assembly file"),
             arg!(-k --keep             "Keep output assembly and object files"),
+            arg!(   --allow_overrides  "Ignore re-declarations (very unsafe, used to compile std)"),
             arg!(-x --exec_mode [INT]  "Exec mode"),
             arg!(   [input]            "Input code to evaluate"),
         ]);
@@ -274,8 +281,9 @@ fn get_cli_args () -> Args {
         eval: m.get_one::<String>("eval").unwrap_or(&String::from("")).to_string(),
         std_path: m.get_one::<String>("std")
             .unwrap_or(&String::from("/usr/local/bin/oxy-std.asm")).to_string(),
-        exec_mode: get_int_cli_arg(m, "exec_mode", 0),
-        //keep: m.get_one::<bool>("keep").is_some_and(|b| b == true)
+        allow_overrides: m.get_flag("allow_overrides"),
+        exec_mode: get_int_cli_arg(&m, "exec_mode", 0),
+        keep: m.get_flag("keep")
     }
 }
 
@@ -289,7 +297,6 @@ fn print_usage () {
 }
 
 fn main() -> std::io::Result<()> {
-
     let mut e = std::io::stderr();
 
     let args = get_cli_args();
@@ -298,7 +305,6 @@ fn main() -> std::io::Result<()> {
         let _ = e.write("Cannot specify both 'input' and 'eval' options\n".as_bytes());
         return Ok(());
     }
-
     if args.exec_mode != 1 && !Path::new(&args.std_path).exists() {
         let _ = e.write(format!("STD file '{}' does not exist or is not accessible\n", args.std_path).as_bytes());
         return Ok(());
@@ -329,7 +335,7 @@ fn main() -> std::io::Result<()> {
 
         let res = compile_and_assemble(
             input,
-            "CLI".to_owned(),
+            args.input.clone(),
             &args
         );
         if res.is_err() {

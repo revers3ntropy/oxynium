@@ -9,3 +9,4 @@ fn print_false(): Void;
 fn print_nl(): Void;
 fn exit(): Void;
 fn throw(): Void;
+fn print_hello_world(): Int;

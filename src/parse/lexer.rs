@@ -113,6 +113,14 @@ impl Lexer {
             } else if c == '"' {
                 tokens.push(self.make_string());
 
+            } else if c == '/' &&
+                self.input.chars().nth((self.position.idx + 1) as usize) == Some('/')
+            {
+                self.advance();
+                while self.current_char.is_some() && self.current_char.unwrap() != '\n' {
+                    self.advance();
+                }
+
             } else if DOUBLE_CHAR_TOKENS.contains_key(&(
                 c.to_string() +
                     &self.input.chars()
