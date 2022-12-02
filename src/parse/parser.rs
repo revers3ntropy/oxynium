@@ -11,6 +11,7 @@ use crate::ast::mutate_var::MutateVar;
 use crate::ast::r#break::BreakNode;
 use crate::ast::r#if::IfNode;
 use crate::ast::Node;
+use crate::ast::pass::PassNode;
 use crate::ast::r#continue::ContinueNode;
 use crate::ast::statements::StatementsNode;
 use crate::ast::str::StrNode;
@@ -205,6 +206,25 @@ impl Parser {
         self.clear_end_statements(&mut res);
 
         res.success(Box::new(StatementsNode { statements }));
+        res
+    }
+
+    fn context(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+        self.consume(&mut res, TokenType::OpenBrace);
+        if res.error.is_some() { return res; }
+
+        let mut statements: Option<Box<dyn Node>> = Some(Box::new(PassNode {}));
+
+        if !self.peak_matches(TokenType::CloseBrace, None) {
+            statements = res.register(self.statements());
+            if res.error.is_some() { return res; }
+        }
+
+        self.consume(&mut res, TokenType::CloseBrace);
+        if res.error.is_some() { return res; }
+
+        res.success(statements.unwrap());
         res
     }
 
@@ -563,13 +583,7 @@ impl Parser {
     fn for_loop(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
 
-        self.consume(&mut res, TokenType::OpenBrace);
-        if res.error.is_some() { return res; }
-
-        let statements = res.register(self.statements());
-        if res.error.is_some() { return res; }
-
-        self.consume(&mut res, TokenType::CloseBrace);
+        let statements = res.register(self.context());
         if res.error.is_some() { return res; }
 
         res.success(Box::new(ForLoopNode {
@@ -584,13 +598,7 @@ impl Parser {
         let comparison = res.register(self.expression());
         if res.error.is_some() { return res; }
 
-        self.consume(&mut res, TokenType::OpenBrace);
-        if res.error.is_some() { return res; }
-
-        let statements = res.register(self.statements());
-        if res.error.is_some() { return res; }
-
-        self.consume(&mut res, TokenType::CloseBrace);
+        let statements = res.register(self.context());
         if res.error.is_some() { return res; }
 
         let mut else_body: Option<Box<dyn Node>> = None;
@@ -598,11 +606,7 @@ impl Parser {
         if self.peak_matches(TokenType::Identifier, Some("else".to_string())) {
             self.advance(&mut res);
             if self.peak_matches(TokenType::OpenBrace, None) {
-                self.advance(&mut res);
-                let else_expr_option = res.register(self.statements());
-                if res.error.is_some() { return res; }
-                else_body = Some(else_expr_option.unwrap());
-                self.consume(&mut res, TokenType::CloseBrace);
+                else_body = res.register(self.context());
                 if res.error.is_some() { return res; }
             } else {
                 let else_expr_option = res.register(self.statement());
@@ -706,10 +710,24 @@ impl Parser {
             ret_type = ret_type_option.unwrap();
         }
 
+        if !self.peak_matches(TokenType::OpenBrace, None) {
+            res.success(Box::new(FnDeclarationNode {
+                identifier,
+                ret_type,
+                params: params.unwrap(),
+                body: None
+            }));
+            return res;
+        }
+
+        let body = res.register(self.context());
+        if res.error.is_some() { return res; }
+
         res.success(Box::new(FnDeclarationNode {
             identifier,
             ret_type,
-            params: params.unwrap()
+            params: params.unwrap(),
+            body: Some(body.unwrap())
         }));
         res
     }

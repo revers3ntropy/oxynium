@@ -20,6 +20,7 @@ impl Node for GlobVarDecl<i64> {
         ctx.declare(Symbol {
             name: self.identifier.clone(),
             data: Some(data),
+            text: None,
             constant: false,
             type_: self.type_.clone()
         });

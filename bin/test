@@ -115,7 +115,7 @@ function expect_err() {
     output_err="${split_arr[0]}"
 
     if [ "$expected" != "$output_err" ]; then
-        test_failed "$code" "Error: '$expected'" "$output"
+        test_failed "$code" "Error<$expected>" "$output"
     fi
 }
 

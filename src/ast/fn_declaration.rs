@@ -9,11 +9,12 @@ pub struct FnDeclarationNode {
     pub identifier: String,
     pub ret_type: Box<dyn Node>,
     pub params: HashMap<String, Box<dyn Node>>,
+    pub body: Option<Box<dyn Node>>
 }
 
 impl Node for FnDeclarationNode {
     fn asm(&mut self, _: &mut Context) -> Result<String, Error> {
-        Ok("".to_owned())
+        Ok("".to_string())
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
@@ -32,12 +33,28 @@ impl Node for FnDeclarationNode {
             name: "Fn".to_owned(),
             children
         };
-        ctx.declare(Symbol {
-            name: self.identifier.clone(),
-            data: None,
-            constant: true,
-            type_: Box::new(this_type.clone())
-        });
+        if let Some(mut body_node) = self.body.take() {
+            let body = body_node.asm(ctx)?;
+            ctx.declare_glob_var(Symbol {
+                name: self.identifier.clone(),
+                data: None,
+                text: Some(format!("
+                        {body}
+                        ret
+                     ")),
+                constant: true,
+                type_: Box::new(this_type.clone())
+            });
+        } else {
+            ctx.declare(Symbol {
+                name: self.identifier.clone(),
+                data: None,
+                text: Some("ret".to_string()),
+                constant: true,
+                type_: Box::new(this_type.clone())
+            });
+        }
+
         Ok(Box::new(this_type))
     }
 }

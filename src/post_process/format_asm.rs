@@ -5,7 +5,7 @@ pub fn post_process(asm: String) -> String {
 
     let mut indent = 4;
 
-    let indent_re: Regex = Regex::new("^(section ?.[a-zA-Z0-9]+)|([a-zA-Z0-9_-]+:)$").unwrap();
+    let indent_re: Regex = Regex::new("^(section ?.)|([a-zA-Z0-9_-]+:)$").unwrap();
 
     for line in asm.lines() {
         // remove whitespace

@@ -1,4 +1,4 @@
-__$print_digit: ; [number: int, cb: *] => []
+_$_print_digit: ; [number: int, cb: *] => []
     pop rbx ; pop cb
     pop rax ; pop number
 
@@ -19,7 +19,7 @@ __$print_digit: ; [number: int, cb: *] => []
     push rbx ; push callback pointer
     ret
 
-__$print_char: ; [ascii_code: int, cb: *] => []
+_$_print_char: ; [ascii_code: int, cb: *] => []
     pop rbx ; pop cb
     pop rax ; pop number
 
@@ -60,15 +60,15 @@ print: ; [string: str*, cb: *] => []
     mov rdx, 0 ; string length
 
     ; find length of string
-    __$print_find_length:
+    _$_print_find_length:
         mov rcx, [rax]
         cmp rcx, 0
-        je __$print_end_length
+        je _$_print_end_length
         inc rdx
         inc rax
-        jmp __$print_find_length
+        jmp _$_print_find_length
 
-    __$print_end_length:
+    _$_print_end_length:
         mov rax, 1
         mov rdi, 1
         syscall
@@ -81,10 +81,10 @@ print_true: ; [cb: *] => []
     push 'u'
     push 'r'
     push 't'
-    call __$print_char
-    call __$print_char
-    call __$print_char
-    call __$print_char
+    call _$_print_char
+    call _$_print_char
+    call _$_print_char
+    call _$_print_char
     ret
 
 print_false: ; [cb: *] => []
@@ -93,11 +93,11 @@ print_false: ; [cb: *] => []
     push 'l'
     push 'a'
     push 'f'
-    call __$print_char
-    call __$print_char
-    call __$print_char
-    call __$print_char
-    call __$print_char
+    call _$_print_char
+    call _$_print_char
+    call _$_print_char
+    call _$_print_char
+    call _$_print_char
     ret
 
 print_bool: ; [bool: int*, cb: *] => []
@@ -106,17 +106,18 @@ print_bool: ; [bool: int*, cb: *] => []
 
     mov rax, [rsi]
     cmp rax, 0
-    je __$print_bool_false
+    je _$_print_bool_false
     call print_true
-    jmp __$print_bool_end
+    jmp _$_print_bool_end
 
-    __$print_bool_false:
+    _$_print_bool_false:
         call print_false
 
-    __$print_bool_end:
+    _$_print_bool_end:
         push rbx
         call print_nl
         ret
+
 
 print_int: ; [number: int*, cb: *] => []
            ; prints an 8 byte integer in base 10
@@ -132,30 +133,34 @@ print_int: ; [number: int*, cb: *] => []
     pop r15 ; pop num
     mov r15, [r15]
 
+    mov r10, rsp
+
     mov r12, 1 ; base
     mov r13, 0 ; remainder
     mov r14, 0 ; digit_count
     mov r11, 0 ; is negative
 
     cmp r15, 0 ; if num < 0
-    jl __$print_int_negative
+    jl _$_print_int_negative
 
-    cmp r15, 0 ; if num == 0, skip loop
-    jne __$print_int_loop
+    cmp r15, 0 ; if num == 0: break
+    jne _$_print_int_start
     mov rax, 0
     push rax
-    call __$print_digit
-    jmp __$print_int_end
+    call _$_print_digit
+    jmp _$_print_int_end
 
-    __$print_int_negative:
+    _$_print_int_negative:
         neg r15 ; make num positive
         mov r11, 1 ; set is negative flag
-        jmp __$print_int_loop
+        jmp _$_print_int_start
 
-    __$print_int_loop:
+    _$_print_int_start:
+        push 0
+    _$_print_int_loop:
         ; while number > 0
         cmp r15, 0
-        jle __$print_int_end
+        jle _$_print_int_end
 
         ; digit_count++
         inc r14
@@ -165,13 +170,11 @@ print_int: ; [number: int*, cb: *] => []
         mov rax, r15
         mov rcx, 10
         idiv rcx
-        pop r13
         push rdx ; push decimal digit
 
         ; print(remainder * base)
-        mov rax, r13
+        mov rax, 10
         imul rax, r12
-        push rax
 
         ; number = number / 10
         mov rax, r15
@@ -185,35 +188,34 @@ print_int: ; [number: int*, cb: *] => []
         imul rax, 2
         mov r12, rax
 
-        jmp __$print_int_loop
+        jmp _$_print_int_loop
 
-    __$print_int_end: ; do the actual printing off the stack
-        pop rax ; clean up stack
-
+    _$_print_int_end: ; do the actual printing off the stack
         cmp r11, 1 ; r11 is 1 if negative
-        je __$print_int_end_print_negative
-        jmp __$print_int_end_print_loop
+        je _$_print_int_end_print_negative
+        jmp _$_print_int_end_print_loop
 
-        __$print_int_end_print_negative:
+        _$_print_int_end_print_negative:
             mov rax, '-'
             push rax
-            call __$print_char
+            call _$_print_char
 
-        __$print_int_end_print_loop:
+        _$_print_int_end_print_loop:
                 ; print digits in reverse of reverse order
                 ; (i.e. print digits in correct order)
                 ; by popping and printing 'digit_count' stack items
             cmp r14, 0
-            jle __$print_int_end_end
+            jle _$_print_int_return
             dec r14
-            call __$print_digit
-            jmp __$print_int_end_print_loop
+            call _$_print_digit
+            jmp _$_print_int_end_print_loop
 
-        __$print_int_end_end:
-            push r8
-            ret
+    _$_print_int_return:
+        pop rax
+        push r8
+        ret
 
-__$clear_stack: ; [cb: *] => []
+_$_clear_stack: ; [cb: *] => []
              ; resets the stack pointer to the beginning of the stack
     pop rax
     mov rsp, rbp
@@ -224,11 +226,11 @@ print_nl:
     ; print NL
     mov rax, 13
     push rax
-    call __$print_char
+    call _$_print_char
     ; print CR
     mov rax, 10
     push rax
-    call __$print_char
+    call _$_print_char
     ret
 
 add_ints: ; [a: int*, b: int*, cb: *] => [sum: int*]

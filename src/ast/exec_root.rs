@@ -15,15 +15,22 @@ impl Node for ExecRootNode {
         // println!("Generating assembly for program: {:?}", self.statement);
 
         let res = self.statements.asm(ctx)?;
-        let decls = ctx.get_global_vars().iter().map(|k| {
+        let (data_decls, text_decls) = ctx.get_global_vars();
+        let data = data_decls.iter().map(|k| {
             format!("{} {}", k.name, k.data.as_ref().unwrap())
+        }).collect::<Vec<String>>().join("\n");
+
+        let text = text_decls.iter().map(|k| {
+            format!("{}: \n{}", k.name, k.text.as_ref().unwrap())
         }).collect::<Vec<String>>().join("\n");
 
         if ctx.exec_mode == 1 {
             return Ok(format!("
                 section	.note.GNU-stack
                 section .data
-                    {decls}
+                    {data}
+                section .text
+                    {text}
             "));
         }
 
@@ -31,17 +38,19 @@ impl Node for ExecRootNode {
             %include \"{}\"
             section	.note.GNU-stack
             section .data
-                {decls}
+                {data}
             section .text
                 global main
                 extern malloc
 
             {STD_ASM}
 
+            {text}
+
             main:
                 mov rbp, rsp
                 {res}
-                call __$clear_stack
+                call _$_clear_stack
                 call exit
         ", ctx.std_asm_path))
     }

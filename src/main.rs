@@ -1,15 +1,5 @@
 extern crate core;
 
-use std::arch::asm;
-use std::borrow::Borrow;
-use std::env;
-use std::fmt::format;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-use clap::{arg, ArgMatches, Command};
-use crate::ast::types::Type;
-
 mod parse;
 mod ast;
 mod context;
@@ -17,6 +7,12 @@ mod error;
 mod position;
 mod post_process;
 
+use std::env;
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::Path;
+use clap::{arg, ArgMatches, Command};
+use crate::ast::types::Type;
 use crate::parse::lexer::{Lexer};
 use crate::parse::parser::Parser;
 use crate::context::{Context, Symbol};
@@ -37,6 +33,7 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
     ctx.declare(Symbol {
         name: "Int".to_string(),
         data: None,
+        text: None,
         constant: true,
         type_: Box::new(Type {
             id: 0,
@@ -47,6 +44,7 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
     ctx.declare(Symbol {
         name: "Bool".to_string(),
         data: None,
+        text: None,
         constant: true,
         type_: Box::new(Type {
             id: 1,
@@ -57,6 +55,7 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
     ctx.declare(Symbol {
         name: "Str".to_string(),
         data: None,
+        text: None,
         constant: true,
         type_: Box::new(Type {
             id: 2,
@@ -67,6 +66,7 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
     ctx.declare(Symbol {
         name: "Void".to_string(),
         data: None,
+        text: None,
         constant: true,
         type_: Box::new(Type {
             id: 3,
@@ -228,7 +228,8 @@ struct Args {
     out: String,
     eval: String,
     exec_mode: u8,
-    std_path: String
+    std_path: String,
+    //keep: bool
 }
 
 fn get_int_cli_arg (m: ArgMatches, name: &str, default: u8) -> u8 {
@@ -252,11 +253,12 @@ fn get_cli_args () -> Args {
 
     let cmd = Command::new("res")
         .args(&[
-            arg!(-o --out [FILE] "Where to put assembly output"),
-            arg!(-e --eval [EXPR] "Compiles and prints a single expression"),
-            arg!(-s --std [PATH] "Path to STD assembly file"),
-            arg!(-x --exec_mode [INT] "Exec mode"),
-            arg!([input] "Input code to evaluate"),
+            arg!(-o --out       [FILE] "Where to put assembly output"),
+            arg!(-e --eval      [EXPR] "Compiles and prints a single expression"),
+            arg!(-s --std       [PATH] "Path to STD assembly file"),
+            arg!(-k --keep             "Keep output assembly and object files"),
+            arg!(-x --exec_mode [INT]  "Exec mode"),
+            arg!(   [input]            "Input code to evaluate"),
         ]);
     let args: Vec<String> = env::args().collect();
     let matches = cmd.try_get_matches_from(args);
@@ -272,7 +274,8 @@ fn get_cli_args () -> Args {
         eval: m.get_one::<String>("eval").unwrap_or(&String::from("")).to_string(),
         std_path: m.get_one::<String>("std")
             .unwrap_or(&String::from("/usr/local/bin/oxy-std.asm")).to_string(),
-        exec_mode: get_int_cli_arg(m, "exec_mode", 0)
+        exec_mode: get_int_cli_arg(m, "exec_mode", 0),
+        //keep: m.get_one::<bool>("keep").is_some_and(|b| b == true)
     }
 }
 

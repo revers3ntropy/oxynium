@@ -17,6 +17,7 @@ pub mod type_expr;
 pub mod fn_declaration;
 pub mod type_wrapper;
 pub mod r#continue;
+pub mod pass;
 
 use std::fmt::Debug;
 use crate::ast::types::Type;
@@ -29,3 +30,4 @@ pub trait Node: Debug {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error>;
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error>;
 }
+

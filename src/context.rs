@@ -6,6 +6,7 @@ use crate::ast::types::Type;
 pub struct Symbol {
     pub name: String,
     pub data: Option<String>,
+    pub text: Option<String>,
     pub constant: bool,
     pub type_: Box<Type>
 }
@@ -69,6 +70,7 @@ impl Context {
         let symbol = Symbol {
             name: name.clone(),
             data: Some(data),
+            text: None,
             constant,
             type_
         };
@@ -77,12 +79,23 @@ impl Context {
         name.clone()
     }
 
-    pub fn get_global_vars(&mut self) -> Vec<&Symbol> {
-        let mut symbols = Vec::new();
+    pub fn get_global_vars(&mut self) -> (Vec<&Symbol>, Vec<&Symbol>) {
+        let mut data = Vec::new();
+        let mut text = Vec::new();
         for name in &self.global_vars {
-            symbols.push(self.declarations.get(name).unwrap());
+            let symbol = self.declarations.get(name).unwrap();
+            if symbol.text.is_some() {
+                if symbol.data.is_some() {
+                    panic!("Cannot have global variable with both data and text")
+                }
+                text.push(symbol);
+            } else if symbol.data.is_some() {
+                data.push(symbol);
+            } else {
+                panic!("Cannot have global variable without data or text")
+            }
         }
-        symbols
+        (data, text)
     }
 
     pub fn loop_labels_push(&mut self, start: String, end: String) {

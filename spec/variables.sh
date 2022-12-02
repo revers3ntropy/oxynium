@@ -17,6 +17,14 @@ expect '
     print(a)
 ' $'Some String\r'
 
+expect_err '
+    const a = 1;
+    const a = 2;
+' 'TypeError'
+expect '
+    const a = true;
+    print_bool(a);
+' 'true'
 
 describe 'Declaring Variables'
 
@@ -26,6 +34,15 @@ expect '
   print_int(a + b)
 ' '7'
 
+expect_err 'print_int = 1' 'TypeError'
+expect_err 'true = 1' 'TypeError'
+expect_err 'const a = 1; a = 1' 'TypeError'
+expect '
+    const a = 1;
+    print_int(a * 4);
+    print_int(a);
+' '41'
+
 
 describe 'Mutating Variables'
 
@@ -34,11 +51,11 @@ expect '
     a = 2;
     print_int(a)
 ' '2'
-expect '
-    const a = 1;
-    print_int(a * 4);
-    print_int(a);
-' '41'
-expect_err 'print_int = 1' 'TypeError'
-expect_err 'true = 1' 'TypeError'
-expect_err 'const a = 1; a = 1' 'TypeError'
+expect_err '
+    var a = 1;
+    a = true;
+' 'TypeError'
+expect_err '
+    var a = 1;
+    a = "hi";
+' 'TypeError'

@@ -22,6 +22,7 @@ impl Node for ConstDeclNode<i64> {
         ctx.declare_glob_var(Symbol {
             name: self.identifier.clone(),
             data: Some(format!("dq {}", self.value)),
+            text: None,
             constant: self.is_const,
             type_: ctx.get_from_id("Int").type_.clone()
         });
@@ -42,6 +43,7 @@ impl Node for ConstDeclNode<String> {
             name: self.identifier.clone(),
             // ', 0' is a null terminator
             data: Some(format!("dq \"{}\", 0", self.value)),
+            text: None,
             constant: true,
             type_: ctx.get_from_id("Str").type_.clone()
         });
@@ -68,6 +70,7 @@ impl Node for EmptyConstDeclNode {
         ctx.declare(Symbol {
             name: self.identifier.clone(),
             data: None,
+            text: None,
             constant: true,
             type_
         });
