@@ -121,11 +121,15 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
     }
 }
 
-fn compile (input: String, file_name: String, exec_mode: u8, std_path: String) -> CompileResults {
+fn compile (input: String, file_name: String, args: &Args) -> CompileResults {
     let ctx_res = setup_ctx_with_doxy(Context::new());
     if ctx_res.error.is_some() { return ctx_res; }
     let mut ctx = ctx_res.ctx;
-    ctx.std_asm_path = std_path;
+
+    ctx.std_asm_path = args.std_path.clone();
+    ctx.exec_mode = args.exec_mode;
+    ctx.allow_overrides = args.allow_overrides;
+
 
     let mut lexer = Lexer::new(input.clone(), file_name);
     let tokens = lexer.lex();
@@ -148,7 +152,6 @@ fn compile (input: String, file_name: String, exec_mode: u8, std_path: String) -
         };
     }
 
-    ctx.exec_mode = exec_mode;
 
     let mut root_node = ast.node.unwrap();
     let type_check_res = root_node.type_check(&mut ctx);
@@ -177,7 +180,7 @@ fn compile (input: String, file_name: String, exec_mode: u8, std_path: String) -
 }
 
 fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result<(), String> {
-    let compile_res = compile(input, file_name, args.exec_mode, args.std_path.clone());
+    let compile_res = compile(input, file_name, args);
 
     if let Some(e) = compile_res.error {
         return Err(e);

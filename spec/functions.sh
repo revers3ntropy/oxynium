@@ -11,6 +11,9 @@ expect_err 'fn 0()' 'SyntaxError'
 expect_err 'fn 0g()' 'SyntaxError'
 expect_err 'fn g(); fn g();' 'TypeError'
 
+
+describe 'Writing Functions'
+
 expect '
 fn g() {
     print("3");

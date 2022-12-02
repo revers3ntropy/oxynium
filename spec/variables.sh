@@ -21,10 +21,7 @@ expect_err '
     const a = 1;
     const a = 2;
 ' 'TypeError'
-expect '
-    const a = true;
-    print_bool(a);
-' 'true'
+
 
 describe 'Declaring Variables'
 
@@ -36,6 +33,8 @@ expect '
 
 expect_err 'print_int = 1' 'TypeError'
 expect_err 'true = 1' 'TypeError'
+expect_err 'true = false' 'TypeError'
+expect_err 'true = true' 'TypeError'
 expect_err 'const a = 1; a = 1' 'TypeError'
 expect '
     const a = 1;

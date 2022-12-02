@@ -18,7 +18,7 @@ impl Node for FnDeclarationNode {
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
-        if ctx.has_with_id(self.identifier.clone().as_str()) {
+        if !ctx.allow_overrides && ctx.has_with_id(self.identifier.clone().as_str()) {
             return Err(type_error_unstructured(format!("Symbol {} is already defined", self.identifier)))
         }
         let ret_type = self.ret_type.type_check(ctx);

@@ -21,6 +21,7 @@ pub struct Context {
     anon_symbol_count: u64,
     pub exec_mode: u8,
     pub std_asm_path: String,
+    pub allow_overrides: bool
 }
 
 impl Context {
@@ -32,6 +33,7 @@ impl Context {
             anon_symbol_count: 0,
             exec_mode: 0,
             std_asm_path: String::from("std.asm"),
+            allow_overrides: false
         }
     }
 
