@@ -1,7 +1,7 @@
 use crate::ast::Node;
 use crate::ast::types::Type;
 use crate::context::{Context, Symbol};
-use crate::error::{Error, type_error_unstructured};
+use crate::error::{Error};
 
 #[derive(Debug)]
 pub struct ConstDeclNode<T> {

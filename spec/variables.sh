@@ -34,12 +34,11 @@ expect '
     a = 2;
     print_int(a)
 ' '2'
-
-expect_err 'print_int = 1' 'TypeError'
-expect_err 'true = 1' 'TypeError'
-
 expect '
     const a = 1;
     print_int(a * 4);
     print_int(a);
 ' '41'
+expect_err 'print_int = 1' 'TypeError'
+expect_err 'true = 1' 'TypeError'
+expect_err 'const a = 1; a = 1' 'TypeError'

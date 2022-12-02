@@ -44,7 +44,7 @@ function execute() {
       echo "$code" > in.oxy
 
       export RUST_BACKTRACE=1
-      ./target/release/oxynium --std std.asm in.oxy
+      ./target/release/oxynium -o=test-out --std std.asm in.oxy
     } 2>&1 > /dev/null)
 
     if [ "$errors" != "" ]; then
@@ -53,10 +53,10 @@ function execute() {
     fi
 
     output="BASH_ERROR_NOT_ASSIGNED"
-    if test -f "./out"; then
+    if test -f "./test-out"; then
         # remove any \0 characters from output
         # stops 'warning: command substitution: ignored null byte in input'
-        output=$(./out | tr -d '\000')
+        output=$(./test-out | tr -d '\000')
     else
         output="ERROR_NO_OUTPUT"
     fi

@@ -12,10 +12,10 @@ NC='\033[0m'
 # compile, link and assemble the program
 export RUST_BACKTRACE=1
 bin/compile_std
-cargo run -- --std std.asm "$@"
+cargo run -- -o=res-out --std std.asm "$@"
 
-if test -f "./out"; then
-    ./out
+if test -f "./res-out"; then
+    ./res-out
 else
     printf "${RED}No output file!${NC}\n"
 fi

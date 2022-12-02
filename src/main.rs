@@ -1,6 +1,9 @@
 extern crate core;
 
+use std::arch::asm;
+use std::borrow::Borrow;
 use std::env;
+use std::fmt::format;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
@@ -14,7 +17,7 @@ mod error;
 mod position;
 mod post_process;
 
-use crate::parse::lexer::{Lexer, token_type_str};
+use crate::parse::lexer::{Lexer};
 use crate::parse::parser::Parser;
 use crate::context::{Context, Symbol};
 use std::process::Command as Exec;
@@ -173,39 +176,42 @@ fn compile (input: String, file_name: String, exec_mode: u8, std_path: String) -
     }
 }
 
-fn compile_and_assemble(input: String, file_name: String, exec_mode: u8, std_path: String) -> Result<(), String> {
-    let compile_res = compile(input, file_name, exec_mode, std_path);
+fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result<(), String> {
+    let compile_res = compile(input, file_name, args.exec_mode, args.std_path.clone());
 
     if let Some(e) = compile_res.error {
         return Err(e);
     }
 
-    let file = File::create("oxy-out.asm");
-    if file.is_err() { return Err("Could not create temporary assembly file".to_string()); }
+    let asm_out_file = format!("{}.asm", args.out);
+    let o_out_file = format!("{}.o", args.out);
+
+    let file = File::create(asm_out_file.clone());
+    if file.is_err() { return Err(format!("Could not create assembly ('{asm_out_file}') file")); }
     file.unwrap().write_all(compile_res.asm.unwrap().as_bytes())
         .expect("Could not write assembly output");
 
-    let nasm_out =Exec::new("nasm")
+    let nasm_out = Exec::new("nasm")
         .arg("-f")
         .arg("elf64")
-        .arg("oxy-out.asm")
+        .arg(asm_out_file.clone().as_str())
         .arg("-o")
-        .arg("oxy-out.o")
+        .arg(o_out_file.clone().as_str())
         .output()
         .expect("Could not assemble");
     if !nasm_out.status.success() {
         return Err(String::from_utf8(nasm_out.stderr).unwrap());
     }
 
-    if exec_mode == 0 {
+    if args.exec_mode == 0 {
         let ls_out = Exec::new("gcc")
             .arg("-Wall")
             .arg("-no-pie")
-            .arg("oxy-out.o")
+            .arg(o_out_file.clone().as_str())
             .arg("-e")
             .arg("main")
             .arg("-o")
-            .arg("out")
+            .arg(args.out.clone().as_str())
             .output()
             .expect("Could not assemble");
         if !ls_out.status.success() {
@@ -216,7 +222,7 @@ fn compile_and_assemble(input: String, file_name: String, exec_mode: u8, std_pat
     Ok(())
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Args {
     input: String,
     out: String,
@@ -261,7 +267,7 @@ fn get_cli_args () -> Args {
     let m = matches.expect("Failed to parse arguments");
 
     Args {
-        out: m.get_one::<String>("out").unwrap_or(&String::from("out.asm")).to_string(),
+        out: m.get_one::<String>("out").unwrap_or(&String::from("oxy-out")).to_string(),
         input: m.get_one::<String>("input").unwrap_or(&String::from("")).to_string(),
         eval: m.get_one::<String>("eval").unwrap_or(&String::from("")).to_string(),
         std_path: m.get_one::<String>("std")
@@ -296,11 +302,11 @@ fn main() -> std::io::Result<()> {
     }
 
     if !args.eval.is_empty() {
+        let args_ = args.clone();
         let res = compile_and_assemble(
             args.eval,
             "CLI".to_owned(),
-            args.exec_mode,
-            args.std_path
+            &args_
         );
         if res.is_err() {
             let _ = e.write(format!("{}\n", res.err().unwrap()).as_bytes());
@@ -321,8 +327,7 @@ fn main() -> std::io::Result<()> {
         let res = compile_and_assemble(
             input,
             "CLI".to_owned(),
-            args.exec_mode,
-            args.std_path
+            &args
         );
         if res.is_err() {
             let _ = e.write(format!("{}\n", res.err().unwrap()).as_bytes());

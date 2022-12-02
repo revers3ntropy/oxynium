@@ -12,8 +12,8 @@ NC='\033[0m'
 errors=$({
   # compile, link and assemble the program
   export RUST_BACKTRACE=1
-  bin/compiler_std
-  cargo run -- --std std.asm -e "$@"
+  bin/compile_std
+  cargo run -- --std std.asm -o=exec-out -e "$@"
 })
 
 if [ "$errors" != "" ]; then
@@ -21,4 +21,4 @@ if [ "$errors" != "" ]; then
     return 1
 fi
 printf "${GREEN}Program output:${NC}\n"
-./out
+./exec-out

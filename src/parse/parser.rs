@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ops::Deref;
 use crate::ast::bin_op::BinOpNode;
 use crate::ast::unary_op::{UnaryOpNode};
 use crate::ast::const_decl::{ConstDeclNode, EmptyConstDeclNode};
