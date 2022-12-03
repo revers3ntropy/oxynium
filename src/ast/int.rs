@@ -1,6 +1,6 @@
 use crate::ast::Node;
 use crate::ast::types::Type;
-use crate::context::Context;
+use crate::context::{Context, SymbolDef};
 use crate::error::Error;
 
 #[derive(Debug)]
@@ -11,15 +11,17 @@ pub struct IntNode {
 impl Node for IntNode {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
         let data = format!("dq {}", self.value);
-        let reference = ctx.declare_anon_data(
-            data,
-            true,
-            ctx.get_from_id("Int").type_.clone()
-        );
+        let reference = ctx.get_anon_id();
+        ctx.define(SymbolDef {
+            name: reference.clone(),
+            data: Some(data),
+            text: None,
+            is_local: false
+        }, true)?;
         Ok(format!("push {}", reference))
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
-        Ok(ctx.get_from_id("Int").type_.clone())
+        Ok(ctx.get_dec_from_id("Int").type_.clone())
     }
 }

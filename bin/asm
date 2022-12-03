@@ -5,5 +5,3 @@ nasm -f elf64 "$1" -o "$1.o"
 gcc -Wall -no-pie "$1.o" -e main -o out
 
 ./out
-
-printf "\n"

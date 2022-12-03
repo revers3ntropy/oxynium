@@ -6,8 +6,7 @@ pub mod fn_call;
 pub mod statements;
 pub mod str;
 pub mod symbol_access;
-pub mod const_decl;
-pub mod glob_var_decl;
+pub mod global_const;
 pub mod mutate_var;
 pub mod for_loop;
 pub mod r#break;
@@ -18,13 +17,14 @@ pub mod fn_declaration;
 pub mod type_wrapper;
 pub mod r#continue;
 pub mod pass;
+pub mod context;
 
 use std::fmt::Debug;
 use crate::ast::types::Type;
 use crate::context::Context;
 use crate::error::Error;
 
-pub const ANON_PREFIX: &str = "__ANON_";
+pub const ANON_PREFIX: &str = "_$_ANON_";
 
 pub trait Node: Debug {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error>;

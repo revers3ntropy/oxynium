@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::ast::bin_op::BinOpNode;
 use crate::ast::unary_op::{UnaryOpNode};
-use crate::ast::const_decl::{ConstDeclNode, EmptyConstDeclNode};
+use crate::ast::global_const::{EmptyGlobalConstNode, GlobalConstNode};
 use crate::ast::exec_root::{EmptyExecRootNode, ExecRootNode};
 use crate::ast::fn_call::FnCallNode;
 use crate::ast::fn_declaration::FnDeclarationNode;
@@ -131,7 +131,7 @@ impl Parser {
         }
     }
 
-    fn bin_op <Fa, Fb>(&mut self, mut func_a: Fa, ops: Vec<TokenType>, mut func_b: Fb) -> ParseResults
+    fn bin_op <Fa, Fb>(&mut self, mut func_a: Fa, mut ops: Vec<(TokenType, Option<String>)>, mut func_b: Fb) -> ParseResults
         where Fa: FnMut(&mut Self) -> ParseResults
             , Fb: FnMut(&mut Self) -> ParseResults
     {
@@ -139,11 +139,17 @@ impl Parser {
         let mut left = res.register(func_a(self));
         if res.error.is_some() { return res; }
 
-        while
-            self.try_peak().is_some() &&
-            ops.contains(&self.try_peak().unwrap().token_type)
-        {
-            let op_tok = self.try_peak();
+        while let Some(op_tok) = self.try_peak() {
+            if ops.iter_mut().filter(|(op, value)| {
+                if value.is_none() {
+                    return &op_tok.token_type == op;
+                }
+                &op_tok.token_type == op
+                    && op_tok.literal.is_some()
+                    && op_tok.literal.clone().unwrap() == value.clone().unwrap()
+            }).count() == 0 {
+                break;
+            }
             self.advance(&mut res);
 
             let right = res.register(func_b(self));
@@ -151,7 +157,7 @@ impl Parser {
             if res.error.is_some() { return res; }
             left = Some(Box::new(BinOpNode {
                 lhs: left.unwrap(),
-                operator: op_tok.unwrap(),
+                operator: op_tok,
                 rhs: right.unwrap()
             }));
         }
@@ -252,12 +258,12 @@ impl Parser {
         }
         if self.peak_matches(TokenType::Identifier, Some("break".to_string())) {
             self.advance(&mut res);
-            res.success(Box::new(BreakNode { }));
+            res.success(Box::new(BreakNode {}));
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("continue".to_string())) {
             self.advance(&mut res);
-            res.success(Box::new(ContinueNode { }));
+            res.success(Box::new(ContinueNode {}));
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("fn".to_string())) {
@@ -273,8 +279,16 @@ impl Parser {
         self.clear_end_statements(&mut res);
         if res.error.is_some() { return res; }
         self.bin_op(
+            |this| this.as_expr(),
+            vec![(TokenType::And, None), (TokenType::Or, None)],
+            |this| this.as_expr(),
+        )
+    }
+
+    fn as_expr(&mut self) -> ParseResults {
+        self.bin_op(
             |this| this.comparison_expr(),
-            vec![TokenType::And, TokenType::Or],
+            vec![(TokenType::Identifier, Some(format!("as")))],
             |this| this.comparison_expr(),
         )
     }
@@ -285,9 +299,9 @@ impl Parser {
         let node = res.register(self.bin_op(
             |this| this.arithmetic_expr(),
             vec![
-                TokenType::DblEquals, TokenType::NotEquals,
-                TokenType::GT, TokenType::GTE,
-                TokenType::LTE, TokenType::LT
+                (TokenType::DblEquals, None), (TokenType::NotEquals, None),
+                (TokenType::GT, None), (TokenType::GTE, None),
+                (TokenType::LTE, None), (TokenType::LT, None)
             ],
             |this| this.arithmetic_expr(),
         ));
@@ -312,52 +326,64 @@ impl Parser {
             return res;
         }
 
-        if self.peak_matches(TokenType::Equals, None) {
+        let mut type_: Option<Box<dyn Node>> = None;
+
+        if self.peak_matches(TokenType::Colon, None) {
             self.advance(&mut res);
-        } else {
-            self.consume(&mut res, TokenType::Colon);
+            type_ = res.register(self.type_expr());
             if res.error.is_some() { return res; }
+        }
 
-            let type_ = res.register(self.type_expr());
-            if res.error.is_some() { return res; }
-
-            res.success(Box::new(EmptyConstDeclNode {
+        if !self.peak_matches(TokenType::Equals, None) {
+            if type_.is_none() {
+                res.failure(syntax_error("Expected type annotation".to_string()),
+                    Some(self.tokens[self.tok_idx-1].start.clone()),
+                    Some(self.tokens[self.tok_idx-1].end.clone())
+                );
+                return res;
+            }
+            res.success(Box::new(EmptyGlobalConstNode {
                 identifier: name.unwrap(),
-                type_: type_.unwrap()
+                type_: type_.unwrap(),
+                is_const
             }));
             return res;
         }
+        self.advance(&mut res); // '='
 
-        if let Some(tok) = self.try_peak() {
-            if tok.token_type == TokenType::Int {
-                self.advance(&mut res);
-                let value = tok.literal.unwrap().parse::<i64>().unwrap();
-                res.success(Box::new(ConstDeclNode {
-                    identifier: name.unwrap(),
-                    value,
-                    is_const
-                }));
-                return res;
-            } else if tok.token_type == TokenType::String {
-                self.advance(&mut res);
-                res.success(Box::new(ConstDeclNode {
-                    identifier: name.unwrap(),
-                    value: tok.literal.unwrap(),
-                    is_const
-                }));
-                return res;
-            }
-            res.failure(syntax_error("Expected int or str".to_string()),
-                Some(self.tokens[self.tok_idx-1].start.clone()),
-                Some(self.tokens[self.tok_idx-1].end.clone())
+        if self.try_peak().is_none() {
+            res.failure(syntax_error("Unexpected EOF".to_string()),
+                        Some(self.tokens[self.tok_idx-1].start.clone()),
+                        Some(self.tokens[self.tok_idx-1].end.clone())
             );
             return res;
         }
-        res.failure(syntax_error("Unexpected EOF".to_string()),
-            Some(self.tokens[self.tok_idx-1].start.clone()),
-            Some(self.tokens[self.tok_idx-1].end.clone())
+
+        let tok = self.try_peak().unwrap();
+
+        if tok.token_type == TokenType::Int {
+            self.advance(&mut res);
+            let value = tok.literal.unwrap().parse::<i64>().unwrap();
+            res.success(Box::new(GlobalConstNode {
+                identifier: name.unwrap(),
+                value,
+                is_const
+            }));
+            return res;
+        } else if tok.token_type == TokenType::String {
+            self.advance(&mut res);
+            res.success(Box::new(GlobalConstNode {
+                identifier: name.unwrap(),
+                value: tok.literal.unwrap(),
+                is_const
+            }));
+            return res;
+        }
+        res.failure(syntax_error("Expected int or str".to_string()),
+                    Some(self.tokens[self.tok_idx-1].start.clone()),
+                    Some(self.tokens[self.tok_idx-1].end.clone())
         );
-        return res;
+        res
     }
 
     fn unary_expr(&mut self) -> ParseResults {
@@ -402,7 +428,11 @@ impl Parser {
     fn term(&mut self) -> ParseResults {
         self.bin_op(
             |this| this.factor(),
-            vec![TokenType::Astrix, TokenType::FSlash, TokenType::Percent],
+            vec![
+                (TokenType::Astrix, None),
+                (TokenType::FSlash, None),
+                (TokenType::Percent, None)
+            ],
             |this| this.factor(),
         )
     }
@@ -410,7 +440,7 @@ impl Parser {
     fn arithmetic_expr(&mut self) -> ParseResults {
         self.bin_op(
             |this| this.term(),
-            vec![TokenType::Plus, TokenType::Sub],
+            vec![(TokenType::Plus, None), (TokenType::Sub, None)],
             |this| this.term(),
         )
     }
@@ -723,6 +753,7 @@ impl Parser {
         let body = res.register(self.context());
         if res.error.is_some() { return res; }
 
+        println!("{identifier}: {:?}", body);
         res.success(Box::new(FnDeclarationNode {
             identifier,
             ret_type,

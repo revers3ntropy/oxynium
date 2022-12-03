@@ -45,8 +45,8 @@ impl Node for UnaryOpNode {
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
         let t = match self.operator.token_type {
-            TokenType::Sub => ctx.get_from_id("Int").type_.clone(),
-            _ => ctx.get_from_id("Bool").type_.clone(),
+            TokenType::Sub => ctx.get_dec_from_id("Int").type_.clone(),
+            _ => ctx.get_dec_from_id("Bool").type_.clone(),
         };
 
         let value_type = self.rhs.type_check(ctx)?;

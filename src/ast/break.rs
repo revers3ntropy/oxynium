@@ -20,6 +20,6 @@ impl Node for BreakNode {
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
-        Ok(ctx.get_from_id("Void").type_.clone())
+        Ok(ctx.get_dec_from_id("Void").type_.clone())
     }
 }

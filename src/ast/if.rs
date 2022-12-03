@@ -48,6 +48,6 @@ impl Node for IfNode {
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
         self.body.type_check(ctx)?;
         self.comparison.type_check(ctx)?;
-        Ok(ctx.get_from_id("Void").type_.clone())
+        Ok(ctx.get_dec_from_id("Void").type_.clone())
     }
 }

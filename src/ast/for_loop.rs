@@ -10,8 +10,7 @@ pub struct ForLoopNode {
 
 impl Node for ForLoopNode {
     fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
-        let start_lbl = ctx.get_anon_label();
-        let end_lbl = ctx.get_anon_label();
+        let (start_lbl, end_lbl) = (ctx.get_anon_label(), ctx.get_anon_label());
 
         ctx.loop_labels_push(start_lbl.clone(), end_lbl.clone());
         let body = self.statements.asm(ctx)?;
@@ -27,6 +26,6 @@ impl Node for ForLoopNode {
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
         self.statements.type_check(ctx)?;
-        Ok(ctx.get_from_id("Void").type_.clone())
+        Ok(ctx.get_dec_from_id("Void").type_.clone())
     }
 }

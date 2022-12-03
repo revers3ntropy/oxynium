@@ -134,8 +134,8 @@ impl Node for BinOpNode {
             | TokenType::LT
             | TokenType::GTE
             | TokenType::LTE
-                => ctx.get_from_id("Int").type_.clone(),
-            _ => ctx.get_from_id("Bool").type_.clone(),
+                => ctx.get_dec_from_id("Int").type_.clone(),
+            _ => ctx.get_dec_from_id("Bool").type_.clone(),
         };
 
         let lhs_type = self.lhs.type_check(ctx)?;
@@ -153,8 +153,8 @@ impl Node for BinOpNode {
             | TokenType::Sub
             | TokenType::Astrix
             | TokenType::FSlash
-            => ctx.get_from_id("Int").type_.clone(),
-            _ => ctx.get_from_id("Bool").type_.clone(),
+            => ctx.get_dec_from_id("Int").type_.clone(),
+            _ => ctx.get_dec_from_id("Bool").type_.clone(),
         });
     }
 }

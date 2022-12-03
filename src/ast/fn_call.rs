@@ -31,22 +31,22 @@ impl Node for FnCallNode {
             args.push(arg.type_check(ctx)?);
         }
 
-        if !ctx.has_with_id(&self.identifier) {
+        if !ctx.has_dec_with_id(&self.identifier) {
             return Err(unknown_symbol(format!("undefined function {}", self.identifier)));
         }
 
-        let mut call_signature_children = vec![ctx.get_from_id("Void").type_.clone()];
+        let mut call_signature_children = vec![ctx.get_dec_from_id("Void").type_.clone()];
         call_signature_children.append(&mut args);
         let call_signature_type = Box::new(Type {
-            id: 999,
+            id: ctx.get_type_id(),
             name: "Fn".to_string(),
             children: call_signature_children
         });
 
-        let fn_type = ctx.get_from_id(&self.identifier).type_.clone();
+        let fn_type = ctx.get_dec_from_id(&self.identifier).type_.clone();
         if !fn_type.contains(&call_signature_type) {
             return Err(type_error(fn_type.as_ref(), call_signature_type.as_ref()));
         }
-        Ok(ctx.get_from_id("Void").type_.clone())
+        Ok(ctx.get_dec_from_id("Void").type_.clone())
     }
 }

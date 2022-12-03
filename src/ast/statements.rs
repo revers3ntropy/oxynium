@@ -13,15 +13,10 @@ impl Node for StatementsNode {
         let mut asm = String::new();
         for statement in self.statements.iter_mut() {
             let stmt = statement.asm(ctx)?;
-            if stmt.is_empty() {
-                continue;
+            if !stmt.is_empty() {
+                asm.push('\n');
+                asm.push_str(&stmt.clone());
             }
-            // asm.push('\n');
-            // asm.push_str("mov rsp, rbp");
-            // asm.push('\n');
-            // asm.push_str("add rsp, 4");
-            asm.push('\n');
-            asm.push_str(&stmt.clone());
         };
         Ok(asm)
     }
@@ -30,6 +25,6 @@ impl Node for StatementsNode {
         for statement in self.statements.iter_mut() {
             statement.type_check(ctx)?;
         }
-        Ok(ctx.get_from_id("Void").type_.clone())
+        Ok(ctx.get_dec_from_id("Void").type_.clone())
     }
 }

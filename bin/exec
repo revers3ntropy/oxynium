@@ -4,9 +4,9 @@ GREEN='\033[0;32m'
 NC='\033[0m'
 
 {
-    rm ./out.asm
-    rm ./out.o
-    rm ./out
+    rm ./exec-out.asm
+    rm ./exec-out.o
+    rm ./exec-out
 } 2> /dev/null
 
 errors=$({

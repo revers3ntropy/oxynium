@@ -15,183 +15,131 @@ use clap::{arg, ArgMatches, Command};
 use crate::ast::types::Type;
 use crate::parse::lexer::{Lexer};
 use crate::parse::parser::Parser;
-use crate::context::{Context, Symbol};
+use crate::context::{Context, SymbolDec, SymbolDef};
 use std::process::Command as Exec;
+use crate::error::{Error, io_error};
 use crate::post_process::format_asm::post_process;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
-#[derive(Debug)]
-struct CompileResults {
-    error: Option<String>,
-    asm: Option<String>,
-    ctx: Context
-}
 
-fn setup_ctx_with_doxy(mut ctx: Context) -> CompileResults {
+fn setup_ctx_with_doxy(mut ctx: Context) -> Result<Context, Error> {
     // declare the built in types
-    ctx.declare(Symbol {
+    ctx.declare(SymbolDec {
         name: "Int".to_string(),
-        data: None,
-        text: None,
-        constant: true,
+        is_constant: true,
+        is_type: true,
         type_: Box::new(Type {
             id: 0,
             name: "Int".to_string(),
             children: vec![]
         })
-    });
-    ctx.declare(Symbol {
+    })?;
+    ctx.declare(SymbolDec {
         name: "Bool".to_string(),
-        data: None,
-        text: None,
-        constant: true,
+        is_constant: true,
+        is_type: true,
         type_: Box::new(Type {
             id: 1,
             name: "Bool".to_string(),
             children: vec![]
         })
-    });
-    ctx.declare(Symbol {
+    })?;
+    ctx.declare(SymbolDec {
         name: "Str".to_string(),
-        data: None,
-        text: None,
-        constant: true,
+        is_constant: true,
+        is_type: true,
         type_: Box::new(Type {
             id: 2,
             name: "Str".to_string(),
             children: vec![]
         })
-    });
-    ctx.declare(Symbol {
+    })?;
+    ctx.declare(SymbolDec {
         name: "Void".to_string(),
-        data: None,
-        text: None,
-        constant: true,
+        is_constant: true,
+        is_type: true,
         type_: Box::new(Type {
             id: 3,
             name: "Void".to_string(),
             children: vec![]
         })
-    });
+    })?;
 
     let mut lexer = Lexer::new(STD_DOXY.to_owned(), "std.doxy".to_owned());
     let tokens = lexer.lex();
     if tokens.is_err() {
-        return CompileResults {
-            error: Some(tokens.err().unwrap().str()),
-            asm: None,
-            ctx
-        };
+        return Err(tokens.err().unwrap());
     }
 
     let mut parser = Parser::new(tokens.unwrap());
     let ast = parser.parse();
 
     if ast.error.is_some() {
-        return CompileResults {
-            error: Some(ast.error.unwrap().str()),
-            asm: None,
-            ctx
-        };
+        return Err(ast.error.unwrap());
     }
 
     let mut node = ast.node.unwrap();
     let type_check_res = node.type_check(&mut ctx);
     if type_check_res.is_err() {
-        return CompileResults {
-            error: Some(type_check_res.err().unwrap().str()),
-            asm: None,
-            ctx
-        };
+        return Err(type_check_res.err().unwrap());
     }
     let asm_error = node.asm(&mut ctx);
     if asm_error.is_err() {
-        return CompileResults {
-            error: Some(asm_error.err().unwrap().str()),
-            asm: None,
-            ctx
-        };
+        return Err(asm_error.err().unwrap());
     }
 
-    CompileResults {
-        error: None,
-        asm: None,
-        ctx
-    }
+    ctx.define(SymbolDef {
+        name: "true".to_string(),
+        data: Some("dq 1".to_string()),
+        text: None,
+        is_local: false
+    }, false)?;
+    ctx.define(SymbolDef {
+        name: "false".to_string(),
+        data: Some("dq 0".to_string()),
+        text: None,
+        is_local: false
+    }, false)?;
+
+    Ok(ctx)
 }
 
-fn compile (input: String, file_name: String, args: &Args) -> CompileResults {
-    let ctx_res = setup_ctx_with_doxy(Context::new());
-    if ctx_res.error.is_some() { return ctx_res; }
-    let mut ctx = ctx_res.ctx;
-
+fn compile (input: String, file_name: String, args: &Args) -> Result<(String, Context), Error> {
+    let mut ctx = setup_ctx_with_doxy(Context::new(None))?;
     ctx.std_asm_path = args.std_path.clone();
     ctx.exec_mode = args.exec_mode;
     ctx.allow_overrides = args.allow_overrides;
 
 
     let mut lexer = Lexer::new(input.clone(), file_name);
-    let tokens = lexer.lex();
-    if tokens.is_err() {
-        return CompileResults {
-            error: Some(tokens.err().unwrap().str()),
-            asm: None,
-            ctx
-        };
-    }
+    let tokens = lexer.lex()?;
 
-    let mut parser = Parser::new(tokens.unwrap());
+    let mut parser = Parser::new(tokens);
     let ast = parser.parse();
-
     if ast.error.is_some() {
-        return CompileResults {
-            error: Some(ast.error.unwrap().str()),
-            asm: None,
-            ctx
-        };
+        return Err(ast.error.unwrap());
     }
-
 
     let mut root_node = ast.node.unwrap();
-    let type_check_res = root_node.type_check(&mut ctx);
-    if type_check_res.is_err() {
-        return CompileResults {
-            error: Some(type_check_res.err().unwrap().str()),
-            asm: None,
-            ctx
-        };
-    }
-    let compile_res = root_node.asm(&mut ctx);
-    if compile_res.is_err() {
-        return CompileResults {
-            error: Some(compile_res.err().unwrap().str()),
-            asm: None,
-            ctx
-        };
-    }
+    root_node.type_check(&mut ctx)?;
+    let compile_res = root_node.asm(&mut ctx)?;
 
-    let asm = post_process(compile_res.unwrap());
-    CompileResults {
-        error: None,
-        asm: Some(asm),
-        ctx
-    }
+    let asm = post_process(compile_res);
+    Ok((asm, ctx))
 }
 
-fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result<(), String> {
-    let compile_res = compile(input, file_name, args);
-
-    if let Some(e) = compile_res.error {
-        return Err(e);
-    }
+fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result<(), Error> {
+    let compile_res = compile(input, file_name, args)?;
 
     let asm_out_file = format!("{}.asm", args.out);
     let o_out_file = format!("{}.o", args.out);
 
     let file = File::create(asm_out_file.clone());
-    if file.is_err() { return Err(format!("Could not create assembly ('{asm_out_file}') file")); }
-    file.unwrap().write_all(compile_res.asm.unwrap().as_bytes())
+    if file.is_err() {
+        return Err(io_error(format!("Could not create assembly ('{asm_out_file}') file")));
+    }
+    file.unwrap().write_all(compile_res.0.as_bytes())
         .expect("Could not write assembly output");
 
     let nasm_out = Exec::new("nasm")
@@ -203,7 +151,7 @@ fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result
         .output()
         .expect("Could not assemble");
     if !nasm_out.status.success() {
-        return Err(String::from_utf8(nasm_out.stderr).unwrap());
+        return Err(io_error(String::from_utf8(nasm_out.stderr).unwrap()));
     }
 
     if args.exec_mode == 0 {
@@ -218,7 +166,7 @@ fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result
             .output()
             .expect("Could not assemble");
         if !ls_out.status.success() {
-            return Err(String::from_utf8(ls_out.stderr).unwrap());
+            return Err(io_error(String::from_utf8(ls_out.stderr).unwrap()));
         }
     }
 
@@ -321,7 +269,7 @@ fn main() -> std::io::Result<()> {
             &args_
         );
         if res.is_err() {
-            let _ = e.write(format!("{}\n", res.err().unwrap()).as_bytes());
+            let _ = e.write(format!("{}\n", res.err().unwrap().str()).as_bytes());
         }
         return Ok(());
     }
@@ -342,7 +290,7 @@ fn main() -> std::io::Result<()> {
             &args
         );
         if res.is_err() {
-            let _ = e.write(format!("{}\n", res.err().unwrap()).as_bytes());
+            let _ = e.write(format!("{}\n", res.err().unwrap().str()).as_bytes());
         }
         return Ok(());
     }

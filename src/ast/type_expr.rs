@@ -1,7 +1,7 @@
 use crate::ast::Node;
 use crate::ast::types::{Type};
 use crate::context::Context;
-use crate::error::{Error, unknown_symbol};
+use crate::error::{Error, type_error_unstructured, unknown_symbol};
 
 #[derive(Debug)]
 pub struct TypeNode {
@@ -14,9 +14,14 @@ impl Node for TypeNode {
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
-        if !ctx.has_with_id(&self.identifier) {
+        if !ctx.has_dec_with_id(&self.identifier) {
             return Err(unknown_symbol(self.identifier.clone()));
         }
-        Ok(ctx.get_from_id(&self.identifier).type_.clone())
+        if !ctx.get_dec_from_id(&self.identifier).is_type {
+            return Err(type_error_unstructured(format!(
+                "'{}' cannot be used as a type", self.identifier
+            )));
+        }
+        Ok(ctx.get_dec_from_id(&self.identifier).type_.clone())
     }
 }

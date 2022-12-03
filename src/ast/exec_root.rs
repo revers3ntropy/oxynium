@@ -15,7 +15,7 @@ impl Node for ExecRootNode {
         // println!("Generating assembly for program: {:?}", self.statement);
 
         let res = self.statements.asm(ctx)?;
-        let (data_decls, text_decls) = ctx.get_global_vars();
+        let (data_decls, text_decls) = ctx.get_global_definitions();
         let data = data_decls.iter().map(|k| {
             format!("{} {}", k.name, k.data.as_ref().unwrap())
         }).collect::<Vec<String>>().join("\n");
@@ -42,22 +42,19 @@ impl Node for ExecRootNode {
             section .text
                 global main
                 extern malloc
-
             {STD_ASM}
-
             {text}
-
             main:
                 mov rbp, rsp
                 {res}
-                call _$_clear_stack
+                mov rsp, rbp
                 call exit
         ", ctx.std_asm_path))
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
         self.statements.type_check(ctx)?;
-        Ok(ctx.get_from_id("Void").type_.clone())
+        Ok(ctx.get_dec_from_id("Void").type_.clone())
     }
 }
 
@@ -83,6 +80,6 @@ impl Node for EmptyExecRootNode {
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
-        Ok(ctx.get_from_id("Void").type_.clone())
+        Ok(ctx.get_dec_from_id("Void").type_.clone())
     }
 }

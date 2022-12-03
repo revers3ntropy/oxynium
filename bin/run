@@ -4,9 +4,9 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 {
-    rm ./out.asm
-    rm ./out.o
-    rm ./out
+    rm ./res-out.asm
+    rm ./res-out.o
+    rm ./res-out
 } 2> /dev/null
 
 # compile, link and assemble the program

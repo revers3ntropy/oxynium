@@ -67,3 +67,7 @@ pub fn type_error (expected: &dyn Display, got: &dyn Display) -> Error {
 pub fn type_error_unstructured(message: String) -> Error {
     Error::new("TypeError".to_string(), message)
 }
+
+pub fn io_error(message: String) -> Error {
+    Error::new("IOError".to_string(), message)
+}

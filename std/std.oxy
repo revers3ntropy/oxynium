@@ -1,6 +1,0 @@
-const true = 1;
-const false = 0;
-
-// fn print_hello_world() {
-//    print("Hello, world!");
-// }

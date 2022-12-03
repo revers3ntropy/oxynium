@@ -14,6 +14,6 @@ impl Node for TypeWrapperNode {
     }
 
     fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
-        Ok(ctx.get_from_id(self.identifier.as_str()).type_.clone())
+        Ok(ctx.get_dec_from_id(self.identifier.as_str()).type_.clone())
     }
 }
