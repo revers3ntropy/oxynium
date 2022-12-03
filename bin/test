@@ -144,6 +144,13 @@ function results() {
     fi
 }
 
+function clean_up() {
+    # show last 'all passing' message
+    describe ""
+    rm ./in.oxy
+    rm ./test-out
+}
+
 start=$(date +"%s.%3N")
 
 setup
@@ -154,11 +161,9 @@ for f in ./spec/*; do
   source "$f";
 done
 
-# show last 'all passing' message
-describe ""
+clean_up
+results
 
 end=$(date +"%s.%3N")
 runtime=$(echo "$end - $start" | bc -l)
 echo "Tests ran in $runtime s"
-
-results

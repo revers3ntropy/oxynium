@@ -12,7 +12,7 @@ NC='\033[0m'
 # compile, link and assemble the program
 export RUST_BACKTRACE=1
 bin/compile_std
-cargo run -- -o=res-out --std std.asm "$@"
+cargo run -- -ko=res-out --std std.asm "$@"
 
 if test -f "./res-out"; then
     ./res-out

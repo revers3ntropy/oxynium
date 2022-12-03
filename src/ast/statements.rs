@@ -17,7 +17,9 @@ impl Node for StatementsNode {
                 continue;
             }
             // asm.push('\n');
-            // asm.push_str("call clear_stack");
+            // asm.push_str("mov rsp, rbp");
+            // asm.push('\n');
+            // asm.push_str("add rsp, 4");
             asm.push('\n');
             asm.push_str(&stmt.clone());
         };

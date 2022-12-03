@@ -39,7 +39,11 @@ impl Node for FnDeclarationNode {
                 name: self.identifier.clone(),
                 data: None,
                 text: Some(format!("
+                        push rbp
+                        mov rbp, rsp
                         {body}
+                        mov rsp, rbp
+                        pop rbp
                         ret
                      ")),
                 constant: true,
