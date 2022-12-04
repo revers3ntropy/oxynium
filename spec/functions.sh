@@ -28,7 +28,7 @@ fn f() {
 print("1");
 f();
 print("5");
-' $'1\r2\r3\r4\r5\r'
+' '12345'
 
 expect '
 fn g() {
@@ -50,7 +50,7 @@ fn log(msg: Str) {
     print(msg);
 };
 log("Hello");
-' $'Hello\r'
+' 'Hello'
 
 expect '
 fn sum_and_log(a: Int, b: Int, c: Int) {
@@ -60,9 +60,10 @@ sum_and_log(5, 8, 9);
 ' '22'
 
 expect '
-fn log(msg1: Str, msg2: Str) {
+fn log(msg1: Str, msg2: Str, msg3: Str) {
     print(msg1);
     print(msg2);
+    print(msg3);
 };
-log("Hello", "World");
-' $'Hello\rWorld\r'
+log("Hello", " World", "!");
+' 'Hello World!'

@@ -15,10 +15,10 @@ expect '
         break;
     };
     for {
-        print("there");
+        print(" there");
         break;
     };
-' $'hello\rthere'
+' 'hello there'
 
 expect '
     var i = 0;
@@ -30,7 +30,7 @@ expect '
         print_int(i);
         break;
     };
-' $'5'
+' '5'
 
 expect '
     const n = 9;
@@ -43,4 +43,4 @@ expect '
             break;
         };
     };
-' $'1\r2\r3\r4\r5\r6\r7\r8\r9\r10\r'
+' '12345678910'

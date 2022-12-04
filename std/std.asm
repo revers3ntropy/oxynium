@@ -73,7 +73,6 @@ print: ; [string: str*, cb: *] => []
         mov rdi, 1
         syscall
         push rbx
-        call print_nl
         ret
 
 print_true: ; [cb: *] => []

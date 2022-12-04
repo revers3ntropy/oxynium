@@ -3,17 +3,17 @@ describe 'Comments'
 expect '
 // This is a comment
 print("Hello, World!")
-' $'Hello, World!\r'
+' 'Hello, World!'
 
 expect '
 print("Hello, World!") // This is a comment
-' $'Hello, World!\r'
+' 'Hello, World!'
 
 expect '
 // This is a comment
 print("Hello, World!") // This is a comment
 // This is a comment
-' $'Hello, World!\r'
+' 'Hello, World!'
 
 expect '
 // This is a comment
@@ -21,7 +21,7 @@ print("Hello, World!"); // Another Comment
 // This is a comment
 print("Hello, World!")  ////
 // This is a comment
-' $'Hello, World!\rHello, World!\r'
+' 'Hello, World!Hello, World!'
 
 expect '
 //

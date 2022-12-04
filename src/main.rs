@@ -114,7 +114,6 @@ fn compile (input: String, file_name: String, args: &Args) -> Result<(String, Ct
     let ctx = setup_ctx_with_doxy(Context::new())?;
     ctx.borrow_mut().std_asm_path = args.std_path.clone();
     ctx.borrow_mut().exec_mode = args.exec_mode;
-    ctx.borrow_mut().allow_overrides = args.allow_overrides;
 
     let mut lexer = Lexer::new(input.clone(), file_name);
     let tokens = lexer.lex()?;
@@ -189,7 +188,6 @@ struct Args {
     eval: String,
     exec_mode: u8,
     std_path: String,
-    allow_overrides: bool,
     keep: bool
 }
 
@@ -218,7 +216,6 @@ fn get_cli_args () -> Args {
             arg!(-e --eval      [EXPR] "Compiles and prints a single expression"),
             arg!(-s --std       [PATH] "Path to STD assembly file"),
             arg!(-k --keep             "Keep output assembly and object files"),
-            arg!(   --allow_overrides  "Ignore re-declarations (very unsafe, used to compile std)"),
             arg!(-x --exec_mode [INT]  "Exec mode"),
             arg!(   [input]            "Input code to evaluate"),
         ]);
@@ -236,7 +233,6 @@ fn get_cli_args () -> Args {
         eval: m.get_one::<String>("eval").unwrap_or(&String::from("")).to_string(),
         std_path: m.get_one::<String>("std")
             .unwrap_or(&String::from("/usr/local/bin/oxy-std.asm")).to_string(),
-        allow_overrides: m.get_flag("allow_overrides"),
         exec_mode: get_int_cli_arg(&m, "exec_mode", 0),
         keep: m.get_flag("keep")
     }
