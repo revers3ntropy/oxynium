@@ -2,7 +2,7 @@ use std::rc::Rc;
 use crate::ast::Node;
 use crate::ast::types::Type;
 use crate::context::Ctx;
-use crate::error::{Error, type_error};
+use crate::error::{Error, mismatched_types};
 use crate::parse::token::{Token, TokenType};
 
 #[derive(Debug)]
@@ -141,11 +141,11 @@ impl Node for BinOpNode {
 
         let lhs_type = self.lhs.type_check(Rc::clone(&ctx))?;
         if !operand_types.contains(lhs_type.as_ref()) {
-            return Err(type_error(operand_types.as_ref(), lhs_type.as_ref()))
+            return Err(mismatched_types(operand_types.as_ref(), lhs_type.as_ref()))
         }
         let rhs_type = self.rhs.type_check(Rc::clone(&ctx))?;
         if !operand_types.contains(rhs_type.as_ref()) {
-            return Err(type_error(operand_types.as_ref(), rhs_type.as_ref()))
+            return Err(mismatched_types(operand_types.as_ref(), rhs_type.as_ref()))
         }
 
         return Ok(match self.operator.token_type {

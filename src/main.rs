@@ -8,7 +8,6 @@ mod position;
 mod post_process;
 
 use std::{env, fs};
-use std::cell::RefCell;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
@@ -24,12 +23,12 @@ use crate::post_process::format_asm::post_process;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
-fn setup_ctx_with_doxy(context: Context) -> Result<Ctx, Error> {
-    let ctx = Rc::new(RefCell::new(context));
+fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
 
     // declare the built in types
     ctx.borrow_mut().declare(SymbolDec {
         name: "Int".to_string(),
+        id: "Int".to_string(),
         is_constant: true,
         is_type: true,
         type_: Box::new(Type {
@@ -40,6 +39,7 @@ fn setup_ctx_with_doxy(context: Context) -> Result<Ctx, Error> {
     })?;
     ctx.borrow_mut().declare(SymbolDec {
         name: "Bool".to_string(),
+        id: "Bool".to_string(),
         is_constant: true,
         is_type: true,
         type_: Box::new(Type {
@@ -50,6 +50,7 @@ fn setup_ctx_with_doxy(context: Context) -> Result<Ctx, Error> {
     })?;
     ctx.borrow_mut().declare(SymbolDec {
         name: "Str".to_string(),
+        id: "Str".to_string(),
         is_constant: true,
         is_type: true,
         type_: Box::new(Type {
@@ -60,6 +61,7 @@ fn setup_ctx_with_doxy(context: Context) -> Result<Ctx, Error> {
     })?;
     ctx.borrow_mut().declare(SymbolDec {
         name: "Void".to_string(),
+        id: "Void".to_string(),
         is_constant: true,
         is_type: true,
         type_: Box::new(Type {
@@ -109,7 +111,7 @@ fn setup_ctx_with_doxy(context: Context) -> Result<Ctx, Error> {
 }
 
 fn compile (input: String, file_name: String, args: &Args) -> Result<(String, Ctx), Error> {
-    let ctx = setup_ctx_with_doxy(Context::new(None))?;
+    let ctx = setup_ctx_with_doxy(Context::new())?;
     ctx.borrow_mut().std_asm_path = args.std_path.clone();
     ctx.borrow_mut().exec_mode = args.exec_mode;
     ctx.borrow_mut().allow_overrides = args.allow_overrides;

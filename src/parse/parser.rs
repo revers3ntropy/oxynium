@@ -1,13 +1,10 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
 use crate::ast::bin_op::BinOpNode;
 use crate::ast::scope::ScopeNode;
 use crate::ast::unary_op::{UnaryOpNode};
 use crate::ast::global_const::{EmptyGlobalConstNode, GlobalConstNode};
 use crate::ast::exec_root::{EmptyExecRootNode, ExecRootNode};
 use crate::ast::fn_call::FnCallNode;
-use crate::ast::fn_declaration::FnDeclarationNode;
+use crate::ast::fn_declaration::{FnDeclarationNode, Parameter, Params};
 use crate::ast::for_loop::ForLoopNode;
 use crate::ast::int::IntNode;
 use crate::ast::mutate_var::MutateVar;
@@ -235,7 +232,7 @@ impl Parser {
         if res.error.is_some() { return res; }
 
         res.success(Box::new(ScopeNode {
-            ctx: Rc::new(RefCell::new(Context::new(None))),
+            ctx: Context::new(),
             body: statements.unwrap()
         }));
         res
@@ -687,17 +684,20 @@ impl Parser {
         Ok((identifier.literal.unwrap(), type_expr.unwrap()))
     }
 
-    fn parameters(&mut self) -> Result<HashMap<String, Box<dyn Node>>, Error> {
+    fn parameters(&mut self) -> Result<Params, Error> {
         let mut res = ParseResults::new();
 
-        let mut parameters = HashMap::new();
+        let mut parameters: Params = Vec::new();
 
         if self.peak_matches(TokenType::CloseParen, None) {
             return Ok(parameters);
         }
 
         let (identifier, type_expr) = self.parameter()?;
-        parameters.insert(identifier, type_expr);
+        parameters.push(Parameter {
+            identifier,
+            type_: type_expr
+        });
 
         while let Some(next) = self.try_peak() {
             if next.token_type == TokenType::CloseParen {
@@ -708,7 +708,10 @@ impl Parser {
             if res.error.is_some() { return Err(res.error.unwrap()); }
 
             let (identifier, type_expr) = self.parameter()?;
-            parameters.insert(identifier, type_expr);
+            parameters.push(Parameter {
+                identifier,
+                type_: type_expr
+            });
         }
 
         let mut e = syntax_error("Expected ',' or ')', got EOF".to_owned());
@@ -750,6 +753,7 @@ impl Parser {
         if !self.peak_matches(TokenType::OpenBrace, None) {
             res.success(Box::new(FnDeclarationNode {
                 identifier,
+                params_scope: Context::new(),
                 ret_type,
                 params: params.unwrap(),
                 body: None
@@ -762,6 +766,7 @@ impl Parser {
 
         res.success(Box::new(FnDeclarationNode {
             identifier,
+            params_scope: Context::new(),
             ret_type,
             params: params.unwrap(),
             body: Some(body.unwrap())

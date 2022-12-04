@@ -1,7 +1,7 @@
 use crate::ast::Node;
 use crate::ast::types::{Type};
 use crate::context::{Ctx};
-use crate::error::{Error, type_error_unstructured, unknown_symbol};
+use crate::error::{Error, type_error, unknown_symbol};
 
 #[derive(Debug)]
 pub struct TypeNode {
@@ -18,7 +18,7 @@ impl Node for TypeNode {
             return Err(unknown_symbol(self.identifier.clone()));
         }
         if !ctx.borrow_mut().get_dec_from_id(&self.identifier)?.is_type {
-            return Err(type_error_unstructured(format!(
+            return Err(type_error(format!(
                 "'{}' cannot be used as a type", self.identifier
             )));
         }

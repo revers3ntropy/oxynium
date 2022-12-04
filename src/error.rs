@@ -57,14 +57,14 @@ pub fn numeric_overflow(message: String) -> Error {
     Error::new("NumericOverflow".to_string(), message)
 }
 
-pub fn type_error (expected: &dyn Display, got: &dyn Display) -> Error {
+pub fn mismatched_types(expected: &dyn Display, got: &dyn Display) -> Error {
     Error::new(
         "TypeError".to_string(),
         format!("expected '{expected}', got '{got}'")
     )
 }
 
-pub fn type_error_unstructured(message: String) -> Error {
+pub fn type_error(message: String) -> Error {
     Error::new("TypeError".to_string(), message)
 }
 

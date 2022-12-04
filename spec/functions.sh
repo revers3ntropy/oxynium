@@ -44,3 +44,25 @@ fn f() {
 
 f();
 ' '3'
+
+expect '
+fn log(msg: Str) {
+    print(msg);
+};
+log("Hello");
+' $'Hello\r'
+
+expect '
+fn sum_and_log(a: Int, b: Int, c: Int) {
+    print_int(a + b + c);
+};
+sum_and_log(5, 8, 9);
+' '22'
+
+expect '
+fn log(msg1: Str, msg2: Str) {
+    print(msg1);
+    print(msg2);
+};
+log("Hello", "World");
+' $'Hello\rWorld\r'

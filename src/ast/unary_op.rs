@@ -2,7 +2,7 @@ use std::rc::Rc;
 use crate::ast::Node;
 use crate::ast::types::Type;
 use crate::context::{Ctx};
-use crate::error::{Error, type_error};
+use crate::error::{Error, mismatched_types};
 use crate::parse::token::{Token, TokenType};
 
 #[derive(Debug)]
@@ -52,7 +52,7 @@ impl Node for UnaryOpNode {
 
         let value_type = self.rhs.type_check(Rc::clone(&ctx))?;
         if !t.contains(value_type.as_ref()) {
-            return Err(type_error(t.as_ref(), value_type.as_ref()))
+            return Err(mismatched_types(t.as_ref(), value_type.as_ref()))
         }
 
         Ok(t)

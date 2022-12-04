@@ -2,7 +2,7 @@ use std::rc::Rc;
 use crate::ast::Node;
 use crate::ast::types::Type;
 use crate::context::{Ctx};
-use crate::error::{Error, type_error, type_error_unstructured, unknown_symbol};
+use crate::error::{Error, mismatched_types, type_error, unknown_symbol};
 
 #[derive(Debug)]
 pub struct MutateVar {
@@ -33,15 +33,15 @@ impl Node for MutateVar {
         let assign_type = self.value.type_check(Rc::clone(&ctx))?;
         let symbol = ctx.borrow_mut().get_dec_from_id(&self.identifier)?.clone();
         if symbol.is_constant {
-            return Err(type_error(&"<var>", &"<const>"));
+            return Err(mismatched_types(&"<var>", &"<const>"));
         }
         if symbol.is_type {
-            return Err(type_error_unstructured(format!(
+            return Err(type_error(format!(
                 "'{}' is a type and does not exist at runtime", self.identifier
             )));
         }
         if !symbol.type_.contains(assign_type.as_ref()) {
-            return Err(type_error(symbol.type_.as_ref(), assign_type.as_ref()));
+            return Err(mismatched_types(symbol.type_.as_ref(), assign_type.as_ref()));
         }
         Ok(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone())
     }

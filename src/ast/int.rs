@@ -1,6 +1,6 @@
 use crate::ast::Node;
 use crate::ast::types::Type;
-use crate::context::{Ctx, SymbolDef};
+use crate::context::Ctx;
 use crate::error::Error;
 
 #[derive(Debug)]
@@ -9,16 +9,14 @@ pub struct IntNode {
 }
 
 impl Node for IntNode {
-    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
-        let data = format!("dq {}", self.value);
-        let reference = ctx.borrow_mut().get_anon_id();
-        ctx.borrow_mut().define(SymbolDef {
-            name: reference.clone(),
-            data: Some(data),
-            text: None,
-            is_local: false
-        }, true)?;
-        Ok(format!("push {}", reference))
+    fn asm(&mut self, _ctx: Ctx) -> Result<String, Error> {
+        Ok(format!("
+            mov rdi, 8
+            call malloc WRT ..plt
+            mov rcx, {} ; go through register otherwise limited to 16 bits (dword)
+            mov qword [rax], rcx
+            push rax
+        ", self.value))
     }
 
     fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {

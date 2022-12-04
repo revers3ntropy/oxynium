@@ -18,6 +18,6 @@ impl Node for ScopeNode {
     fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
         self.ctx.borrow_mut().set_parent(Rc::clone(&ctx));
         self.body.type_check(Rc::clone(&self.ctx))?;
-        Ok(Rc::clone(&self.ctx).borrow_mut().get_dec_from_id("Void")?.type_.clone())
+        Ok(self.ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone())
     }
 }

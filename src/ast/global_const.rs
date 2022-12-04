@@ -26,6 +26,7 @@ impl Node for GlobalConstNode<i64> {
         let int = ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone();
         ctx.borrow_mut().declare(SymbolDec {
             name: self.identifier.clone(),
+            id: self.identifier.clone(),
             is_constant: self.is_const,
             is_type: false,
             type_: int
@@ -50,6 +51,7 @@ impl Node for GlobalConstNode<String> {
         let str = ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone();
         ctx.borrow_mut().declare(SymbolDec {
             name: self.identifier.clone(),
+            id: self.identifier.clone(),
             is_constant: true,
             is_type: false,
             type_: str
@@ -74,6 +76,7 @@ impl Node for EmptyGlobalConstNode {
         let type_ = self.type_.type_check(Rc::clone(&ctx))?;
         ctx.borrow_mut().declare(SymbolDec {
             name: self.identifier.clone(),
+            id: self.identifier.clone(),
             is_constant: self.is_const,
             is_type: false,
             type_

@@ -2,7 +2,7 @@ use std::rc::Rc;
 use crate::ast::Node;
 use crate::ast::types::Type;
 use crate::context::{Ctx};
-use crate::error::{Error, type_error, unknown_symbol};
+use crate::error::{Error, mismatched_types, unknown_symbol};
 
 #[derive(Debug)]
 pub struct FnCallNode {
@@ -49,7 +49,7 @@ impl Node for FnCallNode {
 
         let fn_type = ctx.borrow_mut().get_dec_from_id(&self.identifier)?.type_.clone();
         if !fn_type.contains(&call_signature_type) {
-            return Err(type_error(fn_type.as_ref(), call_signature_type.as_ref()));
+            return Err(mismatched_types(fn_type.as_ref(), call_signature_type.as_ref()));
         }
         Ok(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone())
     }

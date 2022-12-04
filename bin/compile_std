@@ -10,4 +10,4 @@
 
 # compile, link and assemble the program
 export RUST_BACKTRACE=1
-cargo run -- std/std.oxy --keep --allow_overrides --exec_mode=1 --out=std
+cargo run -- std/std.oxy --allow_overrides -kx=1 --out=std
