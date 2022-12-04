@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use crate::ast::Node;
 use crate::ast::types::Type;
-use crate::context::{Ctx, SymbolDec, SymbolDef};
+use crate::context::{CallStackFrame, Ctx, SymbolDec, SymbolDef};
 use crate::error::{Error, type_error};
 
 pub type Params = Vec<Parameter>;
@@ -26,6 +26,10 @@ impl Node for FnDeclarationNode {
         if self.body.is_none() {
             return Ok("".to_string());
         }
+        ctx.borrow_mut().stack_frame_push(CallStackFrame {
+            name: self.identifier.clone()
+        });
+
         let body = self.body.take().unwrap().asm(Rc::clone(&self.params_scope))?;
         ctx.borrow_mut().define(SymbolDef {
             name: self.identifier.clone(),
@@ -35,10 +39,11 @@ impl Node for FnDeclarationNode {
                     push rbp
                     mov rbp, rsp
                     {body}
+                _$_{}_end:
                     mov rsp, rbp
                     pop rbp
                     ret
-                 "))
+                 ", self.identifier.clone()))
         }, false)?;
         Ok("".to_string())
     }

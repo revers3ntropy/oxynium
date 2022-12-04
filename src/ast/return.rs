@@ -4,17 +4,17 @@ use crate::context::Ctx;
 use crate::error::{Error, syntax_error};
 
 #[derive(Debug)]
-pub struct ContinueNode {}
+pub struct ReturnNode {}
 
-impl Node for ContinueNode {
+impl Node for ReturnNode {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
-        let labels = ctx.borrow_mut().loop_label_peak();
-        if labels.is_none() {
-            return Err(syntax_error("'continue' statement outside of loop".to_string()));
+        let frame = ctx.borrow_mut().stack_frame_pop();
+        if frame.is_none() {
+            return Err(syntax_error("'return' statement outside of function".to_string()));
         }
         Ok(format!("
-            jmp {}
-        ", labels.unwrap().0))
+            jmp _$_{}_end
+        ", frame.unwrap().name))
     }
 
     fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {

@@ -8,9 +8,9 @@ pub struct BreakNode {}
 
 impl Node for BreakNode {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
-        let labels = ctx.borrow_mut().loop_labels_peak();
+        let labels = ctx.borrow_mut().loop_label_peak();
         if labels.is_none() {
-            return Err(syntax_error("break statement outside of loop".to_string()));
+            return Err(syntax_error("'break' statement outside of loop".to_string()));
         }
         Ok(format!("
             jmp {}

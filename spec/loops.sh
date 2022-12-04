@@ -44,3 +44,23 @@ expect '
         };
     };
 ' '12345678910'
+
+expect '
+    var i = 1;
+    var j = 1;
+    for {
+        j = 1;
+        for {
+            j = j + 1;
+            print_int(i*j);
+            if j > 3 {
+                break;
+            };
+        };
+        print(" ");
+        i = i + 1;
+        if i > 3 {
+            break;
+        };
+    };
+' '234 468 6912 '

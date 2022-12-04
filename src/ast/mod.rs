@@ -18,6 +18,7 @@ pub mod type_wrapper;
 pub mod r#continue;
 pub mod pass;
 pub mod scope;
+pub mod r#return;
 
 use std::fmt::Debug;
 use crate::ast::types::Type;

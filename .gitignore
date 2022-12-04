@@ -17,6 +17,7 @@ out
 /*.s
 /*.oxy
 /*.out
+/*.js
 
 # OS
 .DS_Store

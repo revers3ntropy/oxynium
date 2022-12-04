@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use crate::ast::Node;
 use crate::ast::types::Type;
-use crate::context::{Ctx};
+use crate::context::{CallStackFrame, Ctx};
 use crate::error::{Error, mismatched_types, unknown_symbol};
 
 #[derive(Debug)]
@@ -12,7 +12,11 @@ pub struct FnCallNode {
 
 impl Node for FnCallNode {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
-        let mut asm = String::new();
+        let mut asm = format!("
+            ; reserve space for return value
+            mov rax, 0
+            push rax
+        ");
 
         for arg in self.args.iter_mut().rev() {
             asm.push_str(&arg.asm(Rc::clone(&ctx))?);

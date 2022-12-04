@@ -133,6 +133,10 @@ function expect_expr_bool() {
 
 function results() {
 
+    end=$(date +"%s.%3N")
+    runtime=$(echo "$end - $start" | bc -l)
+    echo "Tests ran in $runtime s"
+
     if [ "$fails" -eq 0 ]; then
         # shellcheck disable=SC2059
         printf "${GREEN}  ${tests}/${tests} tests passed!${NC}\n"
@@ -163,7 +167,3 @@ done
 
 clean_up
 results
-
-end=$(date +"%s.%3N")
-runtime=$(echo "$end - $start" | bc -l)
-echo "Tests ran in $runtime s"

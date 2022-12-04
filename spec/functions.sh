@@ -67,3 +67,14 @@ fn log(msg1: Str, msg2: Str, msg3: Str) {
 };
 log("Hello", " World", "!");
 ' 'Hello World!'
+
+
+describe 'Return'
+
+expect '
+fn f() {
+    return;
+    print("hi");
+};
+f();
+' ''

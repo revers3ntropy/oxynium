@@ -33,6 +33,11 @@ pub struct SymbolDef {
     pub is_local: bool,
 }
 
+#[derive(Debug, Clone)]
+pub struct CallStackFrame {
+    pub name: String
+}
+
 #[derive(Debug)]
 pub struct Context {
     parent: Option<Ctx>,
@@ -43,6 +48,7 @@ pub struct Context {
     definitions: HashMap<String, SymbolDef>,
     // Vec<(start of loop label, end of loop label)>
     loop_label_stack: Vec<(String, String)>,
+    call_stack: Vec<CallStackFrame>,
     anon_symbol_count: u64,
     type_id_count: u64,
     pub exec_mode: u8,
@@ -57,6 +63,7 @@ impl Context {
             declarations: HashMap::new(),
             definitions: HashMap::new(),
             loop_label_stack: Vec::new(),
+            call_stack: Vec::new(),
             anon_symbol_count: 0,
             exec_mode: 0,
             type_id_count: 100,
@@ -174,25 +181,36 @@ impl Context {
         self.loop_label_stack.push((start, end));
     }
 
-    pub fn loop_labels_pop(&mut self) -> (String, String) {
+    pub fn loop_labels_pop(&mut self) -> Option<(String, String)> {
         if self.parent.is_some() {
             return self.with_root(&mut |ctx| ctx.loop_labels_pop());
         }
-        if let Some(lbl) = self.loop_label_stack.pop() {
-            lbl
-        } else {
-            panic!("Tried to pop from empty loop label stack");
-        }
+        self.loop_label_stack.pop()
     }
 
-    pub fn loop_labels_peak(&mut self) -> Option<(String, String)> {
+    pub fn loop_label_peak(&mut self) -> Option<(String, String)> {
         if self.parent.is_some() {
-            return self.with_root(&mut |ctx| ctx.loop_labels_peak());
+            return self.with_root(&mut |ctx| ctx.loop_label_peak());
         }
-        if let Some(lbl) = self.loop_label_stack.last() {
-            Some(lbl.clone())
-        } else {
-            None
+        self.loop_label_stack.last().cloned()
+    }
+
+
+    // Stack Frames
+
+    pub fn stack_frame_push(&mut self, frame: CallStackFrame) {
+        if self.parent.is_some() {
+            return self.with_root(&mut |ctx| {
+                ctx.stack_frame_push(frame.clone())
+            });
         }
+        self.call_stack.push(frame);
+    }
+
+    pub fn stack_frame_pop(&mut self) -> Option<CallStackFrame> {
+        if self.parent.is_some() {
+            return self.with_root(&mut |ctx| ctx.stack_frame_pop());
+        }
+        self.call_stack.pop()
     }
 }

@@ -13,6 +13,7 @@ use crate::ast::r#if::IfNode;
 use crate::ast::Node;
 use crate::ast::pass::PassNode;
 use crate::ast::r#continue::ContinueNode;
+use crate::ast::r#return::ReturnNode;
 use crate::ast::statements::StatementsNode;
 use crate::ast::str::StrNode;
 use crate::ast::symbol_access::SymbolAccess;
@@ -268,6 +269,11 @@ impl Parser {
         if self.peak_matches(TokenType::Identifier, Some("continue".to_string())) {
             self.advance(&mut res);
             res.success(Box::new(ContinueNode {}));
+            return res;
+        }
+        if self.peak_matches(TokenType::Identifier, Some("return".to_string())) {
+            self.advance(&mut res);
+            res.node = res.register(self.return_expr());
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("fn".to_string())) {
@@ -771,6 +777,12 @@ impl Parser {
             params: params.unwrap(),
             body: Some(body.unwrap())
         }));
+        res
+    }
+
+    fn return_expr(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+        res.success(Box::new(ReturnNode {}));
         res
     }
 }
