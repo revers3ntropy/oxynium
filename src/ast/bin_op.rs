@@ -1,6 +1,7 @@
+use std::rc::Rc;
 use crate::ast::Node;
-use crate::ast::types::{Type};
-use crate::context::Context;
+use crate::ast::types::Type;
+use crate::context::Ctx;
 use crate::error::{Error, type_error};
 use crate::parse::token::{Token, TokenType};
 
@@ -12,7 +13,7 @@ pub struct BinOpNode {
 }
 
 impl Node for BinOpNode {
-    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
+    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
         match self.operator.token_type {
             TokenType::Plus | TokenType::Sub | TokenType::And | TokenType::Or => {
                 Ok(format!("
@@ -30,8 +31,8 @@ impl Node for BinOpNode {
                     mov [rax], rdx
                     push rax
                 ",
-                   self.rhs.asm(ctx)?,
-                   self.lhs.asm(ctx)?,
+                   self.rhs.asm(Rc::clone(&ctx))?,
+                   self.lhs.asm(Rc::clone(&ctx))?,
                    match self.operator.token_type {
                        TokenType::Plus => "add",
                        TokenType::Sub => "sub",
@@ -57,8 +58,8 @@ impl Node for BinOpNode {
                         mov [rax], rdx
                         push rax
                     ",
-                      self.rhs.asm(ctx)?,
-                      self.lhs.asm(ctx)?,
+                      self.rhs.asm(Rc::clone(&ctx))?,
+                      self.lhs.asm(Rc::clone(&ctx))?,
                       match self.operator.token_type {
                           TokenType::Astrix => "imul",
                           _ => "idiv",
@@ -82,8 +83,8 @@ impl Node for BinOpNode {
                         mov [rax], rdx
                         push rax
                     ",
-                       self.rhs.asm(ctx)?,
-                       self.lhs.asm(ctx)?,
+                       self.rhs.asm(Rc::clone(&ctx))?,
+                       self.lhs.asm(Rc::clone(&ctx))?,
                 ))
             },
             TokenType::GT | TokenType::LT | TokenType::LTE | TokenType::GTE | TokenType::DblEquals | TokenType::NotEquals => {
@@ -104,8 +105,8 @@ impl Node for BinOpNode {
                         mov [rax], rdx
                         push rax
                 ",
-                       self.rhs.asm(ctx)?,
-                       self.lhs.asm(ctx)?,
+                       self.rhs.asm(Rc::clone(&ctx))?,
+                       self.lhs.asm(Rc::clone(&ctx))?,
                        match self.operator.token_type {
                            TokenType::DblEquals => "sete",
                            TokenType::NotEquals => "setne",
@@ -120,7 +121,7 @@ impl Node for BinOpNode {
         }
     }
 
-    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
+    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
 
         let operand_types = match self.operator.token_type {
             TokenType::Percent
@@ -134,15 +135,15 @@ impl Node for BinOpNode {
             | TokenType::LT
             | TokenType::GTE
             | TokenType::LTE
-                => ctx.get_dec_from_id("Int").type_.clone(),
-            _ => ctx.get_dec_from_id("Bool").type_.clone(),
+                => ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(),
+            _ => ctx.borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
         };
 
-        let lhs_type = self.lhs.type_check(ctx)?;
+        let lhs_type = self.lhs.type_check(Rc::clone(&ctx))?;
         if !operand_types.contains(lhs_type.as_ref()) {
             return Err(type_error(operand_types.as_ref(), lhs_type.as_ref()))
         }
-        let rhs_type = self.rhs.type_check(ctx)?;
+        let rhs_type = self.rhs.type_check(Rc::clone(&ctx))?;
         if !operand_types.contains(rhs_type.as_ref()) {
             return Err(type_error(operand_types.as_ref(), rhs_type.as_ref()))
         }
@@ -153,8 +154,8 @@ impl Node for BinOpNode {
             | TokenType::Sub
             | TokenType::Astrix
             | TokenType::FSlash
-            => ctx.get_dec_from_id("Int").type_.clone(),
-            _ => ctx.get_dec_from_id("Bool").type_.clone(),
+            => Rc::clone(&ctx).borrow_mut().get_dec_from_id("Int")?.type_.clone(),
+            _ => Rc::clone(&ctx).borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
         });
     }
 }

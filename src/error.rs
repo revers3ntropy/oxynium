@@ -50,7 +50,7 @@ pub fn syntax_error(message: String) -> Error {
 }
 
 pub fn unknown_symbol(message: String) -> Error {
-    Error::new("UnknownSymbol".to_string(), message)
+    Error::new("UnknownSymbolError".to_string(), message)
 }
 
 pub fn numeric_overflow(message: String) -> Error {

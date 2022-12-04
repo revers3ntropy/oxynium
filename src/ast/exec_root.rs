@@ -1,6 +1,7 @@
+use std::rc::Rc;
 use crate::ast::Node;
 use crate::ast::types::Type;
-use crate::context::Context;
+use crate::context::{Ctx};
 use crate::error::Error;
 
 const STD_ASM: &str = include_str!("../../std/std.asm");
@@ -11,11 +12,10 @@ pub struct ExecRootNode {
 }
 
 impl Node for ExecRootNode {
-    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
-        // println!("Generating assembly for program: {:?}", self.statement);
-
-        let res = self.statements.asm(ctx)?;
-        let (data_decls, text_decls) = ctx.get_global_definitions();
+    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+        let res = self.statements.asm(Rc::clone(&ctx))?;
+        let mut mut_ref = ctx.borrow_mut();
+        let (data_decls, text_decls) = mut_ref.get_global_definitions();
         let data = data_decls.iter().map(|k| {
             format!("{} {}", k.name, k.data.as_ref().unwrap())
         }).collect::<Vec<String>>().join("\n");
@@ -24,7 +24,7 @@ impl Node for ExecRootNode {
             format!("{}: \n{}", k.name, k.text.as_ref().unwrap())
         }).collect::<Vec<String>>().join("\n");
 
-        if ctx.exec_mode == 1 {
+        if mut_ref.exec_mode == 1 {
             return Ok(format!("
                 section	.note.GNU-stack
                 section .data
@@ -49,12 +49,12 @@ impl Node for ExecRootNode {
                 {res}
                 mov rsp, rbp
                 call exit
-        ", ctx.std_asm_path))
+        ", mut_ref.std_asm_path))
     }
 
-    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
-        self.statements.type_check(ctx)?;
-        Ok(ctx.get_dec_from_id("Void").type_.clone())
+    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
+        self.statements.type_check(Rc::clone(&ctx))?;
+        Ok(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone())
     }
 }
 
@@ -62,8 +62,8 @@ impl Node for ExecRootNode {
 pub struct EmptyExecRootNode {}
 
 impl Node for EmptyExecRootNode {
-    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
-        if ctx.exec_mode == 1 {
+    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+        if ctx.borrow_mut().exec_mode == 1 {
             Ok(format!("
                 section	.note.GNU-stack
             "))
@@ -79,7 +79,7 @@ impl Node for EmptyExecRootNode {
         }
     }
 
-    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
-        Ok(ctx.get_dec_from_id("Void").type_.clone())
+    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
+        Ok(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone())
     }
 }

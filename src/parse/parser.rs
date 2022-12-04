@@ -1,5 +1,8 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 use crate::ast::bin_op::BinOpNode;
+use crate::ast::scope::ScopeNode;
 use crate::ast::unary_op::{UnaryOpNode};
 use crate::ast::global_const::{EmptyGlobalConstNode, GlobalConstNode};
 use crate::ast::exec_root::{EmptyExecRootNode, ExecRootNode};
@@ -18,6 +21,7 @@ use crate::ast::str::StrNode;
 use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::type_expr::TypeNode;
 use crate::ast::type_wrapper::TypeWrapperNode;
+use crate::context::Context;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
 use crate::error::{Error, numeric_overflow, syntax_error};
@@ -230,7 +234,10 @@ impl Parser {
         self.consume(&mut res, TokenType::CloseBrace);
         if res.error.is_some() { return res; }
 
-        res.success(statements.unwrap());
+        res.success(Box::new(ScopeNode {
+            ctx: Rc::new(RefCell::new(Context::new(None))),
+            body: statements.unwrap()
+        }));
         res
     }
 
@@ -753,7 +760,6 @@ impl Parser {
         let body = res.register(self.context());
         if res.error.is_some() { return res; }
 
-        println!("{identifier}: {:?}", body);
         res.success(Box::new(FnDeclarationNode {
             identifier,
             ret_type,

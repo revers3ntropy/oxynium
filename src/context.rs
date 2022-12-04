@@ -1,7 +1,11 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 use crate::ast::ANON_PREFIX;
 use crate::ast::types::Type;
 use crate::error::{Error, type_error_unstructured};
+
+pub type Ctx = Rc<RefCell<Context>>;
 
 #[derive(Debug, Clone)]
 pub struct SymbolDec {
@@ -30,7 +34,7 @@ pub struct SymbolDef {
 
 #[derive(Debug)]
 pub struct Context {
-    parent: Option<Box<Context>>,
+    parent: Option<Ctx>,
     // Declarations are analysed at compile time, and are used to type check
     declarations: HashMap<String, SymbolDec>,
     // Definitions are generated at compile time
@@ -42,11 +46,12 @@ pub struct Context {
     type_id_count: u64,
     pub exec_mode: u8,
     pub std_asm_path: String,
-    pub allow_overrides: bool
+    pub allow_overrides: bool,
+    pub id: u64
 }
 
 impl Context {
-    pub fn new(parent: Option<Box<Context>>) -> Context {
+    pub fn new(parent: Option<Ctx>) -> Context {
         Context {
             parent,
             declarations: HashMap::new(),
@@ -56,24 +61,53 @@ impl Context {
             exec_mode: 0,
             type_id_count: 100,
             std_asm_path: String::from("std.asm"),
-            allow_overrides: false
+            allow_overrides: false,
+            // random id
+            id: rand::random::<u64>()
         }
     }
 
+    pub fn set_parent(&mut self, parent: Rc<RefCell<Context>>) {
+        self.parent = Some(parent);
+    }
+
+    pub fn is_root(&self) -> bool {
+        self.parent.is_none()
+    }
+
+    pub fn with_root<T>(&mut self, cb: &mut impl Fn(&mut Context) -> T) -> T {
+        if self.parent.is_some() {
+            let ref_ = self.parent.take().unwrap();
+            let res = Rc::clone(&ref_).borrow_mut().with_root(cb);
+            self.parent = Some(ref_);
+            res
+        } else {
+            cb(self)
+        }
+    }
 
     // Generate unique identifiers
 
     pub fn get_anon_id(&mut self) -> String {
+        if self.parent.is_some() {
+            return self.with_root(&mut |ctx| ctx.get_anon_id());
+        }
         let symbol = format!("{}D{}", ANON_PREFIX, self.anon_symbol_count);
         self.anon_symbol_count += 1;
         symbol
     }
     pub fn get_anon_label(&mut self) -> String {
+        if self.parent.is_some() {
+            return self.with_root(&mut |ctx| ctx.get_anon_label());
+        }
         let symbol = format!("{}L{}", ANON_PREFIX, self.anon_symbol_count);
         self.anon_symbol_count += 1;
         symbol
     }
     pub fn get_type_id(&mut self) -> u64 {
+        if self.parent.is_some() {
+            return self.with_root(&mut |ctx| ctx.get_type_id());
+        }
         self.type_id_count += 1;
         self.type_id_count
     }
@@ -83,7 +117,6 @@ impl Context {
 
     pub fn declare(&mut self, symbol: SymbolDec) -> Result<(), Error> {
         if let Some(duplicate) = self.declarations.get(symbol.name.clone().as_str()) {
-            println!("Duplicate declaration:\n{:?}\n{:?}", symbol, duplicate);
             if !self.allow_overrides || !duplicate.contains(&symbol) {
                 return Err(type_error_unstructured(format!("Symbol {} is already declared", symbol.name)))
             }
@@ -91,11 +124,23 @@ impl Context {
         self.declarations.insert(symbol.name.clone(), symbol);
         Ok(())
     }
-    pub fn has_dec_with_id(&self, id: &str) -> bool {
-        self.declarations.get(id).is_some()
+    pub fn has_dec_with_id(&mut self, id: &str) -> bool {
+        if self.declarations.get(id).is_some() {
+            true
+        } else if self.parent.is_some() {
+            self.with_root(&mut |ctx| ctx.has_dec_with_id(id))
+        } else {
+            false
+        }
     }
-    pub fn get_dec_from_id(&self, id: &str) -> &SymbolDec {
-        self.declarations.get(id).unwrap()
+    pub fn get_dec_from_id(&mut self, id: &str) -> Result<SymbolDec, Error> {
+        if self.declarations.get(id).is_some() {
+            Ok(self.declarations.get(id).unwrap().clone())
+        } else if self.parent.is_some() {
+            self.with_root(&mut |ctx| ctx.get_dec_from_id(id))
+        } else {
+            Err(type_error_unstructured(format!("Symbol {} is not declared", id)))
+        }
     }
 
 
@@ -133,10 +178,18 @@ impl Context {
     // Loop labels
 
     pub fn loop_labels_push(&mut self, start: String, end: String) {
+        if self.parent.is_some() {
+            return self.with_root(&mut |ctx| {
+                ctx.loop_labels_push(start.clone(), end.clone())
+            });
+        }
         self.loop_label_stack.push((start, end));
     }
 
     pub fn loop_labels_pop(&mut self) -> (String, String) {
+        if self.parent.is_some() {
+            return self.with_root(&mut |ctx| ctx.loop_labels_pop());
+        }
         if let Some(lbl) = self.loop_label_stack.pop() {
             lbl
         } else {
@@ -144,7 +197,10 @@ impl Context {
         }
     }
 
-    pub fn loop_labels_peak(&self) -> Option<(String, String)> {
+    pub fn loop_labels_peak(&mut self) -> Option<(String, String)> {
+        if self.parent.is_some() {
+            return self.with_root(&mut |ctx| ctx.loop_labels_peak());
+        }
         if let Some(lbl) = self.loop_label_stack.last() {
             Some(lbl.clone())
         } else {

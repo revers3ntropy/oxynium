@@ -50,6 +50,12 @@ expect '
     a = 2;
     print_int(a)
 ' '2'
+expect '
+    var a = 1;
+    a = 5;
+    a = a + 4;
+    print_int(a)
+' '9'
 expect_err '
     var a = 1;
     a = true;

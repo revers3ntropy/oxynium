@@ -1,6 +1,7 @@
+use std::rc::Rc;
 use crate::ast::Node;
 use crate::ast::types::Type;
-use crate::context::Context;
+use crate::context::{Ctx};
 use crate::error::{Error, type_error};
 use crate::parse::token::{Token, TokenType};
 
@@ -11,7 +12,7 @@ pub struct UnaryOpNode {
 }
 
 impl Node for UnaryOpNode {
-    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
+    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
         Ok(match self.operator.token_type {
             TokenType::Sub => {
                 format!("
@@ -22,7 +23,7 @@ impl Node for UnaryOpNode {
                     mov [rcx], rax
                     push rcx
                 ",
-                    self.rhs.asm(ctx)?
+                    self.rhs.asm(Rc::clone(&ctx))?
                 )
             }
             TokenType::Not => {
@@ -36,20 +37,20 @@ impl Node for UnaryOpNode {
                     push rax
                     push rsp
                 ",
-                    self.rhs.asm(ctx)?
+                    self.rhs.asm(Rc::clone(&ctx))?
                 )
             }
             _ => panic!("Invalid arithmetic unary operator: {:?}", self.operator)
         })
     }
 
-    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
+    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
         let t = match self.operator.token_type {
-            TokenType::Sub => ctx.get_dec_from_id("Int").type_.clone(),
-            _ => ctx.get_dec_from_id("Bool").type_.clone(),
+            TokenType::Sub => ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(),
+            _ => ctx.borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
         };
 
-        let value_type = self.rhs.type_check(ctx)?;
+        let value_type = self.rhs.type_check(Rc::clone(&ctx))?;
         if !t.contains(value_type.as_ref()) {
             return Err(type_error(t.as_ref(), value_type.as_ref()))
         }

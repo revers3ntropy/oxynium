@@ -1,6 +1,6 @@
 use crate::ast::Node;
 use crate::ast::types::Type;
-use crate::context::{Context, SymbolDef};
+use crate::context::{Ctx, SymbolDef};
 use crate::error::Error;
 
 #[derive(Debug)]
@@ -9,10 +9,10 @@ pub struct StrNode {
 }
 
 impl Node for StrNode {
-    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error> {
+    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
         let data = format!("dq \"{}\", 0", self.value);
-        let reference = ctx.get_anon_id();
-        ctx.define(SymbolDef {
+        let reference = ctx.borrow_mut().get_anon_id();
+        ctx.borrow_mut().define(SymbolDef {
             name: reference.clone(),
             data: Some(data),
             text: None,
@@ -21,7 +21,8 @@ impl Node for StrNode {
         Ok(format!("push {}", reference))
     }
 
-    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error> {
-        Ok(ctx.get_dec_from_id("Str").type_.clone())
+    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
+        let res = Ok(ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone());
+        res
     }
 }

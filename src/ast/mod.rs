@@ -17,17 +17,17 @@ pub mod fn_declaration;
 pub mod type_wrapper;
 pub mod r#continue;
 pub mod pass;
-pub mod context;
+pub mod scope;
 
 use std::fmt::Debug;
 use crate::ast::types::Type;
-use crate::context::Context;
+use crate::context::{Ctx};
 use crate::error::Error;
 
 pub const ANON_PREFIX: &str = "_$_ANON_";
 
 pub trait Node: Debug {
-    fn asm(&mut self, ctx: &mut Context) -> Result<String, Error>;
-    fn type_check(&mut self, ctx: &mut Context) -> Result<Box<Type>, Error>;
+    fn asm(&mut self, ctx: Ctx) -> Result<String, Error>;
+    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error>;
 }
 

@@ -8,6 +8,7 @@ mod position;
 mod post_process;
 
 use std::{env, fs};
+use std::cell::RefCell;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
@@ -15,17 +16,19 @@ use clap::{arg, ArgMatches, Command};
 use crate::ast::types::Type;
 use crate::parse::lexer::{Lexer};
 use crate::parse::parser::Parser;
-use crate::context::{Context, SymbolDec, SymbolDef};
+use crate::context::{Context, Ctx, SymbolDec, SymbolDef};
 use std::process::Command as Exec;
+use std::rc::Rc;
 use crate::error::{Error, io_error};
 use crate::post_process::format_asm::post_process;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
+fn setup_ctx_with_doxy(context: Context) -> Result<Ctx, Error> {
+    let ctx = Rc::new(RefCell::new(context));
 
-fn setup_ctx_with_doxy(mut ctx: Context) -> Result<Context, Error> {
     // declare the built in types
-    ctx.declare(SymbolDec {
+    ctx.borrow_mut().declare(SymbolDec {
         name: "Int".to_string(),
         is_constant: true,
         is_type: true,
@@ -35,7 +38,7 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> Result<Context, Error> {
             children: vec![]
         })
     })?;
-    ctx.declare(SymbolDec {
+    ctx.borrow_mut().declare(SymbolDec {
         name: "Bool".to_string(),
         is_constant: true,
         is_type: true,
@@ -45,7 +48,7 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> Result<Context, Error> {
             children: vec![]
         })
     })?;
-    ctx.declare(SymbolDec {
+    ctx.borrow_mut().declare(SymbolDec {
         name: "Str".to_string(),
         is_constant: true,
         is_type: true,
@@ -55,7 +58,7 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> Result<Context, Error> {
             children: vec![]
         })
     })?;
-    ctx.declare(SymbolDec {
+    ctx.borrow_mut().declare(SymbolDec {
         name: "Void".to_string(),
         is_constant: true,
         is_type: true,
@@ -80,22 +83,22 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> Result<Context, Error> {
     }
 
     let mut node = ast.node.unwrap();
-    let type_check_res = node.type_check(&mut ctx);
+    let type_check_res = node.type_check(Rc::clone(&ctx));
     if type_check_res.is_err() {
         return Err(type_check_res.err().unwrap());
     }
-    let asm_error = node.asm(&mut ctx);
+    let asm_error = node.asm(Rc::clone(&ctx));
     if asm_error.is_err() {
         return Err(asm_error.err().unwrap());
     }
 
-    ctx.define(SymbolDef {
+    ctx.borrow_mut().define(SymbolDef {
         name: "true".to_string(),
         data: Some("dq 1".to_string()),
         text: None,
         is_local: false
     }, false)?;
-    ctx.define(SymbolDef {
+    ctx.borrow_mut().define(SymbolDef {
         name: "false".to_string(),
         data: Some("dq 0".to_string()),
         text: None,
@@ -105,12 +108,11 @@ fn setup_ctx_with_doxy(mut ctx: Context) -> Result<Context, Error> {
     Ok(ctx)
 }
 
-fn compile (input: String, file_name: String, args: &Args) -> Result<(String, Context), Error> {
-    let mut ctx = setup_ctx_with_doxy(Context::new(None))?;
-    ctx.std_asm_path = args.std_path.clone();
-    ctx.exec_mode = args.exec_mode;
-    ctx.allow_overrides = args.allow_overrides;
-
+fn compile (input: String, file_name: String, args: &Args) -> Result<(String, Ctx), Error> {
+    let ctx = setup_ctx_with_doxy(Context::new(None))?;
+    ctx.borrow_mut().std_asm_path = args.std_path.clone();
+    ctx.borrow_mut().exec_mode = args.exec_mode;
+    ctx.borrow_mut().allow_overrides = args.allow_overrides;
 
     let mut lexer = Lexer::new(input.clone(), file_name);
     let tokens = lexer.lex()?;
@@ -122,11 +124,11 @@ fn compile (input: String, file_name: String, args: &Args) -> Result<(String, Co
     }
 
     let mut root_node = ast.node.unwrap();
-    root_node.type_check(&mut ctx)?;
-    let compile_res = root_node.asm(&mut ctx)?;
+    root_node.type_check(Rc::clone(&ctx))?;
+    let compile_res = root_node.asm(Rc::clone(&ctx))?;
 
     let asm = post_process(compile_res);
-    Ok((asm, ctx))
+    Ok((asm, Rc::clone(&ctx)))
 }
 
 fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result<(), Error> {
