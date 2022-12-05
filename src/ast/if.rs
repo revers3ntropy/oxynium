@@ -1,8 +1,7 @@
 use std::rc::Rc;
-use crate::ast::Node;
-use crate::ast::types::Type;
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::{Ctx};
-use crate::error::Error;
+use crate::error::{Error, type_error};
 
 #[derive(Debug)]
 pub struct IfNode {
@@ -46,14 +45,28 @@ impl Node for IfNode {
         }
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
-        self.body.type_check(Rc::clone(&ctx))?;
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+        let (_, mut body_ret_type) = self.body.type_check(Rc::clone(&ctx))?;
+
         self.comparison.type_check(Rc::clone(&ctx))?;
+
         if self.else_body.is_some() {
             let mut else_body = self.else_body.take().unwrap();
-            else_body.type_check(Rc::clone(&ctx))?;
+            let (_, else_ret_type) = else_body.type_check(Rc::clone(&ctx))?;
             self.else_body = Some(else_body);
+
+            if let Some(body_ret) = body_ret_type.take() {
+                if else_ret_type.is_some() && !body_ret.contains(&else_ret_type.as_ref().unwrap()) {
+                    return Err(type_error(format!(
+                        "if statement branches cannot return different types: {} and {}",
+                        body_ret, else_ret_type.unwrap()
+                    )));
+                }
+                body_ret_type = Some(body_ret);
+            } else if else_ret_type.is_some() {
+                body_ret_type = else_ret_type;
+            }
         }
-        Ok(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone())
+        Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), body_ret_type))
     }
 }

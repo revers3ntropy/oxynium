@@ -36,7 +36,8 @@ pub struct SymbolDef {
 #[derive(Debug, Clone)]
 pub struct CallStackFrame {
     pub name: String,
-    pub params: Vec<String>
+    pub params: Vec<String>,
+    pub ret_lbl: String,
 }
 
 #[derive(Debug)]
@@ -91,7 +92,9 @@ impl Context {
         }
     }
 
-    // Generate unique identifiers
+
+    // Generate unique identifiers (use root context)
+
     pub fn get_anon_label(&mut self) -> String {
         if self.parent.is_some() {
             return self.with_root(&mut |ctx| ctx.get_anon_label());
@@ -124,7 +127,7 @@ impl Context {
         if self.declarations.get(id).is_some() {
             true
         } else if self.parent.is_some() {
-            self.with_root(&mut |ctx| ctx.has_dec_with_id(id))
+            self.parent.as_ref().unwrap().borrow_mut().has_dec_with_id(id)
         } else {
             false
         }
@@ -133,7 +136,7 @@ impl Context {
         if self.declarations.get(id).is_some() {
             Ok(self.declarations.get(id).unwrap().clone())
         } else if self.parent.is_some() {
-            self.with_root(&mut |ctx| ctx.get_dec_from_id(id))
+            self.parent.as_ref().unwrap().borrow_mut().get_dec_from_id(id)
         } else {
             Err(type_error(format!("Symbol {} is not declared", id)))
         }

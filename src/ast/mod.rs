@@ -14,7 +14,6 @@ pub mod r#if;
 pub mod types;
 pub mod type_expr;
 pub mod fn_declaration;
-pub mod type_wrapper;
 pub mod r#continue;
 pub mod pass;
 pub mod scope;
@@ -27,8 +26,15 @@ use crate::error::Error;
 
 pub const ANON_PREFIX: &str = "_$_ANON_";
 
+// (type of result of node, type of returned values from node and children)
+pub type TypeCheckRes = (Box<Type>, Option<Box<Type>>);
+
 pub trait Node: Debug {
-    fn asm(&mut self, ctx: Ctx) -> Result<String, Error>;
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error>;
+    fn asm(&mut self, _ctx: Ctx) -> Result<String, Error> {
+        Ok("".to_string())
+    }
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+        Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), None))
+    }
 }
 

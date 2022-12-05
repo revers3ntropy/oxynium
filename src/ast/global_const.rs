@@ -1,6 +1,5 @@
 use std::rc::Rc;
-use crate::ast::Node;
-use crate::ast::types::Type;
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::{Ctx, SymbolDec, SymbolDef};
 use crate::error::{Error};
 
@@ -22,7 +21,7 @@ impl Node for GlobalConstNode<i64> {
         Ok("".to_owned())
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         let int = ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone();
         ctx.borrow_mut().declare(SymbolDec {
             name: self.identifier.clone(),
@@ -31,7 +30,7 @@ impl Node for GlobalConstNode<i64> {
             is_type: false,
             type_: int
         })?;
-        Ok(ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone())
+        Ok((ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(), None))
     }
 }
 
@@ -47,7 +46,7 @@ impl Node for GlobalConstNode<String> {
         Ok("".to_owned())
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         let str = ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone();
         ctx.borrow_mut().declare(SymbolDec {
             name: self.identifier.clone(),
@@ -56,7 +55,7 @@ impl Node for GlobalConstNode<String> {
             is_type: false,
             type_: str
         })?;
-        Ok(ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone())
+        Ok((ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone(), None))
     }
 }
 
@@ -68,12 +67,8 @@ pub struct EmptyGlobalConstNode {
 }
 
 impl Node for EmptyGlobalConstNode {
-    fn asm(&mut self, mut _ctx: Ctx) -> Result<String, Error> {
-        Ok("".to_owned())
-    }
-
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
-        let type_ = self.type_.type_check(Rc::clone(&ctx))?;
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+        let (type_, _) = self.type_.type_check(Rc::clone(&ctx))?;
         ctx.borrow_mut().declare(SymbolDec {
             name: self.identifier.clone(),
             id: self.identifier.clone(),
@@ -81,6 +76,6 @@ impl Node for EmptyGlobalConstNode {
             is_type: false,
             type_
         })?;
-        Ok(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone())
+        Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), None))
     }
 }

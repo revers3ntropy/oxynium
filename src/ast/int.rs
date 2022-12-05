@@ -1,5 +1,4 @@
-use crate::ast::Node;
-use crate::ast::types::Type;
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::Ctx;
 use crate::error::Error;
 
@@ -19,7 +18,7 @@ impl Node for IntNode {
         ", self.value))
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
-        Ok(ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone())
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+        Ok((ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(), None))
     }
 }

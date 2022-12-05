@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use crate::ast::Node;
+use crate::ast::{Node, TypeCheckRes};
 use crate::ast::types::Type;
 use crate::context::{CallStackFrame, Ctx, SymbolDec, SymbolDef};
 use crate::error::{Error, type_error};
@@ -26,15 +26,19 @@ impl Node for FnDeclarationNode {
         if self.body.is_none() {
             return Ok("".to_string());
         }
+
+        let end_label = ctx.borrow_mut().get_anon_label();
         ctx.borrow_mut().stack_frame_push(CallStackFrame {
             name: self.identifier.clone(),
             params: self.params
                 .iter()
                 .map(|a| a.identifier.clone())
-                .collect()
+                .collect(),
+            ret_lbl: end_label.clone()
         });
 
-        let body = self.body.take().unwrap().asm(Rc::clone(&self.params_scope))?;
+        let body = self.body.take().unwrap()
+            .asm(Rc::clone(&self.params_scope))?;
         ctx.borrow_mut().define(SymbolDef {
             name: self.identifier.clone(),
             is_local: false,
@@ -43,16 +47,18 @@ impl Node for FnDeclarationNode {
                     push rbp
                     mov rbp, rsp
                     {body}
-                _$_{}_end:
+                {end_label}:
                     mov rsp, rbp
                     pop rbp
                     ret
-                 ", self.identifier.clone()))
+                 "))
         }, false)?;
+
+        ctx.borrow_mut().stack_frame_pop();
         Ok("".to_string())
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         self.params_scope.borrow_mut().set_parent(Rc::clone(&ctx));
 
         // don't use param_scope so that the function can have params
@@ -63,14 +69,14 @@ impl Node for FnDeclarationNode {
                                               self.identifier)))
             }
         }
-        let ret_type = self.ret_type.type_check(Rc::clone(&ctx));
+        let (ret_type, _) = self.ret_type.type_check(Rc::clone(&ctx))?;
 
-        let mut children = vec![ret_type?];
+        let mut children = vec![ret_type];
         let num_params = self.params.len();
         for i in 0..self.params.len() {
             let Parameter { identifier, mut type_} =
                 self.params.pop().unwrap();
-            children.push(type_.type_check(Rc::clone(&ctx))?);
+            children.push(type_.type_check(Rc::clone(&ctx))?.0);
 
             self.params_scope.borrow_mut().declare(SymbolDec {
                 name: identifier.clone(),
@@ -95,6 +101,17 @@ impl Node for FnDeclarationNode {
             type_: Box::new(this_type.clone())
         })?;
 
-        Ok(Box::new(this_type))
+        if let Some(mut body) = self.body.take() {
+            let (ret_type, _) = body.type_check(Rc::clone(&self.params_scope))?;
+            if !this_type.children[0].contains(&ret_type) {
+                return Err(type_error(format!(
+                    "Function {} has return type {} but expected {}",
+                    self.identifier, this_type.children[0], ret_type
+                )))
+            }
+            self.body = Some(body);
+        }
+
+        Ok((Box::new(this_type), None))
     }
 }

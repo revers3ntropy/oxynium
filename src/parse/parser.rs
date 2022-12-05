@@ -18,7 +18,6 @@ use crate::ast::statements::StatementsNode;
 use crate::ast::str::StrNode;
 use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::type_expr::TypeNode;
-use crate::ast::type_wrapper::TypeWrapperNode;
 use crate::context::Context;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
@@ -745,7 +744,7 @@ impl Parser {
         self.consume(&mut res, TokenType::CloseParen);
         if res.error.is_some() { return res; }
 
-        let mut ret_type: Box<dyn Node> = Box::new(TypeWrapperNode {
+        let mut ret_type: Box<dyn Node> = Box::new(TypeNode {
             identifier: "Void".to_string()
         });
 
@@ -793,6 +792,7 @@ impl Parser {
             res.success(Box::new(ReturnNode {
                 value: None
             }));
+            return res;
         }
 
         let expr = res.register(self.expression());

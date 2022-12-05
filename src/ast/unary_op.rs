@@ -1,6 +1,5 @@
 use std::rc::Rc;
-use crate::ast::Node;
-use crate::ast::types::Type;
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::{Ctx};
 use crate::error::{Error, mismatched_types};
 use crate::parse::token::{Token, TokenType};
@@ -44,17 +43,17 @@ impl Node for UnaryOpNode {
         })
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         let t = match self.operator.token_type {
             TokenType::Sub => ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(),
             _ => ctx.borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
         };
 
-        let value_type = self.rhs.type_check(Rc::clone(&ctx))?;
+        let (value_type, _) = self.rhs.type_check(Rc::clone(&ctx))?;
         if !t.contains(value_type.as_ref()) {
             return Err(mismatched_types(t.as_ref(), value_type.as_ref()))
         }
 
-        Ok(t)
+        Ok((t, None))
     }
 }

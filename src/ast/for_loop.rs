@@ -1,6 +1,5 @@
 use std::rc::Rc;
-use crate::ast::Node;
-use crate::ast::types::Type;
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::{Ctx};
 use crate::error::Error;
 
@@ -26,8 +25,7 @@ impl Node for ForLoopNode {
         "))
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
-        self.statements.type_check(Rc::clone(&ctx))?;
-        Ok(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone())
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+        self.statements.type_check(Rc::clone(&ctx))
     }
 }

@@ -1,5 +1,4 @@
-use crate::ast::Node;
-use crate::ast::types::{Type};
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::{Ctx};
 use crate::error::{Error, type_error, unknown_symbol};
 
@@ -9,11 +8,7 @@ pub struct TypeNode {
 }
 
 impl Node for TypeNode {
-    fn asm(&mut self, _ctx: Ctx) -> Result<String, Error> {
-        Ok("".to_string())
-    }
-
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         if !ctx.borrow_mut().has_dec_with_id(&self.identifier) {
             return Err(unknown_symbol(self.identifier.clone()));
         }
@@ -22,6 +17,6 @@ impl Node for TypeNode {
                 "'{}' cannot be used as a type", self.identifier
             )));
         }
-        Ok(ctx.borrow_mut().get_dec_from_id(&self.identifier)?.type_.clone())
+        Ok((ctx.borrow_mut().get_dec_from_id(&self.identifier)?.type_.clone(), None))
     }
 }

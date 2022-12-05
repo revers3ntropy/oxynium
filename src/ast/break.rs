@@ -1,5 +1,4 @@
-use crate::ast::Node;
-use crate::ast::types::Type;
+use crate::ast::{Node};
 use crate::context::Ctx;
 use crate::error::{Error, syntax_error};
 
@@ -15,9 +14,5 @@ impl Node for BreakNode {
         Ok(format!("
             jmp {}
         ", labels.unwrap().1))
-    }
-
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
-        Ok(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone())
     }
 }

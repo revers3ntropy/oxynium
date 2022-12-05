@@ -1,5 +1,4 @@
-use crate::ast::Node;
-use crate::ast::types::Type;
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::Ctx;
 use crate::error::Error;
 
@@ -33,8 +32,7 @@ impl Node for StrNode {
         Ok(result)
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
-        let res = Ok(ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone());
-        res
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+        Ok((ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone(), None))
     }
 }

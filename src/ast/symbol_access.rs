@@ -1,5 +1,4 @@
-use crate::ast::Node;
-use crate::ast::types::Type;
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::{Ctx};
 use crate::error::{Error, type_error, unknown_symbol};
 
@@ -15,7 +14,7 @@ impl Node for SymbolAccess {
         ", ctx.borrow_mut().get_dec_from_id(&self.identifier)?.id))
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         if !ctx.borrow_mut().has_dec_with_id(&self.identifier) {
             return Err(unknown_symbol(format!("Symbol '{}' does not exist", self.identifier)));
         }
@@ -24,6 +23,6 @@ impl Node for SymbolAccess {
                 "'{}' is a type and does not exist at runtime", self.identifier
             )));
         }
-        Ok(ctx.borrow_mut().get_dec_from_id(&self.identifier)?.type_.clone())
+        Ok((ctx.borrow_mut().get_dec_from_id(&self.identifier)?.type_.clone(), None))
     }
 }

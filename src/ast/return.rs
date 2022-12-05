@@ -1,5 +1,4 @@
-use crate::ast::Node;
-use crate::ast::types::Type;
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::Ctx;
 use crate::error::{Error, syntax_error};
 
@@ -22,15 +21,21 @@ impl Node for ReturnNode {
                 {}
                 pop rax
                 mov qword [rbp+{ret_offset}], rax
-                jmp _$_{}_end
-            ", value.asm(ctx)?, frame.name));
+                jmp {}
+            ", value.asm(ctx)?, frame.ret_lbl));
         }
         Ok(format!("
-            jmp _$_{}_end
-        ", frame.name))
+            jmp {}
+        ", frame.ret_lbl))
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
-        Ok(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone())
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+        if let Some(ref mut value) = self.value {
+            let (t, _) = value.type_check(ctx)?;
+            Ok((t.clone(), Some(t)))
+        } else {
+            let void = ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone();
+            Ok((void.clone(), Some(void)))
+        }
     }
 }

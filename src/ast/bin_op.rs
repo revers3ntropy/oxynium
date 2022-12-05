@@ -1,6 +1,5 @@
 use std::rc::Rc;
-use crate::ast::Node;
-use crate::ast::types::Type;
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::Ctx;
 use crate::error::{Error, mismatched_types};
 use crate::parse::token::{Token, TokenType};
@@ -121,7 +120,7 @@ impl Node for BinOpNode {
         }
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
+    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
 
         let operand_types = match self.operator.token_type {
             TokenType::Percent
@@ -139,16 +138,16 @@ impl Node for BinOpNode {
             _ => ctx.borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
         };
 
-        let lhs_type = self.lhs.type_check(Rc::clone(&ctx))?;
+        let (lhs_type, _) = self.lhs.type_check(Rc::clone(&ctx))?;
         if !operand_types.contains(lhs_type.as_ref()) {
             return Err(mismatched_types(operand_types.as_ref(), lhs_type.as_ref()))
         }
-        let rhs_type = self.rhs.type_check(Rc::clone(&ctx))?;
+        let (rhs_type, _) = self.rhs.type_check(Rc::clone(&ctx))?;
         if !operand_types.contains(rhs_type.as_ref()) {
             return Err(mismatched_types(operand_types.as_ref(), rhs_type.as_ref()))
         }
 
-        return Ok(match self.operator.token_type {
+        return Ok((match self.operator.token_type {
             TokenType::Percent
             | TokenType::Plus
             | TokenType::Sub
@@ -156,6 +155,6 @@ impl Node for BinOpNode {
             | TokenType::FSlash
             => Rc::clone(&ctx).borrow_mut().get_dec_from_id("Int")?.type_.clone(),
             _ => Rc::clone(&ctx).borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
-        });
+        }, None));
     }
 }
