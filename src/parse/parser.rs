@@ -782,7 +782,25 @@ impl Parser {
 
     fn return_expr(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
-        res.success(Box::new(ReturnNode {}));
+        if self.peak_matches(TokenType::EndStatement, None)
+            // So far, no expression can start with '}', so we might as well
+            // allow returns to not require a semi-colon if they are the last statement
+            // in a scope; so `fn a() { return }` is fine
+            // Doesn't check that we are in a scope though,
+            // so `fn a() { return } }` wouldn't work if '}' was a valid expression
+            || self.peak_matches(TokenType::CloseBrace, None)
+        {
+            res.success(Box::new(ReturnNode {
+                value: None
+            }));
+        }
+
+        let expr = res.register(self.expression());
+        if res.error.is_some() { return res; }
+
+        res.success(Box::new(ReturnNode {
+            value: Some(expr.unwrap())
+        }));
         res
     }
 }

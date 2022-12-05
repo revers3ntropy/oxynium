@@ -27,7 +27,11 @@ impl Node for FnDeclarationNode {
             return Ok("".to_string());
         }
         ctx.borrow_mut().stack_frame_push(CallStackFrame {
-            name: self.identifier.clone()
+            name: self.identifier.clone(),
+            params: self.params
+                .iter()
+                .map(|a| a.identifier.clone())
+                .collect()
         });
 
         let body = self.body.take().unwrap().asm(Rc::clone(&self.params_scope))?;

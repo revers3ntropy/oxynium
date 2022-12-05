@@ -35,7 +35,8 @@ pub struct SymbolDef {
 
 #[derive(Debug, Clone)]
 pub struct CallStackFrame {
-    pub name: String
+    pub name: String,
+    pub params: Vec<String>
 }
 
 #[derive(Debug)]
@@ -212,5 +213,11 @@ impl Context {
             return self.with_root(&mut |ctx| ctx.stack_frame_pop());
         }
         self.call_stack.pop()
+    }
+    pub fn stack_frame_peak(&mut self) -> Option<CallStackFrame> {
+        if self.parent.is_some() {
+            return self.with_root(&mut |ctx| ctx.stack_frame_peak());
+        }
+        self.call_stack.last().cloned()
     }
 }

@@ -12,20 +12,17 @@ pub struct MutateVar {
 
 impl Node for MutateVar {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+        let id = ctx.borrow_mut().get_dec_from_id(&self.identifier)?.id;
         Ok(format!("
            {}
            pop rax
-           mov rbx, {}
+           mov rbx, {id}
            mov rax, [rax]
            mov [rbx], rax
-        ",
-           self.value.asm(ctx)?,
-           self.identifier
-        ))
+        ", self.value.asm(ctx)?))
     }
 
     fn type_check(&mut self, ctx: Ctx) -> Result<Box<Type>, Error> {
-
         if !ctx.borrow_mut().has_dec_with_id(&self.identifier) {
             return Err(unknown_symbol(self.identifier.clone()));
         }

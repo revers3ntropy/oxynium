@@ -53,10 +53,7 @@ log("Hello");
 ' 'Hello'
 
 expect '
-fn sum_and_log(a: Int, b: Int, c: Int) {
-    print_int(a + b + c);
-};
-sum_and_log(5, 8, 9);
+      fn slog(5, 8, 9);
 ' '22'
 
 expect '
@@ -68,6 +65,13 @@ fn log(msg1: Str, msg2: Str, msg3: Str) {
 log("Hello", " World", "!");
 ' 'Hello World!'
 
+expect '
+fn f(a: Int) {
+    a = 2;
+};
+f(1);
+' ''
+
 
 describe 'Return'
 
@@ -78,3 +82,22 @@ fn f() {
 };
 f();
 ' ''
+
+expect '
+        fn f(): Int {
+            return 1;
+        };
+        print_int(f());
+' '1'
+
+expect_err '
+  fn f(): Int {
+      return "";
+  };
+' 'TypeError'
+
+expect_err '
+fn f(): Int {
+    return "";
+};
+' 'TypeError'

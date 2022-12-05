@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use crate::ast::Node;
 use crate::ast::types::Type;
-use crate::context::{CallStackFrame, Ctx};
+use crate::context::Ctx;
 use crate::error::{Error, mismatched_types, unknown_symbol};
 
 #[derive(Debug)]
@@ -41,8 +41,11 @@ impl Node for FnCallNode {
             return Err(unknown_symbol(format!("undefined function {}", self.identifier)));
         }
 
+        let fn_type = ctx.borrow_mut().get_dec_from_id(&self.identifier)?.type_.clone();
+        let ret_type = fn_type.children[0].clone();
+
         let mut call_signature_children = vec![
-            ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone()
+            ret_type.clone()
         ];
         call_signature_children.append(&mut args);
         let call_signature_type = Box::new(Type {
@@ -51,10 +54,9 @@ impl Node for FnCallNode {
             children: call_signature_children
         });
 
-        let fn_type = ctx.borrow_mut().get_dec_from_id(&self.identifier)?.type_.clone();
         if !fn_type.contains(&call_signature_type) {
             return Err(mismatched_types(fn_type.as_ref(), call_signature_type.as_ref()));
         }
-        Ok(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone())
+        Ok(ret_type)
     }
 }
