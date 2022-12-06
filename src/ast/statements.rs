@@ -5,18 +5,24 @@ use crate::error::{Error, type_error};
 
 #[derive(Debug)]
 pub struct StatementsNode {
-    pub statements: Vec<Box<dyn Node>>
+    pub statements: Vec<Box<dyn Node>>,
+    pub src: Vec<String>
 }
 
 impl Node for StatementsNode {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
         let mut asm = String::new();
+
+        let mut i = 0;
         for statement in self.statements.iter_mut() {
             let stmt = statement.asm(Rc::clone(&ctx))?;
             if !stmt.is_empty() {
-                asm.push('\n');
+                asm.push_str("\n;- SRC: ");
+                asm.push_str(self.src.get(i).unwrap());
+                asm.push_str("\n");
                 asm.push_str(&stmt.clone());
             }
+            i += 1;
         }
         Ok(asm)
     }

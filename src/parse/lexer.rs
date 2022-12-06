@@ -34,37 +34,6 @@ const DOUBLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
     "=="=> TokenType::DblEquals,
 };
 
-pub fn token_type_str(token_type: &TokenType) -> String {
-    match token_type {
-        TokenType::Int => "<int>",
-        TokenType::Plus => "+",
-        TokenType::Sub => "-",
-        TokenType::Astrix => "*",
-        TokenType::FSlash => "/",
-        TokenType::OpenParen => "(",
-        TokenType::CloseParen => ")",
-        TokenType::Ampersand => "&",
-        TokenType::Percent => "%",
-        TokenType::Identifier => "<identifier>",
-        TokenType::Comma => ",",
-        TokenType::EndStatement => ";",
-        TokenType::String => "<string>",
-        TokenType::Equals => "=",
-        TokenType::DblEquals => "==",
-        TokenType::OpenBrace => "{",
-        TokenType::CloseBrace => "}",
-        TokenType::Or => "||",
-        TokenType::And => "&&",
-        TokenType::Not => "!",
-        TokenType::GT => ">",
-        TokenType::LT => "<",
-        TokenType::GTE => ">=",
-        TokenType::LTE => "<=",
-        TokenType::NotEquals => "!=",
-        TokenType::Colon => ":",
-    }.to_string()
-}
-
 pub struct Lexer {
     input: String,
     position: Position,

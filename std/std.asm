@@ -75,6 +75,18 @@ print: ; [string: str*, cb: *] => []
         push rbx
         ret
 
+print_stack_frame_and_exit: ; [...stack: *] => []
+    cmp rsp, rbp
+    je exit
+    push rsp
+    call print_int
+
+    add rsp, 8
+
+    call print_nl
+    jmp print_stack_frame_and_exit
+
+
 print_true: ; [cb: *] => []
     push 'e'
     push 'u'

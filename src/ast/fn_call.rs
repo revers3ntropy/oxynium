@@ -12,11 +12,7 @@ pub struct FnCallNode {
 
 impl Node for FnCallNode {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
-        let mut asm = format!("
-            ; reserve space for return value
-            mov rax, 0
-            push rax
-        ");
+        let mut asm = format!("");
 
         for arg in self.args.iter_mut().rev() {
             asm.push_str(&arg.asm(Rc::clone(&ctx))?);
@@ -25,7 +21,9 @@ impl Node for FnCallNode {
 
         asm.push_str(&format!("
             call {}
-        ", self.identifier));
+            times {} pop rcx
+            push rax
+        ", self.identifier, self.args.len()));
 
         Ok(asm)
     }

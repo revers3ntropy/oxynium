@@ -56,4 +56,35 @@ impl Token {
             end: self.end.clone(),
         }
     }
+
+    pub fn str(&self) -> String {
+        match self.token_type {
+            TokenType::Plus => "+".to_string(),
+            TokenType::Sub => "-".to_string(),
+            TokenType::Astrix => "*".to_string(),
+            TokenType::FSlash => "/".to_string(),
+            TokenType::OpenParen => "(".to_string(),
+            TokenType::CloseParen => ")".to_string(),
+            TokenType::Ampersand => "&".to_string(),
+            TokenType::Percent => "%".to_string(),
+            TokenType::Identifier
+            | TokenType::Int => self.literal.as_ref().unwrap().clone(),
+            TokenType::Comma => ",".to_string(),
+            TokenType::EndStatement => ";".to_string(),
+            TokenType::String => format!("\"{}\"", self.literal.as_ref().unwrap().clone()),
+            TokenType::Equals => "=".to_string(),
+            TokenType::DblEquals => "==".to_string(),
+            TokenType::OpenBrace => "{".to_string(),
+            TokenType::CloseBrace => "}".to_string(),
+            TokenType::Or => "||".to_string(),
+            TokenType::And => "&&".to_string(),
+            TokenType::Not => "!".to_string(),
+            TokenType::GT => ">".to_string(),
+            TokenType::LT => "<".to_string(),
+            TokenType::GTE => ">=".to_string(),
+            TokenType::LTE => "<=".to_string(),
+            TokenType::NotEquals => "!=".to_string(),
+            TokenType::Colon => ":".to_string(),
+        }
+    }
 }

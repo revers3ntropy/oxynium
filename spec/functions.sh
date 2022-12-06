@@ -105,7 +105,6 @@ expect '
     };
     f();
 ' '12'
-
 expect '
     fn f(): Int {
         return 1;
@@ -114,19 +113,19 @@ expect '
 ' '1'
 
 expect_err '
-  fn f(): Int {
+    fn f(): Int {
       return "";
-  };
+    };
 ' 'TypeError'
 expect_err '
-fn f(): Int {
-    return "";
-};
+    fn f(): Int {
+        return "";
+    };
 ' 'TypeError'
 expect_err '
-  fn f() {
+    fn f() {
       return "";
-  };
+    };
 ' 'TypeError'
 expect_err '
     fn f(): Int {
@@ -135,55 +134,106 @@ expect_err '
     };
 ' 'TypeError'
 expect_err '
-  fn f(): Int {
+    fn f(): Int {
       print_int(1);
-  };
+    };
 ' 'TypeError'
 expect_err '
-  fn f(): Void {
+    fn f(): Void {
       return 1;
-  };
+    };
 ' 'TypeError'
 expect '
-  fn f(): Void {
+    fn f(): Void {
       return;
-  };
-  f();
+    };
+    f();
 ' ''
 expect '
-  fn f(): Void {
+    fn f(): Void {
       1;
-  };
-  f();
+    };
+    f();
 ' ''
 expect '
-  fn f(): Void {
+    fn f(): Void {
       print("hi");
-  };
-  f();
+    };
+    f();
 ' 'hi'
 expect '
-  fn f(): Int {
+    fn f(): Int {
       return 1;
       print("hi");
-  };
-  print_int(f());
+    };
+    print_int(f());
 ' '1'
 expect '
-  fn f(): Str {
+    fn f(): Str {
       return "hi";
-  };
-  print(f());
+    };
+    print(f());
 ' 'hi'
 expect '
-  fn f(): Bool {
+    fn f(): Bool {
       return 1 == 2;
-  };
-  print_bool(f());
+    };
+    print_bool(f());
 ' 'false'
 expect '
-  fn f(): Bool {
+    fn f(): Bool {
       return true;
-  };
-  print_bool(f());
+    };
+    print_bool(f());
 ' 'true'
+expect_err '
+    fn f(): Str {
+        return "";
+    };
+    print_bool(f());
+' 'TypeError'
+expect_err '
+    fn f(): Void {};
+    print_bool(f());
+' 'TypeError'
+expect '
+    fn square(n: Int): Int {
+        return n * n;
+    };
+    print_int(square(4));
+' '16'
+expect '
+    fn square(n: Int): Int {
+        return n * n;
+    };
+    print_int(square(4) + square(-1));
+' '17'
+expect '
+    fn sum(a: Int, b: Int, c: Int): Int {
+        return a + b + c;
+    };
+    print_int(sum(1, 2, 3) * sum(4, 5, 6));
+' '90'
+expect '
+    fn f(n: Int): Int {
+        return n;
+    };
+    print_int(f(4));
+    print_int(f(4) + f(5));
+' '49'
+
+expect '
+    fn g() {};
+    fn f(n: Int): Void {
+        return g();
+    };
+    f(4);
+' '49'
+
+expect '
+    fn g(a: Str) {};
+    fn f(n: Int, m: Int): Void {
+      return g("");
+    };
+    f(4, 6);
+' ''

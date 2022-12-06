@@ -22,7 +22,6 @@ use crate::context::Context;
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
 use crate::error::{Error, numeric_overflow, syntax_error};
-use crate::parse::lexer::token_type_str;
 use crate::position::Position;
 
 pub struct Parser {
@@ -53,7 +52,7 @@ impl Parser {
         if self.tok_idx < self.tokens.len() {
             res.failure(
                 syntax_error(format!("Unexpected token {:?}",
-                                     token_type_str(&self.tokens[self.tok_idx].token_type))),
+                                     self.tokens[self.tok_idx].str())),
                 Some(self.tokens[self.tok_idx].start.clone()),
                 Some(self.tokens[self.tok_idx].end.clone())
             );
@@ -171,10 +170,17 @@ impl Parser {
     fn statements(&mut self) -> ParseResults {
 
         let mut res = ParseResults::new();
+        let mut src = Vec::new();
         let mut statements: Vec<Box<dyn Node>> = Vec::new();
         self.clear_end_statements(&mut res);
 
+        let first_stmt_start = self.tok_idx;
         let first_stmt = res.register(self.statement());
+        src.push(
+            self.tokens[first_stmt_start..self.tok_idx]
+                .iter()
+                .map(|a| a.str()).collect()
+        );
 
         if res.error.is_some() {
             return res;
@@ -201,18 +207,26 @@ impl Parser {
                 break;
             }
 
+            let start_of_stmt = self.tok_idx;
             let statement = res.try_register(self.statement());
             if res.error.is_some() { return res; }
             if statement.is_none() {
                 self.reverse(res.reverse_count);
                 continue;
             }
+            src.push(
+                self.tokens[start_of_stmt..self.tok_idx]
+                         .iter()
+                         .map(|a| a.str()).collect()
+            );
             statements.push(statement.unwrap());
         }
 
         self.clear_end_statements(&mut res);
 
-        res.success(Box::new(StatementsNode { statements }));
+        res.success(Box::new(StatementsNode {
+            statements, src
+        }));
         res
     }
 
@@ -503,8 +517,7 @@ impl Parser {
                     self.advance(&mut res);
                 } else {
                     res.failure(
-                        syntax_error(format!("Expected ',' or ')', got '{}'",
-                                             token_type_str(&t.token_type))),
+                        syntax_error(format!("Expected ',' or ')', got '{}'", t.str())),
                         Some(fn_identifier_tok.start),
                         Some(fn_identifier_tok.end)
                     );
