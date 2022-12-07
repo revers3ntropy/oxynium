@@ -496,7 +496,9 @@ impl Parser {
                 self.advance(&mut res);
                 res.success(Box::new(FnCallNode {
                     identifier: fn_identifier_tok.literal.unwrap(),
-                    args: Vec::new()
+                    args: Vec::new(),
+                    // default value always overridden
+                    use_return_value: true
                 }));
                 return res;
             }
@@ -539,7 +541,9 @@ impl Parser {
 
         res.success(Box::new(FnCallNode {
             identifier: fn_identifier_tok.literal.unwrap(),
-            args
+            args,
+            // default value always overridden
+            use_return_value: true
         }));
         res
     }

@@ -25,7 +25,7 @@ impl Node for GlobalConstNode<i64> {
         let int = ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone();
         ctx.borrow_mut().declare(SymbolDec {
             name: self.identifier.clone(),
-            id: self.identifier.clone(),
+            id: format!("qword [{}]", self.identifier.clone()),
             is_constant: self.is_const,
             is_type: false,
             type_: int
@@ -69,9 +69,17 @@ pub struct EmptyGlobalConstNode {
 impl Node for EmptyGlobalConstNode {
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         let (type_, _) = self.type_.type_check(Rc::clone(&ctx))?;
+
+        let id = if !type_.is_ptr {
+            // deref if it shouldn't stay as a pointer
+            format!("qword [{}]", self.identifier.clone())
+        } else {
+            self.identifier.clone()
+        };
+
         ctx.borrow_mut().declare(SymbolDec {
             name: self.identifier.clone(),
-            id: self.identifier.clone(),
+            id,
             is_constant: self.is_const,
             is_type: false,
             type_

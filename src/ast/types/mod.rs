@@ -9,7 +9,8 @@ pub struct Type {
     // For types with parameters, this is a list of the parameters.
     // eg. for functions, the first element is the return type
     // and the rest are the parameter types.
-    pub children: Vec<Box<Type>>
+    pub children: Vec<Box<Type>>,
+    pub is_ptr: bool,
 }
 
 impl Type {

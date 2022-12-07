@@ -12,7 +12,6 @@ impl Node for StrNode {
         let mut result = format!("
             mov rdi, {}
             call malloc WRT ..plt
-            push rax
         ",
             // + 1 for null terminator
            (self.value.len() + 1) * 8);
@@ -25,8 +24,10 @@ impl Node for StrNode {
             result = format!("{}{}", result, char_res);
             i += 1;
         }
-        format!("
+        result = format!("
+            {result}
             mov qword [rax+{}], 0
+            push rax
         ", i*8);
 
         Ok(result)

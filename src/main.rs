@@ -34,7 +34,8 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         type_: Box::new(Type {
             id: 0,
             name: "Int".to_string(),
-            children: vec![]
+            children: vec![],
+            is_ptr: false
         })
     })?;
     ctx.borrow_mut().declare(SymbolDec {
@@ -45,7 +46,8 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         type_: Box::new(Type {
             id: 1,
             name: "Bool".to_string(),
-            children: vec![]
+            children: vec![],
+            is_ptr: false
         })
     })?;
     ctx.borrow_mut().declare(SymbolDec {
@@ -56,7 +58,8 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         type_: Box::new(Type {
             id: 2,
             name: "Str".to_string(),
-            children: vec![]
+            children: vec![],
+            is_ptr: true
         })
     })?;
     ctx.borrow_mut().declare(SymbolDec {
@@ -67,7 +70,8 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         type_: Box::new(Type {
             id: 3,
             name: "Void".to_string(),
-            children: vec![]
+            children: vec![],
+            is_ptr: true
         })
     })?;
 

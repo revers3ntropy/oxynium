@@ -15,9 +15,7 @@ impl Node for MutateVar {
         Ok(format!("
            {}
            pop rax
-           mov rbx, {id}
-           mov rax, [rax]
-           mov [rbx], rax
+           mov {id}, rax
         ", self.value.asm(ctx)?))
     }
 

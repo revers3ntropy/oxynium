@@ -90,7 +90,8 @@ impl Node for FnDeclarationNode {
         let this_type = Type {
             id: ctx.borrow_mut().get_type_id(),
             name: "Fn".to_owned(),
-            children
+            children,
+            is_ptr: true
         };
         // declare in the parent context
         ctx.borrow_mut().declare(SymbolDec {

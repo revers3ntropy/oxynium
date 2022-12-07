@@ -7,7 +7,8 @@ use crate::error::{Error, mismatched_types, unknown_symbol};
 #[derive(Debug)]
 pub struct FnCallNode {
     pub identifier: String,
-    pub args: Vec<Box<dyn Node>>
+    pub args: Vec<Box<dyn Node>>,
+    pub use_return_value: bool
 }
 
 impl Node for FnCallNode {
@@ -21,9 +22,17 @@ impl Node for FnCallNode {
 
         asm.push_str(&format!("
             call {}
-            times {} pop rcx
-            push rax
-        ", self.identifier, self.args.len()));
+            {}
+            {}
+        ",
+            self.identifier,
+            if self.args.len() > 0 {
+                format!("times {} pop rcx", self.args.len())
+            } else {
+                "".to_string()
+            },
+            if self.use_return_value { "push rax" } else { "" }
+        ));
 
         Ok(asm)
     }
@@ -49,11 +58,18 @@ impl Node for FnCallNode {
         let call_signature_type = Box::new(Type {
             id: ctx.borrow_mut().get_type_id(),
             name: "Fn".to_string(),
-            children: call_signature_children
+            children: call_signature_children,
+            is_ptr: true
         });
 
         if !fn_type.contains(&call_signature_type) {
             return Err(mismatched_types(fn_type.as_ref(), call_signature_type.as_ref()));
+        }
+
+        if ret_type.contains(&ctx.borrow_mut().get_dec_from_id("Void")?.type_) {
+            self.use_return_value = false;
+        } else {
+            self.use_return_value = true;
         }
         Ok((ret_type, None))
     }

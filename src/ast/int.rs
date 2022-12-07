@@ -10,10 +10,7 @@ pub struct IntNode {
 impl Node for IntNode {
     fn asm(&mut self, _ctx: Ctx) -> Result<String, Error> {
         Ok(format!("
-            mov rdi, 8
-            call malloc WRT ..plt
-            mov rcx, {} ; go through register otherwise limited to 16 bits (dword)
-            mov qword [rax], rcx
+            mov rax, {}
             push rax
         ", self.value))
     }

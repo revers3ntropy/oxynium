@@ -1,4 +1,4 @@
-_$_print_digit: ; [number: int, cb: *] => []
+print_digit: ; [number: int, cb: *]  => Void
     push rbp
     mov rbp, rsp
 
@@ -18,7 +18,7 @@ _$_print_digit: ; [number: int, cb: *] => []
     pop rbp
     ret
 
-_$_print_char: ; [ascii_code: int, cb: *] => []
+print_char: ; [ascii_code: int, cb: *] => Void
     push rbp
     mov rbp, rsp
 
@@ -36,22 +36,7 @@ _$_print_char: ; [ascii_code: int, cb: *] => []
     pop rbp
     ret
 
-print_str: ; [string: str*, length: int*, cb: *] => []
-    push rbp
-    mov rbp, rsp
-
-    mov rdx, qword [rbp+16] ; length
-    mov rsi, qword [rbp+24] ; string
-    mov rax, 1
-    mov rdi, 1
-
-    syscall
-
-    mov rsp, rbp
-    pop rbp
-    ret
-
-print: ; [string: str*, cb: *] => []
+print: ; [string: char*, cb: *] => Void
        ; prints characters until null byte is reached
     push rbp
     mov rbp, rsp
@@ -63,7 +48,7 @@ print: ; [string: str*, cb: *] => []
 
     ; find length of string
     _$_print_find_length:
-        mov rcx, [rax]
+        mov rcx, qword [rax]
         cmp rcx, 0
         je _$_print_end_length
         inc rdx
@@ -79,7 +64,7 @@ print: ; [string: str*, cb: *] => []
         pop rbp
         ret
 
-print_stack_frame_and_exit: ; [...stack: *] => []
+print_stack_frame_and_exit: ; [...stack: *] => Void
     cmp rsp, rbp
     je exit
     push rsp
@@ -91,47 +76,44 @@ print_stack_frame_and_exit: ; [...stack: *] => []
     jmp print_stack_frame_and_exit
 
 
-print_true: ; [cb: *] => []
+print_true: ; [cb: *] => Void
     push 't'
-    call _$_print_char
+    call print_char
     pop rax
     push 'r'
-    call _$_print_char
+    call print_char
     pop rax
     push 'u'
-    call _$_print_char
+    call print_char
     pop rax
     push 'e'
-    call _$_print_char
+    call print_char
     pop rax
     ret
 
-print_false: ; [cb: *] => []
+print_false: ; [cb: *] => Void
     push 'f'
-    call _$_print_char
+    call print_char
     pop rax
     push 'a'
-    call _$_print_char
+    call print_char
     pop rax
     push 'l'
-    call _$_print_char
+    call print_char
     pop rax
     push 's'
-    call _$_print_char
+    call print_char
     pop rax
     push 'e'
-    call _$_print_char
+    call print_char
     pop rax
     ret
 
-print_bool: ; [bool: int*, cb: *] => []
+print_bool: ; [bool: int, cb: *] => Void
     push rbp
     mov rbp, rsp
 
-    mov rsi, qword [rbp+16] ; pop bool
-    mov rax, [rsi]
-
-    cmp rax, 0
+    cmp qword [rbp+16], 0
     je _$_print_bool_false
     call print_true
     jmp _$_print_bool_end
@@ -146,7 +128,7 @@ print_bool: ; [bool: int*, cb: *] => []
         ret
 
 
-print_int: ; [number: int*, cb: *] => []
+print_int: ; [number: int, cb: *] => Void
            ; prints an 8 byte integer in base 10
            ; src: https://www.javatpoint.com/binary-to-decimal-number-in-c
            ;   while (num > 0) {
@@ -160,7 +142,6 @@ print_int: ; [number: int*, cb: *] => []
     mov rbp, rsp
 
     mov r15, qword [rbp+16] ; pop num
-    mov r15, [r15]
 
     mov r10, rsp
 
@@ -174,9 +155,8 @@ print_int: ; [number: int*, cb: *] => []
 
     cmp r15, 0 ; if num == 0: break
     jne _$_print_int_start
-    mov rax, 0
-    push rax
-    call _$_print_digit
+    push '0'
+    call print_char
     pop rax
     jmp _$_print_int_end
 
@@ -226,9 +206,8 @@ print_int: ; [number: int*, cb: *] => []
         jmp _$_print_int_end_print_loop
 
         _$_print_int_end_print_negative:
-            mov rax, '-'
-            push rax
-            call _$_print_char
+            push '-'
+            call print_char
             pop rax
 
         _$_print_int_end_print_loop:
@@ -238,7 +217,7 @@ print_int: ; [number: int*, cb: *] => []
             cmp r14, 0
             jle _$_print_int_return
             dec r14
-            call _$_print_digit
+            call print_digit
             pop rax
             jmp _$_print_int_end_print_loop
 
@@ -251,12 +230,12 @@ print_nl:
     ; print NL
     mov rax, 13
     push rax
-    call _$_print_char
+    call print_char
     pop rax
     ; print CR
     mov rax, 10
     push rax
-    call _$_print_char
+    call print_char
     pop rax
 
 exit:

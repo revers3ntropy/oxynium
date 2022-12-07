@@ -16,11 +16,7 @@ impl Node for UnaryOpNode {
             TokenType::Sub => {
                 format!("
                     {}
-                    pop rcx
-                    mov rax, [rcx]
-                    neg rax
-                    mov [rcx], rax
-                    push rcx
+                    neg qword [rsp]
                 ",
                     self.rhs.asm(Rc::clone(&ctx))?
                 )
@@ -29,12 +25,10 @@ impl Node for UnaryOpNode {
                 format!("
                     {}
                     pop rbx
-                    mov rbx, [rbx]
                     mov rax, 0
                     cmp rbx, 0
                     setle al
                     push rax
-                    push rsp
                 ",
                     self.rhs.asm(Rc::clone(&ctx))?
                 )

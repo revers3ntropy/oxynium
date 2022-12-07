@@ -20,14 +20,7 @@ impl Node for BinOpNode {
                     {}
                     pop rax
                     pop rbx
-                    mov rbx, [rbx]
-                    mov rax, [rax]
                     {} rax, rbx
-                    push rax
-                    mov rdi, 8
-                    call malloc WRT ..plt
-                    pop rdx
-                    mov [rax], rdx
                     push rax
                 ",
                    self.rhs.asm(Rc::clone(&ctx))?,
@@ -44,17 +37,10 @@ impl Node for BinOpNode {
                 Ok(format!("
                         {}
                         {}
-                        pop rcx
+                        pop rax
                         pop rbx
-                        mov rbx, [rbx]
-                        mov rax, [rcx]
                         cqo ; extend rax to rdx:rax
                         {} rbx
-                        push rax
-                        mov rdi, 8
-                        call malloc WRT ..plt
-                        pop rdx
-                        mov [rax], rdx
                         push rax
                     ",
                       self.rhs.asm(Rc::clone(&ctx))?,
@@ -69,39 +55,30 @@ impl Node for BinOpNode {
                 Ok(format!("
                         {}
                         {}
-                        pop rcx
+                        pop rax
                         pop rbx
-                        mov rbx, [rbx]
-                        mov rax, [rcx]
                         cqo ; extend rax to rdx:rax
                         idiv rbx
                         push rdx
-                        mov rdi, 8
-                        call malloc WRT ..plt
-                        pop rdx
-                        mov [rax], rdx
-                        push rax
                     ",
                        self.rhs.asm(Rc::clone(&ctx))?,
                        self.lhs.asm(Rc::clone(&ctx))?,
                 ))
             },
-            TokenType::GT | TokenType::LT | TokenType::LTE | TokenType::GTE | TokenType::DblEquals | TokenType::NotEquals => {
+            TokenType::GT
+            | TokenType::LT
+            | TokenType::LTE
+            | TokenType::GTE
+            | TokenType::DblEquals
+            | TokenType::NotEquals => {
                 Ok(format!("
                         {}
                         {}
-                        pop rcx ; *lhs
-                        pop rbx ; *rhs
-                        mov rbx, [rbx] ; rhs
-                        mov rdx, [rcx] ; lhs
-                        cmp rdx, rbx   ; lhs - rhs
+                        pop rcx ; lhs
+                        pop rdx ; rhs
                         mov rax, 0     ; al is first byte of rax,
+                        cmp rcx, rdx
                         {} al          ; so clear rax and put into al
-                        push rax
-                        mov rdi, 8
-                        call malloc WRT ..plt
-                        pop rdx
-                        mov [rax], rdx
                         push rax
                 ",
                        self.rhs.asm(Rc::clone(&ctx))?,
