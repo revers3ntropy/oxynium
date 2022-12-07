@@ -24,7 +24,7 @@ use crate::ast::types::Type;
 use crate::context::{Ctx};
 use crate::error::Error;
 
-pub const ANON_PREFIX: &str = "_$_ANON_";
+pub const ANON_PREFIX: &str = "_$_";
 
 // (type of result of node, type of returned values from node and children)
 pub type TypeCheckRes = (Box<Type>, Option<Box<Type>>);

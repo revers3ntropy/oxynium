@@ -223,7 +223,11 @@ expect '
 ' '49'
 
 expect '
-    fn g() {};
+    fn g() {
+        print_int(49);
+        return;
+        print_bool(true);
+    };
     fn f(n: Int): Void {
         return g();
     };

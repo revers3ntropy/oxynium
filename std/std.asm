@@ -1,60 +1,62 @@
 _$_print_digit: ; [number: int, cb: *] => []
-    pop rbx ; pop cb
-    pop rax ; pop number
+    push rbp
+    mov rbp, rsp
 
-    mov rcx, '0'
-    add rax, rcx ; add '0' to value to get correct ascii code for digit
+    add qword [rbp+16], '0' ; convert to ascii code
 
-    push rax
-    mov rsi, rsp
+    mov rsi, rbp
+    add rsi, 16 ; rsi points to ascii code
 
-    mov rdx, 2 ; specify length of string
+    mov rdx, 2 ; specify length of string (64 bit char)
     ; set up syscall
     mov rax, 1
     mov rdi, 1
 
     syscall
 
-    pop rax
-    push rbx ; push callback pointer
+    mov rsp, rbp
+    pop rbp
     ret
 
 _$_print_char: ; [ascii_code: int, cb: *] => []
-    pop rbx ; pop cb
-    pop rax ; pop number
+    push rbp
+    mov rbp, rsp
 
-    push rax
-    mov rsi, rsp
+    mov rsi, rbp
+    add rsi, 16 ; rsi points to ascii code
 
-    mov rdx, 2 ; specify length of string
+    mov rdx, 8 ; specify length of string (64 bit char)
     ; set up syscall
     mov rax, 1
     mov rdi, 1
 
     syscall
 
-    pop rax
-    push rbx ; push callback pointer
+    mov rsp, rbp
+    pop rbp
     ret
 
 print_str: ; [string: str*, length: int*, cb: *] => []
-    pop rbx ; pop cb
-    pop rdx ; pop length
-    pop rsi ; pop string
+    push rbp
+    mov rbp, rsp
 
+    mov rdx, qword [rbp+16] ; length
+    mov rsi, qword [rbp+24] ; string
     mov rax, 1
     mov rdi, 1
 
     syscall
 
-    push rbx ; push callback pointer
+    mov rsp, rbp
+    pop rbp
     ret
-
 
 print: ; [string: str*, cb: *] => []
        ; prints characters until null byte is reached
-    pop rbx ; pop cb
-    pop rsi ; pop string
+    push rbp
+    mov rbp, rsp
+
+    mov rsi, qword [rbp+16] ; pop string
     mov rax, rsi ; copy string pointer
 
     mov rdx, 0 ; string length
@@ -72,7 +74,9 @@ print: ; [string: str*, cb: *] => []
         mov rax, 1
         mov rdi, 1
         syscall
-        push rbx
+
+        mov rsp, rbp
+        pop rbp
         ret
 
 print_stack_frame_and_exit: ; [...stack: *] => []
@@ -88,34 +92,45 @@ print_stack_frame_and_exit: ; [...stack: *] => []
 
 
 print_true: ; [cb: *] => []
-    push 'e'
-    push 'u'
-    push 'r'
     push 't'
     call _$_print_char
+    pop rax
+    push 'r'
     call _$_print_char
+    pop rax
+    push 'u'
     call _$_print_char
+    pop rax
+    push 'e'
     call _$_print_char
+    pop rax
     ret
 
 print_false: ; [cb: *] => []
-    push 'e'
-    push 's'
-    push 'l'
-    push 'a'
     push 'f'
     call _$_print_char
+    pop rax
+    push 'a'
     call _$_print_char
+    pop rax
+    push 'l'
     call _$_print_char
+    pop rax
+    push 's'
     call _$_print_char
+    pop rax
+    push 'e'
     call _$_print_char
+    pop rax
     ret
 
 print_bool: ; [bool: int*, cb: *] => []
-    pop rbx ; pop cb
-    pop rsi ; pop bool
+    push rbp
+    mov rbp, rsp
 
+    mov rsi, qword [rbp+16] ; pop bool
     mov rax, [rsi]
+
     cmp rax, 0
     je _$_print_bool_false
     call print_true
@@ -125,8 +140,9 @@ print_bool: ; [bool: int*, cb: *] => []
         call print_false
 
     _$_print_bool_end:
-        push rbx
         call print_nl
+        mov rsp, rbp
+        pop rbp
         ret
 
 
@@ -140,8 +156,10 @@ print_int: ; [number: int*, cb: *] => []
            ;        base = base * 2;
            ;    }
 
-    pop r8 ; pop cb
-    pop r15 ; pop num
+    push rbp
+    mov rbp, rsp
+
+    mov r15, qword [rbp+16] ; pop num
     mov r15, [r15]
 
     mov r10, rsp
@@ -159,6 +177,7 @@ print_int: ; [number: int*, cb: *] => []
     mov rax, 0
     push rax
     call _$_print_digit
+    pop rax
     jmp _$_print_int_end
 
     _$_print_int_negative:
@@ -210,6 +229,7 @@ print_int: ; [number: int*, cb: *] => []
             mov rax, '-'
             push rax
             call _$_print_char
+            pop rax
 
         _$_print_int_end_print_loop:
                 ; print digits in reverse of reverse order
@@ -219,11 +239,12 @@ print_int: ; [number: int*, cb: *] => []
             jle _$_print_int_return
             dec r14
             call _$_print_digit
+            pop rax
             jmp _$_print_int_end_print_loop
 
     _$_print_int_return:
-        pop rax
-        push r8
+        mov rsp, rbp
+        pop rbp
         ret
 
 print_nl:
@@ -231,35 +252,12 @@ print_nl:
     mov rax, 13
     push rax
     call _$_print_char
+    pop rax
     ; print CR
     mov rax, 10
     push rax
     call _$_print_char
-    ret
-
-add_ints: ; [a: int*, b: int*, cb: *] => [sum: int*]
-    pop rdx ; pop cb
-
     pop rax
-    pop rbx
-    mov rbx, [rbx]
-    add [rax], rbx
-    push rax
-
-    push rdx ; push callback pointer
-    ret
-
-sub_ints: ; [a: int*, b: int*, cb: *] => [sum: int*]
-    pop rdx ; pop cb
-
-    pop rax
-    pop rbx
-    mov rbx, [rbx]
-    sub [rax], rbx
-    push rax
-
-    push rdx ; push callback pointer
-    ret
 
 exit:
     mov rax, 60
