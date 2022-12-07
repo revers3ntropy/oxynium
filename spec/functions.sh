@@ -1,20 +1,20 @@
 describe 'Function Declarations'
 
-expect 'fn a()' ''
-expect 'fn a(a: Int, b: Bool, c: Str)' ''
-expect 'fn a(): Void' ''
-expect 'fn a(a: Int): Str' ''
-expect_err 'fn a(a): Str' 'SyntaxError'
-expect_err 'fn a(a)' 'SyntaxError'
-expect_err 'fn()' 'SyntaxError'
-expect_err 'fn 0()' 'SyntaxError'
-expect_err 'fn 0g()' 'SyntaxError'
-expect_err 'fn g(); fn g();' 'TypeError'
+expect '' 'fn a()'
+expect '' 'fn a(a: Int, b: Bool, c: Str)'
+expect '' 'fn a(): Void'
+expect '' 'fn a(a: Int): Str'
+expect_err 'SyntaxError' 'fn a(a): Str'
+expect_err 'SyntaxError' 'fn a(a)'
+expect_err 'SyntaxError' 'fn()'
+expect_err 'SyntaxError' 'fn 0()'
+expect_err 'SyntaxError' 'fn 0g()'
+expect_err 'TypeError' 'fn g(); fn g();'
 
 
 describe 'Writing Functions'
 
-expect '
+expect '12345' '
     fn g() {
         print("3");
     };
@@ -28,9 +28,8 @@ expect '
     print("1");
     f();
     print("5");
-' '12345'
-
-expect '
+'
+expect '3' '
     fn g() {
         2; // just push a value to the stack
         // Ensures the stack is cleared when the function returns
@@ -42,59 +41,55 @@ expect '
         3;
     };
     f();
-' '3'
-
-expect '
+'
+expect 'Hello' '
     fn log(msg: Str) {
         print(msg);
     };
     log("Hello");
-' 'Hello'
-
-expect '
+'
+expect '22' '
       fn sum_and_log(a: Int, b: Int, c: Int) {
           print_int(a + b + c);
       };
       sum_and_log(5, 8, 9);
-' '22'
-
-expect '
+'
+expect 'Hello World!' '
     fn log(msg1: Str, msg2: Str, msg3: Str) {
         print(msg1);
         print(msg2);
         print(msg3);
     };
     log("Hello", " World", "!");
-' 'Hello World!'
-
-expect_err '
+'
+expect_err 'TypeError' '
     fn f(a: Int) {
         a = 2;
     };
 f(1);
-' 'TypeError'
+'
 
 
 describe 'Return'
 
-expect '
+expect '' '
     fn f() {
         return;
         print("hi");
     };
     f();
-' ''
+'
 
-expect '
+expect '1' '
     fn f() {
         print("1");
         return;
         print("2");
     };
     f();
-' '1'
+'
 
-expect '
+expect '12' '
     var i = 0;
     fn f() {
         for {
@@ -104,125 +99,124 @@ expect '
         };
     };
     f();
-' '12'
-expect '
+'
+expect '1' '
     fn f(): Int {
         return 1;
     };
     print_int(f());
-' '1'
+'
 
-expect_err '
+expect_err 'TypeError' '
     fn f(): Int {
       return "";
     };
-' 'TypeError'
-expect_err '
+'
+expect_err 'TypeError' '
     fn f(): Int {
         return "";
     };
-' 'TypeError'
-expect_err '
+'
+expect_err 'TypeError' '
     fn f() {
       return "";
     };
-' 'TypeError'
-expect_err '
+'
+expect_err 'TypeError' '
     fn f(): Int {
         print("hi");
         return;
     };
-' 'TypeError'
-expect_err '
+'
+expect_err 'TypeError' '
     fn f(): Int {
       print_int(1);
     };
-' 'TypeError'
-expect_err '
+'
+expect_err 'TypeError' '
     fn f(): Void {
       return 1;
     };
-' 'TypeError'
-expect '
+'
+expect '' '
     fn f(): Void {
       return;
     };
     f();
-' ''
-expect '
+'
+expect '' '
     fn f(): Void {
       1;
     };
     f();
-' ''
-expect '
+'
+expect 'hi' '
     fn f(): Void {
       print("hi");
     };
     f();
-' 'hi'
-expect '
+'
+expect '1' '
     fn f(): Int {
       return 1;
       print("hi");
     };
     print_int(f());
-' '1'
-expect '
+'
+expect 'hi' '
     fn f(): Str {
       return "hi";
     };
     print(f());
-' 'hi'
-expect '
+'
+expect 'false' '
     fn f(): Bool {
       return 1 == 2;
     };
     print_bool(f());
-' 'false'
-expect '
+'
+expect 'true' '
     fn f(): Bool {
       return true;
     };
     print_bool(f());
-' 'true'
-expect_err '
+'
+expect_err 'TypeError' '
     fn f(): Str {
         return "";
     };
     print_bool(f());
-' 'TypeError'
-expect_err '
+'
+expect_err 'TypeError' '
     fn f(): Void {};
     print_bool(f());
-' 'TypeError'
-expect '
+'
+expect '16' '
     fn square(n: Int): Int {
         return n * n;
     };
     print_int(square(4));
-' '16'
-expect '
+'
+expect '17' '
     fn square(n: Int): Int {
         return n * n;
     };
     print_int(square(4) + square(-1));
-' '17'
-expect '
+'
+expect '90' '
     fn sum(a: Int, b: Int, c: Int): Int {
         return a + b + c;
     };
     print_int(sum(1, 2, 3) * sum(4, 5, 6));
-' '90'
-expect '
+'
+expect '49' '
     fn f(n: Int): Int {
         return n;
     };
     print_int(f(4));
     print_int(f(4) + f(5));
-' '49'
-
-expect '
+'
+expect '49' '
     fn g() {
         print_int(49);
         return;
@@ -232,12 +226,11 @@ expect '
         return g();
     };
     f(4);
-' '49'
-
-expect '
+'
+expect '' '
     fn g(a: Str) {};
     fn f(n: Int, m: Int): Void {
       return g("");
     };
     f(4, 6);
-' ''
+'

@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 use std::fmt::Display;
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Type {
@@ -9,12 +10,12 @@ pub struct Type {
     // For types with parameters, this is a list of the parameters.
     // eg. for functions, the first element is the return type
     // and the rest are the parameter types.
-    pub children: Vec<Box<Type>>,
+    pub children: Vec<Rc<Type>>,
     pub is_ptr: bool,
 }
 
 impl Type {
-    pub fn contains(&self, t: &Type) -> bool {
+    pub fn contains(&self, t: Rc<Type>) -> bool {
         if self.children.is_empty() {
             return self.id == t.id;
         }
@@ -22,7 +23,7 @@ impl Type {
             return false;
         }
         for i in 0..self.children.iter().len() {
-            if !self.children[i].contains(t.children[i].as_ref()) {
+            if !self.children[i].contains(t.children[i].clone()) {
                 return false;
             }
         }

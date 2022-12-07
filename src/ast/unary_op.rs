@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::{Ctx};
 use crate::error::{Error, mismatched_types};
@@ -18,7 +17,7 @@ impl Node for UnaryOpNode {
                     {}
                     neg qword [rsp]
                 ",
-                    self.rhs.asm(Rc::clone(&ctx))?
+                    self.rhs.asm(ctx.clone())?
                 )
             }
             TokenType::Not => {
@@ -30,7 +29,7 @@ impl Node for UnaryOpNode {
                     setle al
                     push rax
                 ",
-                    self.rhs.asm(Rc::clone(&ctx))?
+                    self.rhs.asm(ctx.clone())?
                 )
             }
             _ => panic!("Invalid arithmetic unary operator: {:?}", self.operator)
@@ -43,8 +42,8 @@ impl Node for UnaryOpNode {
             _ => ctx.borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
         };
 
-        let (value_type, _) = self.rhs.type_check(Rc::clone(&ctx))?;
-        if !t.contains(value_type.as_ref()) {
+        let (value_type, _) = self.rhs.type_check(ctx.clone())?;
+        if !t.contains(value_type.clone()) {
             return Err(mismatched_types(t.as_ref(), value_type.as_ref()))
         }
 

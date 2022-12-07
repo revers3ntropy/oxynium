@@ -16,7 +16,7 @@ impl Node for FnCallNode {
         let mut asm = format!("");
 
         for arg in self.args.iter_mut().rev() {
-            asm.push_str(&arg.asm(Rc::clone(&ctx))?);
+            asm.push_str(&arg.asm(ctx.clone())?);
             asm.push_str("\n");
         }
 
@@ -40,7 +40,7 @@ impl Node for FnCallNode {
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         let mut args = Vec::new();
         for arg in self.args.iter_mut() {
-            let (arg_type, _) = arg.type_check(Rc::clone(&ctx))?;
+            let (arg_type, _) = arg.type_check(ctx.clone())?;
             args.push(arg_type);
         }
 
@@ -55,18 +55,18 @@ impl Node for FnCallNode {
             ret_type.clone()
         ];
         call_signature_children.append(&mut args);
-        let call_signature_type = Box::new(Type {
+        let call_signature_type = Rc::new(Type {
             id: ctx.borrow_mut().get_type_id(),
             name: "Fn".to_string(),
             children: call_signature_children,
             is_ptr: true
         });
 
-        if !fn_type.contains(&call_signature_type) {
-            return Err(mismatched_types(fn_type.as_ref(), call_signature_type.as_ref()));
+        if !fn_type.contains(call_signature_type.clone()) {
+            return Err(mismatched_types(&fn_type.clone(), &call_signature_type.clone()));
         }
 
-        if ret_type.contains(&ctx.borrow_mut().get_dec_from_id("Void")?.type_) {
+        if ret_type.contains(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone()) {
             self.use_return_value = false;
         } else {
             self.use_return_value = true;

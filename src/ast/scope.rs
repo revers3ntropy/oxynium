@@ -1,6 +1,5 @@
-use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
-use crate::context::{Ctx};
+use crate::context::Ctx;
 use crate::error::Error;
 
 #[derive(Debug)]
@@ -15,7 +14,7 @@ impl Node for ScopeNode {
     }
 
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
-        self.ctx.borrow_mut().set_parent(Rc::clone(&ctx));
-        self.body.type_check(Rc::clone(&self.ctx))
+        self.ctx.borrow_mut().set_parent(ctx.clone());
+        self.body.type_check(self.ctx.clone())
     }
 }

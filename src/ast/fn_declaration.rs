@@ -38,7 +38,7 @@ impl Node for FnDeclarationNode {
         });
 
         let body = self.body.take().unwrap()
-            .asm(Rc::clone(&self.params_scope))?;
+            .asm(self.params_scope.clone())?;
         ctx.borrow_mut().define(SymbolDef {
             name: self.identifier.clone(),
             is_local: false,
@@ -59,7 +59,7 @@ impl Node for FnDeclarationNode {
     }
 
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
-        self.params_scope.borrow_mut().set_parent(Rc::clone(&ctx));
+        self.params_scope.borrow_mut().set_parent(ctx.clone());
 
         // don't use param_scope so that the function can have params
         // with the same name as the function
@@ -69,14 +69,14 @@ impl Node for FnDeclarationNode {
                                               self.identifier)))
             }
         }
-        let (ret_type, _) = self.ret_type.type_check(Rc::clone(&ctx))?;
+        let (ret_type, _) = self.ret_type.type_check(ctx.clone())?;
 
         let mut children = vec![ret_type];
         let num_params = self.params.len();
         for i in 0..self.params.len() {
             let Parameter { identifier, mut type_} =
                 self.params.pop().unwrap();
-            children.push(type_.type_check(Rc::clone(&ctx))?.0);
+            children.push(type_.type_check(ctx.clone())?.0);
 
             self.params_scope.borrow_mut().declare(SymbolDec {
                 name: identifier.clone(),
@@ -87,24 +87,24 @@ impl Node for FnDeclarationNode {
             })?;
         }
 
-        let this_type = Type {
+        let this_type = Rc::new(Type {
             id: ctx.borrow_mut().get_type_id(),
             name: "Fn".to_owned(),
             children,
             is_ptr: true
-        };
+        });
         // declare in the parent context
         ctx.borrow_mut().declare(SymbolDec {
             name: self.identifier.clone(),
             id: self.identifier.clone(),
             is_constant: true,
             is_type: false,
-            type_: Box::new(this_type.clone())
+            type_: this_type.clone()
         })?;
 
         if let Some(mut body) = self.body.take() {
-            let (ret_type, _) = body.type_check(Rc::clone(&self.params_scope))?;
-            if !this_type.children[0].contains(&ret_type) {
+            let (ret_type, _) = body.type_check(self.params_scope.clone())?;
+            if !this_type.children[0].contains(ret_type.clone()) {
                 return Err(type_error(format!(
                     "Function {} has return type {} but expected {}",
                     self.identifier, this_type.children[0], ret_type
@@ -113,6 +113,6 @@ impl Node for FnDeclarationNode {
             self.body = Some(body);
         }
 
-        Ok((Box::new(this_type), None))
+        Ok((this_type, None))
     }
 }

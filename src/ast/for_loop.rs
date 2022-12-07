@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::{Ctx};
 use crate::error::Error;
@@ -14,7 +13,7 @@ impl Node for ForLoopNode {
         let end_lbl = ctx.borrow_mut().get_anon_label();
 
         ctx.borrow_mut().loop_labels_push(start_lbl.clone(), end_lbl.clone());
-        let body = self.statements.asm(Rc::clone(&ctx))?;
+        let body = self.statements.asm(ctx.clone())?;
         ctx.borrow_mut().loop_labels_pop();
 
         Ok(format!("
@@ -26,6 +25,6 @@ impl Node for ForLoopNode {
     }
 
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
-        self.statements.type_check(Rc::clone(&ctx))
+        self.statements.type_check(ctx.clone())
     }
 }

@@ -1,15 +1,15 @@
 describe 'Loops'
 
-expect '
+expect '1' '
     var i = 0;
     for {
         i = i + 1;
         print_int(i);
         break;
     }
-' '1'
+'
 
-expect '
+expect 'hello there' '
     for {
         print("hello");
         break;
@@ -18,9 +18,9 @@ expect '
         print(" there");
         break;
     };
-' 'hello there'
+'
 
-expect '
+expect '5' '
     var i = 0;
     for {
         i = i + 1;
@@ -30,9 +30,9 @@ expect '
         print_int(i);
         break;
     };
-' '5'
+'
 
-expect '
+expect '12345678910' '
     const n = 9;
     var i = 0;
     for {
@@ -43,9 +43,9 @@ expect '
             break;
         };
     };
-' '12345678910'
+'
 
-expect '
+expect '234 468 6912' '
     var i = 1;
     var j = 1;
     for {
@@ -57,10 +57,11 @@ expect '
                 break;
             };
         };
-        print(" ");
+
         i = i + 1;
         if i > 3 {
             break;
         };
+        print(" ");
     };
-' '234 468 6912 '
+'

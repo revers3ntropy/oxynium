@@ -13,12 +13,12 @@ pub struct SymbolDec {
     pub id: String,
     pub is_constant: bool,
     pub is_type: bool,
-    pub type_: Box<Type>,
+    pub type_: Rc<Type>,
 }
 
 impl SymbolDec {
     fn contains(&self, s: &SymbolDec) -> bool {
-        self.type_.contains(&s.type_)
+        self.type_.contains(s.type_.clone())
             && self.name == s.name
             && self.is_constant == s.is_constant
             && self.is_type == s.is_type
@@ -84,7 +84,7 @@ impl Context {
     pub fn with_root<T>(&mut self, cb: &mut impl Fn(&mut Context) -> T) -> T {
         if self.parent.is_some() {
             let ref_ = self.parent.take().unwrap();
-            let res = Rc::clone(&ref_).borrow_mut().with_root(cb);
+            let res = ref_.clone().borrow_mut().with_root(cb);
             self.parent = Some(ref_);
             res
         } else {

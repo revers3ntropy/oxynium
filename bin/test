@@ -89,8 +89,8 @@ function test_failed() {
 }
 
 function expect() {
-    code="$1"
-    expected="$2"
+    expected="$1"
+    code="$2"
 
     tests=$((tests+1))
     current_spec_num_tests=$((current_spec_num_tests+1))
@@ -106,8 +106,8 @@ function expect() {
 }
 
 function expect_err() {
-    code="$1"
-    expected="$2"
+    expected="$1"
+    code="$2"
 
     tests=$((tests+1))
     current_spec_num_tests=$((current_spec_num_tests+1))
@@ -122,15 +122,11 @@ function expect_err() {
 }
 
 function expect_expr_int() {
-    code="$1"
-    expected="$2"
-    expect "print_int($code)" "$expected"
+    expect "$1" "print_int($2)"
 }
 
 function expect_expr_bool() {
-    code="$1"
-    expected="$2"
-    expect "print_bool($code)" "$expected"
+    expect "$1" "print_bool($2)"
 }
 
 function results() {

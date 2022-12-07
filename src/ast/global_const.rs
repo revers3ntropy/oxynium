@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::{Ctx, SymbolDec, SymbolDef};
 use crate::error::{Error};
@@ -68,7 +67,7 @@ pub struct EmptyGlobalConstNode {
 
 impl Node for EmptyGlobalConstNode {
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
-        let (type_, _) = self.type_.type_check(Rc::clone(&ctx))?;
+        let (type_, _) = self.type_.type_check(ctx.clone())?;
 
         let id = if !type_.is_ptr {
             // deref if it shouldn't stay as a pointer

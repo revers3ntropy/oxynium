@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::{Ctx};
 use crate::error::{Error, type_error};
@@ -15,7 +14,7 @@ impl Node for StatementsNode {
 
         let mut i = 0;
         for statement in self.statements.iter_mut() {
-            let stmt = statement.asm(Rc::clone(&ctx))?;
+            let stmt = statement.asm(ctx.clone())?;
             if !stmt.is_empty() {
                 asm.push_str("\n;- SRC: ");
                 asm.push_str(self.src.get(i).unwrap());
@@ -30,7 +29,7 @@ impl Node for StatementsNode {
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         let mut ret_types = Vec::new();
         for statement in self.statements.iter_mut() {
-            let t = statement.type_check(Rc::clone(&ctx))?;
+            let t = statement.type_check(ctx.clone())?;
             if t.1.is_some() {
                 ret_types.push(t.1.unwrap())
             }
@@ -40,7 +39,7 @@ impl Node for StatementsNode {
         }
 
         for ret_type in ret_types.iter() {
-            if !ret_type.contains(ret_types.first().unwrap()) {
+            if !ret_type.contains(ret_types.first().unwrap().clone()) {
                 return Err(type_error("All return types must be the same".to_string()));
             }
         }

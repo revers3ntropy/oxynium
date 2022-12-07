@@ -1,4 +1,4 @@
-use crate::ast::{Node};
+use crate::ast::Node;
 use crate::context::Ctx;
 use crate::error::{Error, syntax_error};
 

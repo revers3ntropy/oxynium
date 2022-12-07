@@ -1,6 +1,5 @@
-use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
-use crate::context::{Ctx};
+use crate::context::Ctx;
 use crate::error::Error;
 
 const STD_ASM: &str = include_str!("../../std/std.asm");
@@ -12,7 +11,7 @@ pub struct ExecRootNode {
 
 impl Node for ExecRootNode {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
-        let res = self.statements.asm(Rc::clone(&ctx))?;
+        let res = self.statements.asm(ctx.clone())?;
         let mut mut_ref = ctx.borrow_mut();
         let (data_decls, text_decls) = mut_ref.get_global_definitions();
         let data = data_decls.iter().map(|k| {
@@ -52,7 +51,7 @@ impl Node for ExecRootNode {
     }
 
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
-        self.statements.type_check(Rc::clone(&ctx))
+        self.statements.type_check(ctx.clone())
     }
 }
 

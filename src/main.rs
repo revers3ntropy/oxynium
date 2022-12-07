@@ -31,7 +31,7 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         id: "Int".to_string(),
         is_constant: true,
         is_type: true,
-        type_: Box::new(Type {
+        type_: Rc::new(Type {
             id: 0,
             name: "Int".to_string(),
             children: vec![],
@@ -43,7 +43,7 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         id: "Bool".to_string(),
         is_constant: true,
         is_type: true,
-        type_: Box::new(Type {
+        type_: Rc::new(Type {
             id: 1,
             name: "Bool".to_string(),
             children: vec![],
@@ -55,7 +55,7 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         id: "Str".to_string(),
         is_constant: true,
         is_type: true,
-        type_: Box::new(Type {
+        type_: Rc::new(Type {
             id: 2,
             name: "Str".to_string(),
             children: vec![],
@@ -67,7 +67,7 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         id: "Void".to_string(),
         is_constant: true,
         is_type: true,
-        type_: Box::new(Type {
+        type_: Rc::new(Type {
             id: 3,
             name: "Void".to_string(),
             children: vec![],
@@ -89,11 +89,11 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
     }
 
     let mut node = ast.node.unwrap();
-    let type_check_res = node.type_check(Rc::clone(&ctx));
+    let type_check_res = node.type_check(ctx.clone());
     if type_check_res.is_err() {
         return Err(type_check_res.err().unwrap());
     }
-    let asm_error = node.asm(Rc::clone(&ctx));
+    let asm_error = node.asm(ctx.clone());
     if asm_error.is_err() {
         return Err(asm_error.err().unwrap());
     }
@@ -129,11 +129,11 @@ fn compile (input: String, file_name: String, args: &Args) -> Result<(String, Ct
     }
 
     let mut root_node = ast.node.unwrap();
-    root_node.type_check(Rc::clone(&ctx))?;
-    let compile_res = root_node.asm(Rc::clone(&ctx))?;
+    root_node.type_check(ctx.clone())?;
+    let compile_res = root_node.asm(ctx.clone())?;
 
     let asm = post_process(compile_res);
-    Ok((asm, Rc::clone(&ctx)))
+    Ok((asm, ctx.clone()))
 }
 
 fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result<(), Error> {

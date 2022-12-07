@@ -20,6 +20,7 @@ pub mod scope;
 pub mod r#return;
 
 use std::fmt::Debug;
+use std::rc::Rc;
 use crate::ast::types::Type;
 use crate::context::{Ctx};
 use crate::error::Error;
@@ -27,7 +28,7 @@ use crate::error::Error;
 pub const ANON_PREFIX: &str = "_$_";
 
 // (type of result of node, type of returned values from node and children)
-pub type TypeCheckRes = (Box<Type>, Option<Box<Type>>);
+pub type TypeCheckRes = (Rc<Type>, Option<Rc<Type>>);
 
 pub trait Node: Debug {
     fn asm(&mut self, _ctx: Ctx) -> Result<String, Error> {

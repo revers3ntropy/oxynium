@@ -1,43 +1,38 @@
 describe 'If Statements'
 
-expect '
+expect '' '
     if false {
       print("hi");
     }
-' ''
-
-expect '
+'
+expect 'hi' '
     if true {
       print("hi");
     }
-' $'hi\r'
-expect 'if true { 1 }' ''
-
-expect '
+'
+expect '' 'if true { 1 }'
+expect '2' '
     if false {
       print_int(1);
     } else {
       print_int(2);
     }
-' '2'
-
-expect '
+'
+expect '1' '
     if true {
       print_int(1);
     } else {
       print_int(2);
     }
-' '1'
-
-expect '
+'
+expect '2' '
     if false {
       print("1");
     } else if true {
       print("2");
     }
-' '2'
-
-expect '
+'
+expect '2' '
     if false {
       print_int(1);
     } else if true {
@@ -45,9 +40,8 @@ expect '
     } else {
       print_int(3);
     }
-' '2'
-
-expect '
+'
+expect '3' '
     if false {
       print_int(1);
     } else if false {
@@ -55,12 +49,17 @@ expect '
     } else {
       print_int(3);
     }
-' '3'
+'
 
-expect_err 'if' 'SyntaxError'
-expect_err 'if ()' 'SyntaxError'
-expect_err 'if (false) print_int(2);' 'SyntaxError'
-expect_err 'if {}' 'SyntaxError'
-expect_err 'if { print(); }' 'SyntaxError'
-expect_err 'if { print(); }' 'SyntaxError'
-expect_err 'if true { 1 } if true { 1 }' 'SyntaxError'
+expect_err 'SyntaxError' 'if'
+expect_err 'SyntaxError' 'if ()'
+expect_err 'SyntaxError' 'if (false) print_int(2);'
+expect_err 'SyntaxError' 'if {}'
+expect_err 'SyntaxError' 'if { print(); }'
+expect_err 'SyntaxError' 'if { print(); }'
+expect_err 'SyntaxError' 'if true { 1 } if true { 1 }'
+
+expect_err 'TypeError' 'if 0 { 1 }'
+expect_err 'TypeError' 'if "" { 1 }'
+expect_err 'TypeError' 'if -100 { 1 }'
+expect_err 'TypeError' 'if 1 + 1 { 1 }'

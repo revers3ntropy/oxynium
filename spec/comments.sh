@@ -1,34 +1,34 @@
 describe 'Comments'
 
-expect '
+expect 'Hello, World!' '
 // This is a comment
 print("Hello, World!")
-' 'Hello, World!'
+'
 
-expect '
+expect 'Hello, World!' '
 print("Hello, World!") // This is a comment
-' 'Hello, World!'
+'
 
-expect '
+expect 'Hello, World!' '
 // This is a comment
 print("Hello, World!") // This is a comment
 // This is a comment
-' 'Hello, World!'
+'
 
-expect '
+expect 'Hello, World!Hello, World!' '
 // This is a comment
 print("Hello, World!"); // Another Comment
 // This is a comment
 print("Hello, World!")  ////
 // This is a comment
-' 'Hello, World!Hello, World!'
+'
 
-expect '
+expect '' '
 //
 // This is a comment
 //
-' ''
+'
 
-expect '//' ''
-expect ' // ' ''
-expect ' // ' ''
+expect '' '//'
+expect '' ' // '
+expect '' ' // '

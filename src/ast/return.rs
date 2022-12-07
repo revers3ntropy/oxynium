@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Ctx;
 use crate::error::{Error, syntax_error};
@@ -30,7 +29,7 @@ impl Node for ReturnNode {
 
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         if let Some(ref mut value) = self.value {
-            let (t, _) = value.type_check(Rc::clone(&ctx))?;
+            let (t, _) = value.type_check(ctx.clone())?;
             Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), Some(t)))
         } else {
             let void = ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone();

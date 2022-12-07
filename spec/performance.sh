@@ -14,7 +14,7 @@ oxy_perf_code='
     print_int(sum);
 '
 
-expect "$oxy_perf_code" '49999995000000'
+expect '49999995000000' "$oxy_perf_code"
 
 perf_timer_start=$(date +"%s.%3N")
 
