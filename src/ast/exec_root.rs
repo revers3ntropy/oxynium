@@ -12,8 +12,8 @@ pub struct ExecRootNode {
 impl Node for ExecRootNode {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
         let res = self.statements.asm(ctx.clone())?;
-        let mut mut_ref = ctx.borrow_mut();
-        let (data_decls, text_decls) = mut_ref.get_global_definitions();
+        let mut_ref = ctx.borrow_mut();
+        let (data_decls, text_decls) = mut_ref.get_definitions();
         let data = data_decls.iter().map(|k| {
             format!("{} {}", k.name, k.data.as_ref().unwrap())
         }).collect::<Vec<String>>().join("\n");

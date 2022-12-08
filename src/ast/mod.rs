@@ -6,7 +6,7 @@ pub mod fn_call;
 pub mod statements;
 pub mod str;
 pub mod symbol_access;
-pub mod global_const;
+pub mod global_var_decl;
 pub mod mutate_var;
 pub mod for_loop;
 pub mod r#break;
@@ -18,6 +18,7 @@ pub mod r#continue;
 pub mod pass;
 pub mod scope;
 pub mod r#return;
+pub mod local_var_decl;
 
 use std::fmt::Debug;
 use std::rc::Rc;

@@ -150,20 +150,28 @@ print_int: ; [number: int, cb: *] => Void
     mov r14, 0 ; digit_count
     mov r11, 0 ; is negative
 
+    mov rax, -9223372036854775808
+    cmp r15, rax
+    jle _$_print_int_0
+
     cmp r15, 0 ; if num < 0
     jl _$_print_int_negative
 
-    cmp r15, 0 ; if num == 0: break
+    cmp r15, 0 ; if num == 0
     jne _$_print_int_start
-    push '0'
-    call print_char
-    pop rax
-    jmp _$_print_int_end
+    ; fall through if num == 0
+    _$_print_int_0:
+        push '0'
+        call print_char
+        pop rax
+        jmp _$_print_int_end
 
     _$_print_int_negative:
         neg r15 ; make num positive
         mov r11, 1 ; set is negative flag
-        jmp _$_print_int_start
+        cmp r15, 0 ; if num == 0: break
+        jne _$_print_int_start
+        jmp _$_print_int_0
 
     _$_print_int_start:
         push 0

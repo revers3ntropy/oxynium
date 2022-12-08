@@ -54,7 +54,7 @@ int main () {
 }
 ' > out.cpp
 
-gcc out.cpp -lstdc++
+gcc out.cpp -lstdc++ -O3
 
 echo "C++ Compilation: $(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)"
 perf_timer_start=$(date +"%s.%3N")

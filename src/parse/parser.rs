@@ -1,12 +1,13 @@
 use crate::ast::bin_op::BinOpNode;
 use crate::ast::scope::ScopeNode;
 use crate::ast::unary_op::{UnaryOpNode};
-use crate::ast::global_const::{EmptyGlobalConstNode, GlobalConstNode};
+use crate::ast::global_var_decl::{EmptyGlobalConstNode, GlobalConstNode};
 use crate::ast::exec_root::{EmptyExecRootNode, ExecRootNode};
 use crate::ast::fn_call::FnCallNode;
 use crate::ast::fn_declaration::{FnDeclarationNode, Parameter, Params};
 use crate::ast::for_loop::ForLoopNode;
 use crate::ast::int::IntNode;
+use crate::ast::local_var_decl::{LocalVarNode};
 use crate::ast::mutate_var::MutateVar;
 use crate::ast::r#break::BreakNode;
 use crate::ast::r#if::IfNode;
@@ -230,7 +231,7 @@ impl Parser {
         res
     }
 
-    fn context(&mut self) -> ParseResults {
+    fn scope(&mut self, make_scope_node: bool) -> ParseResults {
         let mut res = ParseResults::new();
         self.consume(&mut res, TokenType::OpenBrace);
         if res.error.is_some() { return res; }
@@ -245,10 +246,15 @@ impl Parser {
         self.consume(&mut res, TokenType::CloseBrace);
         if res.error.is_some() { return res; }
 
-        res.success(Box::new(ScopeNode {
-            ctx: Context::new(),
-            body: statements.unwrap()
-        }));
+        if make_scope_node {
+            res.success(Box::new(ScopeNode {
+                ctx: Context::new(),
+                body: statements.unwrap()
+            }));
+        } else {
+            res.success(statements.unwrap());
+        }
+
         res
     }
 
@@ -256,12 +262,17 @@ impl Parser {
         let mut res = ParseResults::new();
         if self.peak_matches(TokenType::Identifier, Some("const".to_string())) {
             self.advance(&mut res);
-            res.node = res.register(self.var_decl(true));
+            res.node = res.register(self.global_var_decl(true));
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("var".to_string())) {
             self.advance(&mut res);
-            res.node = res.register(self.var_decl(false));
+            res.node = res.register(self.global_var_decl(false));
+            return res;
+        }
+        if self.peak_matches(TokenType::Identifier, Some("let".to_string())) {
+            self.advance(&mut res);
+            res.node = res.register(self.local_var_decl());
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("for".to_string())) {
@@ -334,7 +345,7 @@ impl Parser {
         res
     }
 
-    fn var_decl(&mut self, is_const: bool) -> ParseResults {
+    fn global_var_decl(&mut self, is_const: bool) -> ParseResults {
         let mut res = ParseResults::new();
         let name;
 
@@ -406,6 +417,34 @@ impl Parser {
                     Some(self.tokens[self.tok_idx-1].start.clone()),
                     Some(self.tokens[self.tok_idx-1].end.clone())
         );
+        res
+    }
+
+    fn local_var_decl(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+        let mut mutable = false;
+
+        if self.peak_matches(TokenType::Identifier, Some("mut".to_string())) {
+            self.advance(&mut res);
+            mutable = true;
+        }
+
+        let name_tok = self.consume(&mut res, TokenType::Identifier);
+        if res.error.is_some() { return res; }
+        let name = name_tok.literal.unwrap();
+
+        self.consume(&mut res, TokenType::Equals);
+        if res.error.is_some() { return res; }
+
+        let expr = res.register(self.expression());
+        if res.error.is_some() { return res; }
+
+        res.success(Box::new(LocalVarNode {
+            identifier: name,
+            value: expr.unwrap(),
+            mutable,
+            local_var_idx: 0 // overridden
+        }));
         res
     }
 
@@ -639,7 +678,7 @@ impl Parser {
     fn for_loop(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
 
-        let statements = res.register(self.context());
+        let statements = res.register(self.scope(true));
         if res.error.is_some() { return res; }
 
         res.success(Box::new(ForLoopNode {
@@ -654,7 +693,7 @@ impl Parser {
         let comparison = res.register(self.expression());
         if res.error.is_some() { return res; }
 
-        let statements = res.register(self.context());
+        let statements = res.register(self.scope(true));
         if res.error.is_some() { return res; }
 
         let mut else_body: Option<Box<dyn Node>> = None;
@@ -662,7 +701,7 @@ impl Parser {
         if self.peak_matches(TokenType::Identifier, Some("else".to_string())) {
             self.advance(&mut res);
             if self.peak_matches(TokenType::OpenBrace, None) {
-                else_body = res.register(self.context());
+                else_body = res.register(self.scope(true));
                 if res.error.is_some() { return res; }
             } else {
                 let else_expr_option = res.register(self.statement());
@@ -783,7 +822,7 @@ impl Parser {
             return res;
         }
 
-        let body = res.register(self.context());
+        let body = res.register(self.scope(false));
         if res.error.is_some() { return res; }
 
         res.success(Box::new(FnDeclarationNode {

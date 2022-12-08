@@ -58,7 +58,7 @@ function execute() {
         # stops 'warning: command substitution: ignored null byte in input'
         output=$({
             ./test-out;
-        } >&1 | tr -d '\000')
+        } 2>&1 | tr -d '\000')
     else
         output="ERROR_NO_OUTPUT"
     fi

@@ -1,6 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::{Ctx, SymbolDec, SymbolDef};
-use crate::error::{Error};
+use crate::error::{Error, syntax_error};
 
 #[derive(Debug)]
 pub struct GlobalConstNode<T> {
@@ -11,6 +11,13 @@ pub struct GlobalConstNode<T> {
 
 impl Node for GlobalConstNode<i64> {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+        if ctx.borrow_mut().stack_frame_peak().is_some() {
+            return Err(syntax_error(format!(
+                "Cannot declare global {} '{}' inside function. Try using 'let' instead.",
+                if self.is_const { "constant" } else { "variable" },
+                self.identifier
+            )));
+        }
         ctx.borrow_mut().define(SymbolDef {
             name: self.identifier.clone(),
             data: Some(format!("dq {}", self.value)),
@@ -35,6 +42,13 @@ impl Node for GlobalConstNode<i64> {
 
 impl Node for GlobalConstNode<String> {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+        if ctx.borrow_mut().stack_frame_peak().is_some() {
+            return Err(syntax_error(format!(
+                "Cannot declare global {} '{}' inside function. Try using 'let' instead.",
+                if self.is_const { "constant" } else { "variable" },
+                self.identifier
+            )));
+        }
         ctx.borrow_mut().define(SymbolDef {
             name: self.identifier.clone(),
             // ,0 is the null terminator
@@ -66,6 +80,16 @@ pub struct EmptyGlobalConstNode {
 }
 
 impl Node for EmptyGlobalConstNode {
+    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+        if ctx.borrow_mut().stack_frame_peak().is_some() {
+            return Err(syntax_error(format!(
+                "Cannot declare global {} '{}' inside function. Try using 'let' instead.",
+                if self.is_const { "constant" } else { "variable" },
+                self.identifier
+            )));
+        }
+        Ok("".to_owned())
+    }
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         let (type_, _) = self.type_.type_check(ctx.clone())?;
 

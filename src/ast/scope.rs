@@ -9,8 +9,8 @@ pub struct ScopeNode {
 }
 
 impl Node for ScopeNode {
-    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
-        self.body.asm(ctx)
+    fn asm(&mut self, _ctx: Ctx) -> Result<String, Error> {
+        self.body.asm(self.ctx.clone())
     }
 
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {

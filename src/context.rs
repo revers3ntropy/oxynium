@@ -55,7 +55,8 @@ pub struct Context {
     type_id_count: u64,
     pub exec_mode: u8,
     pub std_asm_path: String,
-    pub allow_overrides: bool
+    pub allow_overrides: bool,
+    pub allow_local_var_decls: bool,
 }
 
 impl Context {
@@ -70,7 +71,8 @@ impl Context {
             exec_mode: 0,
             type_id_count: 100,
             std_asm_path: String::from("std.asm"),
-            allow_overrides: false
+            allow_overrides: false,
+            allow_local_var_decls: false,
         }))
     }
 
@@ -115,6 +117,9 @@ impl Context {
     // Declarations
 
     pub fn declare(&mut self, symbol: SymbolDec) -> Result<(), Error> {
+        if self.parent.is_some() && !self.allow_local_var_decls {
+            return self.parent.as_ref().unwrap().borrow_mut().declare(symbol);
+        }
         if let Some(duplicate) = self.declarations.get(symbol.name.clone().as_str()) {
             if !self.allow_overrides || !duplicate.contains(&symbol) {
                 return Err(type_error(format!("Symbol {} is already declared", symbol.name)))
@@ -142,10 +147,21 @@ impl Context {
         }
     }
 
+    pub fn get_declarations(&mut self) -> Vec<SymbolDec> {
+        let mut decs = Vec::new();
+        for (_, dec) in self.declarations.iter() {
+            decs.push(dec.clone());
+        }
+        decs
+    }
+
 
     // Definitions
 
     pub fn define(&mut self, symbol: SymbolDef, anon: bool) -> Result<(), Error> {
+        if self.parent.is_some() && !self.allow_local_var_decls {
+            return self.parent.as_ref().unwrap().borrow_mut().define(symbol, anon);
+        }
         if self.definitions.get(symbol.name.clone().as_str()).is_some() {
             return Err(type_error(format!("Symbol {} is already defined", symbol.name)))
         }
@@ -157,13 +173,10 @@ impl Context {
         Ok(())
     }
 
-    pub fn get_global_definitions(&mut self) -> (Vec<&SymbolDef>, Vec<&SymbolDef>) {
+    pub fn get_definitions(&self) -> (Vec<&SymbolDef>, Vec<&SymbolDef>) {
         let mut data = Vec::new();
         let mut text = Vec::new();
         for (_id, def) in self.definitions.iter() {
-            if def.is_local {
-                continue;
-            }
             if def.data.is_some() {
                 data.push(def);
             } else if def.text.is_some() {

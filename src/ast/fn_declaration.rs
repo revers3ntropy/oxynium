@@ -39,6 +39,11 @@ impl Node for FnDeclarationNode {
 
         let body = self.body.take().unwrap()
             .asm(self.params_scope.clone())?;
+        let params_scope = self.params_scope.borrow_mut();
+        let (data_defs, text_defs) = params_scope.get_definitions();
+        if text_defs.len() > 0 {
+            return Err(type_error("Nested functions not allowed".to_string()));
+        }
         ctx.borrow_mut().define(SymbolDef {
             name: self.identifier.clone(),
             is_local: false,
@@ -46,12 +51,13 @@ impl Node for FnDeclarationNode {
             text: Some(format!("
                     push rbp
                     mov rbp, rsp
+                    times {} push 0
                     {body}
                 {end_label}:
                     mov rsp, rbp
                     pop rbp
                     ret
-                 "))
+                 ", data_defs.len()))
         }, false)?;
 
         ctx.borrow_mut().stack_frame_pop();
@@ -60,6 +66,7 @@ impl Node for FnDeclarationNode {
 
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         self.params_scope.borrow_mut().set_parent(ctx.clone());
+        self.params_scope.borrow_mut().allow_local_var_decls = true;
 
         // don't use param_scope so that the function can have params
         // with the same name as the function
@@ -108,7 +115,7 @@ impl Node for FnDeclarationNode {
                 return Err(type_error(format!(
                     "Function {} has return type {} but expected {}",
                     self.identifier, this_type.children[0], ret_type
-                )))
+                )));
             }
             self.body = Some(body);
         }
