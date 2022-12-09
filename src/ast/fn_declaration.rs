@@ -2,7 +2,7 @@ use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
 use crate::ast::types::Type;
 use crate::context::{CallStackFrame, Ctx, SymbolDec, SymbolDef};
-use crate::error::{Error, type_error};
+use crate::error::{Error, syntax_error, type_error};
 
 pub type Params = Vec<Parameter>;
 
@@ -18,11 +18,19 @@ pub struct FnDeclarationNode {
     pub ret_type: Box<dyn Node>,
     pub params: Vec<Parameter>,
     pub body: Option<Box<dyn Node>>,
-    pub params_scope: Ctx
+    pub params_scope: Ctx,
+    pub is_external: bool,
 }
 
 impl Node for FnDeclarationNode {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+        if ctx.borrow_mut().stack_frame_peak().is_some() {
+            return Err(syntax_error(format!(
+                "Cannot declare function '{}' inside of another function.",
+                self.identifier
+            )));
+        }
+
         if self.body.is_none() {
             return Ok("".to_string());
         }
@@ -90,6 +98,8 @@ impl Node for FnDeclarationNode {
                 id: format!("qword [rbp+{}]", 8 * ((num_params - (i + 1)) + 2)),
                 is_constant: true,
                 is_type: false,
+                require_init: false,
+                is_defined: true,
                 type_: children.last().unwrap().clone()
             })?;
         }
@@ -106,6 +116,8 @@ impl Node for FnDeclarationNode {
             id: self.identifier.clone(),
             is_constant: true,
             is_type: false,
+            require_init: !self.is_external,
+            is_defined: self.body.is_some(),
             type_: this_type.clone()
         })?;
 

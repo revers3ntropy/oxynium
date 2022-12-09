@@ -1,12 +1,12 @@
-const true: Bool;
-const false: Bool;
+extern const true: Bool;
+extern const false: Bool;
 
-fn print(msg: Str): Void;
-fn print_int(int: Int): Void;
-fn print_bool(bool: Bool): Void;
-fn print_true(): Void;
-fn print_false(): Void;
-fn print_nl(): Void;
-fn exit(): Void;
-fn throw(): Void;
-fn print_hello_world(): Int;
+extern fn print(msg: Str): Void;
+extern fn print_int(int: Int): Void;
+extern fn print_bool(bool: Bool): Void;
+extern fn print_true(): Void;
+extern fn print_false(): Void;
+extern fn print_nl(): Void;
+extern fn exit(): Void;
+extern fn throw(): Void;
+extern fn print_hello_world(): Int;

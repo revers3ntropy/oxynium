@@ -9,6 +9,14 @@ pub struct SymbolAccess {
 
 impl Node for SymbolAccess {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+        let decl = ctx.borrow_mut().get_dec_from_id(&self.identifier).unwrap();
+        if decl.require_init && !decl.is_defined {
+            return Err(type_error(format!(
+                "Cannot use uninitialized variable '{}'",
+                self.identifier
+            )));
+        }
+
         Ok(format!("
             push {}
         ", ctx.borrow_mut().get_dec_from_id(&self.identifier)?.id))

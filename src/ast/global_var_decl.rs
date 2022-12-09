@@ -6,7 +6,7 @@ use crate::error::{Error, syntax_error};
 pub struct GlobalConstNode<T> {
     pub identifier: String,
     pub value: T,
-    pub is_const: bool,
+    pub is_const: bool
 }
 
 impl Node for GlobalConstNode<i64> {
@@ -34,6 +34,8 @@ impl Node for GlobalConstNode<i64> {
             id: format!("qword [{}]", self.identifier.clone()),
             is_constant: self.is_const,
             is_type: false,
+            require_init: true,
+            is_defined: true,
             type_: int
         })?;
         Ok((ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(), None))
@@ -66,6 +68,8 @@ impl Node for GlobalConstNode<String> {
             id: self.identifier.clone(),
             is_constant: true,
             is_type: false,
+            require_init: true,
+            is_defined: true,
             type_: str
         })?;
         Ok((ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone(), None))
@@ -77,6 +81,7 @@ pub struct EmptyGlobalConstNode {
     pub identifier: String,
     pub type_: Box<dyn Node>,
     pub is_const: bool,
+    pub is_external: bool
 }
 
 impl Node for EmptyGlobalConstNode {
@@ -105,6 +110,8 @@ impl Node for EmptyGlobalConstNode {
             id,
             is_constant: self.is_const,
             is_type: false,
+            require_init: !self.is_external,
+            is_defined: false,
             type_
         })?;
         Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), None))

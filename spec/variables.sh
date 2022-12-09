@@ -156,3 +156,50 @@ expect '4' '
     };
     print_int(f(2));
 '
+expect '4' '
+    fn f(n: Int): Int {
+        let mut a: Int;
+        if n == 3 {
+            a = 2;
+        } else {
+            a = 1;
+        };
+        return a * 2;
+    };
+    print_int(f(3));
+'
+expect '5' '
+    fn f(n: Int): Int {
+        if true {
+            let a = n + 3;
+            return a;
+        };
+        return n;
+    };
+    print_int(f(2));
+'
+expect_err 'UnknownSymbolError' '
+    fn f(): Int {
+        return a;
+        let a = 5;
+    };
+'
+expect_err 'SyntaxError' '
+    fn f(): Int {
+        let a: Int;
+    };
+'
+expect_err 'TypeError' '
+    fn f(): Int {
+        let mut a: Int;
+        return a;
+    };
+'
+expect '1' '
+    fn f(): Int {
+        let mut a: Int;
+        a = 1;
+        return a;
+    };
+    print_int(f());
+'

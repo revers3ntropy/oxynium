@@ -14,6 +14,8 @@ pub struct SymbolDec {
     pub is_constant: bool,
     pub is_type: bool,
     pub type_: Rc<Type>,
+    pub require_init: bool,
+    pub is_defined: bool,
 }
 
 impl SymbolDec {
@@ -146,7 +148,6 @@ impl Context {
             Err(type_error(format!("Symbol {} is not declared", id)))
         }
     }
-
     pub fn get_declarations(&mut self) -> Vec<SymbolDec> {
         let mut decs = Vec::new();
         for (_, dec) in self.declarations.iter() {
@@ -154,7 +155,18 @@ impl Context {
         }
         decs
     }
-
+    pub fn set_dec_as_defined(&mut self, id: &str) -> Result<(), Error> {
+        if self.declarations.get(id).is_some() {
+            let mut dec = self.declarations.get(id).unwrap().clone();
+            dec.is_defined = true;
+            self.declarations.insert(id.to_string(), dec);
+            Ok(())
+        } else if self.parent.is_some() {
+            self.parent.as_ref().unwrap().borrow_mut().set_dec_as_defined(id)
+        } else {
+            Err(type_error(format!("Symbol {} is not declared", id)))
+        }
+    }
 
     // Definitions
 
@@ -184,6 +196,16 @@ impl Context {
             }
         }
         (data, text)
+    }
+
+    pub fn get_def_from_id(&mut self, id: &str) -> Option<SymbolDef> {
+        if self.definitions.get(id).is_some() {
+            Some(self.definitions.get(id).unwrap().clone())
+        } else if self.parent.is_some() {
+            self.parent.as_ref().unwrap().borrow_mut().get_def_from_id(id)
+        } else {
+            None
+        }
     }
 
 

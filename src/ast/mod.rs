@@ -23,7 +23,7 @@ pub mod local_var_decl;
 use std::fmt::Debug;
 use std::rc::Rc;
 use crate::ast::types::Type;
-use crate::context::{Ctx};
+use crate::context::Ctx;
 use crate::error::Error;
 
 pub const ANON_PREFIX: &str = "_$_";

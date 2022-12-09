@@ -31,6 +31,8 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         id: "Int".to_string(),
         is_constant: true,
         is_type: true,
+        require_init: false,
+        is_defined: true,
         type_: Rc::new(Type {
             id: 0,
             name: "Int".to_string(),
@@ -43,6 +45,8 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         id: "Bool".to_string(),
         is_constant: true,
         is_type: true,
+        require_init: false,
+        is_defined: true,
         type_: Rc::new(Type {
             id: 1,
             name: "Bool".to_string(),
@@ -55,6 +59,8 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         id: "Str".to_string(),
         is_constant: true,
         is_type: true,
+        require_init: false,
+        is_defined: true,
         type_: Rc::new(Type {
             id: 2,
             name: "Str".to_string(),
@@ -67,6 +73,8 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         id: "Void".to_string(),
         is_constant: true,
         is_type: true,
+        require_init: false,
+        is_defined: true,
         type_: Rc::new(Type {
             id: 3,
             name: "Void".to_string(),

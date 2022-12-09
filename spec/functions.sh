@@ -234,3 +234,15 @@ expect '' '
     };
     f(4, 6);
 '
+expect_err 'SyntaxError' '
+    fn g() {
+        fn f() {};
+    };
+'
+expect_err 'SyntaxError' '
+    fn g() {
+        fn f() {
+            fn h() {};
+        };
+    };
+'

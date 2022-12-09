@@ -11,14 +11,19 @@ pub struct MutateVar {
 impl Node for MutateVar {
     fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
         let id = ctx.borrow_mut().get_dec_from_id(&self.identifier)?.id;
+
+        // get value before setting variable as initialised
+        // so that self-references are invalid until AFTER the variable is initialised
+        let value = self.value.asm(ctx.clone())?;
+
+        ctx.borrow_mut().set_dec_as_defined(&self.identifier)?;
+
         Ok(format!("
-           {}
+           {value}
            pop rax
            mov {id}, rax
-        ", self.value.asm(ctx)?))
+        "))
     }
-
-
 
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         if !ctx.borrow_mut().has_dec_with_id(&self.identifier) {
