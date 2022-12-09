@@ -38,7 +38,6 @@ impl Node for ExecRootNode {
                 {data}
             section .text
                 global main
-                extern malloc
             {STD_ASM}
             {text}
             main:

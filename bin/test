@@ -32,6 +32,7 @@ function describe () {
 
 function execute() {
     code="$1"
+    input="$2"
 
     {
         rm ./out.asm
@@ -57,7 +58,7 @@ function execute() {
         # remove any \0 characters from output
         # stops 'warning: command substitution: ignored null byte in input'
         output=$({
-            ./test-out;
+            echo "$input" | ./test-out;
         } 2>&1 | tr -d '\000')
     else
         output="ERROR_NO_OUTPUT"
@@ -91,11 +92,12 @@ function test_failed() {
 function expect() {
     expected="$1"
     code="$2"
+    stdin="$3"
 
     tests=$((tests+1))
     current_spec_num_tests=$((current_spec_num_tests+1))
 
-    output=$(execute "$code")
+    output=$(execute "$code" "$stdin")
     # replace \r with \r\n in expected
     expected=$(echo "$expected" | tr '\r' '\n')
     output=$(echo "$output" | tr '\r' '\n')
@@ -108,11 +110,12 @@ function expect() {
 function expect_err() {
     expected="$1"
     code="$2"
+    stdin="$3"
 
     tests=$((tests+1))
     current_spec_num_tests=$((current_spec_num_tests+1))
 
-    output=$(execute "$code")
+    output=$(execute "$code" "$stdin")
     split_arr=(${output//:/ })
     output_err="${split_arr[0]}"
 

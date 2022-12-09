@@ -29,3 +29,10 @@ print_int(4);
 f();
 print_int(5);
 '
+
+
+describe '`input` BIF'
+
+expect 'abcdefghijklmnopqrstuvwxyz1234567890' '
+    print(input())
+' 'abcdefghijklmnopqrstuvwxyz1234567890'

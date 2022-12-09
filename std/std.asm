@@ -1,3 +1,9 @@
+    extern malloc
+    extern calloc
+    extern memcpy
+    extern scanf
+    extern printf
+
 print_digit: ; [number: int, cb: *]  => Void
     push rbp
     mov rbp, rsp
@@ -122,7 +128,6 @@ print_bool: ; [bool: int, cb: *] => Void
         call print_false
 
     _$_print_bool_end:
-        call print_nl
         mov rsp, rbp
         pop rbp
         ret
@@ -245,6 +250,37 @@ print_nl:
     push rax
     call print_char
     pop rax
+
+input: ; [cb: *] => String
+       ; reads from stdin until a newline is reached
+       ; allocates string to heap to fit input
+       ; returns pointer to string in rax
+    push rbp
+    mov rbp, rsp
+
+    mov rdi, 1000
+    call malloc WRT ..plt
+    mov r15, rax ; r15 = input buffer
+
+    mov rdi, 6
+    call malloc WRT ..plt
+    mov qword [rax], '%'
+    mov qword [rax+1], '9'
+    mov qword [rax+2], '9'
+    mov qword [rax+3], '9'
+    mov qword [rax+4], 's'
+    mov qword [rax+5], 0
+
+    mov rdi, rax
+    mov rsi, r15
+    call scanf WRT ..plt
+
+    mov rax, r15
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
 
 exit:
     mov rax, 60
