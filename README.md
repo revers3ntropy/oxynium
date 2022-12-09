@@ -1,6 +1,6 @@
 ![example workflow](https://github.com/revers3ntropy/oxynium/actions/workflows/tests.yml/badge.svg)
 
-# Simple Compiler in Rust
+# Oxynium Compiler in Rust
 
 Tested on Ubuntu.
 
@@ -38,19 +38,20 @@ e.g. `oxy -e "(1+1)*2"` instead of `oxy -e (1+1)*2`
 
 ### Options
 
-| Command             | Type | Description                 | Default                      |
-|---------------------|------|-----------------------------|------------------------------|
-| `-o`, `--output`    | Str  | Output assembly file path   | `'out.asm'`                  |
-| `-e`, `--eval`      | Str  | Pass the program on the CLI |                              |
-| `-x`, `--exec_mode` | Int  | Exec mode                   | `0`                          |
-| `-s`, `--std`       | Str  | Path to STD asm file        | `/usr/local/bin/oxy-std.asm` |
+| Command             | Type | Description                          | Default                      |
+|---------------------|------|--------------------------------------|------------------------------|
+| `-o`, `--output`    | Str  | Output assembly file path            | `'out.asm'`                  |
+| `-e`, `--eval`      | Str  | Pass the program on the CLI          |                              |
+| `-s`, `--std`       | Str  | Path to STD asm file                 | `/usr/local/bin/oxy-std.asm` |
+| `-k`, `--keep`      | Bool | Keep outputted `.asm` and `.o` files | `0`                          |
+| `-x`, `--exec_mode` | Int  | Exec mode                            | `0`                          |
 
 #### Exec Mode
 `0` Compile to application
 
 `1` Compile as library
 
-## Commands
+## Dev Commands
 
 ```shell
 # Build
