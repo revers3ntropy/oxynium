@@ -124,9 +124,51 @@ function expect_err() {
 function expect_expr_int() {
     expect "$1" "print_int($2)"
 }
-
 function expect_expr_bool() {
     expect "$1" "print_bool($2)"
+}
+
+function perf_test_comp_cpp() {
+    expected="$1"
+    oxy="$2"
+    cpp="$3"
+
+    expect "$expected" "$oxy"
+
+    perf_timer_start=$(date +"%s.%3N")
+
+    errors=$({
+        # in.oxy already has code in
+      ./target/release/oxynium -o=test-out --std std.asm in.oxy
+    } 2>&1 > /dev/null)
+
+    if [ "$errors" != "" ]; then
+        test_failed "$oxy" 'no errors' "$errors"
+    fi
+
+    echo "Oxy Compilation: $(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)"
+    perf_timer_start=$(date +"%s.%3N")
+
+    ./test-out > /dev/null
+
+    echo "Oxy Execution: $(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)"
+    perf_timer_start=$(date +"%s.%3N")
+
+    echo "$cpp" > out.cpp
+
+    gcc out.cpp -lstdc++ -O3
+
+    echo "C++ Compilation: $(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)"
+    perf_timer_start=$(date +"%s.%3N")
+
+    cpp_out=$(./a.out)
+
+    echo "C++ Execution: $(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)"
+    perf_timer_start=$(date +"%s.%3N")
+
+    if [ "$cpp_out" != "$expected" ]; then
+        test_failed "C++ performance code" "$expected" "$cpp_out"
+    fi
 }
 
 function results() {
