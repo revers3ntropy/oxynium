@@ -1,8 +1,9 @@
 use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
 use crate::ast::types::Type;
-use crate::context::{CallStackFrame, Ctx, SymbolDec, SymbolDef};
-use crate::error::{Error, syntax_error, type_error};
+use crate::context::{CallStackFrame, Ctx};
+use crate::error::{Error, syntax_error, type_error, unknown_symbol};
+use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
 
 pub type Params = Vec<Parameter>;
 
@@ -73,6 +74,9 @@ impl Node for FnDeclarationNode {
     }
 
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+        if !is_valid_identifier(&self.identifier) {
+            return Err(unknown_symbol(self.identifier.clone()));
+        }
         self.params_scope.borrow_mut().set_parent(ctx.clone());
         self.params_scope.borrow_mut().allow_local_var_decls = true;
 

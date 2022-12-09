@@ -203,3 +203,34 @@ expect '1' '
     };
     print_int(f());
 '
+
+
+describe 'Invalid Variable Names'
+
+expect_err 'SyntaxError' 'var 1 = 1'
+expect_err 'SyntaxError' 'var 1a = 1'
+expect_err 'SyntaxError' 'var _$_ = 1'
+expect_err 'SyntaxError' 'var _$_a = 1'
+expect_err 'SyntaxError' 'var mut = 1'
+expect_err 'SyntaxError' 'var fn = 1'
+
+expect_err 'SyntaxError' 'const 1 = 1'
+expect_err 'SyntaxError' 'const 1a = 1'
+expect_err 'SyntaxError' 'const _$_ = 1'
+expect_err 'SyntaxError' 'const _$_a = 1'
+expect_err 'SyntaxError' 'const mut = 1'
+expect_err 'SyntaxError' 'const fn = 1'
+
+expect_err 'SyntaxError' 'fn f() { let 1 = 1; }'
+expect_err 'SyntaxError' 'fn f() { let 1a = 1; }'
+expect_err 'SyntaxError' 'fn f() { let _$_ = 1; }'
+expect_err 'SyntaxError' 'fn f() { let _$_a = 1; }'
+expect_err 'SyntaxError' 'fn f() { let mut = 1; }'
+expect_err 'SyntaxError' 'fn f() { let fn = 1; }'
+
+expect_err 'SyntaxError' 'fn f() { let mut 1 = 1; }'
+expect_err 'SyntaxError' 'fn f() { let mut 1a = 1; }'
+expect_err 'SyntaxError' 'fn f() { let mut _$_ = 1; }'
+expect_err 'SyntaxError' 'fn f() { let mut _$_a = 1; }'
+expect_err 'SyntaxError' 'fn f() { let mut mut = 1; }'
+expect_err 'SyntaxError' 'fn f() { let mut fn = 1; }'

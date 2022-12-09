@@ -19,6 +19,9 @@ pub mod pass;
 pub mod scope;
 pub mod r#return;
 pub mod local_var_decl;
+pub mod empty_exec_root;
+pub mod empty_global_var_decl;
+pub mod empty_local_var_decl;
 
 use std::fmt::Debug;
 use std::rc::Rc;
@@ -27,6 +30,7 @@ use crate::context::Ctx;
 use crate::error::Error;
 
 pub const ANON_PREFIX: &str = "_$_";
+pub const STD_ASM: &str = include_str!("../../std/std.asm");
 
 // (type of result of node, type of returned values from node and children)
 pub type TypeCheckRes = (Rc<Type>, Option<Rc<Type>>);

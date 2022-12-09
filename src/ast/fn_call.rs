@@ -3,6 +3,7 @@ use crate::ast::{Node, TypeCheckRes};
 use crate::ast::types::Type;
 use crate::context::Ctx;
 use crate::error::{Error, mismatched_types, unknown_symbol};
+use crate::symbols::is_valid_identifier;
 
 #[derive(Debug)]
 pub struct FnCallNode {
@@ -38,6 +39,10 @@ impl Node for FnCallNode {
     }
 
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+        if !is_valid_identifier(&self.identifier) {
+            return Err(unknown_symbol(self.identifier.clone()));
+        }
+
         let mut args = Vec::new();
         for arg in self.args.iter_mut() {
             let (arg_type, _) = arg.type_check(ctx.clone())?;

@@ -2,38 +2,10 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use crate::ast::ANON_PREFIX;
-use crate::ast::types::Type;
 use crate::error::{Error, type_error};
+use crate::symbols::{SymbolDec, SymbolDef};
 
 pub type Ctx = Rc<RefCell<Context>>;
-
-#[derive(Debug, Clone)]
-pub struct SymbolDec {
-    pub name: String,
-    pub id: String,
-    pub is_constant: bool,
-    pub is_type: bool,
-    pub type_: Rc<Type>,
-    pub require_init: bool,
-    pub is_defined: bool,
-}
-
-impl SymbolDec {
-    fn contains(&self, s: &SymbolDec) -> bool {
-        self.type_.contains(s.type_.clone())
-            && self.name == s.name
-            && self.is_constant == s.is_constant
-            && self.is_type == s.is_type
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct SymbolDef {
-    pub name: String,
-    pub data: Option<String>,
-    pub text: Option<String>,
-    pub is_local: bool,
-}
 
 #[derive(Debug, Clone)]
 pub struct CallStackFrame {
@@ -196,16 +168,6 @@ impl Context {
             }
         }
         (data, text)
-    }
-
-    pub fn get_def_from_id(&mut self, id: &str) -> Option<SymbolDef> {
-        if self.definitions.get(id).is_some() {
-            Some(self.definitions.get(id).unwrap().clone())
-        } else if self.parent.is_some() {
-            self.parent.as_ref().unwrap().borrow_mut().get_def_from_id(id)
-        } else {
-            None
-        }
     }
 
 

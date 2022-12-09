@@ -1,8 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Ctx;
 use crate::error::Error;
-
-const STD_ASM: &str = include_str!("../../std/std.asm");
+use crate::ast::STD_ASM;
 
 #[derive(Debug)]
 pub struct ExecRootNode {
@@ -52,27 +51,5 @@ impl Node for ExecRootNode {
 
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
         self.statements.type_check(ctx.clone())
-    }
-}
-
-#[derive(Debug)]
-pub struct EmptyExecRootNode {}
-
-impl Node for EmptyExecRootNode {
-    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
-        if ctx.borrow_mut().exec_mode == 1 {
-            Ok(format!("
-                section	.note.GNU-stack
-            "))
-        } else {
-            Ok(format!("
-                section	.note.GNU-stack
-                section .text
-                    global main
-                    {STD_ASM}
-                main:
-                    call exit
-            "))
-        }
     }
 }

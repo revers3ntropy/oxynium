@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::{Ctx};
 use crate::error::{Error, type_error, unknown_symbol};
+use crate::symbols::is_valid_identifier;
 
 #[derive(Debug)]
 pub struct SymbolAccess {
@@ -23,6 +24,9 @@ impl Node for SymbolAccess {
     }
 
     fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+        if !is_valid_identifier(&self.identifier) {
+            return Err(unknown_symbol(self.identifier.clone()));
+        }
         if !ctx.borrow_mut().has_dec_with_id(&self.identifier) {
             return Err(unknown_symbol(format!("Symbol '{}' does not exist", self.identifier)));
         }

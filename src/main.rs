@@ -6,6 +6,7 @@ mod context;
 mod error;
 mod position;
 mod post_process;
+mod symbols;
 
 use std::{env, fs};
 use std::fs::File;
@@ -15,11 +16,12 @@ use clap::{arg, ArgMatches, Command};
 use crate::ast::types::Type;
 use crate::parse::lexer::{Lexer};
 use crate::parse::parser::Parser;
-use crate::context::{Context, Ctx, SymbolDec, SymbolDef};
+use crate::context::{Context, Ctx};
 use std::process::Command as Exec;
 use std::rc::Rc;
 use crate::error::{Error, io_error};
 use crate::post_process::format_asm::post_process;
+use crate::symbols::{SymbolDec, SymbolDef};
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 

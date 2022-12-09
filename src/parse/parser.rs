@@ -1,13 +1,16 @@
 use crate::ast::bin_op::BinOpNode;
+use crate::ast::empty_exec_root::EmptyExecRootNode;
+use crate::ast::empty_global_var_decl::EmptyGlobalConstNode;
+use crate::ast::empty_local_var_decl::EmptyLocalVarNode;
 use crate::ast::scope::ScopeNode;
-use crate::ast::unary_op::{UnaryOpNode};
-use crate::ast::global_var_decl::{EmptyGlobalConstNode, GlobalConstNode};
-use crate::ast::exec_root::{EmptyExecRootNode, ExecRootNode};
+use crate::ast::unary_op::UnaryOpNode;
+use crate::ast::global_var_decl::GlobalConstNode;
+use crate::ast::exec_root::ExecRootNode;
 use crate::ast::fn_call::FnCallNode;
 use crate::ast::fn_declaration::{FnDeclarationNode, Parameter, Params};
 use crate::ast::for_loop::ForLoopNode;
 use crate::ast::int::IntNode;
-use crate::ast::local_var_decl::{EmptyLocalVarNode, LocalVarNode};
+use crate::ast::local_var_decl::LocalVarNode;
 use crate::ast::mutate_var::MutateVar;
 use crate::ast::r#break::BreakNode;
 use crate::ast::r#if::IfNode;
@@ -132,12 +135,12 @@ impl Parser {
         }
         Some(self.tokens[self.tok_idx-1].clone())
     }
-    fn next_tok(&self) -> Option<Token> {
-        if self.tok_idx+1 >= self.tokens.len() {
-            return None;
-        }
-        Some(self.tokens[self.tok_idx+1].clone())
-    }
+    // fn next_tok(&self) -> Option<Token> {
+    //     if self.tok_idx+1 >= self.tokens.len() {
+    //         return None;
+    //     }
+    //     Some(self.tokens[self.tok_idx+1].clone())
+    // }
 
     fn clear_end_statements (&mut self, res: &mut ParseResults) {
         while self.peak_matches(TokenType::EndStatement, None) {
@@ -421,8 +424,8 @@ impl Parser {
 
         if self.current_tok().is_none() {
             res.failure(syntax_error("Unexpected EOF".to_string()),
-                        Some(self.tokens[self.tok_idx-1].start.clone()),
-                        Some(self.tokens[self.tok_idx-1].end.clone())
+                        Some(self.last_tok().unwrap().start.clone()),
+                        Some(self.last_tok().unwrap().end.clone())
             );
             return res;
         }
