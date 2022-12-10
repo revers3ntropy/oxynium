@@ -57,9 +57,14 @@ function execute() {
     if test -f "./test-out"; then
         # remove any \0 characters from output
         # stops 'warning: command substitution: ignored null byte in input'
-        output=$({
-            echo "$input" | ./test-out;
-        } 2>&1 | tr -d '\000')
+        if [ "$input" != "" ]; then
+            output=$({
+                echo "$input" | ./test-out;
+            } 2>&1 | tr -d '\000')
+        else
+            output=$({ ./test-out; } 2>&1 | tr -d '\000')
+        fi
+
     else
         output="ERROR_NO_OUTPUT"
     fi
