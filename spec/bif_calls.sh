@@ -33,6 +33,8 @@ print_int(5);
 
 describe '`input` BIF'
 
-expect 'abcdefghijklmnopqrstuvwxyz1234567890' '
+expect 'abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ' '
     print(input())
-' 'abcdefghijklmnopqrstuvwxyz1234567890'
+' 'abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+expect 'Hello, World!' 'print(input())' 'Hello, World!'
+expect 'Љ а ߷ ߬a ߦ' 'print(input())' 'Љ а ߷ ߬a ߦ'

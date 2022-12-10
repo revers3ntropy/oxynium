@@ -1,8 +1,4 @@
-    extern malloc
-    extern calloc
-    extern memcpy
-    extern scanf
-    extern printf
+    extern malloc, _read
 
 print_digit: ; [number: int, cb: *]  => Void
     push rbp
@@ -260,20 +256,13 @@ input: ; [cb: *] => String
 
     mov rdi, 1000
     call malloc WRT ..plt
-    mov r15, rax ; r15 = input buffer
+    mov r15, rax ; r15 = string pointer
 
-    mov rdi, 6
-    call malloc WRT ..plt
-    mov qword [rax], '%'
-    mov qword [rax+1], '9'
-    mov qword [rax+2], '9'
-    mov qword [rax+3], '9'
-    mov qword [rax+4], 's'
-    mov qword [rax+5], 0
-
-    mov rdi, rax
+    mov rax, 0
+    mov rdi, 0
     mov rsi, r15
-    call scanf WRT ..plt
+    mov rdx, 999
+    syscall
 
     mov rax, r15
 
