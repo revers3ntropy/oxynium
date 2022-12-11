@@ -4,8 +4,7 @@ use std::rc::Rc;
 use crate::ast::ANON_PREFIX;
 use crate::error::{Error, type_error};
 use crate::symbols::{SymbolDec, SymbolDef};
-
-pub type Ctx = Rc<RefCell<Context>>;
+use crate::util::{MutRc, new_mut_rc};
 
 #[derive(Debug, Clone)]
 pub struct CallStackFrame {
@@ -16,7 +15,7 @@ pub struct CallStackFrame {
 
 #[derive(Debug)]
 pub struct Context {
-    parent: Option<Ctx>,
+    parent: Option<MutRc<Context>>,
     // Declarations are analysed at compile time, and are used to type check
     declarations: HashMap<String, SymbolDec>,
     // Definitions are generated at compile time
@@ -33,8 +32,8 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new() -> Ctx {
-        Rc::new(RefCell::new(Context {
+    pub fn new() -> MutRc<Context> {
+        new_mut_rc(Context {
             parent: None,
             declarations: HashMap::new(),
             definitions: HashMap::new(),
@@ -45,7 +44,7 @@ impl Context {
             std_asm_path: String::from("std.asm"),
             allow_overrides: false,
             allow_local_var_decls: false,
-        }))
+        })
     }
 
     pub fn set_parent(&mut self, parent: Rc<RefCell<Context>>) {

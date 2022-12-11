@@ -7,6 +7,7 @@ mod error;
 mod position;
 mod post_process;
 mod symbols;
+mod util;
 
 use std::{env, fs};
 use std::fs::File;
@@ -15,17 +16,18 @@ use std::path::Path;
 use clap::{arg, ArgMatches, Command};
 use crate::parse::lexer::{Lexer};
 use crate::parse::parser::Parser;
-use crate::context::{Context, Ctx};
 use std::process::Command as Exec;
 use std::rc::Rc;
 use crate::ast::types::atomic::AtomicType;
+use crate::context::Context;
 use crate::error::{Error, io_error};
 use crate::post_process::format_asm::post_process;
 use crate::symbols::{SymbolDec, SymbolDef};
+use crate::util::MutRc;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
-fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
+fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
 
     // declare the built in types
     ctx.borrow_mut().declare(SymbolDec {
@@ -94,12 +96,12 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         return Err(ast.error.unwrap());
     }
 
-    let mut node = ast.node.unwrap();
-    let type_check_res = node.type_check(ctx.clone());
+    let node = ast.node.unwrap();
+    let type_check_res = node.borrow_mut().type_check(ctx.clone());
     if type_check_res.is_err() {
         return Err(type_check_res.err().unwrap());
     }
-    let asm_error = node.asm(ctx.clone());
+    let asm_error = node.borrow_mut().asm(ctx.clone());
     if asm_error.is_err() {
         return Err(asm_error.err().unwrap());
     }
@@ -120,7 +122,7 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
     Ok(ctx)
 }
 
-fn compile (input: String, file_name: String, args: &Args) -> Result<(String, Ctx), Error> {
+fn compile (input: String, file_name: String, args: &Args) -> Result<(String, MutRc<Context>), Error> {
     let ctx = setup_ctx_with_doxy(Context::new())?;
     ctx.borrow_mut().std_asm_path = args.std_path.clone();
     ctx.borrow_mut().exec_mode = args.exec_mode;
@@ -134,9 +136,9 @@ fn compile (input: String, file_name: String, args: &Args) -> Result<(String, Ct
         return Err(ast.error.unwrap());
     }
 
-    let mut root_node = ast.node.unwrap();
-    root_node.type_check(ctx.clone())?;
-    let compile_res = root_node.asm(ctx.clone())?;
+    let root_node = ast.node.unwrap();
+    root_node.borrow_mut().type_check(ctx.clone())?;
+    let compile_res = root_node.borrow_mut().asm(ctx.clone())?;
 
     let asm = post_process(compile_res);
     Ok((asm, ctx.clone()))

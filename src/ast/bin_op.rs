@@ -1,17 +1,18 @@
 use crate::ast::{Node, TypeCheckRes};
-use crate::context::Ctx;
+use crate::context::Context;
+use crate::util::MutRc;
 use crate::error::{Error, mismatched_types};
 use crate::parse::token::{Token, TokenType};
 
 #[derive(Debug)]
 pub struct BinOpNode {
-    pub lhs: Box<dyn Node>,
+    pub lhs: MutRc<dyn Node>,
     pub operator: Token,
-    pub rhs: Box<dyn Node>
+    pub rhs: MutRc<dyn Node>
 }
 
 impl Node for BinOpNode {
-    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         match self.operator.token_type {
             TokenType::Plus | TokenType::Sub | TokenType::And | TokenType::Or => {
                 Ok(format!("
@@ -22,8 +23,8 @@ impl Node for BinOpNode {
                     {} rax, rbx
                     push rax
                 ",
-                   self.rhs.asm(ctx.clone())?,
-                   self.lhs.asm(ctx.clone())?,
+                   self.rhs.borrow_mut().asm(ctx.clone())?,
+                   self.lhs.borrow_mut().asm(ctx.clone())?,
                    match self.operator.token_type {
                        TokenType::Plus => "add",
                        TokenType::Sub => "sub",
@@ -42,8 +43,8 @@ impl Node for BinOpNode {
                         {} rbx
                         push rax
                     ",
-                      self.rhs.asm(ctx.clone())?,
-                      self.lhs.asm(ctx.clone())?,
+                      self.rhs.borrow_mut().asm(ctx.clone())?,
+                      self.lhs.borrow_mut().asm(ctx.clone())?,
                       match self.operator.token_type {
                           TokenType::Astrix => "imul",
                           _ => "idiv",
@@ -60,8 +61,8 @@ impl Node for BinOpNode {
                         idiv rbx
                         push rdx
                     ",
-                       self.rhs.asm(ctx.clone())?,
-                       self.lhs.asm(ctx.clone())?,
+                       self.rhs.borrow_mut().asm(ctx.clone())?,
+                       self.lhs.borrow_mut().asm(ctx.clone())?,
                 ))
             },
             TokenType::GT
@@ -80,8 +81,8 @@ impl Node for BinOpNode {
                         {} al          ; so clear rax and put into al
                         push rax
                 ",
-                       self.rhs.asm(ctx.clone())?,
-                       self.lhs.asm(ctx.clone())?,
+                       self.rhs.borrow_mut().asm(ctx.clone())?,
+                       self.lhs.borrow_mut().asm(ctx.clone())?,
                        match self.operator.token_type {
                            TokenType::DblEquals => "sete",
                            TokenType::NotEquals => "setne",
@@ -96,7 +97,7 @@ impl Node for BinOpNode {
         }
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
 
         let operand_types = match self.operator.token_type {
             TokenType::Percent
@@ -114,11 +115,11 @@ impl Node for BinOpNode {
             _ => ctx.borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
         };
 
-        let (lhs_type, _) = self.lhs.type_check(ctx.clone())?;
+        let (lhs_type, _) = self.lhs.borrow_mut().type_check(ctx.clone())?;
         if !operand_types.contains(lhs_type.clone()) {
             return Err(mismatched_types(operand_types.clone(), lhs_type.clone()))
         }
-        let (rhs_type, _) = self.rhs.type_check(ctx.clone())?;
+        let (rhs_type, _) = self.rhs.borrow_mut().type_check(ctx.clone())?;
         if !operand_types.contains(rhs_type.clone()) {
             return Err(mismatched_types(operand_types.clone(), rhs_type.clone()))
         }

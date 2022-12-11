@@ -247,7 +247,7 @@ expect_err 'SyntaxError' '
     };
 '
 
-_="
+
 describe 'Default Arguments'
 
 expect '123' '
@@ -268,19 +268,21 @@ expect '14' '
 '
 expect '44' '
     const u = 1;
-    fn f(a: Int, b: Int = a-u) {
+    fn f(a: Int, b: Int = 5-u) {
         print_int(a);
         print_int(b);
     };
     f(4);
 '
-expect '463' '
-    fn f(a: Int, b=a+2, c=3): Int {
+expect '42hi6' '
+    fn f(a: Int, b: Int = 2, c: Str = "hi"): Int {
         print_int(a);
         print_int(b);
-        print_int(c);
-        return c;
+        print(c);
+        return b + a;
     };
-    f(4);
+    print_int(f(4));
 '
-"
+expect_err 'TypeError' '
+    fn f(a: Int = "") {};
+'

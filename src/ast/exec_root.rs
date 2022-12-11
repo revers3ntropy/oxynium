@@ -1,16 +1,17 @@
 use crate::ast::{Node, TypeCheckRes};
-use crate::context::Ctx;
+use crate::context::Context;
+use crate::util::MutRc;
 use crate::error::Error;
 use crate::ast::STD_ASM;
 
 #[derive(Debug)]
 pub struct ExecRootNode {
-    pub statements: Box<dyn Node>
+    pub statements: MutRc<dyn Node>
 }
 
 impl Node for ExecRootNode {
-    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
-        let res = self.statements.asm(ctx.clone())?;
+    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+        let res = self.statements.borrow_mut().asm(ctx.clone())?;
         let mut_ref = ctx.borrow_mut();
         let (data_decls, text_decls) = mut_ref.get_definitions();
         let data = data_decls.iter().map(|k| {
@@ -48,7 +49,7 @@ impl Node for ExecRootNode {
         ", mut_ref.std_asm_path))
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
-        self.statements.type_check(ctx.clone())
+    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+        self.statements.borrow_mut().type_check(ctx.clone())
     }
 }

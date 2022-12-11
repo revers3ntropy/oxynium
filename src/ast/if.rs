@@ -1,22 +1,23 @@
 use crate::ast::{Node, TypeCheckRes};
-use crate::context::Ctx;
+use crate::context::Context;
+use crate::util::MutRc;
 use crate::error::{Error, type_error};
 
 #[derive(Debug)]
 pub struct IfNode {
-    pub comparison: Box<dyn Node>,
-    pub body: Box<dyn Node>,
-    pub else_body: Option<Box<dyn Node>>
+    pub comparison: MutRc<dyn Node>,
+    pub body: MutRc<dyn Node>,
+    pub else_body: Option<MutRc<dyn Node>>
 }
 
 impl Node for IfNode {
-    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
-        let body = self.body.asm(ctx.clone())?;
-        let comp = self.comparison.asm(ctx.clone())?;
+    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+        let body = self.body.borrow_mut().asm(ctx.clone())?;
+        let comp = self.comparison.borrow_mut().asm(ctx.clone())?;
         let after_lbl = ctx.borrow_mut().get_anon_label();
 
         if self.else_body.is_some() {
-            let else_body = self.else_body.take().unwrap().asm(ctx.clone())?;
+            let else_body = self.else_body.take().unwrap().borrow_mut().asm(ctx.clone())?;
             let else_lbl = ctx.borrow_mut().get_anon_label();
 
             Ok(format!("
@@ -42,17 +43,17 @@ impl Node for IfNode {
         }
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
-        let (_, mut body_ret_type) = self.body.type_check(ctx.clone())?;
+    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+        let (_, mut body_ret_type) = self.body.borrow_mut().type_check(ctx.clone())?;
 
-        let (comp_type, _) = self.comparison.type_check(ctx.clone())?;
+        let (comp_type, _) = self.comparison.borrow_mut().type_check(ctx.clone())?;
         if !ctx.borrow_mut().get_dec_from_id("Bool")?.type_.contains(comp_type) {
             return Err(type_error("if condition must be a bool".to_string()))
         }
 
         if self.else_body.is_some() {
-            let mut else_body = self.else_body.take().unwrap();
-            let (_, else_ret_type) = else_body.type_check(ctx.clone())?;
+            let else_body = self.else_body.take().unwrap();
+            let (_, else_ret_type) = else_body.borrow_mut().type_check(ctx.clone())?;
             self.else_body = Some(else_body);
 
             if let Some(body_ret) = body_ret_type.take() {

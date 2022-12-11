@@ -1,5 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
-use crate::context::Ctx;
+use crate::context::Context;
+use crate::util::MutRc;
 use crate::error::{Error, syntax_error};
 use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
 
@@ -11,7 +12,7 @@ pub struct GlobalConstNode<T> {
 }
 
 impl Node for GlobalConstNode<i64> {
-    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare global {} '{}' inside function. Try using 'let' instead.",
@@ -28,7 +29,7 @@ impl Node for GlobalConstNode<i64> {
         Ok("".to_owned())
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(syntax_error(format!(
                 "Invalid global variable '{}'",
@@ -50,7 +51,7 @@ impl Node for GlobalConstNode<i64> {
 }
 
 impl Node for GlobalConstNode<String> {
-    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare global {} '{}' inside function. Try using 'let' instead.",
@@ -68,7 +69,7 @@ impl Node for GlobalConstNode<String> {
         Ok("".to_owned())
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(syntax_error(format!(
                 "Invalid global variable '{}'",

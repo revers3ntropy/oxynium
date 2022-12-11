@@ -1,21 +1,22 @@
 use crate::ast::{Node, TypeCheckRes};
-use crate::context::{Ctx};
+use crate::context::Context;
+use crate::util::MutRc;
 use crate::error::{Error, mismatched_types, type_error, unknown_symbol};
 use crate::symbols::is_valid_identifier;
 
 #[derive(Debug)]
 pub struct MutateVar {
     pub identifier: String,
-    pub value: Box<dyn Node>
+    pub value: MutRc<dyn Node>
 }
 
 impl Node for MutateVar {
-    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         let id = ctx.borrow_mut().get_dec_from_id(&self.identifier)?.id;
 
         // get value before setting variable as initialised
         // so that self-references are invalid until AFTER the variable is initialised
-        let value = self.value.asm(ctx.clone())?;
+        let value = self.value.borrow_mut().asm(ctx.clone())?;
 
         ctx.borrow_mut().set_dec_as_defined(&self.identifier)?;
 
@@ -26,14 +27,14 @@ impl Node for MutateVar {
         "))
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier)
             || !ctx.borrow_mut().has_dec_with_id(&self.identifier)
         {
             return Err(unknown_symbol(self.identifier.clone()));
         }
 
-        let (assign_type, _) = self.value.type_check(ctx.clone())?;
+        let (assign_type, _) = self.value.borrow_mut().type_check(ctx.clone())?;
         let symbol = ctx.borrow_mut().get_dec_from_id(&self.identifier)?.clone();
         if symbol.is_constant {
             return Err(type_error(format!(

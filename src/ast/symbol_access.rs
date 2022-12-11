@@ -1,7 +1,8 @@
 use crate::ast::{Node, TypeCheckRes};
-use crate::context::{Ctx};
+use crate::context::Context;
 use crate::error::{Error, type_error, unknown_symbol};
 use crate::symbols::is_valid_identifier;
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct SymbolAccess {
@@ -9,7 +10,7 @@ pub struct SymbolAccess {
 }
 
 impl Node for SymbolAccess {
-    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         let decl = ctx.borrow_mut().get_dec_from_id(&self.identifier).unwrap();
         if decl.require_init && !decl.is_defined {
             return Err(type_error(format!(
@@ -23,7 +24,7 @@ impl Node for SymbolAccess {
         ", ctx.borrow_mut().get_dec_from_id(&self.identifier)?.id))
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(unknown_symbol(self.identifier.clone()));
         }

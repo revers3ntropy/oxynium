@@ -1,20 +1,21 @@
 use crate::ast::{Node, TypeCheckRes};
-use crate::context::{Ctx};
+use crate::context::Context;
 use crate::error::{Error, type_error};
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct StatementsNode {
-    pub statements: Vec<Box<dyn Node>>,
+    pub statements: Vec<MutRc<dyn Node>>,
     pub src: Vec<String>
 }
 
 impl Node for StatementsNode {
-    fn asm(&mut self, ctx: Ctx) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         let mut asm = String::new();
 
         let mut i = 0;
         for statement in self.statements.iter_mut() {
-            let stmt = statement.asm(ctx.clone())?;
+            let stmt = statement.borrow_mut().asm(ctx.clone())?;
             if !stmt.is_empty() {
                 asm.push_str("\n;- SRC: ");
                 asm.push_str(self.src.get(i).unwrap());
@@ -26,10 +27,10 @@ impl Node for StatementsNode {
         Ok(asm)
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         let mut ret_types = Vec::new();
         for statement in self.statements.iter_mut() {
-            let t = statement.type_check(ctx.clone())?;
+            let t = statement.borrow_mut().type_check(ctx.clone())?;
             if t.1.is_some() {
                 ret_types.push(t.1.unwrap())
             }

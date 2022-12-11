@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
-use crate::context::{Ctx};
+use crate::context::Context;
 use crate::error::{Error, type_error, unknown_symbol};
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct TypeNode {
@@ -8,7 +9,7 @@ pub struct TypeNode {
 }
 
 impl Node for TypeNode {
-    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !ctx.borrow_mut().has_dec_with_id(&self.identifier) {
             return Err(unknown_symbol(self.identifier.clone()));
         }

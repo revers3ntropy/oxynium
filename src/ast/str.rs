@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
-use crate::context::Ctx;
+use crate::context::Context;
 use crate::error::Error;
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct StrNode {
@@ -8,7 +9,7 @@ pub struct StrNode {
 }
 
 impl Node for StrNode {
-    fn asm(&mut self, _ctx: Ctx) -> Result<String, Error> {
+    fn asm(&mut self, _ctx: MutRc<Context>) -> Result<String, Error> {
         let mut result = format!("
             mov rdi, {}
             call malloc WRT ..plt
@@ -33,7 +34,7 @@ impl Node for StrNode {
         Ok(result)
     }
 
-    fn type_check(&mut self, ctx: Ctx) -> Result<TypeCheckRes, Error> {
+    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         Ok((ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone(), None))
     }
 }
