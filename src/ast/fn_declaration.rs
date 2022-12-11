@@ -1,3 +1,4 @@
+use std::process::id;
 use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
 use crate::ast::types::function::{FnParamType, FnType};
@@ -95,19 +96,27 @@ impl Node for FnDeclarationNode {
         let mut parameters: Vec<FnParamType> = Vec::new();
 
         let num_params = self.params.len();
+        let mut seen_param_without_default = false;
         for i in 0..self.params.len() {
 
             let Parameter { identifier, type_, default_value} =
                 self.params.pop().unwrap();
 
             let param_type = type_.borrow_mut().type_check(ctx.clone())?.0;
-
             if let Some(default_value) = default_value.clone() {
+                if seen_param_without_default {
+                    return Err(type_error(format!(
+                        "Parameters after '{}' must have default values",
+                        identifier
+                    )));
+                }
                 let default_value_type = default_value.borrow_mut().type_check(ctx.clone())?.0;
                 if !param_type.contains(default_value_type.clone()) {
                     return Err(type_error(format!("Default value for parameter {} is not of type {}",
                                                   identifier, param_type.str())));
                 }
+            } else {
+                seen_param_without_default = true;
             }
 
             parameters.push(FnParamType {

@@ -286,3 +286,9 @@ expect '42hi6' '
 expect_err 'TypeError' '
     fn f(a: Int = "") {};
 '
+expect_err 'TypeError' '
+    fn f(a: Int = 1, b: Int) {};
+'
+expect_err 'TypeError' '
+    fn f(a: Int, b: Int = 1, c: Int) {};
+'
