@@ -1,4 +1,5 @@
-use std::fmt::Display;
+use std::rc::Rc;
+use crate::ast::types::Type;
 use crate::position::{Position};
 
 #[derive(Debug, Clone)]
@@ -10,9 +11,9 @@ pub struct Error {
 }
 
 impl Error {
-    pub fn new(name: String, message: String) -> Error {
+    pub fn new(name: &str, message: String) -> Error {
         Error {
-            name,
+            name: name.to_string(),
             message,
             start: Position::unknown(),
             end: Position::unknown(),
@@ -46,28 +47,28 @@ impl Error {
 }
 
 pub fn syntax_error(message: String) -> Error {
-    Error::new("SyntaxError".to_string(), message)
+    Error::new("SyntaxError", message)
 }
 
 pub fn unknown_symbol(message: String) -> Error {
-    Error::new("UnknownSymbolError".to_string(), message)
+    Error::new("UnknownSymbolError", message)
 }
 
 pub fn numeric_overflow(message: String) -> Error {
-    Error::new("NumericOverflow".to_string(), message)
+    Error::new("NumericOverflow", message)
 }
 
-pub fn mismatched_types(expected: &dyn Display, got: &dyn Display) -> Error {
-    Error::new(
-        "TypeError".to_string(),
-        format!("expected '{expected}', got '{got}'")
-    )
+pub fn mismatched_types(expected: Rc<dyn Type>, got: Rc<dyn Type>) -> Error {
+    Error::new("TypeError", format!(
+        "expected '{}', got '{}'",
+        expected.str(), got.str()
+    ))
 }
 
 pub fn type_error(message: String) -> Error {
-    Error::new("TypeError".to_string(), message)
+    Error::new("TypeError", message)
 }
 
 pub fn io_error(message: String) -> Error {
-    Error::new("IOError".to_string(), message)
+    Error::new("IOError", message)
 }

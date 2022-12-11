@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
+use crate::ast::types::function::FnType;
 use crate::ast::types::Type;
 use crate::context::Ctx;
 use crate::error::{Error, mismatched_types, unknown_symbol};
@@ -53,29 +54,29 @@ impl Node for FnCallNode {
             return Err(unknown_symbol(format!("undefined function {}", self.identifier)));
         }
 
-        let fn_type = ctx.borrow_mut().get_dec_from_id(&self.identifier)?.type_.clone();
-        let ret_type = fn_type.children[0].clone();
+        let fn_type = ctx.borrow_mut()
+            .get_dec_from_id(&self.identifier)?.type_.clone()
+            .as_fn();
+        if fn_type.is_none() {
+            return Err(unknown_symbol(format!("'{}' is not a function", self.identifier)));
+        }
+        let fn_type = fn_type.unwrap();
 
-        let mut call_signature_children = vec![
-            ret_type.clone()
-        ];
-        call_signature_children.append(&mut args);
-        let call_signature_type = Rc::new(Type {
-            id: ctx.borrow_mut().get_type_id(),
-            name: "Fn".to_string(),
-            children: call_signature_children,
-            is_ptr: true
+        let call_signature_type = Rc::new(FnType {
+            name: self.identifier.clone(),
+            ret_type: fn_type.ret_type.clone(),
+            parameters: args,
         });
 
         if !fn_type.contains(call_signature_type.clone()) {
-            return Err(mismatched_types(&fn_type.clone(), &call_signature_type.clone()));
+            return Err(mismatched_types(Rc::new(fn_type), call_signature_type.clone()));
         }
 
-        if ret_type.contains(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone()) {
+        if fn_type.ret_type.contains(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone()) {
             self.use_return_value = false;
         } else {
             self.use_return_value = true;
         }
-        Ok((ret_type, None))
+        Ok((fn_type.ret_type.clone(), None))
     }
 }

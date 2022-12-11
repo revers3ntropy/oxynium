@@ -13,12 +13,12 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use clap::{arg, ArgMatches, Command};
-use crate::ast::types::Type;
 use crate::parse::lexer::{Lexer};
 use crate::parse::parser::Parser;
 use crate::context::{Context, Ctx};
 use std::process::Command as Exec;
 use std::rc::Rc;
+use crate::ast::types::atomic::AtomicType;
 use crate::error::{Error, io_error};
 use crate::post_process::format_asm::post_process;
 use crate::symbols::{SymbolDec, SymbolDef};
@@ -35,10 +35,9 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         is_type: true,
         require_init: false,
         is_defined: true,
-        type_: Rc::new(Type {
+        type_: Rc::new(AtomicType {
             id: 0,
             name: "Int".to_string(),
-            children: vec![],
             is_ptr: false
         })
     })?;
@@ -49,10 +48,9 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         is_type: true,
         require_init: false,
         is_defined: true,
-        type_: Rc::new(Type {
+        type_: Rc::new(AtomicType {
             id: 1,
             name: "Bool".to_string(),
-            children: vec![],
             is_ptr: false
         })
     })?;
@@ -63,10 +61,9 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         is_type: true,
         require_init: false,
         is_defined: true,
-        type_: Rc::new(Type {
+        type_: Rc::new(AtomicType {
             id: 2,
             name: "Str".to_string(),
-            children: vec![],
             is_ptr: true
         })
     })?;
@@ -77,10 +74,9 @@ fn setup_ctx_with_doxy(ctx: Ctx) -> Result<Ctx, Error> {
         is_type: true,
         require_init: false,
         is_defined: true,
-        type_: Rc::new(Type {
+        type_: Rc::new(AtomicType {
             id: 3,
             name: "Void".to_string(),
-            children: vec![],
             is_ptr: true
         })
     })?;

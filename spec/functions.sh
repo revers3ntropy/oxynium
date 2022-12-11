@@ -246,3 +246,41 @@ expect_err 'SyntaxError' '
         };
     };
 '
+
+_="
+describe 'Default Arguments'
+
+expect '123' '
+    fn f(a: Int, b: Int = 2, c: Int = 3) {
+        print_int(a);
+        print_int(b);
+        print_int(c);
+    };
+    f(1);
+'
+expect '14' '
+    const a = 1;
+    fn f(a: Int = a) {
+        print_int(a);
+    };
+    f();
+    f(4);
+'
+expect '44' '
+    const u = 1;
+    fn f(a: Int, b: Int = a-u) {
+        print_int(a);
+        print_int(b);
+    };
+    f(4);
+'
+expect '463' '
+    fn f(a: Int, b=a+2, c=3): Int {
+        print_int(a);
+        print_int(b);
+        print_int(c);
+        return c;
+    };
+    f(4);
+'
+"

@@ -36,7 +36,10 @@ impl Node for MutateVar {
         let (assign_type, _) = self.value.type_check(ctx.clone())?;
         let symbol = ctx.borrow_mut().get_dec_from_id(&self.identifier)?.clone();
         if symbol.is_constant {
-            return Err(mismatched_types(&"<var>", &"<const>"));
+            return Err(type_error(format!(
+                "Expected mutable variable, found constant '{}'",
+                self.identifier
+            )));
         }
         if symbol.is_type {
             return Err(type_error(format!(
@@ -44,7 +47,7 @@ impl Node for MutateVar {
             )));
         }
         if !symbol.type_.contains(assign_type.clone()) {
-            return Err(mismatched_types(symbol.type_.as_ref(), assign_type.as_ref()));
+            return Err(mismatched_types(symbol.type_.clone(), assign_type.clone()));
         }
         Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), None))
     }

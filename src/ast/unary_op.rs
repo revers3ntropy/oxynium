@@ -44,7 +44,7 @@ impl Node for UnaryOpNode {
 
         let (value_type, _) = self.rhs.type_check(ctx.clone())?;
         if !t.contains(value_type.clone()) {
-            return Err(mismatched_types(t.as_ref(), value_type.as_ref()))
+            return Err(mismatched_types(t.clone(), value_type.clone()))
         }
 
         Ok((t, None))

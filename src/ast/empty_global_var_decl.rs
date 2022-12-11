@@ -31,7 +31,7 @@ impl Node for EmptyGlobalConstNode {
         }
         let (type_, _) = self.type_.type_check(ctx.clone())?;
 
-        let id = if !type_.is_ptr {
+        let id = if !type_.is_ptr() {
             // deref if it shouldn't stay as a pointer
             format!("qword [{}]", self.identifier.clone())
         } else {

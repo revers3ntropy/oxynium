@@ -33,7 +33,7 @@ pub const ANON_PREFIX: &str = "_$_";
 pub const STD_ASM: &str = include_str!("../../std/std.asm");
 
 // (type of result of node, type of returned values from node and children)
-pub type TypeCheckRes = (Rc<Type>, Option<Rc<Type>>);
+pub type TypeCheckRes = (Rc<dyn Type>, Option<Rc<dyn Type>>);
 
 pub trait Node: Debug {
     fn asm(&mut self, _ctx: Ctx) -> Result<String, Error> {

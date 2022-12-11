@@ -33,7 +33,7 @@ pub struct SymbolDec {
     pub id: String,
     pub is_constant: bool,
     pub is_type: bool,
-    pub type_: Rc<Type>,
+    pub type_: Rc<dyn Type>,
     pub require_init: bool,
     pub is_defined: bool,
 }

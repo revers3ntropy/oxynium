@@ -116,11 +116,11 @@ impl Node for BinOpNode {
 
         let (lhs_type, _) = self.lhs.type_check(ctx.clone())?;
         if !operand_types.contains(lhs_type.clone()) {
-            return Err(mismatched_types(operand_types.as_ref(), lhs_type.as_ref()))
+            return Err(mismatched_types(operand_types.clone(), lhs_type.clone()))
         }
         let (rhs_type, _) = self.rhs.type_check(ctx.clone())?;
         if !operand_types.contains(rhs_type.clone()) {
-            return Err(mismatched_types(operand_types.as_ref(), rhs_type.as_ref()))
+            return Err(mismatched_types(operand_types.clone(), rhs_type.clone()))
         }
 
         return Ok((match self.operator.token_type {

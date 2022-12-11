@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
-use crate::ast::types::Type;
+use crate::ast::types::function::FnType;
 use crate::context::{CallStackFrame, Ctx};
 use crate::error::{Error, syntax_error, type_error, unknown_symbol};
 use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
@@ -90,12 +90,16 @@ impl Node for FnDeclarationNode {
         }
         let (ret_type, _) = self.ret_type.type_check(ctx.clone())?;
 
-        let mut children = vec![ret_type];
+        let mut parameter_types = Vec::new();
+
         let num_params = self.params.len();
         for i in 0..self.params.len() {
+
             let Parameter { identifier, mut type_} =
                 self.params.pop().unwrap();
-            children.push(type_.type_check(ctx.clone())?.0);
+
+            let param_type = type_.type_check(ctx.clone())?.0;
+            parameter_types.push(param_type.clone());
 
             self.params_scope.borrow_mut().declare(SymbolDec {
                 name: identifier.clone(),
@@ -104,15 +108,14 @@ impl Node for FnDeclarationNode {
                 is_type: false,
                 require_init: false,
                 is_defined: true,
-                type_: children.last().unwrap().clone()
+                type_: param_type.clone()
             })?;
         }
 
-        let this_type = Rc::new(Type {
-            id: ctx.borrow_mut().get_type_id(),
-            name: "Fn".to_owned(),
-            children,
-            is_ptr: true
+        let this_type = Rc::new(FnType {
+            name: self.identifier.clone(),
+            ret_type: ret_type.clone(),
+            parameters: parameter_types,
         });
         // declare in the parent context
         ctx.borrow_mut().declare(SymbolDec {
@@ -126,11 +129,11 @@ impl Node for FnDeclarationNode {
         })?;
 
         if let Some(mut body) = self.body.take() {
-            let (ret_type, _) = body.type_check(self.params_scope.clone())?;
-            if !this_type.children[0].contains(ret_type.clone()) {
+            let (body_ret_type, _) = body.type_check(self.params_scope.clone())?;
+            if !ret_type.contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
-                    "Function {} has return type {} but expected {}",
-                    self.identifier, this_type.children[0], ret_type
+                    "Function {} has return type {} but found {}",
+                    self.identifier, ret_type.str(), body_ret_type.str()
                 )));
             }
             self.body = Some(body);

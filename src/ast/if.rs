@@ -60,7 +60,7 @@ impl Node for IfNode {
                     if !body_ret.contains(else_ret_type.clone()) {
                         return Err(type_error(format!(
                             "if statement branches cannot return different types: {} and {}",
-                            body_ret, else_ret_type.clone()
+                            body_ret.str(), else_ret_type.str()
                         )));
                     }
                 }

@@ -26,7 +26,6 @@ pub struct Context {
     loop_label_stack: Vec<(String, String)>,
     call_stack: Vec<CallStackFrame>,
     anon_symbol_count: u64,
-    type_id_count: u64,
     pub exec_mode: u8,
     pub std_asm_path: String,
     pub allow_overrides: bool,
@@ -43,7 +42,6 @@ impl Context {
             call_stack: Vec::new(),
             anon_symbol_count: 0,
             exec_mode: 0,
-            type_id_count: 100,
             std_asm_path: String::from("std.asm"),
             allow_overrides: false,
             allow_local_var_decls: false,
@@ -78,13 +76,6 @@ impl Context {
         let symbol = format!("{}L{}", ANON_PREFIX, self.anon_symbol_count);
         self.anon_symbol_count += 1;
         symbol
-    }
-    pub fn get_type_id(&mut self) -> u64 {
-        if self.parent.is_some() {
-            return self.with_root(&mut |ctx| ctx.get_type_id());
-        }
-        self.type_id_count += 1;
-        self.type_id_count
     }
 
 
