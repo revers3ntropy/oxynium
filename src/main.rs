@@ -1,3 +1,20 @@
+use std::{env, fs};
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::Path;
+use clap::{arg, ArgMatches, Command};
+use crate::parse::lexer::Lexer;
+use crate::parse::parser::Parser;
+use std::process::Command as Exec;
+use std::rc::Rc;
+use clap::parser::ValuesRef;
+use crate::ast::types::atomic::AtomicType;
+use crate::context::Context;
+use crate::error::{Error, io_error};
+use crate::post_process::format_asm::post_process;
+use crate::symbols::{SymbolDec, SymbolDef};
+use crate::util::MutRc;
+
 mod parse;
 mod ast;
 mod context;
@@ -6,22 +23,6 @@ mod position;
 mod post_process;
 mod symbols;
 mod util;
-
-use std::{env, fs};
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-use clap::{arg, ArgMatches, Command};
-use crate::parse::lexer::{Lexer};
-use crate::parse::parser::Parser;
-use std::process::Command as Exec;
-use std::rc::Rc;
-use crate::ast::types::atomic::AtomicType;
-use crate::context::Context;
-use crate::error::{Error, io_error};
-use crate::post_process::format_asm::post_process;
-use crate::symbols::{SymbolDec, SymbolDef};
-use crate::util::MutRc;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
@@ -138,7 +139,7 @@ fn compile (input: String, file_name: String, args: &Args) -> Result<(String, Mu
     root_node.borrow_mut().type_check(ctx.clone())?;
     let compile_res = root_node.borrow_mut().asm(ctx.clone())?;
 
-    let asm = post_process(compile_res);
+    let asm = post_process(compile_res, args);
     Ok((asm, ctx.clone()))
 }
 
@@ -192,13 +193,16 @@ fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result
 }
 
 #[derive(Debug, Clone)]
-struct Args {
+pub struct Args {
     input: String,
     out: String,
     eval: String,
     exec_mode: u8,
     std_path: String,
-    keep: bool
+    keep: bool,
+    optimise: u8,
+    enable: Vec<String>,
+    disable: Vec<String>
 }
 
 fn get_int_cli_arg (m: &ArgMatches, name: &str, default: u8) -> u8 {
@@ -222,12 +226,15 @@ fn get_cli_args () -> Args {
 
     let cmd = Command::new("res")
         .args(&[
-            arg!(-o --out       [FILE] "Where to put assembly output"),
-            arg!(-e --eval      [EXPR] "Compiles and prints a single expression"),
-            arg!(-s --std       [PATH] "Path to STD assembly file"),
-            arg!(-k --keep             "Keep output assembly and object files"),
-            arg!(-x --exec_mode [INT]  "Exec mode"),
-            arg!(   [input]            "Input code to evaluate"),
+            arg!(-o --out       [FILE]  "File name of output"),
+            arg!(-e --eval      [EXPR]  "Compiles and prints a single expression"),
+            arg!(-s --std       [PATH]  "Path to STD assembly file"),
+            arg!(-k --keep              "Keep output assembly and object files"),
+            arg!(-x --exec_mode [INT]   "Exec mode"),
+            arg!(-f --optimise  [INT]   "Optimisation level"),
+            arg!(   --enable    [ID]... "Enable specific optimisations"),
+            arg!(   --disable   [ID]... "Disable specific optimisations"),
+            arg!(   [input]             "Input code to evaluate"),
         ]);
     let args: Vec<String> = env::args().collect();
     let matches = cmd.try_get_matches_from(args);
@@ -244,14 +251,19 @@ fn get_cli_args () -> Args {
         std_path: m.get_one::<String>("std")
             .unwrap_or(&String::from("/usr/local/bin/oxy-std.asm")).to_string(),
         exec_mode: get_int_cli_arg(&m, "exec_mode", 0),
-        keep: m.get_flag("keep")
+        optimise: get_int_cli_arg(&m, "optimise", 1),
+        keep: m.get_flag("keep"),
+        enable: m.get_many::<String>("enable").unwrap_or(ValuesRef::default())
+            .into_iter().map(|a| a.to_string()).collect(),
+        disable: m.get_many::<String>("disable").unwrap_or(ValuesRef::default())
+            .into_iter().map(|a| a.to_string()).collect()
     }
 }
 
 fn print_usage () {
     println!("Usage: res [options] [input]");
     println!("Options:");
-    println!("  -o, --out  <FILE>  Where to put assembly output");
+    println!("  -o, --out  <FILE>  File name of output");
     println!("  -e, --eval <EXP>   Compiles and prints a single expression");
     println!("  -s, --std  <PATH>  Path to STD assembly file");
     println!("  -x, --exec_mode <INT>  Exec mode");

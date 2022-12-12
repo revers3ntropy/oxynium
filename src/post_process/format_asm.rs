@@ -1,11 +1,9 @@
 use regex::Regex;
+use crate::Args;
+use crate::post_process::optimise::optimise;
 
-pub fn post_process(asm: String) -> String {
-    let mut output = String::new();
-
-    let mut indent = 4;
-
-    let indent_re: Regex = Regex::new("^(section ?.)|([a-zA-Z0-9_-]+:)$").unwrap();
+fn parse_asm_lines(asm: String) -> Vec<String> {
+    let mut output = Vec::new();
 
     for line in asm.lines() {
         // remove whitespace and comments
@@ -13,10 +11,8 @@ pub fn post_process(asm: String) -> String {
 
         let mut line_split = new_line.clone().split(";");
         // detect comments which start with ';-' which should be kept
-        if let Some(comment) = line_split.nth(1) {
-            if comment.chars().nth(0).unwrap_or(' ') != '-' {
-                new_line = new_line.clone().split(";").nth(0).unwrap();
-            }
+        if line_split.nth(1).is_some() {
+            new_line = new_line.clone().split(";").nth(0).unwrap();
         }
         new_line = new_line.trim();
 
@@ -24,7 +20,21 @@ pub fn post_process(asm: String) -> String {
             continue;
         }
 
-        let should_unindent = indent_re.is_match(new_line);
+        output.push(new_line.to_string());
+    }
+
+    output
+}
+
+pub fn post_process(asm: String, args: &Args) -> String {
+    let mut output = String::new();
+
+    let mut indent = 4;
+
+    let indent_re: Regex = Regex::new("^(section ?.)|([a-zA-Z0-9_-]+:)$").unwrap();
+
+    for line in optimise(parse_asm_lines(asm), args) {
+        let should_unindent = indent_re.is_match(line.as_str());
 
         if should_unindent {
             indent -= 4;
@@ -32,7 +42,7 @@ pub fn post_process(asm: String) -> String {
             //output += "\n";
         }
 
-        output += &(" ".repeat(indent).to_owned() + new_line + "\n");
+        output += &(" ".repeat(indent).to_owned() + line.as_str() + "\n");
 
         if should_unindent {
             indent += 4;
