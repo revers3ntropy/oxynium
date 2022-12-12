@@ -7,6 +7,5 @@ extern fn print_bool(bool: Bool): Void;
 extern fn print_true(): Void;
 extern fn print_false(): Void;
 extern fn print_nl(): Void;
-extern fn exit(): Void;
-extern fn throw(): Void;
-extern fn input(): Str;
+extern fn exit(code: Int = 0): Void;
+extern fn input(prompt: Str = "", buffer_size: Int = 1000): Str;

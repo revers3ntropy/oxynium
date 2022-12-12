@@ -1,4 +1,3 @@
-use std::process::id;
 use std::rc::Rc;
 use crate::ast::{Node, TypeCheckRes};
 use crate::ast::types::function::{FnParamType, FnType};
@@ -7,7 +6,6 @@ use crate::error::{Error, syntax_error, type_error, unknown_symbol};
 use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
 use crate::context::Context;
 use crate::util::MutRc;
-
 
 #[derive(Debug)]
 pub struct Parameter {
@@ -119,7 +117,7 @@ impl Node for FnDeclarationNode {
                 seen_param_without_default = true;
             }
 
-            parameters.push(FnParamType {
+            parameters.insert(0, FnParamType {
                 name: identifier.clone(),
                 type_: param_type.clone(),
                 default_value
@@ -135,8 +133,6 @@ impl Node for FnDeclarationNode {
                 type_: param_type.clone()
             })?;
         }
-
-        parameters.reverse();
 
         let this_type = Rc::new(FnType {
             name: self.identifier.clone(),

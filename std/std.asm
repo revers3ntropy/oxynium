@@ -247,21 +247,26 @@ print_nl:
     call print_char
     pop rax
 
-input: ; [cb: *] => String
+input: ; [buffer_size: int, prompt: char*, cb: *] => String
        ; reads from stdin until a newline is reached
        ; allocates string to heap to fit input
        ; returns pointer to string in rax
     push rbp
     mov rbp, rsp
 
-    mov rdi, 1000
+    push qword [rbp+16]
+    call print
+    pop rax
+
+    mov rdi, qword [rbp+24] ; buffer_size
+    inc rdi ; extra char for null terminator
     call malloc WRT ..plt
     mov r15, rax ; r15 = string pointer
 
     mov rax, 0
     mov rdi, 0
     mov rsi, r15
-    mov rdx, 999
+    mov rdx, qword [rbp+24]
     syscall
 
     mov rax, r15
@@ -272,11 +277,9 @@ input: ; [cb: *] => String
 
 
 exit:
-    mov rax, 60
-    mov rdi, 0
-    syscall
+    push rbp
+    mov rbp, rsp
 
-throw:
     mov rax, 60
-    mov rdi, 1
+    mov rdi, qword [rbp+16]
     syscall

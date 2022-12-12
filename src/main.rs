@@ -1,5 +1,3 @@
-extern crate core;
-
 mod parse;
 mod ast;
 mod context;

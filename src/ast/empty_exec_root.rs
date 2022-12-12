@@ -20,6 +20,7 @@ impl Node for EmptyExecRootNode {
                     global main
                     {STD_ASM}
                 main:
+                    push 0
                     call exit
             "))
         }

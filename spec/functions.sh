@@ -274,14 +274,14 @@ expect '44' '
     };
     f(4);
 '
-expect '42hi6' '
-    fn f(a: Int, b: Int = 2, c: Str = "hi"): Int {
-        print_int(a);
+expect 'true2hi3' '
+    fn f(a: Bool, b: Int = 2, c: Str = "hi"): Int {
+        print_bool(a);
         print_int(b);
         print(c);
-        return b + a;
+        return b + 1;
     };
-    print_int(f(4));
+    print_int(f(true));
 '
 expect_err 'TypeError' '
     fn f(a: Int = "") {};

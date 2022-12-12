@@ -45,6 +45,7 @@ impl Node for ExecRootNode {
                 mov rbp, rsp
                 {res}
                 mov rsp, rbp
+                push 0
                 call exit
         ", mut_ref.std_asm_path))
     }

@@ -75,7 +75,6 @@ impl Node for FnCallNode {
         });
 
         if !fn_type.contains(call_signature_type.clone()) {
-            println!("{:#?}; {:#?}", fn_type, call_signature_type);
             return Err(mismatched_types(Rc::new(fn_type), call_signature_type.clone()));
         }
 
