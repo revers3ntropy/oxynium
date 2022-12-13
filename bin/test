@@ -164,7 +164,7 @@ function perf_test_comp_cpp() {
 
     echo "$cpp" > out.cpp
 
-    gcc out.cpp -lstdc++ -O3
+    gcc out.cpp -lstdc++
 
     echo "C++ Compilation: $(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)"
     perf_timer_start=$(date +"%s.%3N")

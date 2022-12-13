@@ -25,8 +25,8 @@ impl Node for UnaryOpNode {
                 format!("
                     {}
                     pop rbx
-                    mov rax, 0
-                    cmp rbx, 0
+                    xor rax, rax
+                    test rbx, rbx
                     setle al
                     push rax
                 ",

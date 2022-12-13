@@ -76,7 +76,7 @@ impl Node for BinOpNode {
                         {}
                         pop rcx ; lhs
                         pop rdx ; rhs
-                        mov rax, 0     ; al is first byte of rax,
+                        xor rax, rax     ; al is first byte of rax,
                         cmp rcx, rdx
                         {} al          ; so clear rax and put into al
                         push rax

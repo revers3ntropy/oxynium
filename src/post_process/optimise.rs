@@ -1,8 +1,13 @@
 use regex::Regex;
 use crate::Args;
 
-const REGISTERS: [&str; 16] = [
-    "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp",
+// const REGISTERS: [&str; 16] = [
+//     "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp",
+//     "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
+// ];
+
+const REGISTERS_NO_STACK: [&str; 14] = [
+    "rax", "rbx", "rcx", "rdx", "rsi", "rdi",
     "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
 ];
 
@@ -21,8 +26,8 @@ fn o1(name: &str, asm: Vec<String>, args: &Args, cb: fn(Vec<String>) -> Vec<Stri
 pub fn optimise(asm: Vec<String>, args: &Args) -> Vec<String> {
     let mut asm = asm;
 
-    asm = o1("asm_redundant_push", asm, args, push_pull_duplication);
-    asm = o1("asm_redundant_mov", asm, args, mov_same);
+    asm = o1("asm-redundant-push", asm, args, push_pull_duplication);
+    asm = o1("asm-redundant-mov", asm, args, mov_same);
 
     asm
 }
@@ -43,7 +48,7 @@ fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
         }
 
         let (_, register) = line.split_once(" ").unwrap();
-        if !REGISTERS.contains(&register) && !register.starts_with("qword [") {
+        if !REGISTERS_NO_STACK.contains(&register) && !register.starts_with("qword [") {
             res.push(line);
             continue;
         }
@@ -60,7 +65,7 @@ fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
         }
 
         let (_, pop_register) = pop_line.split_once(" ").unwrap();
-        if !REGISTERS.contains(&pop_register) && !register.starts_with("qword [") {
+        if !REGISTERS_NO_STACK.contains(&pop_register) && !register.starts_with("qword [") {
             res.push(line);
             continue;
         }

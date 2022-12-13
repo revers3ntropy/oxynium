@@ -231,9 +231,9 @@ fn get_cli_args () -> Args {
             arg!(-s --std       [PATH]  "Path to STD assembly file"),
             arg!(-k --keep              "Keep output assembly and object files"),
             arg!(-x --exec_mode [INT]   "Exec mode"),
-            arg!(-f --optimise  [INT]   "Optimisation level"),
-            arg!(   --enable    [ID]... "Enable specific optimisations"),
-            arg!(   --disable   [ID]... "Disable specific optimisations"),
+            arg!(-O --optimise  [INT]   "Optimisation level"),
+            arg!(-E --enable    [ID]... "Enable specific optimisations"),
+            arg!(-D --disable   [ID]... "Disable specific optimisations"),
             arg!(   [input]             "Input code to evaluate"),
         ]);
     let args: Vec<String> = env::args().collect();

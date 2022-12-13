@@ -46,12 +46,12 @@ print: ; [string: char*, cb: *] => Void
     mov rsi, qword [rbp+16] ; pop string
     mov rax, rsi ; copy string pointer
 
-    mov rdx, 0 ; string length
+    xor rdx, rdx ; string length
 
     ; find length of string
     _$_print_find_length:
         mov rcx, qword [rax]
-        cmp rcx, 0
+        test rcx, rcx
         je _$_print_end_length
         inc rdx
         inc rax
@@ -147,18 +147,18 @@ print_int: ; [number: int, cb: *] => Void
     mov r10, rsp
 
     mov r12, 1 ; base
-    mov r13, 0 ; remainder
-    mov r14, 0 ; digit_count
-    mov r11, 0 ; is negative
+    xor r13, r13 ; remainder
+    xor r14, r14 ; digit_count
+    xor r11, r11 ; is negative
 
     mov rax, -9223372036854775808
     cmp r15, rax
     jle _$_print_int_0
 
-    cmp r15, 0 ; if num < 0
+    test r15, r15 ; if num < 0
     jl _$_print_int_negative
 
-    cmp r15, 0 ; if num == 0
+    test r15, r15 ; if num == 0
     jne _$_print_int_start
     ; fall through if num == 0
     _$_print_int_0:
@@ -170,7 +170,7 @@ print_int: ; [number: int, cb: *] => Void
     _$_print_int_negative:
         neg r15 ; make num positive
         mov r11, 1 ; set is negative flag
-        cmp r15, 0 ; if num == 0: break
+        test r15, r15 ; if num == 0: break
         jne _$_print_int_start
         jmp _$_print_int_0
 
@@ -178,14 +178,14 @@ print_int: ; [number: int, cb: *] => Void
         push 0
     _$_print_int_loop:
         ; while number > 0
-        cmp r15, 0
+        test r15, r15
         jle _$_print_int_end
 
         ; digit_count++
         inc r14
 
         ; remainder = number % 10
-        mov rdx, 0
+        xor rdx, rdx
         mov rax, r15
         mov rcx, 10
         idiv rcx
@@ -223,7 +223,7 @@ print_int: ; [number: int, cb: *] => Void
                 ; print digits in reverse of reverse order
                 ; (i.e. print digits in correct order)
                 ; by popping and printing 'digit_count' stack items
-            cmp r14, 0
+            test r14, r14
             jle _$_print_int_return
             dec r14
             call print_digit
@@ -263,8 +263,8 @@ input: ; [buffer_size: int, prompt: char*, cb: *] => String
     call malloc WRT ..plt
     mov r15, rax ; r15 = string pointer
 
-    mov rax, 0
-    mov rdi, 0
+    xor rax, rax
+    xor rdi, rdi
     mov rsi, r15
     mov rdx, qword [rbp+24]
     syscall

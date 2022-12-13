@@ -23,7 +23,7 @@ impl Node for IfNode {
             Ok(format!("
                 {comp}
                 pop rax
-                cmp rax, 0     ; if evaluates to false, don't do body
+                test rax, rax     ; if evaluates to false, don't do body
                 je {else_lbl}
                 {body}
                 jmp {after_lbl}
@@ -35,7 +35,7 @@ impl Node for IfNode {
             Ok(format!("
                 {comp}
                 pop rax
-                cmp rax, 0     ; if evaluates to false, don't do body
+                test rax, rax     ; if evaluates to false, don't do body
                 je {after_lbl}
                 {body}
                 {after_lbl}:
