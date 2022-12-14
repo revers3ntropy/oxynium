@@ -30,6 +30,7 @@ pub mod local_var_decl;
 pub mod empty_exec_root;
 pub mod empty_global_var_decl;
 pub mod empty_local_var_decl;
+pub mod struct_declaration;
 
 pub const ANON_PREFIX: &str = "_$_";
 pub const STD_ASM: &str = include_str!("../../std/std.asm");

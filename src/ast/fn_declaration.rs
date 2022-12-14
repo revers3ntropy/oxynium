@@ -102,6 +102,13 @@ impl Node for FnDeclarationNode {
             let Parameter { identifier, type_, default_value} =
                 self.params.pop().unwrap();
 
+            if !is_valid_identifier(&identifier)
+                || identifier == "true"
+                || identifier == "false"
+            {
+                return Err(syntax_error("Invalid parameter name".to_string()));
+            }
+
             let param_type = type_.borrow_mut().type_check(ctx.clone())?.0;
             if let Some(default_value) = default_value.clone() {
                 if seen_param_without_default {

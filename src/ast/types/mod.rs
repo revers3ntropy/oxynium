@@ -1,10 +1,12 @@
 pub mod atomic;
 pub mod function;
+pub mod r#struct;
 
 use std::fmt::Debug;
 use std::rc::Rc;
 use crate::ast::types::atomic::AtomicType;
 use crate::ast::types::function::FnType;
+use crate::ast::types::r#struct::StructType;
 
 pub trait Type: Debug {
     fn is_ptr(&self) -> bool;
@@ -14,4 +16,5 @@ pub trait Type: Debug {
 
     fn as_atomic(&self) -> Option<AtomicType> { None }
     fn as_fn(&self) -> Option<FnType> { None }
+    fn as_struct(&self) -> Option<StructType> { None }
 }

@@ -292,3 +292,7 @@ expect_err 'TypeError' '
 expect_err 'TypeError' '
     fn f(a: Int, b: Int = 1, c: Int) {};
 '
+
+expect_err 'SyntaxError' 'fn f(true: Bool) {}'
+expect_err 'SyntaxError' 'fn f(fn: Bool) {}'
+expect_err 'SyntaxError' 'fn f(while: Bool) {}'

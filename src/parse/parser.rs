@@ -20,6 +20,7 @@ use crate::ast::r#continue::ContinueNode;
 use crate::ast::r#return::ReturnNode;
 use crate::ast::statements::StatementsNode;
 use crate::ast::str::StrNode;
+use crate::ast::struct_declaration::{StructDeclarationNode, StructField};
 use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::type_expr::TypeNode;
 use crate::context::Context;
@@ -348,6 +349,11 @@ impl Parser {
         if self.peak_matches(TokenType::Identifier, Some("fn".to_string())) {
             self.advance(&mut res);
             res.node = res.register(self.fn_expr(false));
+            return res;
+        }
+        if self.peak_matches(TokenType::Identifier, Some("struct".to_string())) {
+            self.advance(&mut res);
+            res.node = res.register(self.struct_expr());
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("extern".to_string())) {
@@ -981,6 +987,65 @@ impl Parser {
 
         res.success(new_mut_rc(ReturnNode {
             value: Some(expr.unwrap()),
+            position: (start, self.last_tok().unwrap().end.clone()),
+        }));
+        res
+    }
+
+    fn struct_field(&mut self) -> Result<StructField, Error> {
+        let mut res = ParseResults::new();
+
+        let identifier = self.consume(&mut res, TokenType::Identifier);
+        if res.error.is_some() { return Err(res.error.unwrap()); }
+
+        self.consume(&mut res, TokenType::Colon);
+        if res.error.is_some() { return Err(res.error.unwrap()); }
+
+        let type_expr = res.register(self.type_expr());
+        if res.error.is_some() { return Err(res.error.unwrap()); }
+
+        Ok(StructField {
+            identifier: identifier.literal.unwrap(),
+            type_: type_expr.unwrap(),
+        })
+    }
+
+    fn struct_expr(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+        let start = self.last_tok().unwrap().start;
+
+        let id_tok = self.consume(&mut res, TokenType::Identifier);
+        if res.error.is_some() { return res; }
+        let identifier = id_tok.literal.unwrap();
+
+        self.consume(&mut res, TokenType::OpenBrace);
+        if res.error.is_some() { return res; }
+
+        let mut fields = Vec::new();
+
+        while let Some(next) = self.current_tok() {
+            if next.token_type == TokenType::CloseBrace {
+                break;
+            }
+
+            let field = self.struct_field();
+            if field.is_err() {
+                // don't override more precise position of error
+                res.failure(field.err().unwrap(), None, None);
+                return res;
+            }
+            fields.push(field.unwrap());
+
+            self.consume(&mut res, TokenType::EndStatement);
+            if res.error.is_some() { return res; }
+        }
+
+        self.consume(&mut res, TokenType::CloseBrace);
+        if res.error.is_some() { return res; }
+
+        res.success(new_mut_rc(StructDeclarationNode {
+            identifier,
+            fields,
             position: (start, self.last_tok().unwrap().end.clone()),
         }));
         res
