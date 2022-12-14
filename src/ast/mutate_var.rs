@@ -2,23 +2,31 @@ use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::util::MutRc;
 use crate::error::{Error, mismatched_types, type_error, unknown_symbol};
+use crate::parse::token::Token;
+use crate::position::Interval;
 use crate::symbols::is_valid_identifier;
 
 #[derive(Debug)]
 pub struct MutateVar {
-    pub identifier: String,
+    pub identifier: Token,
     pub value: MutRc<dyn Node>
+}
+
+impl MutateVar {
+    fn id(&self) -> String {
+        self.identifier.literal.as_ref().unwrap().clone()
+    }
 }
 
 impl Node for MutateVar {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
-        let id = ctx.borrow_mut().get_dec_from_id(&self.identifier)?.id;
+        let id = ctx.borrow_mut().get_dec_from_id(&self.id())?.id;
 
         // get value before setting variable as initialised
         // so that self-references are invalid until AFTER the variable is initialised
         let value = self.value.borrow_mut().asm(ctx.clone())?;
 
-        ctx.borrow_mut().set_dec_as_defined(&self.identifier)?;
+        ctx.borrow_mut().set_dec_as_defined(&self.id())?;
 
         Ok(format!("
            {value}
@@ -28,28 +36,32 @@ impl Node for MutateVar {
     }
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        if !is_valid_identifier(&self.identifier)
-            || !ctx.borrow_mut().has_dec_with_id(&self.identifier)
+        if !is_valid_identifier(&self.id())
+            || !ctx.borrow_mut().has_dec_with_id(&self.id())
         {
-            return Err(unknown_symbol(self.identifier.clone()));
+            return Err(unknown_symbol(self.id().clone()));
         }
 
         let (assign_type, _) = self.value.borrow_mut().type_check(ctx.clone())?;
-        let symbol = ctx.borrow_mut().get_dec_from_id(&self.identifier)?.clone();
+        let symbol = ctx.borrow_mut().get_dec_from_id(&self.id())?.clone();
         if symbol.is_constant {
             return Err(type_error(format!(
                 "Expected mutable variable, found constant '{}'",
-                self.identifier
+                self.id()
             )));
         }
         if symbol.is_type {
             return Err(type_error(format!(
-                "'{}' is a type and does not exist at runtime", self.identifier
+                "'{}' is a type and does not exist at runtime", self.id()
             )));
         }
         if !symbol.type_.contains(assign_type.clone()) {
             return Err(mismatched_types(symbol.type_.clone(), assign_type.clone()));
         }
         Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), None))
+    }
+
+    fn pos(&mut self) -> Interval {
+        (self.identifier.start.clone(), self.value.borrow_mut().pos().1)
     }
 }

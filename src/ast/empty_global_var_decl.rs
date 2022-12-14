@@ -2,6 +2,7 @@ use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::util::MutRc;
 use crate::error::{Error, syntax_error};
+use crate::position::Interval;
 use crate::symbols::{is_valid_identifier, SymbolDec};
 
 #[derive(Debug)]
@@ -9,7 +10,8 @@ pub struct EmptyGlobalConstNode {
     pub identifier: String,
     pub type_: MutRc<dyn Node>,
     pub is_const: bool,
-    pub is_external: bool
+    pub is_external: bool,
+    pub position: Interval
 }
 
 impl Node for EmptyGlobalConstNode {
@@ -49,5 +51,9 @@ impl Node for EmptyGlobalConstNode {
             type_
         })?;
         Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), None))
+    }
+
+    fn pos(&mut self) -> Interval {
+        self.position.clone()
     }
 }

@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use crate::ast::types::Type;
-use crate::position::{Position};
+use crate::position::{Interval, Position};
 
 #[derive(Debug, Clone)]
 pub struct Error {
@@ -23,6 +23,11 @@ impl Error {
     pub fn set_pos(&mut self, start: Position, end: Position) -> &mut Error {
         self.start = start;
         self.end = end;
+        self
+    }
+    pub fn set_interval(mut self, pos: Interval) -> Error {
+        self.start = pos.0;
+        self.end = pos.1;
         self
     }
 

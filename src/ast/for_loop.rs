@@ -2,10 +2,12 @@ use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::util::MutRc;
 use crate::error::Error;
+use crate::position::Interval;
 
 #[derive(Debug)]
 pub struct ForLoopNode {
-    pub statements: MutRc<dyn Node>
+    pub statements: MutRc<dyn Node>,
+    pub position: Interval
 }
 
 impl Node for ForLoopNode {
@@ -27,5 +29,9 @@ impl Node for ForLoopNode {
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         self.statements.borrow_mut().type_check(ctx.clone())
+    }
+
+    fn pos(&mut self) -> Interval {
+        self.position.clone()
     }
 }

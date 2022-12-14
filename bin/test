@@ -13,6 +13,15 @@ current_spec_has_failed=0
 current_spec_file=""
 tests_started=0
 
+function run_cargo_tests {
+    cargo test
+    # exit if tests failed
+    if [ $? -ne 0 ]; then
+        echo "${RED}Tests failed${NC}"
+        exit 1
+    fi
+}
+
 function setup () {
   cargo build -r
   bin/compile_std
@@ -204,6 +213,8 @@ function clean_up() {
 }
 
 start=$(date +"%s.%3N")
+
+run_cargo_tests
 
 setup
 

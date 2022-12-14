@@ -4,6 +4,7 @@ use crate::ast::types::Type;
 use crate::context::Context;
 use crate::util::MutRc;
 use crate::error::Error;
+use crate::position::Interval;
 
 pub mod exec_root;
 pub mod int;
@@ -43,5 +44,6 @@ pub trait Node: Debug {
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), None))
     }
+    fn pos(&mut self) -> Interval;
 }
 

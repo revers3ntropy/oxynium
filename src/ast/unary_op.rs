@@ -2,6 +2,7 @@ use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{Error, mismatched_types};
 use crate::parse::token::{Token, TokenType};
+use crate::position::Interval;
 use crate::util::MutRc;
 
 #[derive(Debug)]
@@ -49,5 +50,9 @@ impl Node for UnaryOpNode {
         }
 
         Ok((t, None))
+    }
+
+    fn pos(&mut self) -> Interval {
+        (self.operator.start.clone(), self.rhs.borrow_mut().pos().1)
     }
 }

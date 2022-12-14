@@ -2,10 +2,12 @@ use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::util::MutRc;
 use crate::error::{Error, syntax_error};
+use crate::position::Interval;
 
 #[derive(Debug)]
 pub struct ReturnNode {
-    pub value: Option<MutRc<dyn Node>>
+    pub value: Option<MutRc<dyn Node>>,
+    pub position: Interval
 }
 
 impl Node for ReturnNode {
@@ -36,5 +38,9 @@ impl Node for ReturnNode {
             let void = ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone();
             Ok((void.clone(), Some(void)))
         }
+    }
+
+    fn pos(&mut self) -> Interval {
+        self.position.clone()
     }
 }

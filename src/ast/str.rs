@@ -1,11 +1,13 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::Error;
+use crate::parse::token::Token;
+use crate::position::Interval;
 use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct StrNode {
-    pub value: String
+    pub value: Token
 }
 
 impl Node for StrNode {
@@ -15,10 +17,10 @@ impl Node for StrNode {
             call malloc WRT ..plt
         ",
             // + 1 for null terminator
-           (self.value.len() + 1) * 8);
+           (self.value.literal.as_ref().unwrap().len() + 1) * 8);
 
         let mut i = 0;
-        for char in self.value.chars() {
+        for char in self.value.literal.as_ref().unwrap().chars() {
             let char_res = format!("
                 mov qword [rax+{}], '{}'
             ", i*8, char);
@@ -36,5 +38,9 @@ impl Node for StrNode {
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         Ok((ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone(), None))
+    }
+
+    fn pos(&mut self) -> Interval {
+        self.value.interval()
     }
 }

@@ -1,4 +1,4 @@
-use crate::position::Position;
+use crate::position::{Interval, Position};
 
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub enum TokenType {
@@ -86,5 +86,9 @@ impl Token {
             TokenType::NotEquals => "!=".to_string(),
             TokenType::Colon => ":".to_string(),
         }
+    }
+
+    pub fn interval(&self) -> Interval {
+        (self.start.clone(), self.end.clone())
     }
 }

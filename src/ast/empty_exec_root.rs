@@ -3,9 +3,12 @@ use crate::context::Context;
 use crate::util::MutRc;
 use crate::error::Error;
 use crate::ast::STD_ASM;
+use crate::position::Interval;
 
 #[derive(Debug)]
-pub struct EmptyExecRootNode {}
+pub struct EmptyExecRootNode {
+    pub(crate) position: Interval
+}
 
 impl Node for EmptyExecRootNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
@@ -24,5 +27,8 @@ impl Node for EmptyExecRootNode {
                     call exit
             "))
         }
+    }
+    fn pos(&mut self) -> Interval {
+        self.position.clone()
     }
 }

@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{Error, type_error};
+use crate::position::Interval;
 use crate::util::MutRc;
 
 #[derive(Debug)]
@@ -46,5 +47,10 @@ impl Node for StatementsNode {
         }
 
         Ok((ret_types[0].clone(), None))
+    }
+
+    fn pos(&mut self) -> Interval {
+        (self.statements[0].borrow_mut().pos().0,
+         self.statements[self.statements.len() - 1].borrow_mut().pos().1)
     }
 }

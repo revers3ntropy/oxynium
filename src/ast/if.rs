@@ -2,12 +2,14 @@ use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::util::MutRc;
 use crate::error::{Error, type_error};
+use crate::position::Interval;
 
 #[derive(Debug)]
 pub struct IfNode {
     pub comparison: MutRc<dyn Node>,
     pub body: MutRc<dyn Node>,
-    pub else_body: Option<MutRc<dyn Node>>
+    pub else_body: Option<MutRc<dyn Node>>,
+    pub position: Interval
 }
 
 impl Node for IfNode {
@@ -48,7 +50,8 @@ impl Node for IfNode {
 
         let (comp_type, _) = self.comparison.borrow_mut().type_check(ctx.clone())?;
         if !ctx.borrow_mut().get_dec_from_id("Bool")?.type_.contains(comp_type) {
-            return Err(type_error("if condition must be a bool".to_string()))
+            return Err(type_error("if condition must be a bool".to_string())
+                .set_interval(self.comparison.borrow_mut().pos()))
         }
 
         if self.else_body.is_some() {
@@ -71,5 +74,9 @@ impl Node for IfNode {
             }
         }
         Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), body_ret_type))
+    }
+
+    fn pos(&mut self) -> Interval {
+        self.position.clone()
     }
 }

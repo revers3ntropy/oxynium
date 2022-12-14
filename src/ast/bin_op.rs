@@ -3,6 +3,7 @@ use crate::context::Context;
 use crate::util::MutRc;
 use crate::error::{Error, mismatched_types};
 use crate::parse::token::{Token, TokenType};
+use crate::position::{Interval};
 
 #[derive(Debug)]
 pub struct BinOpNode {
@@ -133,5 +134,8 @@ impl Node for BinOpNode {
             => ctx.clone().borrow_mut().get_dec_from_id("Int")?.type_.clone(),
             _ => ctx.clone().borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
         }, None));
+    }
+    fn pos(&mut self) -> Interval {
+        (self.lhs.borrow_mut().pos().0, self.rhs.borrow_mut().pos().1)
     }
 }

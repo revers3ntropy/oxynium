@@ -5,13 +5,15 @@ use crate::ast::types::Type;
 use crate::context::Context;
 use crate::util::MutRc;
 use crate::error::{Error, mismatched_types, unknown_symbol};
+use crate::position::Interval;
 use crate::symbols::is_valid_identifier;
 
 #[derive(Debug)]
 pub struct FnCallNode {
     pub identifier: String,
     pub args: Vec<MutRc<dyn Node>>,
-    pub use_return_value: bool
+    pub use_return_value: bool,
+    pub position: Interval
 }
 
 impl Node for FnCallNode {
@@ -88,5 +90,9 @@ impl Node for FnCallNode {
         self.use_return_value = !fn_type.ret_type.contains(
             ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone());
         Ok((fn_type.ret_type.clone(), None))
+    }
+
+    fn pos(&mut self) -> Interval {
+        self.position.clone()
     }
 }

@@ -3,10 +3,11 @@ use crate::context::Context;
 use crate::util::MutRc;
 use crate::error::Error;
 use crate::ast::STD_ASM;
+use crate::position::Interval;
 
 #[derive(Debug)]
 pub struct ExecRootNode {
-    pub statements: MutRc<dyn Node>
+    pub statements: MutRc<dyn Node>,
 }
 
 impl Node for ExecRootNode {
@@ -52,5 +53,9 @@ impl Node for ExecRootNode {
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         self.statements.borrow_mut().type_check(ctx.clone())
+    }
+
+    fn pos(&mut self) -> Interval {
+        self.statements.borrow_mut().pos()
     }
 }

@@ -2,10 +2,12 @@ use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::util::MutRc;
 use crate::error::Error;
+use crate::position::Interval;
 
 #[derive(Debug)]
 pub struct IntNode {
-    pub value: i64
+    pub value: i64,
+    pub position: Interval
 }
 
 impl Node for IntNode {
@@ -18,5 +20,9 @@ impl Node for IntNode {
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         Ok((ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(), None))
+    }
+
+    fn pos(&mut self) -> Interval {
+        self.position.clone()
     }
 }

@@ -1,3 +1,5 @@
+pub type Interval = (Position, Position);
+
 #[derive(Debug)]
 pub struct Position {
     pub file: String,

@@ -2,9 +2,12 @@ use crate::ast::Node;
 use crate::context::Context;
 use crate::util::MutRc;
 use crate::error::{Error, syntax_error};
+use crate::position::Interval;
 
 #[derive(Debug)]
-pub struct BreakNode {}
+pub struct BreakNode {
+    pub(crate) position: Interval
+}
 
 impl Node for BreakNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
@@ -15,5 +18,8 @@ impl Node for BreakNode {
         Ok(format!("
             jmp {}
         ", labels.unwrap().1))
+    }
+    fn pos(&mut self) -> Interval {
+        self.position.clone()
     }
 }

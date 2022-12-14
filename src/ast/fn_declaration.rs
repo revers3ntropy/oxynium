@@ -5,6 +5,7 @@ use crate::context::CallStackFrame;
 use crate::error::{Error, syntax_error, type_error, unknown_symbol};
 use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
 use crate::context::Context;
+use crate::position::Interval;
 use crate::util::MutRc;
 
 #[derive(Debug)]
@@ -22,6 +23,7 @@ pub struct FnDeclarationNode {
     pub body: Option<MutRc<dyn Node>>,
     pub params_scope: MutRc<Context>,
     pub is_external: bool,
+    pub position: Interval,
 }
 
 impl Node for FnDeclarationNode {
@@ -162,5 +164,9 @@ impl Node for FnDeclarationNode {
         }
 
         Ok((this_type, None))
+    }
+
+    fn pos(&mut self) -> Interval {
+        self.position.clone()
     }
 }

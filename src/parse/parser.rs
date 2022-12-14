@@ -46,7 +46,9 @@ impl Parser {
         let mut res = ParseResults::new();
 
         if self.tokens.len() == 0 {
-            res.success(new_mut_rc(EmptyExecRootNode { }));
+            res.success(new_mut_rc(EmptyExecRootNode {
+                position: (Position::unknown(), Position::unknown())
+            }));
             return res;
         }
 
@@ -253,7 +255,19 @@ impl Parser {
         self.consume(&mut res, TokenType::OpenBrace);
         if res.error.is_some() { return res; }
 
-        let mut statements: Option<MutRc<dyn Node>> = Some(new_mut_rc(PassNode {}));
+        let start = self.last_tok().unwrap().start.clone();
+
+        if self.current_tok().is_none() {
+            res.failure(syntax_error("Expected statement or '}'".to_string()),
+                        Some(start.clone()),
+                        Some(start.clone())
+            );
+            return res;
+        }
+
+        let mut statements: Option<MutRc<dyn Node>> = Some(new_mut_rc(PassNode {
+            position: (start.clone(), self.current_tok().unwrap().end.clone())
+        }));
 
         if !self.peak_matches(TokenType::CloseBrace, None) {
             statements = res.register(self.statements());
@@ -263,10 +277,13 @@ impl Parser {
         self.consume(&mut res, TokenType::CloseBrace);
         if res.error.is_some() { return res; }
 
+        let end = self.last_tok().unwrap().end.clone();
+
         if make_scope_node {
             res.success(new_mut_rc(ScopeNode {
                 ctx: Context::new(),
-                body: statements.unwrap()
+                body: statements.unwrap(),
+                position: (start, end)
             }));
         } else {
             res.success(statements.unwrap());
@@ -277,6 +294,13 @@ impl Parser {
 
     fn statement (&mut self) -> ParseResults {
         let mut res = ParseResults::new();
+        if self.current_tok().is_none() {
+            res.failure(syntax_error(format!("Expected statement")),
+                        Some(self.last_tok().unwrap().start.clone()),
+                        Some(self.last_tok().unwrap().end.clone()));
+            return res;
+        }
+        let start = self.current_tok().unwrap().start.clone();
         if self.peak_matches(TokenType::Identifier, Some("const".to_string())) {
             self.advance(&mut res);
             res.node = res.register(self.global_var_decl(true, false));
@@ -304,12 +328,16 @@ impl Parser {
         }
         if self.peak_matches(TokenType::Identifier, Some("break".to_string())) {
             self.advance(&mut res);
-            res.success(new_mut_rc(BreakNode {}));
+            res.success(new_mut_rc(BreakNode {
+                position: (start.clone(), self.last_tok().unwrap().end.clone())
+            }));
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("continue".to_string())) {
             self.advance(&mut res);
-            res.success(new_mut_rc(ContinueNode {}));
+            res.success(new_mut_rc(ContinueNode {
+                position: (start.clone(), self.last_tok().unwrap().end.clone())
+            }));
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("return".to_string())) {
@@ -385,6 +413,7 @@ impl Parser {
     fn global_var_decl(&mut self, is_const: bool, is_external: bool) -> ParseResults {
         let mut res = ParseResults::new();
         let name;
+        let start = self.last_tok().unwrap().start.clone();
 
         if self.peak_matches(TokenType::Identifier, None) {
             name = Some(self.current_tok().unwrap().literal.unwrap());
@@ -417,7 +446,8 @@ impl Parser {
                 identifier: name.unwrap(),
                 type_: type_.unwrap(),
                 is_const,
-                is_external
+                is_external,
+                position: (start, self.last_tok().unwrap().end.clone()),
             }));
             return res;
         }
@@ -439,7 +469,8 @@ impl Parser {
             res.success(new_mut_rc(GlobalConstNode {
                 identifier: name.unwrap(),
                 value,
-                is_const
+                is_const,
+                position: (start, self.last_tok().unwrap().end.clone()),
             }));
             return res;
         } else if tok.token_type == TokenType::String {
@@ -447,7 +478,8 @@ impl Parser {
             res.success(new_mut_rc(GlobalConstNode {
                 identifier: name.unwrap(),
                 value: tok.literal.unwrap(),
-                is_const
+                is_const,
+                position: (start, self.last_tok().unwrap().end.clone()),
             }));
             return res;
         }
@@ -470,7 +502,7 @@ impl Parser {
 
         let name_tok = self.consume(&mut res, TokenType::Identifier);
         if res.error.is_some() { return res; }
-        let name = name_tok.literal.unwrap();
+        let name = name_tok.literal.as_ref().unwrap().clone();
 
         if self.peak_matches(TokenType::Colon, None) {
             self.advance(&mut res);
@@ -489,7 +521,8 @@ impl Parser {
             res.success(new_mut_rc(EmptyLocalVarNode {
                 identifier: name,
                 type_: type_.unwrap(),
-                local_var_idx: 0
+                local_var_idx: 0,
+                position: (start, self.last_tok().unwrap().end.clone()),
             }));
             return res;
         }
@@ -501,7 +534,7 @@ impl Parser {
         if res.error.is_some() { return res; }
 
         res.success(new_mut_rc(LocalVarNode {
-            identifier: name,
+            identifier: name_tok,
             value: expr.unwrap(),
             mutable,
             local_var_idx: 0 // overridden
@@ -587,6 +620,8 @@ impl Parser {
     fn function_call(&mut self, fn_identifier_tok: Token) -> ParseResults {
         let mut res = ParseResults::new();
 
+        let start = self.last_tok().unwrap().start;
+
         self.consume(&mut res, TokenType::OpenParen);
         if res.error.is_some() { return res; }
 
@@ -598,7 +633,8 @@ impl Parser {
                     identifier: fn_identifier_tok.literal.unwrap(),
                     args: Vec::new(),
                     // default value always overridden
-                    use_return_value: true
+                    use_return_value: true,
+                    position: (start, self.last_tok().unwrap().end.clone()),
                 }));
                 return res;
             }
@@ -643,7 +679,8 @@ impl Parser {
             identifier: fn_identifier_tok.literal.unwrap(),
             args,
             // default value always overridden
-            use_return_value: true
+            use_return_value: true,
+            position: (start, self.last_tok().unwrap().end.clone()),
         }));
         res
     }
@@ -657,7 +694,7 @@ impl Parser {
         if res.error.is_some() { return res; }
 
         res.success(new_mut_rc(MutateVar {
-            identifier: id_tok.literal.unwrap(),
+            identifier: id_tok,
             value: value.unwrap()
         }));
 
@@ -691,13 +728,13 @@ impl Parser {
                     return res;
                 }
                 res.success(new_mut_rc(IntNode {
-                    value: int_res.unwrap()
+                    value: int_res.unwrap(),
+                    position: (tok.start.clone(), tok.end.clone()),
                 }));
             },
             TokenType::String => {
                 self.advance(&mut res);
-                let value = tok.literal.unwrap();
-                res.success(new_mut_rc(StrNode { value }));
+                res.success(new_mut_rc(StrNode { value: tok }));
             },
             TokenType::OpenParen => {
                 self.advance(&mut res);
@@ -722,7 +759,7 @@ impl Parser {
                 }
 
                 res.success(new_mut_rc(SymbolAccess {
-                    identifier: tok.literal.unwrap()
+                    identifier: tok
                 }));
             },
             _ => {
@@ -738,18 +775,21 @@ impl Parser {
 
     fn for_loop(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
+        let start = self.last_tok().unwrap().start;
 
         let statements = res.register(self.scope(true));
         if res.error.is_some() { return res; }
 
         res.success(new_mut_rc(ForLoopNode {
-            statements: statements.unwrap()
+            statements: statements.unwrap(),
+            position: (start, self.last_tok().unwrap().end.clone()),
         }));
         res
     }
 
     fn if_expr(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
+        let start = self.last_tok().unwrap().start;
 
         let comparison = res.register(self.expression());
         if res.error.is_some() { return res; }
@@ -774,7 +814,8 @@ impl Parser {
         res.success(new_mut_rc(IfNode {
             comparison: comparison.unwrap(),
             body: statements.unwrap(),
-            else_body
+            else_body,
+            position: (start, self.last_tok().unwrap().end.clone()),
         }));
         res
     }
@@ -786,7 +827,7 @@ impl Parser {
         if res.error.is_some() { return res; }
 
         res.success(new_mut_rc(TypeNode {
-            identifier: type_tok.literal.unwrap()
+            identifier: type_tok
         }));
         res
     }
@@ -849,6 +890,7 @@ impl Parser {
 
     fn fn_expr(&mut self, is_external: bool) -> ParseResults {
         let mut res = ParseResults::new();
+        let start = self.last_tok().unwrap().start;
 
         let id_tok = self.consume(&mut res,TokenType::Identifier);
         if res.error.is_some() { return res; }
@@ -867,7 +909,8 @@ impl Parser {
         if res.error.is_some() { return res; }
 
         let mut ret_type: MutRc<dyn Node> = new_mut_rc(TypeNode {
-            identifier: "Void".to_string()
+            identifier: Token::new(TokenType::Identifier, Some("Void".to_string()),
+                                   Position::unknown(), Position::unknown())
         });
 
         if self.peak_matches(TokenType::Colon, None) {
@@ -884,7 +927,8 @@ impl Parser {
                 ret_type,
                 is_external,
                 params: params.unwrap(),
-                body: None
+                body: None,
+                position: (start, self.last_tok().unwrap().end.clone()),
             }));
             return res;
         }
@@ -907,13 +951,16 @@ impl Parser {
             ret_type,
             params: params.unwrap(),
             body: Some(body.unwrap()),
-            is_external: false
+            is_external: false,
+            position: (start, self.last_tok().unwrap().end.clone()),
         }));
         res
     }
 
     fn return_expr(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
+        let start = self.last_tok().unwrap().start;
+
         if self.peak_matches(TokenType::EndStatement, None)
             // So far, no expression can start with '}', so we might as well
             // allow returns to not require a semi-colon if they are the last statement
@@ -923,7 +970,8 @@ impl Parser {
             || self.peak_matches(TokenType::CloseBrace, None)
         {
             res.success(new_mut_rc(ReturnNode {
-                value: None
+                value: None,
+                position: (start, self.last_tok().unwrap().end.clone()),
             }));
             return res;
         }
@@ -932,7 +980,8 @@ impl Parser {
         if res.error.is_some() { return res; }
 
         res.success(new_mut_rc(ReturnNode {
-            value: Some(expr.unwrap())
+            value: Some(expr.unwrap()),
+            position: (start, self.last_tok().unwrap().end.clone()),
         }));
         res
     }
