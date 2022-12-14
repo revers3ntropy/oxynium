@@ -21,10 +21,10 @@ const RESERVED_KEYWORDS: [&str; 15] = [
 
 pub fn is_valid_identifier(s: &str) -> bool {
     s.chars().next().map_or(false, |c| c.is_alphabetic() || c == '_')
-        && s.chars().all(|c| c.is_alphanumeric() || c == '_')
+        && s.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '$')
         && RESERVED_KEYWORDS.contains(&s) == false
         && !s.as_bytes()[0].is_ascii_digit()
-        && !s.starts_with("_$_")
+        && !s.starts_with("_$")
 }
 
 #[derive(Debug, Clone)]

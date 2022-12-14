@@ -21,21 +21,15 @@ print_digit: ; [number: int, cb: *]  => Void
     ret
 
 print_char: ; [ascii_code: int, cb: *] => Void
-    push rbp
-    mov rbp, rsp
+    mov rsi, rsp
+    add rsi, 8 ; rsi points to ascii code
 
-    mov rsi, rbp
-    add rsi, 16 ; rsi points to ascii code
-
-    mov rdx, 8 ; specify length of string (64 bit char)
+    mov rdx, 2 ; specify length of string (64 bit char)
     ; set up syscall
     mov rax, 1
     mov rdi, 1
-
     syscall
 
-    mov rsp, rbp
-    pop rbp
     ret
 
 print: ; [string: char*, cb: *] => Void
@@ -237,15 +231,16 @@ print_int: ; [number: int, cb: *] => Void
 
 print_nl:
     ; print NL
-    mov rax, 13
-    push rax
+    push 13
     call print_char
     pop rax
+
     ; print CR
-    mov rax, 10
-    push rax
+    push 10
     call print_char
     pop rax
+
+    ret
 
 input: ; [buffer_size: int, prompt: char*, cb: *] => String
        ; reads from stdin until a newline is reached

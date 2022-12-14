@@ -69,6 +69,9 @@ expect_err 'TypeError' '
     var a = 1;
     a = "hi";
 '
+expect_err 'TypeError' '
+    var a = "";
+'
 
 
 describe 'Local Variables'
@@ -209,28 +212,73 @@ describe 'Invalid Variable Names'
 
 expect_err 'SyntaxError' 'var 1 = 1'
 expect_err 'SyntaxError' 'var 1a = 1'
+# shellcheck disable=SC2016
 expect_err 'SyntaxError' 'var _$_ = 1'
+# shellcheck disable=SC2016
 expect_err 'SyntaxError' 'var _$_a = 1'
 expect_err 'SyntaxError' 'var mut = 1'
 expect_err 'SyntaxError' 'var fn = 1'
 
+expect '' 'var _ = 1'
+expect '' 'var __ = 1'
+expect '' 'var __hi = 1'
+expect '' 'var __hi__ = 1'
+expect '' 'var a$j = 1'
+# Cannot start with '_$'
+expect_err 'SyntaxError' 'var _$ = 1'
+expect_err 'SyntaxError' 'var _$0 = 1'
+# Cannot start with '$'
+expect_err 'SyntaxError' 'var $1 = 1'
+expect_err 'SyntaxError' 'var $ = 1'
+expect_err 'SyntaxError' 'var $$ = 1'
+expect_err 'SyntaxError' 'var $_ = 1'
+
 expect_err 'SyntaxError' 'const 1 = 1'
 expect_err 'SyntaxError' 'const 1a = 1'
+# shellcheck disable=SC2016
 expect_err 'SyntaxError' 'const _$_ = 1'
+# shellcheck disable=SC2016
 expect_err 'SyntaxError' 'const _$_a = 1'
 expect_err 'SyntaxError' 'const mut = 1'
 expect_err 'SyntaxError' 'const fn = 1'
 
 expect_err 'SyntaxError' 'fn f() { let 1 = 1; }'
 expect_err 'SyntaxError' 'fn f() { let 1a = 1; }'
+# shellcheck disable=SC2016
 expect_err 'SyntaxError' 'fn f() { let _$_ = 1; }'
+# shellcheck disable=SC2016
 expect_err 'SyntaxError' 'fn f() { let _$_a = 1; }'
 expect_err 'SyntaxError' 'fn f() { let mut = 1; }'
 expect_err 'SyntaxError' 'fn f() { let fn = 1; }'
 
 expect_err 'SyntaxError' 'fn f() { let mut 1 = 1; }'
 expect_err 'SyntaxError' 'fn f() { let mut 1a = 1; }'
+# shellcheck disable=SC2016
 expect_err 'SyntaxError' 'fn f() { let mut _$_ = 1; }'
+# shellcheck disable=SC2016
 expect_err 'SyntaxError' 'fn f() { let mut _$_a = 1; }'
 expect_err 'SyntaxError' 'fn f() { let mut mut = 1; }'
 expect_err 'SyntaxError' 'fn f() { let mut fn = 1; }'
+
+
+describe 'Variables get default value on definition'
+
+expect '22' '
+    var i = 0;
+    for {
+        var a = 1;
+        a = a + 1;
+        print_int(a);
+        if i >= 1 { break };
+        i = i + 1;
+    };
+'
+expect '22' '
+    var i = 0;
+    for {
+        const a = 1;
+        print_int(a+1);
+        if i >= 1 { break };
+        i = i + 1;
+    };
+'

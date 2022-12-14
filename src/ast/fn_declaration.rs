@@ -70,7 +70,7 @@ impl Node for FnDeclarationNode {
                     pop rbp
                     ret
                  ", data_defs.len()))
-        }, false)?;
+        })?;
 
         ctx.borrow_mut().stack_frame_pop();
         Ok("".to_string())

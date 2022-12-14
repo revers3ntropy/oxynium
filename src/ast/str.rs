@@ -3,6 +3,7 @@ use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::Token;
 use crate::position::Interval;
+use crate::symbols::SymbolDef;
 use crate::util::MutRc;
 
 #[derive(Debug)]
@@ -10,30 +11,25 @@ pub struct StrNode {
     pub value: Token
 }
 
+impl StrNode {
+    fn val(&mut self) -> String {
+        self.value.literal.as_ref().unwrap().clone()
+    }
+}
+
 impl Node for StrNode {
-    fn asm(&mut self, _ctx: MutRc<Context>) -> Result<String, Error> {
-        let mut result = format!("
-            mov rdi, {}
-            call malloc WRT ..plt
-        ",
-            // + 1 for null terminator
-           (self.value.literal.as_ref().unwrap().len() + 1) * 8);
+    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+        let anon_id = ctx.borrow_mut().define_anon(SymbolDef {
+            name: "".to_string(),
+            // ,0 is the null terminator
+            data: Some(format!("dq \"{}\", 0", self.val())),
+            text: None,
+            is_local: false,
+        })?;
 
-        let mut i = 0;
-        for char in self.value.literal.as_ref().unwrap().chars() {
-            let char_res = format!("
-                mov qword [rax+{}], '{}'
-            ", i*8, char);
-            result = format!("{}{}", result, char_res);
-            i += 1;
-        }
-        result = format!("
-            {result}
-            mov qword [rax+{}], 0
-            push rax
-        ", i*8);
-
-        Ok(result)
+        Ok(format!("
+            push {anon_id}
+        "))
     }
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {

@@ -130,21 +130,34 @@ impl Context {
         }
     }
 
+
     // Definitions
 
-    pub fn define(&mut self, symbol: SymbolDef, anon: bool) -> Result<(), Error> {
+    pub fn define(&mut self, symbol: SymbolDef) -> Result<(), Error> {
         if self.parent.is_some() && !self.allow_local_var_decls {
-            return self.parent.as_ref().unwrap().borrow_mut().define(symbol, anon);
+            return self.parent.as_ref().unwrap().borrow_mut().define(symbol);
         }
         if self.definitions.get(symbol.name.clone().as_str()).is_some() {
             return Err(type_error(format!("Symbol {} is already defined", symbol.name)))
         }
-        if !anon && !self.declarations.get(symbol.name.clone().as_str()).is_some() {
+        if !self.declarations.get(symbol.name.clone().as_str()).is_some() {
             return Err(type_error(format!("Symbol {} is not declared", symbol.name)))
         }
         let name = symbol.name.clone();
         self.definitions.insert(name.clone(), symbol);
         Ok(())
+    }
+    pub fn define_anon(&mut self, mut symbol: SymbolDef) -> Result<String, Error> {
+        if self.parent.is_some() {
+            return self.parent.as_ref().unwrap().borrow_mut().define_anon(symbol);
+        }
+        symbol.name = self.get_anon_label();
+        if self.definitions.get(symbol.name.clone().as_str()).is_some() {
+            return Err(type_error(format!("Symbol {} is already defined", symbol.name)))
+        }
+        let name = symbol.name.clone();
+        self.definitions.insert(name.clone(), symbol);
+        Ok(name.clone())
     }
 
     pub fn get_definitions(&self) -> (Vec<&SymbolDef>, Vec<&SymbolDef>) {

@@ -17,7 +17,7 @@ function run_cargo_tests {
     cargo test
     # exit if tests failed
     if [ $? -ne 0 ]; then
-        echo "${RED}Tests failed${NC}"
+        printf "$RED Tests failed $NC\n"
         exit 1
     fi
 }

@@ -1,13 +1,12 @@
-use std::{env, fs};
+use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use clap::{arg, ArgMatches, Command};
 use crate::parse::lexer::Lexer;
 use crate::parse::parser::Parser;
 use std::process::Command as Exec;
 use std::rc::Rc;
-use clap::parser::ValuesRef;
+use crate::args::{Args, get_args_cmd, get_cli_args};
 use crate::ast::types::atomic::AtomicType;
 use crate::context::Context;
 use crate::error::{Error, io_error};
@@ -23,6 +22,7 @@ mod position;
 mod post_process;
 mod symbols;
 mod util;
+mod args;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
@@ -110,13 +110,13 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
         data: Some("dq 1".to_string()),
         text: None,
         is_local: false
-    }, false)?;
+    })?;
     ctx.borrow_mut().define(SymbolDef {
         name: "false".to_string(),
         data: Some("dq 0".to_string()),
         text: None,
         is_local: false
-    }, false)?;
+    })?;
 
     Ok(ctx)
 }
@@ -192,81 +192,9 @@ fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result
     Ok(())
 }
 
-#[derive(Debug, Clone)]
-pub struct Args {
-    input: String,
-    out: String,
-    eval: String,
-    exec_mode: u8,
-    std_path: String,
-    keep: bool,
-    optimise: u8,
-    enable: Vec<String>,
-    disable: Vec<String>
-}
-
-fn get_int_cli_arg (m: &ArgMatches, name: &str, default: u8) -> u8 {
-    let res = m.get_one::<String>(name)
-        .unwrap_or(&String::from(default.to_string()))
-        .to_string()
-        .parse::<u8>();
-
-    if res.is_err() {
-        let mut e = std::io::stderr();
-        let _ = e.write(format!(
-            "warning: arg '{name}' must be an integer, using default value {default}"
-        ).as_bytes());
-    }
-
-    res.unwrap_or(default)
-}
-
-fn get_cli_args () -> Args {
-    let mut e = std::io::stderr();
-
-    let cmd = Command::new("res")
-        .args(&[
-            arg!(-o --out       [FILE]  "File name of output"),
-            arg!(-e --eval      [EXPR]  "Compiles and prints a single expression"),
-            arg!(-s --std       [PATH]  "Path to STD assembly file"),
-            arg!(-k --keep              "Keep output assembly and object files"),
-            arg!(-x --exec_mode [INT]   "Exec mode"),
-            arg!(-O --optimise  [INT]   "Optimisation level"),
-            arg!(-E --enable    [ID]... "Enable specific optimisations"),
-            arg!(-D --disable   [ID]... "Disable specific optimisations"),
-            arg!(   [input]             "Input code to evaluate"),
-        ]);
-    let args: Vec<String> = env::args().collect();
-    let matches = cmd.try_get_matches_from(args);
-    if matches.is_err() {
-        let _ = e.write(format!("{}", matches.err().unwrap()).as_bytes());
-        std::process::exit(1);
-    }
-    let m = matches.expect("Failed to parse arguments");
-
-    Args {
-        out: m.get_one::<String>("out").unwrap_or(&String::from("oxy-out")).to_string(),
-        input: m.get_one::<String>("input").unwrap_or(&String::from("")).to_string(),
-        eval: m.get_one::<String>("eval").unwrap_or(&String::from("")).to_string(),
-        std_path: m.get_one::<String>("std")
-            .unwrap_or(&String::from("/usr/local/bin/oxy-std.asm")).to_string(),
-        exec_mode: get_int_cli_arg(&m, "exec_mode", 0),
-        optimise: get_int_cli_arg(&m, "optimise", 1),
-        keep: m.get_flag("keep"),
-        enable: m.get_many::<String>("enable").unwrap_or(ValuesRef::default())
-            .into_iter().map(|a| a.to_string()).collect(),
-        disable: m.get_many::<String>("disable").unwrap_or(ValuesRef::default())
-            .into_iter().map(|a| a.to_string()).collect()
-    }
-}
 
 fn print_usage () {
-    println!("Usage: res [options] [input]");
-    println!("Options:");
-    println!("  -o, --out  <FILE>  File name of output");
-    println!("  -e, --eval <EXP>   Compiles and prints a single expression");
-    println!("  -s, --std  <PATH>  Path to STD assembly file");
-    println!("  -x, --exec_mode <INT>  Exec mode");
+    println!("{}", get_args_cmd().render_usage());
 }
 
 fn main() -> std::io::Result<()> {

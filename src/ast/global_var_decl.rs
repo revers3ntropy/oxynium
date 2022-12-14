@@ -1,7 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::util::MutRc;
-use crate::error::{Error, syntax_error};
+use crate::error::{Error, syntax_error, type_error};
 use crate::position::Interval;
 use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
 
@@ -27,8 +27,15 @@ impl Node for GlobalConstNode<i64> {
             data: Some(format!("dq {}", self.value)),
             text: None,
             is_local: false,
-        }, false)?;
-        Ok("".to_owned())
+        })?;
+        if self.is_const {
+            Ok("".to_owned())
+        } else {
+            Ok(format!("
+                mov rax, {}
+                mov [{}], rax
+            ", self.value, self.identifier))
+        }
     }
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
@@ -71,14 +78,33 @@ impl Node for GlobalConstNode<String> {
             data: Some(format!("dq \"{}\", 0", self.value)),
             text: None,
             is_local: false,
-        }, false)?;
-        Ok("".to_owned())
+        })?;
+        let anon_id = ctx.borrow_mut().define_anon(SymbolDef {
+            name: self.identifier.clone(),
+            // ,0 is the null terminator
+            data: Some(format!("dq \"{}\", 0", self.value)),
+            text: None,
+            is_local: false,
+        })?;
+        if self.is_const {
+            Ok("".to_owned())
+        } else {
+            Ok(format!("
+                mov [{}], {anon_id}
+            ", self.identifier))
+        }
     }
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(syntax_error(format!(
                 "Invalid global variable '{}'",
+                self.identifier.clone()
+            )));
+        }
+        if !self.is_const {
+            return Err(type_error(format!(
+                "Cannot declare global variable '{}' as non-constant string",
                 self.identifier.clone()
             )));
         }

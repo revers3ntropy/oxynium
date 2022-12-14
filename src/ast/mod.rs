@@ -16,7 +16,7 @@ pub mod str;
 pub mod symbol_access;
 pub mod global_var_decl;
 pub mod mutate_var;
-pub mod for_loop;
+pub mod r#loop;
 pub mod r#break;
 pub mod r#if;
 pub mod types;

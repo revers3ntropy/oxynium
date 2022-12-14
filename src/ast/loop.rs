@@ -5,12 +5,12 @@ use crate::error::Error;
 use crate::position::Interval;
 
 #[derive(Debug)]
-pub struct ForLoopNode {
+pub struct LoopNode {
     pub statements: MutRc<dyn Node>,
     pub position: Interval
 }
 
-impl Node for ForLoopNode {
+impl Node for LoopNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         let start_lbl = ctx.borrow_mut().get_anon_label();
         let end_lbl = ctx.borrow_mut().get_anon_label();

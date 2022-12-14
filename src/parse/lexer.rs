@@ -3,7 +3,8 @@ use crate::parse::token::{Token, TokenType};
 use crate::position::Position;
 use crate::error::{Error, syntax_error};
 
-static IDENTIFIER_CHARS: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+static IDENTIFIER_CHARS: &str =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$";
 
 const SINGLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
     "+" => TokenType::Plus,
@@ -73,7 +74,7 @@ impl Lexer {
                     self.position.clone()
                 ));
 
-            } else if char::is_alphabetic(c) {
+            } else if IDENTIFIER_CHARS.contains(c) {
                 tokens.push(self.make_identifier());
 
             } else if c.is_whitespace() {

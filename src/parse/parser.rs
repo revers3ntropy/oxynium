@@ -8,7 +8,7 @@ use crate::ast::global_var_decl::GlobalConstNode;
 use crate::ast::exec_root::ExecRootNode;
 use crate::ast::fn_call::FnCallNode;
 use crate::ast::fn_declaration::{FnDeclarationNode, Parameter};
-use crate::ast::for_loop::ForLoopNode;
+use crate::ast::r#loop::LoopNode;
 use crate::ast::int::IntNode;
 use crate::ast::local_var_decl::LocalVarNode;
 use crate::ast::mutate_var::MutateVar;
@@ -780,7 +780,7 @@ impl Parser {
         let statements = res.register(self.scope(true));
         if res.error.is_some() { return res; }
 
-        res.success(new_mut_rc(ForLoopNode {
+        res.success(new_mut_rc(LoopNode {
             statements: statements.unwrap(),
             position: (start, self.last_tok().unwrap().end.clone()),
         }));
