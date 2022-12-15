@@ -21,6 +21,7 @@ use crate::ast::r#return::ReturnNode;
 use crate::ast::statements::StatementsNode;
 use crate::ast::str::StrNode;
 use crate::ast::struct_declaration::{StructDeclarationNode, StructField};
+use crate::ast::struct_init::StructInitNode;
 use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::type_expr::TypeNode;
 use crate::context::Context;
@@ -83,15 +84,19 @@ impl Parser {
     }
 
     fn consume(&mut self, res: &mut ParseResults, tok_type: TokenType) -> Token {
+        return self.consume_one_of(res, vec![tok_type]);
+    }
+
+    fn consume_one_of(&mut self, res: &mut ParseResults, tok_types: Vec<TokenType>) -> Token {
         if let Some(tok) = self.current_tok() {
-            if tok.token_type == tok_type {
+            if tok_types.contains(&tok.token_type) {
                 self.advance(res);
                 return tok;
             }
 
             let err = syntax_error(format!(
                 "Expected token type: {:?}, got: {:?}",
-                tok_type,
+                tok_types,
                 tok.token_type
             ));
             res.failure(err,
@@ -102,7 +107,7 @@ impl Parser {
 
         res.failure(syntax_error(format!(
             "Unexpected EOF, expected {:?}",
-            tok_type
+            tok_types
         )),
             Some(self.tokens[self.tok_idx-1].start.clone()),
             Some(self.tokens[self.tok_idx-1].end.clone())
@@ -762,6 +767,9 @@ impl Parser {
                     if next.token_type == TokenType::Equals {
                         return self.assign(tok);
                     }
+                    if next.token_type == TokenType::OpenBrace {
+                        return self.struct_init(tok);
+                    }
                 }
 
                 res.success(new_mut_rc(SymbolAccess {
@@ -1045,6 +1053,64 @@ impl Parser {
 
         res.success(new_mut_rc(StructDeclarationNode {
             identifier,
+            fields,
+            position: (start, self.last_tok().unwrap().end.clone()),
+        }));
+        res
+    }
+
+    fn struct_init_field(&mut self) -> Result<(String, MutRc<dyn Node>), Error> {
+        let mut res = ParseResults::new();
+
+        let identifier = self.consume(&mut res, TokenType::Identifier);
+        if res.error.is_some() { return Err(res.error.unwrap()); }
+
+        self.consume(&mut res, TokenType::Colon);
+        if res.error.is_some() { return Err(res.error.unwrap()); }
+
+        let value = res.register(self.expression());
+        if res.error.is_some() { return Err(res.error.unwrap()); }
+
+        Ok((
+            identifier.literal.unwrap(),
+            value.unwrap()
+        ))
+    }
+
+    fn struct_init(&mut self, identifier_tok: Token) -> ParseResults {
+        let mut res = ParseResults::new();
+        let start = identifier_tok.start;
+
+        self.consume(&mut res, TokenType::OpenBrace);
+        if res.error.is_some() { return res; }
+
+        let mut fields = Vec::new();
+
+        while let Some(next) = self.current_tok() {
+            if next.token_type == TokenType::CloseBrace {
+                break;
+            }
+
+            let field = self.struct_init_field();
+            if field.is_err() {
+                // don't override more precise position of error
+                res.failure(field.err().unwrap(), None, None);
+                return res;
+            }
+            fields.push(field.unwrap());
+
+            if self.peak_matches(TokenType::CloseBrace, None) {
+                break
+            }
+            self.consume(&mut res, TokenType::Comma);
+            if res.error.is_some() { return res; }
+        }
+
+        self.consume(&mut res, TokenType::CloseBrace);
+        if res.error.is_some() { return res; }
+
+        res.success(new_mut_rc(StructInitNode {
+            identifier: identifier_tok.literal.unwrap(),
             fields,
             position: (start, self.last_tok().unwrap().end.clone()),
         }));
