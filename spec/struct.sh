@@ -7,8 +7,8 @@ expect '' '
 '
 expect '' '
     struct S {
-        x: Int;
-        y: Int;
+        x: Int,
+        y: Int
     };
 '
 
@@ -17,8 +17,8 @@ describe 'Struct Instantiation'
 
 expect '' '
     struct S {
-        x: Int;
-        y: Int;
+        x: Int,
+        y: Int,
     };
     new S { x: 1, y: 2 };
 '
@@ -28,17 +28,13 @@ describe 'Struct Field Access'
 
 expect '1' '
     struct S {
-        x: Int;
+        x: Int
     };
     print_int(new S { x: 1 }.x);
 '
 expect '456' '
-    struct S {
-        x: Int;
-    };
-    struct S2 {
-        s: S;
-    };
+    struct S { x: Int, };
+    struct S2 { s: S };
     // different bracket permutations
     print_int(new S2 { s: new S { x: 4 }}.s.x);
     print_int((new S2 { s: new S { x: 5 }}).s.x);
@@ -46,8 +42,8 @@ expect '456' '
 '
 expect '9hi' '
     struct S {
-        x: Int;
-        y: Str;
+        x: Int,
+        y: Str
     };
     fn f () {
         let s = new S { x: 9, y: "hi" };
@@ -55,4 +51,37 @@ expect '9hi' '
         print(s.y);
     };
     f();
+'
+
+expect_err 'TypeError' '
+    struct S { x: Int };
+    new S {};
+'
+expect_err 'TypeError' '
+    struct S { x: Int };
+    new S { y: 1 };
+'
+expect_err 'TypeError' '
+    struct S { x: Int };
+    new S { x: "hi" };
+'
+expect_err 'TypeError' '
+    struct S { x: Int };
+    new S { x: 1, y: 2 };
+'
+expect_err 'UnknownSymbolError' '
+    struct S { s: S };
+'
+expect_err 'TypeError' '
+    struct S { x: Int };
+    struct S2 { s: S };
+    new S2 { s: new S { x: "hi" } };
+'
+expect_err 'TypeError' '
+    struct S { x: Int };
+    new S { x: 1 }.y;
+'
+expect_err 'TypeError' '
+    struct S { x: Int };
+    print(new S { x: 1 }.x);
 '

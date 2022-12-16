@@ -1241,8 +1241,11 @@ impl Parser {
                 return res;
             }
             fields.push(field.unwrap());
+            if self.peak_matches(TokenType::CloseBrace, None) {
+                break;
+            }
 
-            self.consume(&mut res, TokenType::EndStatement);
+            self.consume(&mut res, TokenType::Comma);
             if res.error.is_some() {
                 return res;
             }
