@@ -1,6 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{Error, type_error, unknown_symbol};
+use crate::error::{type_error, unknown_symbol, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::util::MutRc;
@@ -23,10 +23,14 @@ impl Node for TypeNode {
         }
         if !ctx.borrow_mut().get_dec_from_id(&self.id())?.is_type {
             return Err(type_error(format!(
-                "'{}' cannot be used as a type", self.id()
+                "'{}' cannot be used as a type",
+                self.id()
             )));
         }
-        Ok((ctx.borrow_mut().get_dec_from_id(&self.id())?.type_.clone(), None))
+        Ok((
+            ctx.borrow_mut().get_dec_from_id(&self.id())?.type_.clone(),
+            None,
+        ))
     }
 
     fn pos(&mut self) -> Interval {

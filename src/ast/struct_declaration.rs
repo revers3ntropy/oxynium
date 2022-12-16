@@ -1,11 +1,11 @@
-use std::rc::Rc;
-use crate::ast::{Node, TypeCheckRes};
 use crate::ast::types::r#struct::{StructFieldType, StructType};
-use crate::error::{Error, unknown_symbol};
-use crate::symbols::{is_valid_identifier, SymbolDec};
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
+use crate::error::{unknown_symbol, Error};
 use crate::position::Interval;
+use crate::symbols::{is_valid_identifier, SymbolDec};
 use crate::util::MutRc;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct StructField {
@@ -26,17 +26,21 @@ impl Node for StructDeclarationNode {
             return Err(unknown_symbol(self.identifier.clone()));
         }
 
-        let fields = self.fields.iter().map(|field| {
-            let type_ = field.type_.borrow_mut().type_check(ctx.clone())?;
-            Ok(StructFieldType {
-                name: field.identifier.clone(),
-                type_: type_.0,
+        let fields = self
+            .fields
+            .iter()
+            .map(|field| {
+                let type_ = field.type_.borrow_mut().type_check(ctx.clone())?;
+                Ok(StructFieldType {
+                    name: field.identifier.clone(),
+                    type_: type_.0,
+                })
             })
-        }).collect::<Result<Vec<StructFieldType>, Error>>()?;
+            .collect::<Result<Vec<StructFieldType>, Error>>()?;
 
         let this_type = Rc::new(StructType {
             name: self.identifier.clone(),
-            fields
+            fields,
         });
 
         ctx.borrow_mut().declare(SymbolDec {

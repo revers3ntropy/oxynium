@@ -1,16 +1,16 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::util::MutRc;
-use crate::error::{Error, syntax_error};
+use crate::error::{syntax_error, Error};
 use crate::position::Interval;
 use crate::symbols::{is_valid_identifier, SymbolDec};
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct EmptyLocalVarNode {
     pub identifier: String,
     pub local_var_idx: usize,
     pub type_: MutRc<dyn Node>,
-    pub position: Interval
+    pub position: Interval,
 }
 
 impl Node for EmptyLocalVarNode {
@@ -29,7 +29,8 @@ impl Node for EmptyLocalVarNode {
             return Err(syntax_error(format!(
                 "Invalid local variable '{}'",
                 self.identifier.clone()
-            )).set_interval(self.position.clone()));
+            ))
+            .set_interval(self.position.clone()));
         }
         self.local_var_idx = ctx.borrow_mut().get_declarations().len();
 
@@ -37,12 +38,12 @@ impl Node for EmptyLocalVarNode {
 
         ctx.borrow_mut().declare(SymbolDec {
             name: self.identifier.clone(),
-            id: format!("qword [rbp - {}]", (self.local_var_idx+1) * 8),
+            id: format!("qword [rbp - {}]", (self.local_var_idx + 1) * 8),
             is_constant: false,
             is_type: false,
             require_init: true,
             is_defined: false,
-            type_: type_.clone()
+            type_: type_.clone(),
         })?;
         Ok((type_.clone(), None))
     }
@@ -51,4 +52,3 @@ impl Node for EmptyLocalVarNode {
         self.position.clone()
     }
 }
-

@@ -38,7 +38,7 @@ impl Position {
         if self.idx == -2 {
             "<unknown>".to_string()
         } else {
-            format!("'{}' {}:{}", self.file, self.line+1, self.col+1)
+            format!("'{}' {}:{}", self.file, self.line + 1, self.col + 1)
         }
     }
 }

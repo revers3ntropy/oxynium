@@ -1,14 +1,14 @@
+use crate::ast::types::Type;
+use crate::ast::Node;
+use crate::util::MutRc;
 use std::fmt;
 use std::rc::Rc;
-use crate::ast::Node;
-use crate::ast::types::Type;
-use crate::util::MutRc;
 
 #[derive(Clone, Debug)]
 pub struct FnParamType {
     pub name: String,
     pub type_: Rc<dyn Type>,
-    pub default_value: Option<MutRc<dyn Node>>
+    pub default_value: Option<MutRc<dyn Node>>,
 }
 impl FnParamType {
     fn str(&self) -> String {
@@ -28,12 +28,15 @@ pub struct FnType {
 }
 
 impl Type for FnType {
-    fn is_ptr(&self) -> bool { true }
+    fn is_ptr(&self) -> bool {
+        true
+    }
     fn str(&self) -> String {
         format!(
             "Fn {}({}): {}",
             self.name,
-            self.parameters.iter()
+            self.parameters
+                .iter()
                 .map(|p| p.str())
                 .collect::<Vec<String>>()
                 .join(", "),
@@ -49,11 +52,16 @@ impl Type for FnType {
 
             let required_args = self.parameters.iter().filter(|a| a.default_value.is_none());
 
-            if fn_type.parameters.len() < required_args.count() || fn_type.parameters.len() > self.parameters.len() {
+            if fn_type.parameters.len() < required_args.count()
+                || fn_type.parameters.len() > self.parameters.len()
+            {
                 return false;
             }
             for i in 0..fn_type.parameters.len() {
-                if !self.parameters[i].type_.contains(fn_type.parameters[i].type_.clone()) {
+                if !self.parameters[i]
+                    .type_
+                    .contains(fn_type.parameters[i].type_.clone())
+                {
                     return false;
                 }
             }

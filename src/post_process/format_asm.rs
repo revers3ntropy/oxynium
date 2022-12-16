@@ -1,6 +1,6 @@
-use regex::Regex;
-use crate::Args;
 use crate::post_process::optimise::optimise;
+use crate::Args;
+use regex::Regex;
 
 fn parse_asm_lines(asm: String) -> Vec<String> {
     let mut output = Vec::new();

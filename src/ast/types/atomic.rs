@@ -1,6 +1,6 @@
+use crate::ast::types::Type;
 use std::fmt;
 use std::rc::Rc;
-use crate::ast::types::Type;
 
 #[derive(Clone)]
 pub struct AtomicType {
@@ -10,7 +10,9 @@ pub struct AtomicType {
 }
 
 impl Type for AtomicType {
-    fn is_ptr(&self) -> bool { self.is_ptr }
+    fn is_ptr(&self) -> bool {
+        self.is_ptr
+    }
     fn str(&self) -> String {
         format!("{}", self.name)
     }

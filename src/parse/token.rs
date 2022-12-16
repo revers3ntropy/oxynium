@@ -39,7 +39,12 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, literal: Option<String>, start: Position, end: Position) -> Token {
+    pub fn new(
+        token_type: TokenType,
+        literal: Option<String>,
+        start: Position,
+        end: Position,
+    ) -> Token {
         Token {
             token_type,
             literal,
@@ -67,8 +72,7 @@ impl Token {
             TokenType::CloseParen => ")".to_string(),
             TokenType::Ampersand => "&".to_string(),
             TokenType::Percent => "%".to_string(),
-            TokenType::Identifier
-            | TokenType::Int => self.literal.as_ref().unwrap().clone(),
+            TokenType::Identifier | TokenType::Int => self.literal.as_ref().unwrap().clone(),
             TokenType::Comma => ",".to_string(),
             TokenType::EndStatement => ";".to_string(),
             TokenType::String => format!("\"{}\"", self.literal.as_ref().unwrap().clone()),

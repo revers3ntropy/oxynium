@@ -1,12 +1,11 @@
+use crate::ast::types::Type;
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
-use crate::ast::types::Type;
-
 
 #[derive(Clone)]
 pub struct InstanceType {
-    pub struct_type: Rc<dyn Type>
+    pub struct_type: Rc<dyn Type>,
 }
 
 impl Debug for InstanceType {
@@ -16,12 +15,11 @@ impl Debug for InstanceType {
 }
 
 impl Type for InstanceType {
-    fn is_ptr(&self) -> bool { true }
+    fn is_ptr(&self) -> bool {
+        true
+    }
     fn str(&self) -> String {
-        format!(
-            "Instance of {}",
-            self.struct_type.str()
-        )
+        format!("Instance of {}", self.struct_type.str())
     }
 
     fn contains(&self, t: Rc<dyn Type>) -> bool {

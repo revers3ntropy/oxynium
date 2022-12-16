@@ -1,9 +1,9 @@
+use crate::ast::STD_ASM;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::util::MutRc;
 use crate::error::Error;
-use crate::ast::STD_ASM;
 use crate::position::Interval;
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct ExecRootNode {
@@ -15,25 +15,32 @@ impl Node for ExecRootNode {
         let res = self.statements.borrow_mut().asm(ctx.clone())?;
         let mut_ref = ctx.borrow_mut();
         let (data_decls, text_decls) = mut_ref.get_definitions();
-        let data = data_decls.iter().map(|k| {
-            format!("{} {}", k.name, k.data.as_ref().unwrap())
-        }).collect::<Vec<String>>().join("\n");
+        let data = data_decls
+            .iter()
+            .map(|k| format!("{} {}", k.name, k.data.as_ref().unwrap()))
+            .collect::<Vec<String>>()
+            .join("\n");
 
-        let text = text_decls.iter().map(|k| {
-            format!("{}: \n{}", k.name, k.text.as_ref().unwrap())
-        }).collect::<Vec<String>>().join("\n");
+        let text = text_decls
+            .iter()
+            .map(|k| format!("{}: \n{}", k.name, k.text.as_ref().unwrap()))
+            .collect::<Vec<String>>()
+            .join("\n");
 
         if mut_ref.exec_mode == 1 {
-            return Ok(format!("
+            return Ok(format!(
+                "
                 section	.note.GNU-stack
                 section .data
                     {data}
                 section .text
                     {text}
-            "));
+            "
+            ));
         }
 
-        Ok(format!("
+        Ok(format!(
+            "
             %include \"{}\"
             section	.note.GNU-stack
             section .data
@@ -48,7 +55,9 @@ impl Node for ExecRootNode {
                 mov rsp, rbp
                 push 0
                 call exit
-        ", mut_ref.std_asm_path))
+        ",
+            mut_ref.std_asm_path
+        ))
     }
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {

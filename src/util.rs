@@ -9,12 +9,9 @@ pub fn new_mut_rc<T>(t: T) -> MutRc<T> {
     Rc::new(RefCell::new(t))
 }
 
-pub fn keys_match<T: Eq + Hash, U, V>(
-    map1: &HashMap<T, U>,
-    map2: &HashMap<T, V>,
-) -> bool {
-    map1.len() == map2.len() && map1.keys().all(|k| map2.contains_key(k))
-}
+// pub fn keys_match<T: Eq + Hash, U, V>(map1: &HashMap<T, U>, map2: &HashMap<T, V>) -> bool {
+//     map1.len() == map2.len() && map1.keys().all(|k| map2.contains_key(k))
+// }
 
 pub fn intersection<T: Eq + Hash + Clone, U, V>(
     map1: &HashMap<T, U>,

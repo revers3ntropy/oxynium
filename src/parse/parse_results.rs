@@ -20,7 +20,7 @@ impl ParseResults {
             error: None,
             reverse_count: 0,
             last_registered_advance_count: 0,
-            advance_count: 0
+            advance_count: 0,
         }
     }
 
@@ -38,7 +38,7 @@ impl ParseResults {
         res.node
     }
 
-    pub fn try_register (&mut self, res: ParseResults) -> Option<MutRc<dyn Node>> {
+    pub fn try_register(&mut self, res: ParseResults) -> Option<MutRc<dyn Node>> {
         if res.error.is_some() {
             self.reverse_count += res.advance_count;
             return None;
@@ -51,10 +51,15 @@ impl ParseResults {
         self
     }
 
-    pub fn failure(&mut self, mut error: Error, start: Option<Position>, end: Option<Position>) -> &ParseResults {
+    pub fn failure(
+        &mut self,
+        mut error: Error,
+        start: Option<Position>,
+        end: Option<Position>,
+    ) -> &ParseResults {
         error.set_pos(
             start.unwrap_or(Position::unknown()),
-            end.unwrap_or(Position::unknown())
+            end.unwrap_or(Position::unknown()),
         );
         self.error = Some(error);
         self

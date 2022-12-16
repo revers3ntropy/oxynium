@@ -1,9 +1,9 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::util::MutRc;
-use crate::error::{Error, syntax_error};
+use crate::error::{syntax_error, Error};
 use crate::position::Interval;
 use crate::symbols::{is_valid_identifier, SymbolDec};
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct EmptyGlobalConstNode {
@@ -11,7 +11,7 @@ pub struct EmptyGlobalConstNode {
     pub type_: MutRc<dyn Node>,
     pub is_const: bool,
     pub is_external: bool,
-    pub position: Interval
+    pub position: Interval,
 }
 
 impl Node for EmptyGlobalConstNode {
@@ -19,7 +19,11 @@ impl Node for EmptyGlobalConstNode {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare global {} '{}' inside function. Try using 'let' instead.",
-                if self.is_const { "constant" } else { "variable" },
+                if self.is_const {
+                    "constant"
+                } else {
+                    "variable"
+                },
                 self.identifier
             )));
         }
@@ -48,9 +52,12 @@ impl Node for EmptyGlobalConstNode {
             is_type: false,
             require_init: !self.is_external,
             is_defined: false,
-            type_
+            type_,
         })?;
-        Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), None))
+        Ok((
+            ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),
+            None,
+        ))
     }
 
     fn pos(&mut self) -> Interval {

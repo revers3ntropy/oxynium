@@ -1,12 +1,11 @@
-use phf::phf_map;
+use crate::error::{syntax_error, Error};
 use crate::parse::token::{Token, TokenType};
 use crate::position::Position;
-use crate::error::{Error, syntax_error};
+use phf::phf_map;
 
-static IDENTIFIER_CHARS: &str =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$";
+static IDENTIFIER_CHARS: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$";
 
-const SINGLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
+const SINGLE_CHAR_TOKENS: phf::Map<&'static str, TokenType> = phf_map! {
     "+" => TokenType::Plus,
     "-" => TokenType::Sub,
     "*" => TokenType::Astrix,
@@ -26,7 +25,7 @@ const SINGLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
     ":" => TokenType::Colon,
 };
 
-const DOUBLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
+const DOUBLE_CHAR_TOKENS: phf::Map<&'static str, TokenType> = phf_map! {
     "||" => TokenType::Or,
     "&&" => TokenType::And,
     ">=" => TokenType::GTE,
@@ -38,16 +37,16 @@ const DOUBLE_CHAR_TOKENS:  phf::Map<&'static str, TokenType> = phf_map! {
 pub struct Lexer {
     input: String,
     position: Position,
-    current_char: Option<char>
+    current_char: Option<char>,
 }
 
 impl Lexer {
     pub fn new(input: String, file_name: String) -> Lexer {
-       Lexer {
-           input,
-           position: Position::new(file_name, -1, 0, -1),
-           current_char: None
-       }
+        Lexer {
+            input,
+            position: Position::new(file_name, -1, 0, -1),
+            current_char: None,
+        }
     }
 
     pub fn lex(&mut self) -> Result<Vec<Token>, Error> {
@@ -61,6 +60,7 @@ impl Lexer {
 
         while let Some(c) = self.current_char {
             if char::is_numeric(c) {
+                let start = self.position.clone();
                 // build a number while we can
                 let mut number = String::new();
                 while self.current_char.is_some() && self.current_char.unwrap().is_numeric() {
@@ -70,58 +70,55 @@ impl Lexer {
                 tokens.push(Token::new(
                     TokenType::Int,
                     Some(number),
+                    start,
                     self.position.clone(),
-                    self.position.clone()
                 ));
-
             } else if IDENTIFIER_CHARS.contains(c) {
                 tokens.push(self.make_identifier());
-
             } else if c.is_whitespace() {
                 self.advance();
-
             } else if c == '"' {
                 tokens.push(self.make_string());
-
-            } else if c == '/' &&
-                self.input.chars().nth((self.position.idx + 1) as usize) == Some('/')
+            } else if c == '/'
+                && self.input.chars().nth((self.position.idx + 1) as usize) == Some('/')
             {
                 self.advance();
                 while self.current_char.is_some() && self.current_char.unwrap() != '\n' {
                     self.advance();
                 }
-
-            } else if DOUBLE_CHAR_TOKENS.contains_key(&(
-                c.to_string() +
-                    &self.input.chars()
+            } else if DOUBLE_CHAR_TOKENS.contains_key(
+                &(c.to_string()
+                    + &self
+                        .input
+                        .chars()
                         .nth((self.position.idx + 1) as usize)
                         .unwrap_or('\0')
-                        .to_string()
-            )) {
+                        .to_string()),
+            ) {
+                let start = self.position.clone();
                 tokens.push(Token::new(
-                    DOUBLE_CHAR_TOKENS[&(
-                        c.to_string() +
-                            &self.input.chars()
-                                .nth((self.position.idx + 1) as usize)
-                                .unwrap_or('\0')
-                                .to_string())
-                        ],
+                    DOUBLE_CHAR_TOKENS[&(c.to_string()
+                        + &self
+                            .input
+                            .chars()
+                            .nth((self.position.idx + 1) as usize)
+                            .unwrap_or('\0')
+                            .to_string())],
                     None,
+                    start,
                     self.position.clone(),
-                    self.position.clone()
                 ));
                 self.advance();
                 self.advance();
-
             } else if SINGLE_CHAR_TOKENS.contains_key(&c.to_string()) {
+                let start = self.position.clone();
                 tokens.push(Token::new(
                     SINGLE_CHAR_TOKENS[&c.to_string()],
                     None,
+                    start,
                     self.position.clone(),
-                    self.position.clone()
                 ));
                 self.advance();
-
             } else {
                 return Err(syntax_error(format!("Unexpected character '{}'", c)));
             }
@@ -146,9 +143,7 @@ impl Lexer {
     fn make_identifier(&mut self) -> Token {
         let mut identifier = String::new();
         let start = self.position.clone();
-        while self.current_char.is_some() &&
-            IDENTIFIER_CHARS.contains(self.current_char.unwrap())
-        {
+        while self.current_char.is_some() && IDENTIFIER_CHARS.contains(self.current_char.unwrap()) {
             identifier.push(self.current_char.unwrap());
             self.advance();
         }
@@ -156,7 +151,7 @@ impl Lexer {
             TokenType::Identifier,
             Some(identifier),
             start,
-            self.position.clone()
+            self.position.clone(),
         )
     }
 
@@ -173,7 +168,7 @@ impl Lexer {
             TokenType::String,
             Some(string),
             start,
-            self.position.clone()
+            self.position.clone(),
         )
     }
 }

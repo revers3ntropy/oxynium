@@ -1,15 +1,15 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::util::MutRc;
-use crate::error::{Error, type_error};
+use crate::error::{type_error, Error};
 use crate::position::Interval;
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct IfNode {
     pub comparison: MutRc<dyn Node>,
     pub body: MutRc<dyn Node>,
     pub else_body: Option<MutRc<dyn Node>>,
-    pub position: Interval
+    pub position: Interval,
 }
 
 impl Node for IfNode {
@@ -19,10 +19,16 @@ impl Node for IfNode {
         let after_lbl = ctx.borrow_mut().get_anon_label();
 
         if self.else_body.is_some() {
-            let else_body = self.else_body.take().unwrap().borrow_mut().asm(ctx.clone())?;
+            let else_body = self
+                .else_body
+                .take()
+                .unwrap()
+                .borrow_mut()
+                .asm(ctx.clone())?;
             let else_lbl = ctx.borrow_mut().get_anon_label();
 
-            Ok(format!("
+            Ok(format!(
+                "
                 {comp}
                 pop rax
                 test rax, rax     ; if evaluates to false, don't do body
@@ -32,16 +38,19 @@ impl Node for IfNode {
                 {else_lbl}:
                 {else_body}
                 {after_lbl}:
-            "))
+            "
+            ))
         } else {
-            Ok(format!("
+            Ok(format!(
+                "
                 {comp}
                 pop rax
                 test rax, rax     ; if evaluates to false, don't do body
                 je {after_lbl}
                 {body}
                 {after_lbl}:
-            "))
+            "
+            ))
         }
     }
 
@@ -49,9 +58,14 @@ impl Node for IfNode {
         let (_, mut body_ret_type) = self.body.borrow_mut().type_check(ctx.clone())?;
 
         let (comp_type, _) = self.comparison.borrow_mut().type_check(ctx.clone())?;
-        if !ctx.borrow_mut().get_dec_from_id("Bool")?.type_.contains(comp_type) {
+        if !ctx
+            .borrow_mut()
+            .get_dec_from_id("Bool")?
+            .type_
+            .contains(comp_type)
+        {
             return Err(type_error("if condition must be a bool".to_string())
-                .set_interval(self.comparison.borrow_mut().pos()))
+                .set_interval(self.comparison.borrow_mut().pos()));
         }
 
         if self.else_body.is_some() {
@@ -64,7 +78,8 @@ impl Node for IfNode {
                     if !body_ret.contains(else_ret_type.clone()) {
                         return Err(type_error(format!(
                             "if statement branches cannot return different types: {} and {}",
-                            body_ret.str(), else_ret_type.str()
+                            body_ret.str(),
+                            else_ret_type.str()
                         )));
                     }
                 }
@@ -73,7 +88,10 @@ impl Node for IfNode {
                 body_ret_type = else_ret_type;
             }
         }
-        Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), body_ret_type))
+        Ok((
+            ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),
+            body_ret_type,
+        ))
     }
 
     fn pos(&mut self) -> Interval {

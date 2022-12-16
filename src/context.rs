@@ -1,10 +1,10 @@
+use crate::ast::ANON_PREFIX;
+use crate::error::{type_error, Error};
+use crate::symbols::{SymbolDec, SymbolDef};
+use crate::util::{new_mut_rc, MutRc};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use crate::ast::ANON_PREFIX;
-use crate::error::{Error, type_error};
-use crate::symbols::{SymbolDec, SymbolDef};
-use crate::util::{MutRc, new_mut_rc};
 
 #[derive(Debug, Clone)]
 pub struct CallStackFrame {
@@ -65,7 +65,6 @@ impl Context {
         }
     }
 
-
     // Generate unique identifiers (use root context)
 
     pub fn get_anon_label(&mut self) -> String {
@@ -77,7 +76,6 @@ impl Context {
         symbol
     }
 
-
     // Declarations
 
     pub fn declare(&mut self, symbol: SymbolDec) -> Result<(), Error> {
@@ -86,7 +84,10 @@ impl Context {
         }
         if let Some(duplicate) = self.declarations.get(symbol.name.clone().as_str()) {
             if !self.allow_overrides || !duplicate.contains(&symbol) {
-                return Err(type_error(format!("Symbol {} is already declared", symbol.name)))
+                return Err(type_error(format!(
+                    "Symbol {} is already declared",
+                    symbol.name
+                )));
             }
         }
         self.declarations.insert(symbol.name.clone(), symbol);
@@ -96,7 +97,11 @@ impl Context {
         if self.declarations.get(id).is_some() {
             true
         } else if self.parent.is_some() {
-            self.parent.as_ref().unwrap().borrow_mut().has_dec_with_id(id)
+            self.parent
+                .as_ref()
+                .unwrap()
+                .borrow_mut()
+                .has_dec_with_id(id)
         } else {
             false
         }
@@ -105,7 +110,11 @@ impl Context {
         if self.declarations.get(id).is_some() {
             Ok(self.declarations.get(id).unwrap().clone())
         } else if self.parent.is_some() {
-            self.parent.as_ref().unwrap().borrow_mut().get_dec_from_id(id)
+            self.parent
+                .as_ref()
+                .unwrap()
+                .borrow_mut()
+                .get_dec_from_id(id)
         } else {
             Err(type_error(format!("Symbol {} is not declared", id)))
         }
@@ -124,12 +133,15 @@ impl Context {
             self.declarations.insert(id.to_string(), dec);
             Ok(())
         } else if self.parent.is_some() {
-            self.parent.as_ref().unwrap().borrow_mut().set_dec_as_defined(id)
+            self.parent
+                .as_ref()
+                .unwrap()
+                .borrow_mut()
+                .set_dec_as_defined(id)
         } else {
             Err(type_error(format!("Symbol {} is not declared", id)))
         }
     }
-
 
     // Definitions
 
@@ -138,10 +150,20 @@ impl Context {
             return self.parent.as_ref().unwrap().borrow_mut().define(symbol);
         }
         if self.definitions.get(symbol.name.clone().as_str()).is_some() {
-            return Err(type_error(format!("Symbol {} is already defined", symbol.name)))
+            return Err(type_error(format!(
+                "Symbol {} is already defined",
+                symbol.name
+            )));
         }
-        if !self.declarations.get(symbol.name.clone().as_str()).is_some() {
-            return Err(type_error(format!("Symbol {} is not declared", symbol.name)))
+        if !self
+            .declarations
+            .get(symbol.name.clone().as_str())
+            .is_some()
+        {
+            return Err(type_error(format!(
+                "Symbol {} is not declared",
+                symbol.name
+            )));
         }
         let name = symbol.name.clone();
         self.definitions.insert(name.clone(), symbol);
@@ -149,11 +171,19 @@ impl Context {
     }
     pub fn define_anon(&mut self, mut symbol: SymbolDef) -> Result<String, Error> {
         if self.parent.is_some() {
-            return self.parent.as_ref().unwrap().borrow_mut().define_anon(symbol);
+            return self
+                .parent
+                .as_ref()
+                .unwrap()
+                .borrow_mut()
+                .define_anon(symbol);
         }
         symbol.name = self.get_anon_label();
         if self.definitions.get(symbol.name.clone().as_str()).is_some() {
-            return Err(type_error(format!("Symbol {} is already defined", symbol.name)))
+            return Err(type_error(format!(
+                "Symbol {} is already defined",
+                symbol.name
+            )));
         }
         let name = symbol.name.clone();
         self.definitions.insert(name.clone(), symbol);
@@ -173,14 +203,11 @@ impl Context {
         (data, text)
     }
 
-
     // Loop labels
 
     pub fn loop_labels_push(&mut self, start: String, end: String) {
         if self.parent.is_some() {
-            return self.with_root(&mut |ctx| {
-                ctx.loop_labels_push(start.clone(), end.clone())
-            });
+            return self.with_root(&mut |ctx| ctx.loop_labels_push(start.clone(), end.clone()));
         }
         self.loop_label_stack.push((start, end));
     }
@@ -199,14 +226,11 @@ impl Context {
         self.loop_label_stack.last().cloned()
     }
 
-
     // Stack Frames
 
     pub fn stack_frame_push(&mut self, frame: CallStackFrame) {
         if self.parent.is_some() {
-            return self.with_root(&mut |ctx| {
-                ctx.stack_frame_push(frame.clone())
-            });
+            return self.with_root(&mut |ctx| ctx.stack_frame_push(frame.clone()));
         }
         self.call_stack.push(frame);
     }

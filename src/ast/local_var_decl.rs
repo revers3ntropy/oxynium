@@ -1,10 +1,10 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::util::MutRc;
-use crate::error::{Error, syntax_error};
+use crate::error::{syntax_error, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::{is_valid_identifier, SymbolDec};
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct LocalVarNode {
@@ -28,36 +28,43 @@ impl Node for LocalVarNode {
                 self.identifier.literal.as_ref().unwrap()
             )));
         }
-        Ok(format!("
+        Ok(format!(
+            "
             {}
             pop rax
             mov qword [rbp - {}], rax
-        ", self.value.borrow_mut().asm(ctx)?, (self.local_var_idx+1) * 8))
+        ",
+            self.value.borrow_mut().asm(ctx)?,
+            (self.local_var_idx + 1) * 8
+        ))
     }
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.id()) {
-            return Err(syntax_error(format!(
-                "Invalid local variable '{}'",
-                self.id()
-            )).set_interval(self.identifier.interval()));
+            return Err(
+                syntax_error(format!("Invalid local variable '{}'", self.id()))
+                    .set_interval(self.identifier.interval()),
+            );
         }
         let (type_, _) = self.value.borrow_mut().type_check(ctx.clone())?;
         self.local_var_idx = ctx.borrow_mut().get_declarations().len();
 
         ctx.borrow_mut().declare(SymbolDec {
             name: self.id(),
-            id: format!("qword [rbp - {}]", (self.local_var_idx+1) * 8),
+            id: format!("qword [rbp - {}]", (self.local_var_idx + 1) * 8),
             is_constant: !self.mutable,
             is_type: false,
             require_init: true,
             is_defined: true,
-            type_: type_.clone()
+            type_: type_.clone(),
         })?;
         Ok((type_.clone(), None))
     }
 
     fn pos(&mut self) -> Interval {
-        (self.identifier.start.clone(), self.value.borrow_mut().pos().1)
+        (
+            self.identifier.start.clone(),
+            self.value.borrow_mut().pos().1,
+        )
     }
 }

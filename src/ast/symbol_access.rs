@@ -1,6 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{Error, type_error, unknown_symbol};
+use crate::error::{type_error, unknown_symbol, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::is_valid_identifier;
@@ -8,7 +8,7 @@ use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct SymbolAccess {
-    pub identifier: Token
+    pub identifier: Token,
 }
 
 impl SymbolAccess {
@@ -27,9 +27,12 @@ impl Node for SymbolAccess {
             )));
         }
 
-        Ok(format!("
+        Ok(format!(
+            "
             push {}
-        ", ctx.borrow_mut().get_dec_from_id(&self.id())?.id))
+        ",
+            ctx.borrow_mut().get_dec_from_id(&self.id())?.id
+        ))
     }
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
@@ -37,14 +40,21 @@ impl Node for SymbolAccess {
             return Err(unknown_symbol(self.id()));
         }
         if !ctx.borrow_mut().has_dec_with_id(&self.id()) {
-            return Err(unknown_symbol(format!("Symbol '{}' does not exist", self.id())));
+            return Err(unknown_symbol(format!(
+                "Symbol '{}' does not exist",
+                self.id()
+            )));
         }
         if ctx.borrow_mut().get_dec_from_id(&self.id())?.is_type {
             return Err(type_error(format!(
-                "'{}' is a type and does not exist at runtime", self.id()
+                "'{}' is a type and does not exist at runtime",
+                self.id()
             )));
         }
-        Ok((ctx.borrow_mut().get_dec_from_id(&self.id())?.type_.clone(), None))
+        Ok((
+            ctx.borrow_mut().get_dec_from_id(&self.id())?.type_.clone(),
+            None,
+        ))
     }
 
     fn pos(&mut self) -> Interval {

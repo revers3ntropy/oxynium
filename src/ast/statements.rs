@@ -1,13 +1,13 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{Error, type_error};
+use crate::error::{type_error, Error};
 use crate::position::Interval;
 use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct StatementsNode {
     pub statements: Vec<MutRc<dyn Node>>,
-    pub src: Vec<String>
+    pub src: Vec<String>,
 }
 
 impl Node for StatementsNode {
@@ -37,7 +37,10 @@ impl Node for StatementsNode {
             }
         }
         if ret_types.len() < 1 {
-            return Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), None));
+            return Ok((
+                ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),
+                None,
+            ));
         }
 
         for ret_type in ret_types.iter() {
@@ -50,7 +53,12 @@ impl Node for StatementsNode {
     }
 
     fn pos(&mut self) -> Interval {
-        (self.statements[0].borrow_mut().pos().0,
-         self.statements[self.statements.len() - 1].borrow_mut().pos().1)
+        (
+            self.statements[0].borrow_mut().pos().0,
+            self.statements[self.statements.len() - 1]
+                .borrow_mut()
+                .pos()
+                .1,
+        )
     }
 }

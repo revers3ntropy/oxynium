@@ -1,16 +1,16 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::util::MutRc;
-use crate::error::{Error, syntax_error, type_error};
+use crate::error::{syntax_error, type_error, Error};
 use crate::position::Interval;
 use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct GlobalConstNode<T> {
     pub identifier: String,
     pub value: T,
     pub is_const: bool,
-    pub position: Interval
+    pub position: Interval,
 }
 
 impl Node for GlobalConstNode<i64> {
@@ -18,7 +18,11 @@ impl Node for GlobalConstNode<i64> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare global {} '{}' inside function. Try using 'let' instead.",
-                if self.is_const { "constant" } else { "variable" },
+                if self.is_const {
+                    "constant"
+                } else {
+                    "variable"
+                },
                 self.identifier
             )));
         }
@@ -31,10 +35,13 @@ impl Node for GlobalConstNode<i64> {
         if self.is_const {
             Ok("".to_owned())
         } else {
-            Ok(format!("
+            Ok(format!(
+                "
                 mov rax, {}
                 mov [{}], rax
-            ", self.value, self.identifier))
+            ",
+                self.value, self.identifier
+            ))
         }
     }
 
@@ -53,7 +60,7 @@ impl Node for GlobalConstNode<i64> {
             is_type: false,
             require_init: true,
             is_defined: true,
-            type_: int
+            type_: int,
         })?;
         Ok((ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(), None))
     }
@@ -68,7 +75,11 @@ impl Node for GlobalConstNode<String> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare global {} '{}' inside function. Try using 'let' instead.",
-                if self.is_const { "constant" } else { "variable" },
+                if self.is_const {
+                    "constant"
+                } else {
+                    "variable"
+                },
                 self.identifier
             )));
         }
@@ -89,9 +100,12 @@ impl Node for GlobalConstNode<String> {
         if self.is_const {
             Ok("".to_owned())
         } else {
-            Ok(format!("
+            Ok(format!(
+                "
                 mov [{}], {anon_id}
-            ", self.identifier))
+            ",
+                self.identifier
+            ))
         }
     }
 
@@ -116,7 +130,7 @@ impl Node for GlobalConstNode<String> {
             is_type: false,
             require_init: true,
             is_defined: true,
-            type_: str
+            type_: str,
         })?;
         Ok((ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone(), None))
     }

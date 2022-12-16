@@ -3,7 +3,7 @@ use crate::position::Interval;
 
 #[derive(Debug)]
 pub struct PassNode {
-    pub position: Interval
+    pub position: Interval,
 }
 
 impl Node for PassNode {

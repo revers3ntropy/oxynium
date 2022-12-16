@@ -1,33 +1,32 @@
+use crate::args::{get_args_cmd, get_cli_args, Args};
+use crate::ast::types::atomic::AtomicType;
+use crate::context::Context;
+use crate::error::{io_error, Error};
+use crate::parse::lexer::Lexer;
+use crate::parse::parser::Parser;
+use crate::post_process::format_asm::post_process;
+use crate::symbols::{SymbolDec, SymbolDef};
+use crate::util::MutRc;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use crate::parse::lexer::Lexer;
-use crate::parse::parser::Parser;
 use std::process::Command as Exec;
 use std::rc::Rc;
-use crate::args::{Args, get_args_cmd, get_cli_args};
-use crate::ast::types::atomic::AtomicType;
-use crate::context::Context;
-use crate::error::{Error, io_error};
-use crate::post_process::format_asm::post_process;
-use crate::symbols::{SymbolDec, SymbolDef};
-use crate::util::MutRc;
 
-mod parse;
+mod args;
 mod ast;
 mod context;
 mod error;
+mod parse;
 mod position;
 mod post_process;
 mod symbols;
 mod util;
-mod args;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
 fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
-
     // declare the built in types
     ctx.borrow_mut().declare(SymbolDec {
         name: "Int".to_string(),
@@ -39,8 +38,8 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
         type_: Rc::new(AtomicType {
             id: 0,
             name: "Int".to_string(),
-            is_ptr: false
-        })
+            is_ptr: false,
+        }),
     })?;
     ctx.borrow_mut().declare(SymbolDec {
         name: "Bool".to_string(),
@@ -52,8 +51,8 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
         type_: Rc::new(AtomicType {
             id: 1,
             name: "Bool".to_string(),
-            is_ptr: false
-        })
+            is_ptr: false,
+        }),
     })?;
     ctx.borrow_mut().declare(SymbolDec {
         name: "Str".to_string(),
@@ -65,8 +64,8 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
         type_: Rc::new(AtomicType {
             id: 2,
             name: "Str".to_string(),
-            is_ptr: true
-        })
+            is_ptr: true,
+        }),
     })?;
     ctx.borrow_mut().declare(SymbolDec {
         name: "Void".to_string(),
@@ -78,8 +77,8 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
         type_: Rc::new(AtomicType {
             id: 3,
             name: "Void".to_string(),
-            is_ptr: true
-        })
+            is_ptr: true,
+        }),
     })?;
 
     let mut lexer = Lexer::new(STD_DOXY.to_owned(), "std.doxy".to_owned());
@@ -109,19 +108,23 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
         name: "true".to_string(),
         data: Some("dq 1".to_string()),
         text: None,
-        is_local: false
+        is_local: false,
     })?;
     ctx.borrow_mut().define(SymbolDef {
         name: "false".to_string(),
         data: Some("dq 0".to_string()),
         text: None,
-        is_local: false
+        is_local: false,
     })?;
 
     Ok(ctx)
 }
 
-fn compile (input: String, file_name: String, args: &Args) -> Result<(String, MutRc<Context>), Error> {
+fn compile(
+    input: String,
+    file_name: String,
+    args: &Args,
+) -> Result<(String, MutRc<Context>), Error> {
     let ctx = setup_ctx_with_doxy(Context::new())?;
     ctx.borrow_mut().std_asm_path = args.std_path.clone();
     ctx.borrow_mut().exec_mode = args.exec_mode;
@@ -151,9 +154,12 @@ fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result
 
     let file = File::create(asm_out_file.clone());
     if file.is_err() {
-        return Err(io_error(format!("Could not create assembly ('{asm_out_file}') file")));
+        return Err(io_error(format!(
+            "Could not create assembly ('{asm_out_file}') file"
+        )));
     }
-    file.unwrap().write_all(compile_res.0.as_bytes())
+    file.unwrap()
+        .write_all(compile_res.0.as_bytes())
         .expect("Could not write assembly output");
 
     let nasm_out = Exec::new("nasm")
@@ -192,8 +198,7 @@ fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result
     Ok(())
 }
 
-
-fn print_usage () {
+fn print_usage() {
     println!("{}", get_args_cmd().render_usage());
 }
 
@@ -207,17 +212,19 @@ fn main() -> std::io::Result<()> {
         return Ok(());
     }
     if args.exec_mode != 1 && !Path::new(&args.std_path).exists() {
-        let _ = e.write(format!("STD file '{}' does not exist or is not accessible\n", args.std_path).as_bytes());
+        let _ = e.write(
+            format!(
+                "STD file '{}' does not exist or is not accessible\n",
+                args.std_path
+            )
+            .as_bytes(),
+        );
         return Ok(());
     }
 
     if !args.eval.is_empty() {
         let args_ = args.clone();
-        let res = compile_and_assemble(
-            args.eval,
-            "CLI".to_owned(),
-            &args_
-        );
+        let res = compile_and_assemble(args.eval, "CLI".to_owned(), &args_);
         if res.is_err() {
             let _ = e.write(format!("{}\n", res.err().unwrap().str()).as_bytes());
         }
@@ -234,11 +241,7 @@ fn main() -> std::io::Result<()> {
         let mut input = String::new();
         input_file.read_to_string(&mut input)?;
 
-        let res = compile_and_assemble(
-            input,
-            args.input.clone(),
-            &args
-        );
+        let res = compile_and_assemble(input, args.input.clone(), &args);
         if res.is_err() {
             let _ = e.write(format!("{}\n", res.err().unwrap().str()).as_bytes());
         }

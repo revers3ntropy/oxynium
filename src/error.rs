@@ -1,6 +1,6 @@
-use std::rc::Rc;
 use crate::ast::types::Type;
 use crate::position::{Interval, Position};
+use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct Error {
@@ -33,12 +33,7 @@ impl Error {
 
     pub fn str(&self) -> String {
         if self.start.str() == self.end.str() {
-            format!(
-                "{}: {} at {}",
-                self.name,
-                self.message,
-                self.start.str()
-            )
+            format!("{}: {} at {}", self.name, self.message, self.start.str())
         } else {
             format!(
                 "{}: {} at {} to {}",
@@ -64,10 +59,10 @@ pub fn numeric_overflow(message: String) -> Error {
 }
 
 pub fn mismatched_types(expected: Rc<dyn Type>, got: Rc<dyn Type>) -> Error {
-    Error::new("TypeError", format!(
-        "expected '{}', got '{}'",
-        expected.str(), got.str()
-    ))
+    Error::new(
+        "TypeError",
+        format!("expected '{}', got '{}'", expected.str(), got.str()),
+    )
 }
 
 pub fn type_error(message: String) -> Error {

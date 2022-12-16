@@ -8,7 +8,7 @@ use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct StrNode {
-    pub value: Token
+    pub value: Token,
 }
 
 impl StrNode {
@@ -27,9 +27,11 @@ impl Node for StrNode {
             is_local: false,
         })?;
 
-        Ok(format!("
+        Ok(format!(
+            "
             push {anon_id}
-        "))
+        "
+        ))
     }
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {

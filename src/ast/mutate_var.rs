@@ -1,15 +1,15 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::util::MutRc;
-use crate::error::{Error, mismatched_types, type_error, unknown_symbol};
+use crate::error::{mismatched_types, type_error, unknown_symbol, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::is_valid_identifier;
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct MutateVar {
     pub identifier: Token,
-    pub value: MutRc<dyn Node>
+    pub value: MutRc<dyn Node>,
 }
 
 impl MutateVar {
@@ -28,17 +28,17 @@ impl Node for MutateVar {
 
         ctx.borrow_mut().set_dec_as_defined(&self.id())?;
 
-        Ok(format!("
+        Ok(format!(
+            "
            {value}
            pop rax
            mov {id}, rax
-        "))
+        "
+        ))
     }
 
     fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        if !is_valid_identifier(&self.id())
-            || !ctx.borrow_mut().has_dec_with_id(&self.id())
-        {
+        if !is_valid_identifier(&self.id()) || !ctx.borrow_mut().has_dec_with_id(&self.id()) {
             return Err(unknown_symbol(self.id().clone()));
         }
 
@@ -52,16 +52,23 @@ impl Node for MutateVar {
         }
         if symbol.is_type {
             return Err(type_error(format!(
-                "'{}' is a type and does not exist at runtime", self.id()
+                "'{}' is a type and does not exist at runtime",
+                self.id()
             )));
         }
         if !symbol.type_.contains(assign_type.clone()) {
             return Err(mismatched_types(symbol.type_.clone(), assign_type.clone()));
         }
-        Ok((ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(), None))
+        Ok((
+            ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),
+            None,
+        ))
     }
 
     fn pos(&mut self) -> Interval {
-        (self.identifier.start.clone(), self.value.borrow_mut().pos().1)
+        (
+            self.identifier.start.clone(),
+            self.value.borrow_mut().pos().1,
+        )
     }
 }

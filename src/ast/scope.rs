@@ -1,14 +1,14 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::util::MutRc;
 use crate::error::Error;
 use crate::position::Interval;
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct ScopeNode {
     pub ctx: MutRc<Context>,
     pub body: MutRc<dyn Node>,
-    pub position: Interval
+    pub position: Interval,
 }
 
 impl Node for ScopeNode {

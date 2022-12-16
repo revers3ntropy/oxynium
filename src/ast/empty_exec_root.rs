@@ -1,23 +1,26 @@
 use crate::ast::Node;
-use crate::context::Context;
-use crate::util::MutRc;
-use crate::error::Error;
 use crate::ast::STD_ASM;
+use crate::context::Context;
+use crate::error::Error;
 use crate::position::Interval;
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct EmptyExecRootNode {
-    pub(crate) position: Interval
+    pub(crate) position: Interval,
 }
 
 impl Node for EmptyExecRootNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         if ctx.borrow_mut().exec_mode == 1 {
-            Ok(format!("
+            Ok(format!(
+                "
                 section	.note.GNU-stack
-            "))
+            "
+            ))
         } else {
-            Ok(format!("
+            Ok(format!(
+                "
                 section	.note.GNU-stack
                 section .text
                     global main
@@ -25,7 +28,8 @@ impl Node for EmptyExecRootNode {
                 main:
                     push 0
                     call exit
-            "))
+            "
+            ))
         }
     }
     fn pos(&mut self) -> Interval {

@@ -1,12 +1,12 @@
-use std::rc::Rc;
-use crate::ast::{Node, TypeCheckRes};
 use crate::ast::types::function::{FnParamType, FnType};
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::CallStackFrame;
-use crate::error::{Error, syntax_error, type_error, unknown_symbol};
-use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
 use crate::context::Context;
+use crate::error::{syntax_error, type_error, unknown_symbol, Error};
 use crate::position::Interval;
+use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
 use crate::util::MutRc;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct Parameter {
@@ -42,14 +42,15 @@ impl Node for FnDeclarationNode {
         let end_label = ctx.borrow_mut().get_anon_label();
         ctx.borrow_mut().stack_frame_push(CallStackFrame {
             name: self.identifier.clone(),
-            params: self.params
-                .iter()
-                .map(|a| a.identifier.clone())
-                .collect(),
-            ret_lbl: end_label.clone()
+            params: self.params.iter().map(|a| a.identifier.clone()).collect(),
+            ret_lbl: end_label.clone(),
         });
 
-        let body = self.body.take().unwrap().borrow_mut()
+        let body = self
+            .body
+            .take()
+            .unwrap()
+            .borrow_mut()
             .asm(self.params_scope.clone())?;
         let params_scope = self.params_scope.borrow_mut();
         let (data_defs, text_defs) = params_scope.get_definitions();
@@ -60,7 +61,8 @@ impl Node for FnDeclarationNode {
             name: self.identifier.clone(),
             is_local: false,
             data: None,
-            text: Some(format!("
+            text: Some(format!(
+                "
                     push rbp
                     mov rbp, rsp
                     times {} push 0
@@ -69,7 +71,9 @@ impl Node for FnDeclarationNode {
                     mov rsp, rbp
                     pop rbp
                     ret
-                 ", data_defs.len()))
+                 ",
+                data_defs.len()
+            )),
         })?;
 
         ctx.borrow_mut().stack_frame_pop();
@@ -86,9 +90,14 @@ impl Node for FnDeclarationNode {
         // don't use param_scope so that the function can have params
         // with the same name as the function
         if !ctx.borrow_mut().allow_overrides {
-            if ctx.borrow_mut().has_dec_with_id(self.identifier.clone().as_str()) {
-                return Err(type_error(format!("Symbol {} is already defined",
-                                              self.identifier)))
+            if ctx
+                .borrow_mut()
+                .has_dec_with_id(self.identifier.clone().as_str())
+            {
+                return Err(type_error(format!(
+                    "Symbol {} is already defined",
+                    self.identifier
+                )));
             }
         }
         let (ret_type, _) = self.ret_type.borrow_mut().type_check(ctx.clone())?;
@@ -98,14 +107,13 @@ impl Node for FnDeclarationNode {
         let num_params = self.params.len();
         let mut seen_param_without_default = false;
         for i in 0..self.params.len() {
+            let Parameter {
+                identifier,
+                type_,
+                default_value,
+            } = self.params.pop().unwrap();
 
-            let Parameter { identifier, type_, default_value} =
-                self.params.pop().unwrap();
-
-            if !is_valid_identifier(&identifier)
-                || identifier == "true"
-                || identifier == "false"
-            {
+            if !is_valid_identifier(&identifier) || identifier == "true" || identifier == "false" {
                 return Err(syntax_error("Invalid parameter name".to_string()));
             }
 
@@ -119,18 +127,24 @@ impl Node for FnDeclarationNode {
                 }
                 let default_value_type = default_value.borrow_mut().type_check(ctx.clone())?.0;
                 if !param_type.contains(default_value_type.clone()) {
-                    return Err(type_error(format!("Default value for parameter {} is not of type {}",
-                                                  identifier, param_type.str())));
+                    return Err(type_error(format!(
+                        "Default value for parameter {} is not of type {}",
+                        identifier,
+                        param_type.str()
+                    )));
                 }
             } else {
                 seen_param_without_default = true;
             }
 
-            parameters.insert(0, FnParamType {
-                name: identifier.clone(),
-                type_: param_type.clone(),
-                default_value
-            });
+            parameters.insert(
+                0,
+                FnParamType {
+                    name: identifier.clone(),
+                    type_: param_type.clone(),
+                    default_value,
+                },
+            );
 
             self.params_scope.borrow_mut().declare(SymbolDec {
                 name: identifier.clone(),
@@ -139,7 +153,7 @@ impl Node for FnDeclarationNode {
                 is_type: false,
                 require_init: false,
                 is_defined: true,
-                type_: param_type.clone()
+                type_: param_type.clone(),
             })?;
         }
 
@@ -156,7 +170,7 @@ impl Node for FnDeclarationNode {
             is_type: false,
             require_init: !self.is_external,
             is_defined: self.body.is_some(),
-            type_: this_type.clone()
+            type_: this_type.clone(),
         })?;
 
         if let Some(body) = self.body.take() {
@@ -164,7 +178,9 @@ impl Node for FnDeclarationNode {
             if !ret_type.contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
                     "Function {} has return type {} but found {}",
-                    self.identifier, ret_type.str(), body_ret_type.str()
+                    self.identifier,
+                    ret_type.str(),
+                    body_ret_type.str()
                 )));
             }
             self.body = Some(body);

@@ -1,12 +1,12 @@
+use crate::ast::types::Type;
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
-use crate::ast::types::Type;
 
 #[derive(Clone, Debug)]
 pub struct StructFieldType {
     pub name: String,
-    pub type_: Rc<dyn Type>
+    pub type_: Rc<dyn Type>,
 }
 impl StructFieldType {
     fn str(&self) -> String {
@@ -31,12 +31,15 @@ impl Debug for StructType {
 }
 
 impl Type for StructType {
-    fn is_ptr(&self) -> bool { true }
+    fn is_ptr(&self) -> bool {
+        true
+    }
     fn str(&self) -> String {
         format!(
             "Struct {} {{ {} }}",
             self.name,
-            self.fields.iter()
+            self.fields
+                .iter()
                 .map(|p| p.str())
                 .collect::<Vec<String>>()
                 .join("; ")
