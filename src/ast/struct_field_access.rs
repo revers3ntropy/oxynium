@@ -20,7 +20,8 @@ impl Node for FieldAccessNode {
             .borrow_mut()
             .type_check(ctx.clone())?
             .0
-            .as_struct().unwrap()
+            .as_struct()
+            .unwrap()
             .field_offset(self.field_name.clone().literal.unwrap());
 
         Ok(format!(

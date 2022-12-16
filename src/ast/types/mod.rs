@@ -1,8 +1,6 @@
-pub mod atomic;
 pub mod function;
 pub mod r#struct;
 
-use crate::ast::types::atomic::AtomicType;
 use crate::ast::types::function::FnType;
 use crate::ast::types::r#struct::StructType;
 use std::fmt::Debug;
@@ -14,9 +12,6 @@ pub trait Type: Debug {
 
     fn contains(&self, other: Rc<dyn Type>) -> bool;
 
-    fn as_atomic(&self) -> Option<AtomicType> {
-        None
-    }
     fn as_fn(&self) -> Option<FnType> {
         None
     }

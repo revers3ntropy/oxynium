@@ -23,7 +23,7 @@ impl Node for StrNode {
             name: "".to_string(),
             // ,0 is the null terminator
             data: Some(format!("dq \"{}\", 0", self.val())),
-            text: None
+            text: None,
         })?;
 
         Ok(format!(

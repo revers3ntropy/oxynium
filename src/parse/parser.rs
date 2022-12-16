@@ -1,4 +1,5 @@
 use crate::ast::bin_op::BinOpNode;
+use crate::ast::bool::BoolNode;
 use crate::ast::empty_exec_root::EmptyExecRootNode;
 use crate::ast::empty_global_var_decl::EmptyGlobalConstNode;
 use crate::ast::empty_local_var_decl::EmptyLocalVarNode;
@@ -908,6 +909,15 @@ impl Parser {
                 self.advance(&mut res);
                 if tok.clone().literal.unwrap() == "new" {
                     return self.struct_init();
+                }
+                if tok.clone().literal.unwrap() == "false"
+                    || tok.clone().literal.unwrap() == "true"
+                {
+                    res.success(new_mut_rc(BoolNode {
+                        value: tok.clone().literal.unwrap() == "true",
+                        position: (tok.start.clone(), tok.end.clone()),
+                    }));
+                    return res;
                 }
                 if let Some(next) = self.current_tok() {
                     if next.token_type == TokenType::OpenParen {

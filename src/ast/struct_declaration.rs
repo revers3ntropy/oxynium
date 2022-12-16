@@ -3,7 +3,7 @@ use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{unknown_symbol, Error};
 use crate::position::Interval;
-use crate::symbols::{is_valid_identifier, SymbolDec};
+use crate::symbols::{can_declare_with_identifier, SymbolDec};
 use crate::util::MutRc;
 use std::rc::Rc;
 
@@ -25,7 +25,7 @@ impl Node for StructDeclarationNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        if !is_valid_identifier(&self.identifier) {
+        if !can_declare_with_identifier(&self.identifier) {
             return Err(unknown_symbol(self.identifier.clone()));
         }
 

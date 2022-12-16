@@ -1,5 +1,7 @@
-extern const true: Bool;
-extern const false: Bool;
+struct Str {};
+struct Bool {};
+struct Int {};
+struct Void {};
 
 extern fn print(msg: Str): Void;
 extern fn print_int(int: Int): Void;

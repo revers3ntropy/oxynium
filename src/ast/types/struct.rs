@@ -1,9 +1,6 @@
-use std::collections::HashMap;
 use crate::ast::types::Type;
 use std::fmt;
-use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
-use crate::util::{intersection};
 
 #[derive(Clone, Debug)]
 pub struct StructFieldType {
@@ -35,27 +32,22 @@ impl StructType {
     }
 
     pub fn field_offset(&self, field: String) -> usize {
-        self.fields
-            .iter()
-            .position(|f| f.name == field)
-            .unwrap()
-            * 8
-    }
-    fn field_types_hashmap(&self) -> HashMap<String, Rc<dyn Type>> {
-        let mut instance_fields_hashmap = HashMap::new();
-        for field in self.fields.clone() {
-            instance_fields_hashmap.insert(
-                field.name,
-                field.type_,
-            );
-        }
-        instance_fields_hashmap
+        self.fields.iter().position(|f| f.name == field).unwrap() * 8
     }
 }
 
-impl Debug for StructType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.str())
+impl fmt::Debug for StructType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {{ {} }}",
+            self.name,
+            self.fields
+                .iter()
+                .map(|f| f.str())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )
     }
 }
 
@@ -64,43 +56,13 @@ impl Type for StructType {
         true
     }
     fn str(&self) -> String {
-        format!(
-            "Struct {} {{ {} }}",
-            self.name,
-            self.fields
-                .iter()
-                .map(|p| p.str())
-                .collect::<Vec<String>>()
-                .join("; ")
-        )
+        self.name.clone()
     }
 
     fn contains(&self, t: Rc<dyn Type>) -> bool {
-        let t = t.as_struct();
-        if t.is_none() {
-            return false;
-        }
-        let t = t.unwrap();
-
-        let other_fields_hashmap = t.field_types_hashmap();
-        let self_fields_hashmap = self.field_types_hashmap();
-        let (extra, fields, missing) =
-            intersection(&self_fields_hashmap, &other_fields_hashmap);
-
-        if extra.len() > 0 || missing.len() > 0 {
-            return false
-        }
-
-        for field in fields {
-            if !self_fields_hashmap
-                .get(&field)
-                .unwrap()
-                .contains(other_fields_hashmap.get(&field).unwrap().clone())
-            {
-                return false;
-            }
-        }
-        true
+        // compare values of pointers...
+        // TODO to this properly
+        format!("{:p}", self) == format!("{:p}", t.as_ref())
     }
 
     fn as_struct(&self) -> Option<StructType> {

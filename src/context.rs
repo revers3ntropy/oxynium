@@ -140,11 +140,15 @@ impl Context {
 
     pub fn get_new_local_var_offset(&mut self) -> usize {
         if self.allow_local_var_decls || self.parent.is_none() {
-            let idx = self.declarations.iter()
-                .filter(|d| !d.1.is_param).count();
+            let idx =
+                self.declarations.iter().filter(|d| !d.1.is_param).count();
             8 * (1 + idx)
         } else {
-            self.parent.as_ref().unwrap().borrow_mut().get_new_local_var_offset()
+            self.parent
+                .as_ref()
+                .unwrap()
+                .borrow_mut()
+                .get_new_local_var_offset()
         }
     }
 

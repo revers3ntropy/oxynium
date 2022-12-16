@@ -45,7 +45,8 @@ fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
         (
             push == "push"
                 && (REGISTERS_NO_STACK.contains(&register)
-                    || register.starts_with("qword [")),
+                    || register.starts_with("qword [")
+                    || !register.chars().any(|c| !c.is_digit(10))),
             register.to_string(),
         )
     }

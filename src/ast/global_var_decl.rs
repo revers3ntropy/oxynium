@@ -2,7 +2,7 @@ use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{syntax_error, type_error, Error};
 use crate::position::Interval;
-use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
+use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
 use crate::util::MutRc;
 
 #[derive(Debug)]
@@ -29,7 +29,7 @@ impl Node for GlobalConstNode<i64> {
         ctx.borrow_mut().define(SymbolDef {
             name: self.identifier.clone(),
             data: Some(format!("dq {}", self.value)),
-            text: None
+            text: None,
         })?;
         if self.is_const {
             Ok("".to_owned())
@@ -48,7 +48,7 @@ impl Node for GlobalConstNode<i64> {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        if !is_valid_identifier(&self.identifier) {
+        if !can_declare_with_identifier(&self.identifier) {
             return Err(syntax_error(format!(
                 "Invalid global variable '{}'",
                 self.identifier.clone()
@@ -90,13 +90,13 @@ impl Node for GlobalConstNode<String> {
             name: self.identifier.clone(),
             // ,0 is the null terminator
             data: Some(format!("dq \"{}\", 0", self.value)),
-            text: None
+            text: None,
         })?;
         let anon_id = ctx.borrow_mut().define_anon(SymbolDef {
             name: self.identifier.clone(),
             // ,0 is the null terminator
             data: Some(format!("dq \"{}\", 0", self.value)),
-            text: None
+            text: None,
         })?;
         if self.is_const {
             Ok("".to_owned())
@@ -114,7 +114,7 @@ impl Node for GlobalConstNode<String> {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        if !is_valid_identifier(&self.identifier) {
+        if !can_declare_with_identifier(&self.identifier) {
             return Err(syntax_error(format!(
                 "Invalid global variable '{}'",
                 self.identifier.clone()

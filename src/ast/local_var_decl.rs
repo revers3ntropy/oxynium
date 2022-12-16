@@ -3,7 +3,7 @@ use crate::context::Context;
 use crate::error::{syntax_error, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
-use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
+use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
 use crate::util::MutRc;
 
 #[derive(Debug)]
@@ -33,7 +33,7 @@ impl Node for LocalVarNode {
         ctx.borrow_mut().define(SymbolDef {
             name: self.identifier.str(),
             data: Some("".to_string()),
-            text: None
+            text: None,
         })?;
 
         Ok(format!(
@@ -51,7 +51,7 @@ impl Node for LocalVarNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        if !is_valid_identifier(&self.id()) {
+        if !can_declare_with_identifier(&self.id()) {
             return Err(syntax_error(format!(
                 "Invalid local variable '{}'",
                 self.id()

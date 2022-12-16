@@ -7,6 +7,7 @@ use std::fmt::Debug;
 use std::rc::Rc;
 
 pub mod bin_op;
+pub mod bool;
 pub mod r#break;
 pub mod r#continue;
 pub mod empty_exec_root;

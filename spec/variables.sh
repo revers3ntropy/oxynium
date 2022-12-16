@@ -38,9 +38,9 @@ expect '41' '
     print_int(a);
 '
 expect_err 'TypeError' 'print_int = 1'
-expect_err 'TypeError' 'true = 1'
-expect_err 'TypeError' 'true = false'
-expect_err 'TypeError' 'true = true'
+expect_err 'SyntaxError' 'true = 1'
+expect_err 'SyntaxError' 'true = false'
+expect_err 'SyntaxError' 'true = true'
 expect_err 'TypeError' 'const a = 1; a = 1'
 expect_err 'TypeError' '
     var a = 1;

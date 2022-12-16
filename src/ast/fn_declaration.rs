@@ -4,7 +4,7 @@ use crate::context::CallStackFrame;
 use crate::context::Context;
 use crate::error::{syntax_error, type_error, unknown_symbol, Error};
 use crate::position::Interval;
-use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
+use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
 use crate::util::MutRc;
 use std::rc::Rc;
 
@@ -83,7 +83,7 @@ impl Node for FnDeclarationNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        if !is_valid_identifier(&self.identifier) {
+        if !can_declare_with_identifier(&self.identifier) {
             return Err(unknown_symbol(self.identifier.clone()));
         }
         self.params_scope.borrow_mut().set_parent(ctx.clone());
@@ -116,10 +116,7 @@ impl Node for FnDeclarationNode {
                 default_value,
             } = self.params.pop().unwrap();
 
-            if !is_valid_identifier(&identifier)
-                || identifier == "true"
-                || identifier == "false"
-            {
+            if !can_declare_with_identifier(&identifier) {
                 return Err(syntax_error("Invalid parameter name".to_string()));
             }
 
@@ -155,7 +152,10 @@ impl Node for FnDeclarationNode {
 
             self.params_scope.borrow_mut().declare(SymbolDec {
                 name: identifier.clone(),
-                id: format!("qword [rbp + {}]", 8 * ((num_params - (i + 1)) + 2)),
+                id: format!(
+                    "qword [rbp + {}]",
+                    8 * ((num_params - (i + 1)) + 2)
+                ),
                 is_constant: true,
                 is_type: false,
                 require_init: false,

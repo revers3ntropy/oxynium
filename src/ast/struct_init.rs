@@ -1,7 +1,7 @@
 use crate::ast::types::Type;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{type_error, Error, unknown_symbol};
+use crate::error::{type_error, unknown_symbol, Error};
 use crate::position::Interval;
 use crate::util::{intersection, MutRc};
 use std::collections::HashMap;
@@ -72,9 +72,11 @@ impl Node for StructInitNode {
             ));
         }
 
-        asm.push_str(&format!("
+        asm.push_str(&format!(
+            "
             push rax
-        "));
+        "
+        ));
 
         Ok(asm)
     }
