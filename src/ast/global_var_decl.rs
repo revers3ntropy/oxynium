@@ -29,8 +29,7 @@ impl Node for GlobalConstNode<i64> {
         ctx.borrow_mut().define(SymbolDef {
             name: self.identifier.clone(),
             data: Some(format!("dq {}", self.value)),
-            text: None,
-            is_local: false,
+            text: None
         })?;
         if self.is_const {
             Ok("".to_owned())
@@ -45,7 +44,10 @@ impl Node for GlobalConstNode<i64> {
         }
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(syntax_error(format!(
                 "Invalid global variable '{}'",
@@ -60,6 +62,7 @@ impl Node for GlobalConstNode<i64> {
             is_type: false,
             require_init: true,
             is_defined: true,
+            is_param: false,
             type_: int,
         })?;
         Ok((ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(), None))
@@ -87,15 +90,13 @@ impl Node for GlobalConstNode<String> {
             name: self.identifier.clone(),
             // ,0 is the null terminator
             data: Some(format!("dq \"{}\", 0", self.value)),
-            text: None,
-            is_local: false,
+            text: None
         })?;
         let anon_id = ctx.borrow_mut().define_anon(SymbolDef {
             name: self.identifier.clone(),
             // ,0 is the null terminator
             data: Some(format!("dq \"{}\", 0", self.value)),
-            text: None,
-            is_local: false,
+            text: None
         })?;
         if self.is_const {
             Ok("".to_owned())
@@ -109,7 +110,10 @@ impl Node for GlobalConstNode<String> {
         }
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(syntax_error(format!(
                 "Invalid global variable '{}'",
@@ -130,6 +134,7 @@ impl Node for GlobalConstNode<String> {
             is_type: false,
             require_init: true,
             is_defined: true,
+            is_param: false,
             type_: str,
         })?;
         Ok((ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone(), None))

@@ -21,7 +21,10 @@ impl Node for IntNode {
         ))
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         Ok((ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(), None))
     }
 

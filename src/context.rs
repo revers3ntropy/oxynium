@@ -82,7 +82,9 @@ impl Context {
         if self.parent.is_some() && !self.allow_local_var_decls {
             return self.parent.as_ref().unwrap().borrow_mut().declare(symbol);
         }
-        if let Some(duplicate) = self.declarations.get(symbol.name.clone().as_str()) {
+        if let Some(duplicate) =
+            self.declarations.get(symbol.name.clone().as_str())
+        {
             if !self.allow_overrides || !duplicate.contains(&symbol) {
                 return Err(type_error(format!(
                     "Symbol {} is already declared",
@@ -119,13 +121,6 @@ impl Context {
             Err(type_error(format!("Symbol {} is not declared", id)))
         }
     }
-    pub fn get_declarations(&mut self) -> Vec<SymbolDec> {
-        let mut decs = Vec::new();
-        for (_, dec) in self.declarations.iter() {
-            decs.push(dec.clone());
-        }
-        decs
-    }
     pub fn set_dec_as_defined(&mut self, id: &str) -> Result<(), Error> {
         if self.declarations.get(id).is_some() {
             let mut dec = self.declarations.get(id).unwrap().clone();
@@ -140,6 +135,16 @@ impl Context {
                 .set_dec_as_defined(id)
         } else {
             Err(type_error(format!("Symbol {} is not declared", id)))
+        }
+    }
+
+    pub fn get_new_local_var_offset(&mut self) -> usize {
+        if self.allow_local_var_decls || self.parent.is_none() {
+            let idx = self.declarations.iter()
+                .filter(|d| !d.1.is_param).count();
+            8 * (1 + idx)
+        } else {
+            self.parent.as_ref().unwrap().borrow_mut().get_new_local_var_offset()
         }
     }
 
@@ -169,7 +174,10 @@ impl Context {
         self.definitions.insert(name.clone(), symbol);
         Ok(())
     }
-    pub fn define_anon(&mut self, mut symbol: SymbolDef) -> Result<String, Error> {
+    pub fn define_anon(
+        &mut self,
+        mut symbol: SymbolDef,
+    ) -> Result<String, Error> {
         if self.parent.is_some() {
             return self
                 .parent
@@ -207,7 +215,9 @@ impl Context {
 
     pub fn loop_labels_push(&mut self, start: String, end: String) {
         if self.parent.is_some() {
-            return self.with_root(&mut |ctx| ctx.loop_labels_push(start.clone(), end.clone()));
+            return self.with_root(&mut |ctx| {
+                ctx.loop_labels_push(start.clone(), end.clone())
+            });
         }
         self.loop_label_stack.push((start, end));
     }
@@ -230,7 +240,8 @@ impl Context {
 
     pub fn stack_frame_push(&mut self, frame: CallStackFrame) {
         if self.parent.is_some() {
-            return self.with_root(&mut |ctx| ctx.stack_frame_push(frame.clone()));
+            return self
+                .with_root(&mut |ctx| ctx.stack_frame_push(frame.clone()));
         }
         self.call_stack.push(frame);
     }

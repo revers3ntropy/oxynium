@@ -13,6 +13,7 @@ pub enum TokenType {
     Percent,      // %
     Identifier,   // foo
     Comma,        // ,
+    Dot,          // .
     EndStatement, // ;
     String,       // "foo"
     Equals,       // =
@@ -62,6 +63,10 @@ impl Token {
         }
     }
 
+    pub fn interval(&self) -> Interval {
+        (self.start.clone(), self.end.clone())
+    }
+
     pub fn str(&self) -> String {
         match self.token_type {
             TokenType::Plus => "+".to_string(),
@@ -72,10 +77,15 @@ impl Token {
             TokenType::CloseParen => ")".to_string(),
             TokenType::Ampersand => "&".to_string(),
             TokenType::Percent => "%".to_string(),
-            TokenType::Identifier | TokenType::Int => self.literal.as_ref().unwrap().clone(),
+            TokenType::Identifier | TokenType::Int => {
+                self.literal.as_ref().unwrap().clone()
+            }
             TokenType::Comma => ",".to_string(),
+            TokenType::Dot => ".".to_string(),
             TokenType::EndStatement => ";".to_string(),
-            TokenType::String => format!("\"{}\"", self.literal.as_ref().unwrap().clone()),
+            TokenType::String => {
+                format!("\"{}\"", self.literal.as_ref().unwrap().clone())
+            }
             TokenType::Equals => "=".to_string(),
             TokenType::DblEquals => "==".to_string(),
             TokenType::OpenBrace => "{".to_string(),
@@ -90,9 +100,5 @@ impl Token {
             TokenType::NotEquals => "!=".to_string(),
             TokenType::Colon => ":".to_string(),
         }
-    }
-
-    pub fn interval(&self) -> Interval {
-        (self.start.clone(), self.end.clone())
     }
 }

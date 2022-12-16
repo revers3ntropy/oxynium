@@ -21,7 +21,10 @@ pub struct StructDeclarationNode {
 }
 
 impl Node for StructDeclarationNode {
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(unknown_symbol(self.identifier.clone()));
         }
@@ -48,9 +51,10 @@ impl Node for StructDeclarationNode {
             id: self.identifier.clone(),
             is_constant: true,
             is_type: true,
-            type_: this_type.clone(),
             require_init: false,
             is_defined: true,
+            is_param: false,
+            type_: this_type.clone(),
         })?;
 
         Ok((this_type, None))

@@ -27,6 +27,7 @@ pub mod scope;
 pub mod statements;
 pub mod str;
 pub mod struct_declaration;
+pub mod struct_field_access;
 pub mod struct_init;
 pub mod symbol_access;
 pub mod type_expr;
@@ -43,7 +44,10 @@ pub trait Node: Debug {
     fn asm(&mut self, _ctx: MutRc<Context>) -> Result<String, Error> {
         Ok("".to_string())
     }
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         Ok((
             ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),
             None,

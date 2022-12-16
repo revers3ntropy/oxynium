@@ -2,11 +2,12 @@ use crate::ast::types::Type;
 use std::rc::Rc;
 
 const RESERVED_KEYWORDS: [&str; 51] = [
-    "if", "else", "loop", "while", "for", "in", "break", "continue", "return", "let", "const",
-    "let", "mut", "var", "type", "fn", "extern", "class", "struct", "enum", "trait", "impl", "use",
-    "as", "mod", "import", "export", "is", "async", "await", "yield", "with", "unless", "pass",
-    "case", "match", "compl", "del", "do", "inline", "new", "priv", "pub", "abstract", "virtual",
-    "try", "catch", "static", "except", "macro", "typeof",
+    "if", "else", "loop", "while", "for", "in", "break", "continue", "return",
+    "let", "const", "let", "mut", "var", "type", "fn", "extern", "class",
+    "struct", "enum", "trait", "impl", "use", "as", "mod", "import", "export",
+    "is", "async", "await", "yield", "with", "unless", "pass", "case", "match",
+    "compl", "del", "do", "inline", "new", "priv", "pub", "abstract",
+    "virtual", "try", "catch", "static", "except", "macro", "typeof",
 ];
 
 pub fn is_valid_identifier(s: &str) -> bool {
@@ -29,6 +30,7 @@ pub struct SymbolDec {
     pub type_: Rc<dyn Type>,
     pub require_init: bool,
     pub is_defined: bool,
+    pub is_param: bool,
 }
 
 impl SymbolDec {
@@ -44,6 +46,5 @@ impl SymbolDec {
 pub struct SymbolDef {
     pub name: String,
     pub data: Option<String>,
-    pub text: Option<String>,
-    pub is_local: bool,
+    pub text: Option<String>
 }

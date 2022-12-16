@@ -28,7 +28,10 @@ impl Node for StatementsNode {
         Ok(asm)
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         let mut ret_types = Vec::new();
         for statement in self.statements.iter_mut() {
             let t = statement.borrow_mut().type_check(ctx.clone())?;
@@ -45,7 +48,9 @@ impl Node for StatementsNode {
 
         for ret_type in ret_types.iter() {
             if !ret_type.contains(ret_types.first().unwrap().clone()) {
-                return Err(type_error("All return types must be the same".to_string()));
+                return Err(type_error(
+                    "All return types must be the same".to_string(),
+                ));
             }
         }
 

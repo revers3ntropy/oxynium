@@ -59,7 +59,6 @@ impl Node for FnDeclarationNode {
         }
         ctx.borrow_mut().define(SymbolDef {
             name: self.identifier.clone(),
-            is_local: false,
             data: None,
             text: Some(format!(
                 "
@@ -80,7 +79,10 @@ impl Node for FnDeclarationNode {
         Ok("".to_string())
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(unknown_symbol(self.identifier.clone()));
         }
@@ -100,7 +102,8 @@ impl Node for FnDeclarationNode {
                 )));
             }
         }
-        let (ret_type, _) = self.ret_type.borrow_mut().type_check(ctx.clone())?;
+        let (ret_type, _) =
+            self.ret_type.borrow_mut().type_check(ctx.clone())?;
 
         let mut parameters: Vec<FnParamType> = Vec::new();
 
@@ -113,7 +116,10 @@ impl Node for FnDeclarationNode {
                 default_value,
             } = self.params.pop().unwrap();
 
-            if !is_valid_identifier(&identifier) || identifier == "true" || identifier == "false" {
+            if !is_valid_identifier(&identifier)
+                || identifier == "true"
+                || identifier == "false"
+            {
                 return Err(syntax_error("Invalid parameter name".to_string()));
             }
 
@@ -125,7 +131,8 @@ impl Node for FnDeclarationNode {
                         identifier
                     )));
                 }
-                let default_value_type = default_value.borrow_mut().type_check(ctx.clone())?.0;
+                let default_value_type =
+                    default_value.borrow_mut().type_check(ctx.clone())?.0;
                 if !param_type.contains(default_value_type.clone()) {
                     return Err(type_error(format!(
                         "Default value for parameter {} is not of type {}",
@@ -148,11 +155,12 @@ impl Node for FnDeclarationNode {
 
             self.params_scope.borrow_mut().declare(SymbolDec {
                 name: identifier.clone(),
-                id: format!("qword [rbp+{}]", 8 * ((num_params - (i + 1)) + 2)),
+                id: format!("qword [rbp + {}]", 8 * ((num_params - (i + 1)) + 2)),
                 is_constant: true,
                 is_type: false,
                 require_init: false,
                 is_defined: true,
+                is_param: true,
                 type_: param_type.clone(),
             })?;
         }
@@ -170,11 +178,13 @@ impl Node for FnDeclarationNode {
             is_type: false,
             require_init: !self.is_external,
             is_defined: self.body.is_some(),
+            is_param: false,
             type_: this_type.clone(),
         })?;
 
         if let Some(body) = self.body.take() {
-            let (body_ret_type, _) = body.borrow_mut().type_check(self.params_scope.clone())?;
+            let (body_ret_type, _) =
+                body.borrow_mut().type_check(self.params_scope.clone())?;
             if !ret_type.contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
                     "Function {} has return type {} but found {}",

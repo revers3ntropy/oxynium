@@ -50,7 +50,8 @@ impl Type for FnType {
                 return false;
             }
 
-            let required_args = self.parameters.iter().filter(|a| a.default_value.is_none());
+            let required_args =
+                self.parameters.iter().filter(|a| a.default_value.is_none());
 
             if fn_type.parameters.len() < required_args.count()
                 || fn_type.parameters.len() > self.parameters.len()

@@ -17,7 +17,10 @@ impl TypeNode {
 }
 
 impl Node for TypeNode {
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !ctx.borrow_mut().has_dec_with_id(&self.id()) {
             return Err(unknown_symbol(self.id()));
         }

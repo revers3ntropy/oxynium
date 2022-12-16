@@ -39,7 +39,10 @@ impl Node for ReturnNode {
         ))
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if let Some(ref mut value) = self.value {
             let (t, _) = value.borrow_mut().type_check(ctx.clone())?;
             Ok((

@@ -37,12 +37,18 @@ impl Node for MutateVar {
         ))
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        if !is_valid_identifier(&self.id()) || !ctx.borrow_mut().has_dec_with_id(&self.id()) {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
+        if !is_valid_identifier(&self.id())
+            || !ctx.borrow_mut().has_dec_with_id(&self.id())
+        {
             return Err(unknown_symbol(self.id().clone()));
         }
 
-        let (assign_type, _) = self.value.borrow_mut().type_check(ctx.clone())?;
+        let (assign_type, _) =
+            self.value.borrow_mut().type_check(ctx.clone())?;
         let symbol = ctx.borrow_mut().get_dec_from_id(&self.id())?.clone();
         if symbol.is_constant {
             return Err(type_error(format!(
@@ -57,7 +63,10 @@ impl Node for MutateVar {
             )));
         }
         if !symbol.type_.contains(assign_type.clone()) {
-            return Err(mismatched_types(symbol.type_.clone(), assign_type.clone()));
+            return Err(mismatched_types(
+                symbol.type_.clone(),
+                assign_type.clone(),
+            ));
         }
         Ok((
             ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),

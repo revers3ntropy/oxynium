@@ -15,7 +15,10 @@ pub struct BinOpNode {
 impl Node for BinOpNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         match self.operator.token_type {
-            TokenType::Plus | TokenType::Sub | TokenType::And | TokenType::Or => Ok(format!(
+            TokenType::Plus
+            | TokenType::Sub
+            | TokenType::And
+            | TokenType::Or => Ok(format!(
                 "
                     {}
                     {}
@@ -94,7 +97,10 @@ impl Node for BinOpNode {
         }
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         let operand_types = match self.operator.token_type {
             TokenType::Percent
             | TokenType::Plus
@@ -106,17 +112,25 @@ impl Node for BinOpNode {
             | TokenType::GT
             | TokenType::LT
             | TokenType::GTE
-            | TokenType::LTE => ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(),
+            | TokenType::LTE => {
+                ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone()
+            }
             _ => ctx.borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
         };
 
         let (lhs_type, _) = self.lhs.borrow_mut().type_check(ctx.clone())?;
         if !operand_types.contains(lhs_type.clone()) {
-            return Err(mismatched_types(operand_types.clone(), lhs_type.clone()));
+            return Err(mismatched_types(
+                operand_types.clone(),
+                lhs_type.clone(),
+            ));
         }
         let (rhs_type, _) = self.rhs.borrow_mut().type_check(ctx.clone())?;
         if !operand_types.contains(rhs_type.clone()) {
-            return Err(mismatched_types(operand_types.clone(), rhs_type.clone()));
+            return Err(mismatched_types(
+                operand_types.clone(),
+                rhs_type.clone(),
+            ));
         }
 
         return Ok((

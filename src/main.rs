@@ -35,6 +35,7 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
         is_type: true,
         require_init: false,
         is_defined: true,
+        is_param: false,
         type_: Rc::new(AtomicType {
             id: 0,
             name: "Int".to_string(),
@@ -48,6 +49,7 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
         is_type: true,
         require_init: false,
         is_defined: true,
+        is_param: false,
         type_: Rc::new(AtomicType {
             id: 1,
             name: "Bool".to_string(),
@@ -61,6 +63,7 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
         is_type: true,
         require_init: false,
         is_defined: true,
+        is_param: false,
         type_: Rc::new(AtomicType {
             id: 2,
             name: "Str".to_string(),
@@ -74,6 +77,7 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
         is_type: true,
         require_init: false,
         is_defined: true,
+        is_param: false,
         type_: Rc::new(AtomicType {
             id: 3,
             name: "Void".to_string(),
@@ -107,14 +111,12 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
     ctx.borrow_mut().define(SymbolDef {
         name: "true".to_string(),
         data: Some("dq 1".to_string()),
-        text: None,
-        is_local: false,
+        text: None
     })?;
     ctx.borrow_mut().define(SymbolDef {
         name: "false".to_string(),
         data: Some("dq 0".to_string()),
-        text: None,
-        is_local: false,
+        text: None
     })?;
 
     Ok(ctx)
@@ -146,7 +148,11 @@ fn compile(
     Ok((asm, ctx.clone()))
 }
 
-fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result<(), Error> {
+fn compile_and_assemble(
+    input: String,
+    file_name: String,
+    args: &Args,
+) -> Result<(), Error> {
     let compile_res = compile(input, file_name, args)?;
 
     let asm_out_file = format!("{}.asm", args.out);
@@ -208,7 +214,9 @@ fn main() -> std::io::Result<()> {
     let args = get_cli_args();
 
     if !args.input.is_empty() && !args.eval.is_empty() {
-        let _ = e.write("Cannot specify both 'input' and 'eval' options\n".as_bytes());
+        let _ = e.write(
+            "Cannot specify both 'input' and 'eval' options\n".as_bytes(),
+        );
         return Ok(());
     }
     if args.exec_mode != 1 && !Path::new(&args.std_path).exists() {
@@ -226,14 +234,17 @@ fn main() -> std::io::Result<()> {
         let args_ = args.clone();
         let res = compile_and_assemble(args.eval, "CLI".to_owned(), &args_);
         if res.is_err() {
-            let _ = e.write(format!("{}\n", res.err().unwrap().str()).as_bytes());
+            let _ =
+                e.write(format!("{}\n", res.err().unwrap().str()).as_bytes());
         }
         return Ok(());
     }
 
     if !args.input.is_empty() {
         if !Path::new(args.input.as_str()).exists() {
-            let _ = e.write(format!("Path '{}' doesn't exist\n", args.input).as_bytes());
+            let _ = e.write(
+                format!("Path '{}' doesn't exist\n", args.input).as_bytes(),
+            );
             return Ok(());
         }
 
@@ -243,7 +254,8 @@ fn main() -> std::io::Result<()> {
 
         let res = compile_and_assemble(input, args.input.clone(), &args);
         if res.is_err() {
-            let _ = e.write(format!("{}\n", res.err().unwrap().str()).as_bytes());
+            let _ =
+                e.write(format!("{}\n", res.err().unwrap().str()).as_bytes());
         }
         return Ok(());
     }

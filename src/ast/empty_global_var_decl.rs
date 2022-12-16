@@ -29,7 +29,10 @@ impl Node for EmptyGlobalConstNode {
         }
         Ok("".to_owned())
     }
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(syntax_error(format!(
                 "Invalid global variable '{}'",
@@ -52,6 +55,7 @@ impl Node for EmptyGlobalConstNode {
             is_type: false,
             require_init: !self.is_external,
             is_defined: false,
+            is_param: false,
             type_,
         })?;
         Ok((

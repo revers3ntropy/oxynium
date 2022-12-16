@@ -47,7 +47,10 @@ impl Node for FnCallNode {
         Ok(asm)
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(unknown_symbol(self.identifier.clone()));
         }

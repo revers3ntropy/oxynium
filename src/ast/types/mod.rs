@@ -1,11 +1,9 @@
 pub mod atomic;
 pub mod function;
-pub mod instance;
 pub mod r#struct;
 
 use crate::ast::types::atomic::AtomicType;
 use crate::ast::types::function::FnType;
-use crate::ast::types::instance::InstanceType;
 use crate::ast::types::r#struct::StructType;
 use std::fmt::Debug;
 use std::rc::Rc;
@@ -23,9 +21,6 @@ pub trait Type: Debug {
         None
     }
     fn as_struct(&self) -> Option<StructType> {
-        None
-    }
-    fn as_instance(&self) -> Option<InstanceType> {
         None
     }
 }

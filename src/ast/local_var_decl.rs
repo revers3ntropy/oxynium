@@ -3,7 +3,7 @@ use crate::context::Context;
 use crate::error::{syntax_error, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
-use crate::symbols::{is_valid_identifier, SymbolDec};
+use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
 use crate::util::MutRc;
 
 #[derive(Debug)]
@@ -11,7 +11,7 @@ pub struct LocalVarNode {
     pub identifier: Token,
     pub value: MutRc<dyn Node>,
     pub mutable: bool,
-    pub local_var_idx: usize,
+    pub stack_offset: usize,
 }
 
 impl LocalVarNode {
@@ -28,6 +28,14 @@ impl Node for LocalVarNode {
                 self.identifier.literal.as_ref().unwrap()
             )));
         }
+
+        // just so that space is made on stack
+        ctx.borrow_mut().define(SymbolDef {
+            name: self.identifier.str(),
+            data: Some("".to_string()),
+            text: None
+        })?;
+
         Ok(format!(
             "
             {}
@@ -35,27 +43,32 @@ impl Node for LocalVarNode {
             mov qword [rbp - {}], rax
         ",
             self.value.borrow_mut().asm(ctx)?,
-            (self.local_var_idx + 1) * 8
+            self.stack_offset
         ))
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.id()) {
-            return Err(
-                syntax_error(format!("Invalid local variable '{}'", self.id()))
-                    .set_interval(self.identifier.interval()),
-            );
+            return Err(syntax_error(format!(
+                "Invalid local variable '{}'",
+                self.id()
+            ))
+            .set_interval(self.identifier.interval()));
         }
         let (type_, _) = self.value.borrow_mut().type_check(ctx.clone())?;
-        self.local_var_idx = ctx.borrow_mut().get_declarations().len();
+        self.stack_offset = ctx.borrow_mut().get_new_local_var_offset();
 
         ctx.borrow_mut().declare(SymbolDec {
             name: self.id(),
-            id: format!("qword [rbp - {}]", (self.local_var_idx + 1) * 8),
+            id: format!("qword [rbp - {}]", self.stack_offset),
             is_constant: !self.mutable,
             is_type: false,
             require_init: true,
             is_defined: true,
+            is_param: false,
             type_: type_.clone(),
         })?;
         Ok((type_.clone(), None))

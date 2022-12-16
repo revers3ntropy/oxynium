@@ -36,13 +36,20 @@ impl Node for UnaryOpNode {
                     self.rhs.borrow_mut().asm(ctx.clone())?
                 )
             }
-            _ => panic!("Invalid arithmetic unary operator: {:?}", self.operator),
+            _ => {
+                panic!("Invalid arithmetic unary operator: {:?}", self.operator)
+            }
         })
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         let t = match self.operator.token_type {
-            TokenType::Sub => ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(),
+            TokenType::Sub => {
+                ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone()
+            }
             _ => ctx.borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
         };
 

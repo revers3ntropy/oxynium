@@ -3,7 +3,8 @@ use crate::parse::token::{Token, TokenType};
 use crate::position::Position;
 use phf::phf_map;
 
-static IDENTIFIER_CHARS: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$";
+static IDENTIFIER_CHARS: &str =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$";
 
 const SINGLE_CHAR_TOKENS: phf::Map<&'static str, TokenType> = phf_map! {
     "+" => TokenType::Plus,
@@ -15,6 +16,7 @@ const SINGLE_CHAR_TOKENS: phf::Map<&'static str, TokenType> = phf_map! {
     "%" => TokenType::Percent,
     "&" => TokenType::Ampersand,
     "," => TokenType::Comma,
+    "." => TokenType::Dot,
     ";" => TokenType::EndStatement,
     "=" => TokenType::Equals,
     "{" => TokenType::OpenBrace,
@@ -63,7 +65,9 @@ impl Lexer {
                 let start = self.position.clone();
                 // build a number while we can
                 let mut number = String::new();
-                while self.current_char.is_some() && self.current_char.unwrap().is_numeric() {
+                while self.current_char.is_some()
+                    && self.current_char.unwrap().is_numeric()
+                {
                     number.push(self.current_char.unwrap());
                     self.advance();
                 }
@@ -80,10 +84,13 @@ impl Lexer {
             } else if c == '"' {
                 tokens.push(self.make_string());
             } else if c == '/'
-                && self.input.chars().nth((self.position.idx + 1) as usize) == Some('/')
+                && self.input.chars().nth((self.position.idx + 1) as usize)
+                    == Some('/')
             {
                 self.advance();
-                while self.current_char.is_some() && self.current_char.unwrap() != '\n' {
+                while self.current_char.is_some()
+                    && self.current_char.unwrap() != '\n'
+                {
                     self.advance();
                 }
             } else if DOUBLE_CHAR_TOKENS.contains_key(
@@ -120,7 +127,10 @@ impl Lexer {
                 ));
                 self.advance();
             } else {
-                return Err(syntax_error(format!("Unexpected character '{}'", c)));
+                return Err(syntax_error(format!(
+                    "Unexpected character '{}'",
+                    c
+                )));
             }
         }
 
@@ -143,7 +153,9 @@ impl Lexer {
     fn make_identifier(&mut self) -> Token {
         let mut identifier = String::new();
         let start = self.position.clone();
-        while self.current_char.is_some() && IDENTIFIER_CHARS.contains(self.current_char.unwrap()) {
+        while self.current_char.is_some()
+            && IDENTIFIER_CHARS.contains(self.current_char.unwrap())
+        {
             identifier.push(self.current_char.unwrap());
             self.advance();
         }

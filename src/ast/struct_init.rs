@@ -1,8 +1,7 @@
-use crate::ast::types::instance::InstanceType;
 use crate::ast::types::Type;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{type_error, Error};
+use crate::error::{type_error, Error, unknown_symbol};
 use crate::position::Interval;
 use crate::util::{intersection, MutRc};
 use std::collections::HashMap;
@@ -22,15 +21,21 @@ impl StructInitNode {
     ) -> Result<HashMap<String, Rc<dyn Type>>, Error> {
         let mut instance_fields_hashmap = HashMap::new();
         for field in self.fields.clone() {
-            instance_fields_hashmap
-                .insert(field.0, field.1.borrow_mut().type_check(ctx.clone())?.0);
+            instance_fields_hashmap.insert(
+                field.0,
+                field.1.borrow_mut().type_check(ctx.clone())?.0,
+            );
         }
         Ok(instance_fields_hashmap)
     }
-    fn field_asm_hashmap(&self, ctx: MutRc<Context>) -> Result<HashMap<String, String>, Error> {
+    fn field_asm_hashmap(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<HashMap<String, String>, Error> {
         let mut instance_fields_hashmap = HashMap::new();
         for field in self.fields.clone() {
-            instance_fields_hashmap.insert(field.0, field.1.borrow_mut().asm(ctx.clone())?);
+            instance_fields_hashmap
+                .insert(field.0, field.1.borrow_mut().asm(ctx.clone())?);
         }
         Ok(instance_fields_hashmap)
     }
@@ -61,24 +66,38 @@ impl Node for StructInitNode {
             asm.push_str(&format!(
                 "
                 pop rdx
-                mov qword [rax+{}], rdx
+                mov qword [rax + {}], rdx
             ",
-                i
+                (fields.len() - i - 1) * 8
             ));
         }
+
+        asm.push_str(&format!("
+            push rax
+        "));
 
         Ok(asm)
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        let struct_type = ctx
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
+        if !ctx.borrow_mut().has_dec_with_id(&self.identifier) {
+            return Err(unknown_symbol(self.identifier.clone())
+                .set_interval(self.position.clone()));
+        }
+        let type_ = ctx
             .borrow_mut()
             .get_dec_from_id(&self.identifier)?
             .type_
             .clone();
-        let struct_type = struct_type.as_struct();
+        let struct_type = type_.as_struct();
         if struct_type.is_none() {
-            return Err(type_error(format!("{} is not a struct", self.identifier)));
+            return Err(type_error(format!(
+                "{} is not a struct",
+                self.identifier
+            )));
         }
         let struct_type = struct_type.unwrap();
 
@@ -89,7 +108,8 @@ impl Node for StructInitNode {
             type_fields_hashmap.insert(field.name, field.type_.clone());
         }
 
-        let (extra, fields, missing) = intersection(&instance_fields_hashmap, &type_fields_hashmap);
+        let (extra, fields, missing) =
+            intersection(&instance_fields_hashmap, &type_fields_hashmap);
 
         if extra.len() > 0 {
             return Err(type_error(format!(
@@ -127,12 +147,7 @@ impl Node for StructInitNode {
             }
         }
 
-        Ok((
-            Rc::new(InstanceType {
-                struct_type: Rc::new(struct_type.clone()),
-            }),
-            None,
-        ))
+        Ok((type_, None))
     }
 
     fn pos(&mut self) -> Interval {

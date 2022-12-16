@@ -7,7 +7,8 @@ use regex::Regex;
 // ];
 
 const REGISTERS_NO_STACK: [&str; 14] = [
-    "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15",
+    "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12",
+    "r13", "r14", "r15",
 ];
 
 fn o1(
@@ -43,7 +44,8 @@ fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
         let (push, register) = line.split_once(" ").unwrap_or(("", ""));
         (
             push == "push"
-                && (REGISTERS_NO_STACK.contains(&register) || register.starts_with("qword [")),
+                && (REGISTERS_NO_STACK.contains(&register)
+                    || register.starts_with("qword [")),
             register.to_string(),
         )
     }
@@ -52,7 +54,8 @@ fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
         let (push, register) = line.split_once(" ").unwrap_or(("", ""));
         (
             push == "pop"
-                && (REGISTERS_NO_STACK.contains(&register) || register.starts_with("qword [")),
+                && (REGISTERS_NO_STACK.contains(&register)
+                    || register.starts_with("qword [")),
             register.to_string(),
         )
     }
@@ -137,7 +140,8 @@ fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
             }
             used_registers.push(pop_reg.clone());
             if used_registers.contains(&push_reg) {
-                let index = used_registers.iter().position(|x| *x == push_reg).unwrap();
+                let index =
+                    used_registers.iter().position(|x| *x == push_reg).unwrap();
                 used_registers.remove(index);
             }
             res.push(format!("mov {}, {}", pop_reg.clone(), push_reg.clone()));
@@ -207,7 +211,9 @@ mod tests {
         );
 
         assert_eq!(
-            super::push_pull_duplication(strings_vec!["push r10", "push r11", "pop r12",]),
+            super::push_pull_duplication(strings_vec![
+                "push r10", "push r11", "pop r12",
+            ]),
             strings_vec!["push r10", "mov r12, r11",]
         );
 
@@ -246,9 +252,16 @@ mod tests {
 
         assert_eq!(
             super::push_pull_duplication(strings_vec![
-                "push r12", "push rbx", "push rax", "pop rbx", "pop rax", "pop r12",
+                "push r12", "push rbx", "push rax", "pop rbx", "pop rax",
+                "pop r12",
             ]),
-            strings_vec!["push r12", "push rbx", "mov rbx, rax", "pop rax", "pop r12",]
+            strings_vec![
+                "push r12",
+                "push rbx",
+                "mov rbx, rax",
+                "pop rax",
+                "pop r12",
+            ]
         );
 
         assert_eq!(

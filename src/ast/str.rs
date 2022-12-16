@@ -23,8 +23,7 @@ impl Node for StrNode {
             name: "".to_string(),
             // ,0 is the null terminator
             data: Some(format!("dq \"{}\", 0", self.val())),
-            text: None,
-            is_local: false,
+            text: None
         })?;
 
         Ok(format!(
@@ -34,7 +33,10 @@ impl Node for StrNode {
         ))
     }
 
-    fn type_check(&mut self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         Ok((ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone(), None))
     }
 
