@@ -33,6 +33,65 @@ use crate::parse::token::{Token, TokenType};
 use crate::position::Position;
 use crate::util::{new_mut_rc, MutRc};
 
+macro_rules! ret_on_err {
+    ($e:expr) => {
+        if $e.error.is_some() {
+            return $e;
+        }
+    };
+}
+macro_rules! result_ret_on_err {
+    ($e:expr) => {
+        if $e.error.is_some() {
+            return Err($e.error.unwrap());
+        }
+    };
+}
+
+macro_rules! consume {
+    ($self:expr, $res:expr) => {
+        $self.advance(&mut $res);
+        if $res.error.is_some() {
+            return $res;
+        }
+        if $self.tok_idx >= $self.tokens.len() {
+            $res.failure(syntax_error(
+                "Unexpected end of file".to_string()),
+                Some($self.tokens[$self.tokens.len() - 1].end.clone()),
+                None
+            );
+            return $res;
+        }
+    };
+    ($t:ident, $self:expr, $e:expr) => {
+        $self.consume(&mut $e, TokenType::$t);
+        if $e.error.is_some() {
+            return $e;
+        }
+    };
+    ($res:ident = $t:ident, $self:expr, $e:expr) => {
+        let $res = $self.consume(&mut $e, TokenType::$t);
+        if $e.error.is_some() {
+            return $e;
+        }
+    };
+}
+
+macro_rules! result_consume {
+    ($t:ident, $self:expr, $res:expr) => {
+        $self.consume(&mut $res, TokenType::$t);
+        if $res.error.is_some() {
+            return Err($res.error.unwrap());
+        }
+    };
+    ($res:ident = $t:ident, $self:expr, $r:expr) => {
+        let $res = $self.consume(&mut $r, TokenType::$t);
+        if $r.error.is_some() {
+            return Err($r.error.unwrap());
+        }
+    };
+}
+
 pub struct Parser {
     tokens: Vec<Token>,
     tok_idx: usize,
@@ -54,9 +113,7 @@ impl Parser {
         }
 
         let expr = res.register(self.statements());
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
         let root_node = ExecRootNode {
             statements: expr.unwrap(),
         };
@@ -67,8 +124,8 @@ impl Parser {
                     "Unexpected token {:?}",
                     self.tokens[self.tok_idx].str()
                 )),
-                Some(self.tokens[self.tok_idx].start.clone()),
-                Some(self.tokens[self.tok_idx].end.clone()),
+                Some(self.current_tok().unwrap().start.clone()),
+                Some(self.current_tok().unwrap().end.clone()),
             );
             return res;
         }
@@ -119,35 +176,6 @@ impl Parser {
         )
     }
 
-    // fn consume_one_of(&mut self, res: &mut ParseResults, tok_types: Vec<TokenType>) -> Token {
-    //     if let Some(tok) = self.current_tok() {
-    //         if tok_types.contains(&tok.token_type) {
-    //             self.advance(res);
-    //             return tok;
-    //         }
-    //
-    //         let err = syntax_error(format!(
-    //             "Expected token type: {:?}, got: {:?}",
-    //             tok_types,
-    //             tok.token_type
-    //         ));
-    //         res.failure(err,
-    //             Some(tok.start.clone()),
-    //             Some(tok.end.clone())
-    //         );
-    //     }
-    //
-    //     res.failure(syntax_error(format!(
-    //         "Unexpected EOF, expected {:?}",
-    //         tok_types
-    //     )),
-    //         Some(self.tokens[self.tok_idx-1].start.clone()),
-    //         Some(self.tokens[self.tok_idx-1].end.clone())
-    //     );
-    //     Token::new(TokenType::EndStatement, None,
-    //                Position::unknown(), Position::unknown())
-    // }
-
     fn peak_matches(&self, tok_type: TokenType, value: Option<String>) -> bool {
         if let Some(tok) = self.current_tok() {
             if tok.token_type == tok_type {
@@ -176,12 +204,6 @@ impl Parser {
         }
         Some(self.tokens[self.tok_idx - 1].clone())
     }
-    // fn next_tok(&self) -> Option<Token> {
-    //     if self.tok_idx+1 >= self.tokens.len() {
-    //         return None;
-    //     }
-    //     Some(self.tokens[self.tok_idx+1].clone())
-    // }
 
     fn clear_end_statements(&mut self, res: &mut ParseResults) {
         while self.peak_matches(TokenType::EndStatement, None) {
@@ -201,12 +223,10 @@ impl Parser {
     {
         let mut res = ParseResults::new();
         let mut left = res.register(func_a(self));
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
 
         while let Some(op_tok) = self.current_tok() {
-            if ops
+            let matches = ops
                 .iter_mut()
                 .filter(|(op, value)| {
                     if value.is_none() {
@@ -215,20 +235,16 @@ impl Parser {
                     &op_tok.token_type == op
                         && op_tok.literal.is_some()
                         && op_tok.literal.clone().unwrap()
-                            == value.clone().unwrap()
-                })
-                .count()
-                == 0
-            {
+                        == value.clone().unwrap()
+                });
+            if matches.count() == 0 {
                 break;
             }
             self.advance(&mut res);
 
             let right = res.register(func_b(self));
+            ret_on_err!(res);
 
-            if res.error.is_some() {
-                return res;
-            }
             left = Some(new_mut_rc(BinOpNode {
                 lhs: left.unwrap(),
                 operator: op_tok,
@@ -236,9 +252,7 @@ impl Parser {
             }));
         }
 
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
         res.success(left.unwrap());
         res
     }
@@ -258,9 +272,7 @@ impl Parser {
                 .collect(),
         );
 
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
         if first_stmt.is_none() {
             return res;
         }
@@ -285,9 +297,7 @@ impl Parser {
 
             let start_of_stmt = self.tok_idx;
             let statement = res.try_register(self.statement());
-            if res.error.is_some() {
-                return res;
-            }
+            ret_on_err!(res);
             if statement.is_none() {
                 self.reverse(res.reverse_count);
                 continue;
@@ -309,10 +319,7 @@ impl Parser {
 
     fn scope(&mut self, make_scope_node: bool) -> ParseResults {
         let mut res = ParseResults::new();
-        self.consume(&mut res, TokenType::OpenBrace);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(OpenBrace, self, res);
 
         let start = self.last_tok().unwrap().start.clone();
 
@@ -335,15 +342,10 @@ impl Parser {
 
         if !self.peak_matches(TokenType::CloseBrace, None) {
             statements = res.register(self.statements());
-            if res.error.is_some() {
-                return res;
-            }
+            ret_on_err!(res);
         }
 
-        self.consume(&mut res, TokenType::CloseBrace);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(CloseBrace, self, res);
 
         let end = self.last_tok().unwrap().end.clone();
 
@@ -461,9 +463,7 @@ impl Parser {
     fn expression(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
         self.clear_end_statements(&mut res);
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
         self.bin_op(
             |this| this.as_expr(),
             vec![(TokenType::And, None), (TokenType::Or, None)],
@@ -494,10 +494,7 @@ impl Parser {
             ],
             |this| this.arithmetic_expr(),
         ));
-
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
         res.success(node.unwrap());
         res
     }
@@ -528,9 +525,7 @@ impl Parser {
         if self.peak_matches(TokenType::Colon, None) {
             self.advance(&mut res);
             type_ = res.register(self.type_expr());
-            if res.error.is_some() {
-                return res;
-            }
+            ret_on_err!(res);
         }
 
         if !self.peak_matches(TokenType::Equals, None) {
@@ -551,7 +546,7 @@ impl Parser {
             }));
             return res;
         }
-        self.advance(&mut res); // '='
+        consume!(self, res); // '='
 
         if self.current_tok().is_none() {
             res.failure(
@@ -602,19 +597,15 @@ impl Parser {
             mutable = true;
         }
 
-        let name_tok = self.consume(&mut res, TokenType::Identifier);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(name_tok = Identifier, self, res);
+
         let name = name_tok.literal.as_ref().unwrap().clone();
 
         if self.peak_matches(TokenType::Colon, None) {
             self.advance(&mut res);
 
             let type_ = res.register(self.type_expr());
-            if res.error.is_some() {
-                return res;
-            }
+            ret_on_err!(res);
 
             if !mutable {
                 res.failure(
@@ -637,15 +628,10 @@ impl Parser {
             return res;
         }
 
-        self.consume(&mut res, TokenType::Equals);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(Equals, self, res);
 
         let expr = res.register(self.expression());
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
 
         res.success(new_mut_rc(LocalVarNode {
             identifier: name_tok,
@@ -661,11 +647,9 @@ impl Parser {
 
         if let Some(tok) = self.current_tok() {
             if tok.token_type == TokenType::Not {
-                self.advance(&mut res);
+                consume!(self, res);
                 let node = res.register(self.unary_expr());
-                if res.error.is_some() {
-                    return res;
-                }
+                ret_on_err!(res);
                 res.success(new_mut_rc(UnaryOpNode {
                     operator: tok,
                     rhs: node.unwrap(),
@@ -685,9 +669,7 @@ impl Parser {
             if t.token_type == TokenType::Sub {
                 self.advance(&mut res);
                 let factor = res.register(self.factor());
-                if res.error.is_some() {
-                    return res;
-                }
+                ret_on_err!(res);
                 res.success(new_mut_rc(UnaryOpNode {
                     operator: t,
                     rhs: factor.unwrap(),
@@ -730,19 +712,14 @@ impl Parser {
             base = base_option.unwrap();
         } else {
             let atom = res.register(self.atom());
-            if res.error.is_some() {
-                return res;
-            }
+            ret_on_err!(res);
             base = atom.unwrap();
         }
 
         if self.peak_matches(TokenType::Dot, None) {
             let start = self.current_tok().unwrap().start.clone();
             self.advance(&mut res);
-            let name_tok = self.consume(&mut res, TokenType::Identifier);
-            if res.error.is_some() {
-                return res;
-            }
+            consume!(name_tok = Identifier, self, res);
 
             return self.compound(Some(new_mut_rc(FieldAccessNode {
                 base,
@@ -760,10 +737,7 @@ impl Parser {
 
         let start = self.last_tok().unwrap().start;
 
-        self.consume(&mut res, TokenType::OpenParen);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(OpenParen, self, res);
 
         if let Some(t) = self.current_tok() {
             // fn(), no arguments
@@ -784,9 +758,7 @@ impl Parser {
 
         loop {
             let parameter = res.register(self.expression());
-            if res.error.is_some() {
-                return res;
-            }
+            ret_on_err!(res);
 
             args.push(parameter.unwrap());
 
@@ -816,10 +788,7 @@ impl Parser {
             }
         }
 
-        self.consume(&mut res, TokenType::CloseParen);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(CloseParen, self, res);
 
         res.success(new_mut_rc(FnCallNode {
             identifier: fn_identifier_tok.literal.unwrap(),
@@ -834,12 +803,10 @@ impl Parser {
     fn assign(&mut self, id_tok: Token) -> ParseResults {
         let mut res = ParseResults::new();
 
-        self.consume(&mut res, TokenType::Equals);
+        consume!(Equals, self, res);
 
         let value = res.register(self.expression());
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
 
         res.success(new_mut_rc(MutateVar {
             identifier: id_tok,
@@ -851,9 +818,6 @@ impl Parser {
 
     fn atom(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
-        if res.error.is_some() {
-            return res;
-        }
 
         let token_option = self.current_tok();
         if token_option.is_none() {
@@ -865,6 +829,7 @@ impl Parser {
             return res;
         }
         let tok = token_option.unwrap();
+
         match tok.token_type {
             TokenType::Int => {
                 self.advance(&mut res);
@@ -894,14 +859,9 @@ impl Parser {
                 self.advance(&mut res);
 
                 let expr = res.register(self.expression());
-                if res.error.is_some() {
-                    return res;
-                }
+                ret_on_err!(res);
 
-                self.consume(&mut res, TokenType::CloseParen);
-                if res.error.is_some() {
-                    return res;
-                }
+                consume!(CloseParen, self, res);
 
                 res.success(expr.unwrap());
             }
@@ -948,9 +908,7 @@ impl Parser {
         let start = self.last_tok().unwrap().start;
 
         let statements = res.register(self.scope(true));
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
 
         res.success(new_mut_rc(LoopNode {
             statements: statements.unwrap(),
@@ -964,14 +922,10 @@ impl Parser {
         let start = self.last_tok().unwrap().start;
 
         let comparison = res.register(self.expression());
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
 
         let statements = res.register(self.scope(true));
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
 
         let mut else_body: Option<MutRc<dyn Node>> = None;
 
@@ -979,14 +933,10 @@ impl Parser {
             self.advance(&mut res);
             if self.peak_matches(TokenType::OpenBrace, None) {
                 else_body = res.register(self.scope(true));
-                if res.error.is_some() {
-                    return res;
-                }
+                ret_on_err!(res);
             } else {
                 let else_expr_option = res.register(self.statement());
-                if res.error.is_some() {
-                    return res;
-                }
+                ret_on_err!(res);
                 else_body = Some(else_expr_option.unwrap());
             }
         }
@@ -1003,10 +953,7 @@ impl Parser {
     fn type_expr(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
 
-        let type_tok = self.consume(&mut res, TokenType::Identifier);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(type_tok = Identifier, self, res);
 
         res.success(new_mut_rc(TypeNode {
             identifier: type_tok,
@@ -1017,29 +964,18 @@ impl Parser {
     fn parameter(&mut self) -> Result<Parameter, Error> {
         let mut res = ParseResults::new();
 
-        let identifier = self.consume(&mut res, TokenType::Identifier);
-        if res.error.is_some() {
-            return Err(res.error.unwrap());
-        }
-
-        self.consume(&mut res, TokenType::Colon);
-        if res.error.is_some() {
-            return Err(res.error.unwrap());
-        }
+        result_consume!(identifier = Identifier, self, res);
+        result_consume!(Colon, self, res);
 
         let type_expr = res.register(self.type_expr());
-        if res.error.is_some() {
-            return Err(res.error.unwrap());
-        }
+        result_ret_on_err!(res);
 
         let mut default_value = None;
 
         if self.peak_matches(TokenType::Equals, None) {
             self.advance(&mut res);
             let default_value_option = res.register(self.expression());
-            if res.error.is_some() {
-                return Err(res.error.unwrap());
-            }
+            result_ret_on_err!(res);
             default_value = Some(default_value_option.unwrap());
         }
 
@@ -1066,10 +1002,7 @@ impl Parser {
                 return Ok(parameters);
             }
 
-            self.consume(&mut res, TokenType::Comma);
-            if res.error.is_some() {
-                return Err(res.error.unwrap());
-            }
+            result_consume!(Comma, self, res);
 
             parameters.push(self.parameter()?);
         }
@@ -1086,16 +1019,10 @@ impl Parser {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
 
-        let id_tok = self.consume(&mut res, TokenType::Identifier);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(id_tok = Identifier, self, res);
         let identifier = id_tok.literal.unwrap();
 
-        self.consume(&mut res, TokenType::OpenParen);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(OpenParen, self, res);
 
         let params = self.parameters();
         if params.is_err() {
@@ -1103,10 +1030,7 @@ impl Parser {
             return res;
         }
 
-        self.consume(&mut res, TokenType::CloseParen);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(CloseParen, self, res);
 
         let mut ret_type: MutRc<dyn Node> = new_mut_rc(TypeNode {
             identifier: Token::new(
@@ -1120,9 +1044,7 @@ impl Parser {
         if self.peak_matches(TokenType::Colon, None) {
             self.advance(&mut res);
             let ret_type_option = res.register(self.type_expr());
-            if res.error.is_some() {
-                return res;
-            }
+            ret_on_err!(res);
             ret_type = ret_type_option.unwrap();
         }
 
@@ -1151,9 +1073,7 @@ impl Parser {
         }
 
         let body = res.register(self.scope(false));
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
 
         res.success(new_mut_rc(FnDeclarationNode {
             identifier,
@@ -1187,9 +1107,7 @@ impl Parser {
         }
 
         let expr = res.register(self.expression());
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
 
         res.success(new_mut_rc(ReturnNode {
             value: Some(expr.unwrap()),
@@ -1201,20 +1119,11 @@ impl Parser {
     fn class_field(&mut self) -> Result<ClassField, Error> {
         let mut res = ParseResults::new();
 
-        let identifier = self.consume(&mut res, TokenType::Identifier);
-        if res.error.is_some() {
-            return Err(res.error.unwrap());
-        }
-
-        self.consume(&mut res, TokenType::Colon);
-        if res.error.is_some() {
-            return Err(res.error.unwrap());
-        }
+        result_consume!(identifier = Identifier, self, res);
+        result_consume!(Colon, self, res);
 
         let type_expr = res.register(self.type_expr());
-        if res.error.is_some() {
-            return Err(res.error.unwrap());
-        }
+        result_ret_on_err!(res);
 
         Ok(ClassField {
             identifier: identifier.literal.unwrap(),
@@ -1226,16 +1135,10 @@ impl Parser {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
 
-        let id_tok = self.consume(&mut res, TokenType::Identifier);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(id_tok = Identifier, self, res);
         let identifier = id_tok.literal.unwrap();
 
-        self.consume(&mut res, TokenType::OpenBrace);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(OpenBrace, self, res);
 
         let mut fields = Vec::new();
 
@@ -1255,16 +1158,10 @@ impl Parser {
                 break;
             }
 
-            self.consume(&mut res, TokenType::Comma);
-            if res.error.is_some() {
-                return res;
-            }
+            consume!(Comma, self, res);
         }
 
-        self.consume(&mut res, TokenType::CloseBrace);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(CloseBrace, self, res);
 
         res.success(new_mut_rc(ClassDeclarationNode {
             identifier,
@@ -1279,20 +1176,11 @@ impl Parser {
     ) -> Result<(String, MutRc<dyn Node>), Error> {
         let mut res = ParseResults::new();
 
-        let identifier = self.consume(&mut res, TokenType::Identifier);
-        if res.error.is_some() {
-            return Err(res.error.unwrap());
-        }
-
-        self.consume(&mut res, TokenType::Colon);
-        if res.error.is_some() {
-            return Err(res.error.unwrap());
-        }
+        result_consume!(identifier = Identifier, self, res);
+        result_consume!(Colon, self, res);
 
         let value = res.register(self.expression());
-        if res.error.is_some() {
-            return Err(res.error.unwrap());
-        }
+        result_ret_on_err!(res);
 
         Ok((identifier.literal.unwrap(), value.unwrap()))
     }
@@ -1301,21 +1189,39 @@ impl Parser {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start.clone();
 
-        let identifier_tok = self.consume(&mut res, TokenType::Identifier);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(identifier_tok = Identifier, self, res);
 
-        self.consume(&mut res, TokenType::OpenBrace);
-        if res.error.is_some() {
-            return res;
-        }
+        consume!(OpenBrace, self, res);
 
         let mut fields = Vec::new();
+        let mut methods = Vec::new();
 
         while let Some(next) = self.current_tok() {
             if next.token_type == TokenType::CloseBrace {
                 break;
+            }
+
+            if self.peak_matches(TokenType::Identifier, Some("fn".to_string())) {
+                self.advance(&mut res);
+
+                if !self.peak_matches(TokenType::Identifier, None) {
+                    res.failure(
+                        syntax_error("Expected identifier after 'fn'".to_owned()),
+                        Some(self.last_tok().unwrap().end.clone()),
+                        None,
+                    );
+                    return res;
+                }
+                let identifier = self.current_tok().unwrap().clone().literal.unwrap();
+
+                let fn_decl = res.register(self.fn_expr(false));
+                ret_on_err!(res);
+
+                methods.push((identifier, fn_decl.unwrap()));
+                if self.peak_matches(TokenType::CloseBrace, None) {
+                    break;
+                }
+                continue;
             }
 
             let field = self.class_init_field();
@@ -1330,15 +1236,11 @@ impl Parser {
                 break;
             }
             self.consume(&mut res, TokenType::Comma);
-            if res.error.is_some() {
-                return res;
-            }
+            ret_on_err!(res);
         }
 
         self.consume(&mut res, TokenType::CloseBrace);
-        if res.error.is_some() {
-            return res;
-        }
+        ret_on_err!(res);
 
         res.success(new_mut_rc(ClassInitNode {
             identifier: identifier_tok.literal.unwrap(),
