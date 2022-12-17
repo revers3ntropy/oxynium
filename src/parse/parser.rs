@@ -19,9 +19,9 @@ use crate::ast::r#return::ReturnNode;
 use crate::ast::scope::ScopeNode;
 use crate::ast::statements::StatementsNode;
 use crate::ast::str::StrNode;
-use crate::ast::struct_declaration::{StructDeclarationNode, StructField};
-use crate::ast::struct_field_access::FieldAccessNode;
-use crate::ast::struct_init::StructInitNode;
+use crate::ast::class_declaration::{ClassDeclarationNode, ClassField};
+use crate::ast::class_field_access::FieldAccessNode;
+use crate::ast::class_init::ClassInitNode;
 use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::type_expr::TypeNode;
 use crate::ast::unary_op::UnaryOpNode;
@@ -423,10 +423,10 @@ impl Parser {
             res.node = res.register(self.fn_expr(false));
             return res;
         }
-        if self.peak_matches(TokenType::Identifier, Some("struct".to_string()))
+        if self.peak_matches(TokenType::Identifier, Some("class".to_string()))
         {
             self.advance(&mut res);
-            res.node = res.register(self.struct_expr());
+            res.node = res.register(self.class_expr());
             return res;
         }
         if self.peak_matches(TokenType::Identifier, Some("extern".to_string()))
@@ -908,7 +908,7 @@ impl Parser {
             TokenType::Identifier => {
                 self.advance(&mut res);
                 if tok.clone().literal.unwrap() == "new" {
-                    return self.struct_init();
+                    return self.class_init();
                 }
                 if tok.clone().literal.unwrap() == "false"
                     || tok.clone().literal.unwrap() == "true"
@@ -1198,7 +1198,7 @@ impl Parser {
         res
     }
 
-    fn struct_field(&mut self) -> Result<StructField, Error> {
+    fn class_field(&mut self) -> Result<ClassField, Error> {
         let mut res = ParseResults::new();
 
         let identifier = self.consume(&mut res, TokenType::Identifier);
@@ -1216,13 +1216,13 @@ impl Parser {
             return Err(res.error.unwrap());
         }
 
-        Ok(StructField {
+        Ok(ClassField {
             identifier: identifier.literal.unwrap(),
             type_: type_expr.unwrap(),
         })
     }
 
-    fn struct_expr(&mut self) -> ParseResults {
+    fn class_expr(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
 
@@ -1244,7 +1244,7 @@ impl Parser {
                 break;
             }
 
-            let field = self.struct_field();
+            let field = self.class_field();
             if field.is_err() {
                 // don't override more precise position of error
                 res.failure(field.err().unwrap(), None, None);
@@ -1266,7 +1266,7 @@ impl Parser {
             return res;
         }
 
-        res.success(new_mut_rc(StructDeclarationNode {
+        res.success(new_mut_rc(ClassDeclarationNode {
             identifier,
             fields,
             position: (start, self.last_tok().unwrap().end.clone()),
@@ -1274,7 +1274,7 @@ impl Parser {
         res
     }
 
-    fn struct_init_field(
+    fn class_init_field(
         &mut self,
     ) -> Result<(String, MutRc<dyn Node>), Error> {
         let mut res = ParseResults::new();
@@ -1297,7 +1297,7 @@ impl Parser {
         Ok((identifier.literal.unwrap(), value.unwrap()))
     }
 
-    fn struct_init(&mut self) -> ParseResults {
+    fn class_init(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start.clone();
 
@@ -1318,7 +1318,7 @@ impl Parser {
                 break;
             }
 
-            let field = self.struct_init_field();
+            let field = self.class_init_field();
             if field.is_err() {
                 // don't override more precise position of error
                 res.failure(field.err().unwrap(), None, None);
@@ -1340,7 +1340,7 @@ impl Parser {
             return res;
         }
 
-        res.success(new_mut_rc(StructInitNode {
+        res.success(new_mut_rc(ClassInitNode {
             identifier: identifier_tok.literal.unwrap(),
             fields,
             position: (start, self.last_tok().unwrap().end.clone()),

@@ -1,4 +1,4 @@
-use crate::ast::types::r#struct::{StructFieldType, StructType};
+use crate::ast::types::r#class::{ClassFieldType, ClassType};
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{unknown_symbol, Error};
@@ -8,19 +8,19 @@ use crate::util::MutRc;
 use std::rc::Rc;
 
 #[derive(Debug)]
-pub struct StructField {
+pub struct ClassField {
     pub identifier: String,
     pub type_: MutRc<dyn Node>,
 }
 
 #[derive(Debug)]
-pub struct StructDeclarationNode {
+pub struct ClassDeclarationNode {
     pub identifier: String,
-    pub fields: Vec<StructField>,
+    pub fields: Vec<ClassField>,
     pub position: Interval,
 }
 
-impl Node for StructDeclarationNode {
+impl Node for ClassDeclarationNode {
     fn type_check(
         &mut self,
         ctx: MutRc<Context>,
@@ -34,14 +34,14 @@ impl Node for StructDeclarationNode {
             .iter()
             .map(|field| {
                 let type_ = field.type_.borrow_mut().type_check(ctx.clone())?;
-                Ok(StructFieldType {
+                Ok(ClassFieldType {
                     name: field.identifier.clone(),
                     type_: type_.0,
                 })
             })
-            .collect::<Result<Vec<StructFieldType>, Error>>()?;
+            .collect::<Result<Vec<ClassFieldType>, Error>>()?;
 
-        let this_type = Rc::new(StructType {
+        let this_type = Rc::new(ClassType {
             name: self.identifier.clone(),
             fields,
         });

@@ -8,13 +8,13 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 #[derive(Debug)]
-pub struct StructInitNode {
+pub struct ClassInitNode {
     pub identifier: String,
     pub fields: Vec<(String, MutRc<dyn Node>)>,
     pub position: Interval,
 }
 
-impl StructInitNode {
+impl ClassInitNode {
     fn field_types_hashmap(
         &self,
         ctx: MutRc<Context>,
@@ -41,7 +41,7 @@ impl StructInitNode {
     }
 }
 
-impl Node for StructInitNode {
+impl Node for ClassInitNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         let mut asm = String::new();
 
@@ -94,19 +94,19 @@ impl Node for StructInitNode {
             .get_dec_from_id(&self.identifier)?
             .type_
             .clone();
-        let struct_type = type_.as_struct();
-        if struct_type.is_none() {
+        let class_type = type_.as_class();
+        if class_type.is_none() {
             return Err(type_error(format!(
-                "{} is not a struct",
+                "{} is not a class",
                 self.identifier
             )));
         }
-        let struct_type = struct_type.unwrap();
+        let class_type = class_type.unwrap();
 
         let instance_fields_hashmap = self.field_types_hashmap(ctx.clone())?;
 
         let mut type_fields_hashmap = HashMap::new();
-        for field in struct_type.fields.clone() {
+        for field in class_type.fields.clone() {
             type_fields_hashmap.insert(field.name, field.type_.clone());
         }
 
@@ -115,7 +115,7 @@ impl Node for StructInitNode {
 
         if extra.len() > 0 {
             return Err(type_error(format!(
-                "Unknown fields in struct initialization: {}",
+                "Unknown fields in class initialization: {}",
                 extra
                     .iter()
                     .map(|s| s.clone())
@@ -126,7 +126,7 @@ impl Node for StructInitNode {
 
         if missing.len() > 0 {
             return Err(type_error(format!(
-                "Missing fields in struct initialization: {}",
+                "Missing fields in class initialization: {}",
                 missing
                     .iter()
                     .map(|s| s.clone())
@@ -142,7 +142,7 @@ impl Node for StructInitNode {
                 .contains(instance_fields_hashmap.get(&field).unwrap().clone())
             {
                 return Err(type_error(format!(
-                    "Type mismatch in struct initialization field '{field}': Expected {} but found {}",
+                    "Type mismatch in class initialization field '{field}': Expected {} but found {}",
                     type_fields_hashmap.get(&field).unwrap().str(),
                     instance_fields_hashmap.get(&field).unwrap().str(),
                 )));

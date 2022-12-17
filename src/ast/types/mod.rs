@@ -1,8 +1,8 @@
 pub mod function;
-pub mod r#struct;
+pub mod r#class;
 
 use crate::ast::types::function::FnType;
-use crate::ast::types::r#struct::StructType;
+use crate::ast::types::r#class::ClassType;
 use std::fmt::Debug;
 use std::rc::Rc;
 
@@ -15,7 +15,7 @@ pub trait Type: Debug {
     fn as_fn(&self) -> Option<FnType> {
         None
     }
-    fn as_struct(&self) -> Option<StructType> {
+    fn as_class(&self) -> Option<ClassType> {
         None
     }
 }

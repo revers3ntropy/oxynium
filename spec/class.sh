@@ -1,22 +1,22 @@
-describe 'Struct Declarations'
+describe 'Class Declarations'
 
-expect '' 'struct S {};'
+expect '' 'class S {};'
 expect '' '
-    struct S {};
+    class S {};
     fn do_nothing(s: S) {};
 '
 expect '' '
-    struct S {
+    class S {
         x: Int,
         y: Int
     };
 '
 
 
-describe 'Struct Instantiation'
+describe 'Class Instantiation'
 
 expect '' '
-    struct S {
+    class S {
         x: Int,
         y: Int,
     };
@@ -24,24 +24,24 @@ expect '' '
 '
 
 
-describe 'Struct Field Access'
+describe 'Class Field Access'
 
 expect '1' '
-    struct S {
+    class S {
         x: Int
     };
     print_int(new S { x: 1 }.x);
 '
 expect '456' '
-    struct S { x: Int, };
-    struct S2 { s: S };
+    class S { x: Int, };
+    class S2 { s: S };
     // different bracket permutations
     print_int(new S2 { s: new S { x: 4 }}.s.x);
     print_int((new S2 { s: new S { x: 5 }}).s.x);
     print_int((new S2 { s: new S { x: 6 }}.s).x);
 '
 expect '9hi' '
-    struct S {
+    class S {
         x: Int,
         y: Str
     };
@@ -54,34 +54,34 @@ expect '9hi' '
 '
 
 expect_err 'TypeError' '
-    struct S { x: Int };
+    class S { x: Int };
     new S {};
 '
 expect_err 'TypeError' '
-    struct S { x: Int };
+    class S { x: Int };
     new S { y: 1 };
 '
 expect_err 'TypeError' '
-    struct S { x: Int };
+    class S { x: Int };
     new S { x: "hi" };
 '
 expect_err 'TypeError' '
-    struct S { x: Int };
+    class S { x: Int };
     new S { x: 1, y: 2 };
 '
 expect_err 'UnknownSymbolError' '
-    struct S { s: S };
+    class S { s: S };
 '
 expect_err 'TypeError' '
-    struct S { x: Int };
-    struct S2 { s: S };
+    class S { x: Int };
+    class S2 { s: S };
     new S2 { s: new S { x: "hi" } };
 '
 expect_err 'TypeError' '
-    struct S { x: Int };
+    class S { x: Int };
     new S { x: 1 }.y;
 '
 expect_err 'TypeError' '
-    struct S { x: Int };
+    class S { x: Int };
     print(new S { x: 1 }.x);
 '

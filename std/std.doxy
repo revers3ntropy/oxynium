@@ -1,7 +1,7 @@
-struct Str {};
-struct Bool {};
-struct Int {};
-struct Void {};
+class Str {};
+class Bool {};
+class Int {};
+class Void {};
 
 extern fn print(msg: Str): Void;
 extern fn print_int(int: Int): Void;

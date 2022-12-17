@@ -3,11 +3,11 @@ use std::fmt;
 use std::rc::Rc;
 
 #[derive(Clone, Debug)]
-pub struct StructFieldType {
+pub struct ClassFieldType {
     pub name: String,
     pub type_: Rc<dyn Type>,
 }
-impl StructFieldType {
+impl ClassFieldType {
     fn str(&self) -> String {
         if self.name == "" {
             self.type_.str()
@@ -18,12 +18,12 @@ impl StructFieldType {
 }
 
 #[derive(Clone)]
-pub struct StructType {
+pub struct ClassType {
     pub name: String,
-    pub fields: Vec<StructFieldType>,
+    pub fields: Vec<ClassFieldType>,
 }
 
-impl StructType {
+impl ClassType {
     pub fn field_type(&self, field: &str) -> Option<Rc<dyn Type>> {
         self.fields
             .iter()
@@ -36,7 +36,7 @@ impl StructType {
     }
 }
 
-impl fmt::Debug for StructType {
+impl fmt::Debug for ClassType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -51,7 +51,7 @@ impl fmt::Debug for StructType {
     }
 }
 
-impl Type for StructType {
+impl Type for ClassType {
     fn is_ptr(&self) -> bool {
         true
     }
@@ -65,7 +65,7 @@ impl Type for StructType {
         format!("{:p}", self) == format!("{:p}", t.as_ref())
     }
 
-    fn as_struct(&self) -> Option<StructType> {
+    fn as_class(&self) -> Option<ClassType> {
         Some(self.clone())
     }
 }
