@@ -1,5 +1,5 @@
 use crate::ast::types::Type;
-use std::rc::Rc;
+use crate::util::MutRc;
 
 const RESERVED_KEYWORDS: [&str; 53] = [
     "if", "else", "loop", "while", "for", "in", "break", "continue", "return",
@@ -31,7 +31,7 @@ pub struct SymbolDec {
     pub id: String,
     pub is_constant: bool,
     pub is_type: bool,
-    pub type_: Rc<dyn Type>,
+    pub type_: MutRc<dyn Type>,
     pub require_init: bool,
     pub is_defined: bool,
     pub is_param: bool,
@@ -39,7 +39,7 @@ pub struct SymbolDec {
 
 impl SymbolDec {
     pub fn contains(&self, s: &SymbolDec) -> bool {
-        self.type_.contains(s.type_.clone())
+        self.type_.borrow().contains(s.type_.clone())
             && self.name == s.name
             && self.is_constant == s.is_constant
             && self.is_type == s.is_type

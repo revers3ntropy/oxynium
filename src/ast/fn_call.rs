@@ -5,8 +5,7 @@ use crate::context::Context;
 use crate::error::{mismatched_types, unknown_symbol, Error};
 use crate::position::Interval;
 use crate::symbols::is_valid_identifier;
-use crate::util::MutRc;
-use std::rc::Rc;
+use crate::util::{MutRc, new_mut_rc};
 
 #[derive(Debug)]
 pub struct FnCallNode {
@@ -78,6 +77,7 @@ impl Node for FnCallNode {
             .get_dec_from_id(&self.identifier)?
             .type_
             .clone()
+            .borrow()
             .as_fn();
         if fn_type.is_none() {
             return Err(unknown_symbol(format!(
@@ -87,7 +87,7 @@ impl Node for FnCallNode {
         }
         let fn_type = fn_type.unwrap();
 
-        let call_signature_type = Rc::new(FnType {
+        let call_signature_type = new_mut_rc(FnType {
             name: self.identifier.clone(),
             ret_type: fn_type.ret_type.clone(),
             parameters: args,
@@ -95,7 +95,7 @@ impl Node for FnCallNode {
 
         if !fn_type.contains(call_signature_type.clone()) {
             return Err(mismatched_types(
-                Rc::new(fn_type),
+                new_mut_rc(fn_type),
                 call_signature_type.clone(),
             ));
         }
@@ -111,6 +111,7 @@ impl Node for FnCallNode {
 
         self.use_return_value = !fn_type
             .ret_type
+            .borrow()
             .contains(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone());
         Ok((fn_type.ret_type.clone(), None))
     }

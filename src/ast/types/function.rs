@@ -2,20 +2,19 @@ use crate::ast::types::Type;
 use crate::ast::Node;
 use crate::util::MutRc;
 use std::fmt;
-use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct FnParamType {
     pub name: String,
-    pub type_: Rc<dyn Type>,
+    pub type_: MutRc<dyn Type>,
     pub default_value: Option<MutRc<dyn Node>>,
 }
 impl FnParamType {
     fn str(&self) -> String {
         if self.name == "" {
-            self.type_.str()
+            self.type_.borrow_mut().str()
         } else {
-            format!("{}: {}", self.name, self.type_.str())
+            format!("{}: {}", self.name, self.type_.borrow_mut().str())
         }
     }
 }
@@ -23,7 +22,7 @@ impl FnParamType {
 #[derive(Clone)]
 pub struct FnType {
     pub name: String,
-    pub ret_type: Rc<dyn Type>,
+    pub ret_type: MutRc<dyn Type>,
     pub parameters: Vec<FnParamType>,
 }
 
@@ -40,12 +39,12 @@ impl Type for FnType {
                 .map(|p| p.str())
                 .collect::<Vec<String>>()
                 .join(", "),
-            self.ret_type.str()
+            self.ret_type.borrow().str()
         )
     }
 
-    fn contains(&self, t: Rc<dyn Type>) -> bool {
-        if let Some(fn_type) = t.as_fn() {
+    fn contains(&self, t: MutRc<dyn Type>) -> bool {
+        if let Some(fn_type) = t.borrow().as_fn() {
             if fn_type.name != self.name {
                 return false;
             }
@@ -61,6 +60,7 @@ impl Type for FnType {
             for i in 0..fn_type.parameters.len() {
                 if !self.parameters[i]
                     .type_
+                    .borrow()
                     .contains(fn_type.parameters[i].type_.clone())
                 {
                     return false;

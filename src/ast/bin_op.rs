@@ -119,14 +119,14 @@ impl Node for BinOpNode {
         };
 
         let (lhs_type, _) = self.lhs.borrow_mut().type_check(ctx.clone())?;
-        if !operand_types.contains(lhs_type.clone()) {
+        if !operand_types.borrow().contains(lhs_type.clone()) {
             return Err(mismatched_types(
                 operand_types.clone(),
                 lhs_type.clone(),
             ));
         }
         let (rhs_type, _) = self.rhs.borrow_mut().type_check(ctx.clone())?;
-        if !operand_types.contains(rhs_type.clone()) {
+        if !operand_types.borrow().contains(rhs_type.clone()) {
             return Err(mismatched_types(
                 operand_types.clone(),
                 rhs_type.clone(),

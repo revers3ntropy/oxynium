@@ -47,7 +47,7 @@ impl Node for StatementsNode {
         }
 
         for ret_type in ret_types.iter() {
-            if !ret_type.contains(ret_types.first().unwrap().clone()) {
+            if !ret_type.borrow().contains(ret_types.first().unwrap().clone()) {
                 return Err(type_error(
                     "All return types must be the same".to_string(),
                 ));

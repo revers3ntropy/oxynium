@@ -5,7 +5,6 @@ use crate::error::{type_error, unknown_symbol, Error};
 use crate::position::Interval;
 use crate::util::{intersection, MutRc};
 use std::collections::HashMap;
-use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct ClassInitNode {
@@ -18,7 +17,7 @@ impl ClassInitNode {
     fn field_types_hashmap(
         &self,
         ctx: MutRc<Context>,
-    ) -> Result<HashMap<String, Rc<dyn Type>>, Error> {
+    ) -> Result<HashMap<String, MutRc<dyn Type>>, Error> {
         let mut instance_fields_hashmap = HashMap::new();
         for field in self.fields.clone() {
             instance_fields_hashmap.insert(
@@ -94,7 +93,7 @@ impl Node for ClassInitNode {
             .get_dec_from_id(&self.identifier)?
             .type_
             .clone();
-        let class_type = type_.as_class();
+        let class_type = type_.borrow().as_class();
         if class_type.is_none() {
             return Err(type_error(format!(
                 "{} is not a class",
@@ -139,12 +138,13 @@ impl Node for ClassInitNode {
             if !type_fields_hashmap
                 .get(&field)
                 .unwrap()
+                .borrow()
                 .contains(instance_fields_hashmap.get(&field).unwrap().clone())
             {
                 return Err(type_error(format!(
                     "Type mismatch in class initialization field '{field}': Expected {} but found {}",
-                    type_fields_hashmap.get(&field).unwrap().str(),
-                    instance_fields_hashmap.get(&field).unwrap().str(),
+                    type_fields_hashmap.get(&field).unwrap().borrow().str(),
+                    instance_fields_hashmap.get(&field).unwrap().borrow().str(),
                 )));
             }
         }

@@ -1,6 +1,6 @@
 use crate::ast::types::Type;
 use crate::position::{Interval, Position};
-use std::rc::Rc;
+use crate::util::MutRc;
 
 #[derive(Debug, Clone)]
 pub struct Error {
@@ -58,10 +58,10 @@ pub fn numeric_overflow(message: String) -> Error {
     Error::new("NumericOverflow", message)
 }
 
-pub fn mismatched_types(expected: Rc<dyn Type>, got: Rc<dyn Type>) -> Error {
+pub fn mismatched_types(expected: MutRc<dyn Type>, got: MutRc<dyn Type>) -> Error {
     Error::new(
         "TypeError",
-        format!("expected '{}', got '{}'", expected.str(), got.str()),
+        format!("expected '{}', got '{}'", expected.borrow().str(), got.borrow().str()),
     )
 }
 

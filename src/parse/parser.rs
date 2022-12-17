@@ -1,5 +1,9 @@
 use crate::ast::bin_op::BinOpNode;
 use crate::ast::bool::BoolNode;
+use crate::ast::class_declaration::{ClassDeclarationNode, ClassField};
+use crate::ast::class_field_access::FieldAccessNode;
+use crate::ast::class_init::ClassInitNode;
+use crate::ast::class_method_call::ClassMethodCallNode;
 use crate::ast::empty_exec_root::EmptyExecRootNode;
 use crate::ast::empty_global_var_decl::EmptyGlobalConstNode;
 use crate::ast::empty_local_var_decl::EmptyLocalVarNode;
@@ -19,9 +23,6 @@ use crate::ast::r#return::ReturnNode;
 use crate::ast::scope::ScopeNode;
 use crate::ast::statements::StatementsNode;
 use crate::ast::str::StrNode;
-use crate::ast::class_declaration::{ClassDeclarationNode, ClassField};
-use crate::ast::class_field_access::FieldAccessNode;
-use crate::ast::class_init::ClassInitNode;
 use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::type_expr::TypeNode;
 use crate::ast::unary_op::UnaryOpNode;
@@ -32,6 +33,7 @@ use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
 use crate::position::Position;
 use crate::util::{new_mut_rc, MutRc};
+use std::any::Any;
 
 macro_rules! ret_on_err {
     ($e:expr) => {
@@ -55,10 +57,10 @@ macro_rules! consume {
             return $res;
         }
         if $self.tok_idx >= $self.tokens.len() {
-            $res.failure(syntax_error(
-                "Unexpected end of file".to_string()),
+            $res.failure(
+                syntax_error("Unexpected end of file".to_string()),
                 Some($self.tokens[$self.tokens.len() - 1].end.clone()),
-                None
+                None,
             );
             return $res;
         }
@@ -176,7 +178,11 @@ impl Parser {
         )
     }
 
-    fn peak_matches(&self, tok_type: TokenType, value: Option<String>) -> bool {
+    fn current_matches(
+        &self,
+        tok_type: TokenType,
+        value: Option<String>,
+    ) -> bool {
         if let Some(tok) = self.current_tok() {
             if tok.token_type == tok_type {
                 if let Some(value) = value {
@@ -206,7 +212,7 @@ impl Parser {
     }
 
     fn clear_end_statements(&mut self, res: &mut ParseResults) {
-        while self.peak_matches(TokenType::EndStatement, None) {
+        while self.current_matches(TokenType::EndStatement, None) {
             self.advance(res);
         }
     }
@@ -226,17 +232,14 @@ impl Parser {
         ret_on_err!(res);
 
         while let Some(op_tok) = self.current_tok() {
-            let matches = ops
-                .iter_mut()
-                .filter(|(op, value)| {
-                    if value.is_none() {
-                        return &op_tok.token_type == op;
-                    }
-                    &op_tok.token_type == op
-                        && op_tok.literal.is_some()
-                        && op_tok.literal.clone().unwrap()
-                        == value.clone().unwrap()
-                });
+            let matches = ops.iter_mut().filter(|(op, value)| {
+                if value.is_none() {
+                    return &op_tok.token_type == op;
+                }
+                &op_tok.token_type == op
+                    && op_tok.literal.is_some()
+                    && op_tok.literal.clone().unwrap() == value.clone().unwrap()
+            });
             if matches.count() == 0 {
                 break;
             }
@@ -284,7 +287,7 @@ impl Parser {
         loop {
             let mut nl_count = 0;
             // @ts-ignore
-            while self.peak_matches(TokenType::EndStatement, None) {
+            while self.current_matches(TokenType::EndStatement, None) {
                 self.advance(&mut res);
                 nl_count += 1;
             }
@@ -340,7 +343,7 @@ impl Parser {
                 ),
             }));
 
-        if !self.peak_matches(TokenType::CloseBrace, None) {
+        if !self.current_matches(TokenType::CloseBrace, None) {
             statements = res.register(self.statements());
             ret_on_err!(res);
         }
@@ -373,79 +376,92 @@ impl Parser {
             return res;
         }
         let start = self.current_tok().unwrap().start.clone();
-        if self.peak_matches(TokenType::Identifier, Some("const".to_string())) {
+        if self
+            .current_matches(TokenType::Identifier, Some("const".to_string()))
+        {
             self.advance(&mut res);
             res.node = res.register(self.global_var_decl(true, false));
             return res;
         }
-        if self.peak_matches(TokenType::Identifier, Some("var".to_string())) {
+        if self.current_matches(TokenType::Identifier, Some("var".to_string()))
+        {
             self.advance(&mut res);
             res.node = res.register(self.global_var_decl(false, false));
             return res;
         }
-        if self.peak_matches(TokenType::Identifier, Some("let".to_string())) {
+        if self.current_matches(TokenType::Identifier, Some("let".to_string()))
+        {
             self.advance(&mut res);
             res.node = res.register(self.local_var_decl());
             return res;
         }
-        if self.peak_matches(TokenType::Identifier, Some("for".to_string())) {
+        if self.current_matches(TokenType::Identifier, Some("for".to_string()))
+        {
             self.advance(&mut res);
             res.node = res.register(self.for_loop());
             return res;
         }
-        if self.peak_matches(TokenType::Identifier, Some("if".to_string())) {
+        if self.current_matches(TokenType::Identifier, Some("if".to_string())) {
             self.advance(&mut res);
             res.node = res.register(self.if_expr());
             return res;
         }
-        if self.peak_matches(TokenType::Identifier, Some("break".to_string())) {
+        if self
+            .current_matches(TokenType::Identifier, Some("break".to_string()))
+        {
             self.advance(&mut res);
             res.success(new_mut_rc(BreakNode {
                 position: (start.clone(), self.last_tok().unwrap().end.clone()),
             }));
             return res;
         }
-        if self
-            .peak_matches(TokenType::Identifier, Some("continue".to_string()))
-        {
+        if self.current_matches(
+            TokenType::Identifier,
+            Some("continue".to_string()),
+        ) {
             self.advance(&mut res);
             res.success(new_mut_rc(ContinueNode {
                 position: (start.clone(), self.last_tok().unwrap().end.clone()),
             }));
             return res;
         }
-        if self.peak_matches(TokenType::Identifier, Some("return".to_string()))
+        if self
+            .current_matches(TokenType::Identifier, Some("return".to_string()))
         {
             self.advance(&mut res);
             res.node = res.register(self.return_expr());
             return res;
         }
-        if self.peak_matches(TokenType::Identifier, Some("fn".to_string())) {
+        if self.current_matches(TokenType::Identifier, Some("fn".to_string())) {
             self.advance(&mut res);
             res.node = res.register(self.fn_expr(false));
             return res;
         }
-        if self.peak_matches(TokenType::Identifier, Some("class".to_string()))
+        if self
+            .current_matches(TokenType::Identifier, Some("class".to_string()))
         {
             self.advance(&mut res);
             res.node = res.register(self.class_expr());
             return res;
         }
-        if self.peak_matches(TokenType::Identifier, Some("extern".to_string()))
+        if self
+            .current_matches(TokenType::Identifier, Some("extern".to_string()))
         {
             self.advance(&mut res);
-            if self.peak_matches(TokenType::Identifier, Some("fn".to_string()))
+            if self
+                .current_matches(TokenType::Identifier, Some("fn".to_string()))
             {
                 self.advance(&mut res);
                 res.node = res.register(self.fn_expr(true));
             } else if self
-                .peak_matches(TokenType::Identifier, Some("var".to_string()))
+                .current_matches(TokenType::Identifier, Some("var".to_string()))
             {
                 self.advance(&mut res);
                 res.node = res.register(self.global_var_decl(false, true));
-            } else if self
-                .peak_matches(TokenType::Identifier, Some("const".to_string()))
-            {
+            } else if self.current_matches(
+                TokenType::Identifier,
+                Some("const".to_string()),
+            ) {
                 self.advance(&mut res);
                 res.node = res.register(self.global_var_decl(true, true));
             } else {
@@ -508,7 +524,7 @@ impl Parser {
         let name;
         let start = self.last_tok().unwrap().start.clone();
 
-        if self.peak_matches(TokenType::Identifier, None) {
+        if self.current_matches(TokenType::Identifier, None) {
             name = Some(self.current_tok().unwrap().literal.unwrap());
             self.advance(&mut res);
         } else {
@@ -522,13 +538,13 @@ impl Parser {
 
         let mut type_: Option<MutRc<dyn Node>> = None;
 
-        if self.peak_matches(TokenType::Colon, None) {
+        if self.current_matches(TokenType::Colon, None) {
             self.advance(&mut res);
             type_ = res.register(self.type_expr());
             ret_on_err!(res);
         }
 
-        if !self.peak_matches(TokenType::Equals, None) {
+        if !self.current_matches(TokenType::Equals, None) {
             if type_.is_none() {
                 res.failure(
                     syntax_error("Expected type annotation".to_string()),
@@ -592,7 +608,8 @@ impl Parser {
         let mut mutable = false;
         let start = self.last_tok().unwrap().start.clone();
 
-        if self.peak_matches(TokenType::Identifier, Some("mut".to_string())) {
+        if self.current_matches(TokenType::Identifier, Some("mut".to_string()))
+        {
             self.advance(&mut res);
             mutable = true;
         }
@@ -601,7 +618,7 @@ impl Parser {
 
         let name = name_tok.literal.as_ref().unwrap().clone();
 
-        if self.peak_matches(TokenType::Colon, None) {
+        if self.current_matches(TokenType::Colon, None) {
             self.advance(&mut res);
 
             let type_ = res.register(self.type_expr());
@@ -701,6 +718,40 @@ impl Parser {
         )
     }
 
+    fn method_call(
+        &mut self,
+        start: Position,
+        base: MutRc<dyn Node>,
+        name_tok: Token,
+    ) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        self.advance(&mut res);
+        let mut args = Vec::new();
+        if !self.current_matches(TokenType::CloseParen, None) {
+            loop {
+                let arg = res.register(self.expression());
+                ret_on_err!(res);
+                args.push(arg.unwrap());
+                if self.current_matches(TokenType::Comma, None) {
+                    self.advance(&mut res);
+                } else {
+                    break;
+                }
+            }
+        }
+        consume!(CloseParen, self, res);
+        res.success(new_mut_rc(ClassMethodCallNode {
+            base,
+            name: name_tok,
+            args,
+            position: (start, self.last_tok().unwrap().end.clone()),
+            // default value which is always overridden
+            use_return_value: true,
+        }));
+        return res;
+    }
+
     fn compound(
         &mut self,
         base_option: Option<MutRc<dyn Node>>,
@@ -716,10 +767,14 @@ impl Parser {
             base = atom.unwrap();
         }
 
-        if self.peak_matches(TokenType::Dot, None) {
+        if self.current_matches(TokenType::Dot, None) {
             let start = self.current_tok().unwrap().start.clone();
             self.advance(&mut res);
             consume!(name_tok = Identifier, self, res);
+
+            if self.current_matches(TokenType::OpenParen, None) {
+                return self.method_call(start, base, name_tok);
+            }
 
             return self.compound(Some(new_mut_rc(FieldAccessNode {
                 base,
@@ -929,9 +984,10 @@ impl Parser {
 
         let mut else_body: Option<MutRc<dyn Node>> = None;
 
-        if self.peak_matches(TokenType::Identifier, Some("else".to_string())) {
+        if self.current_matches(TokenType::Identifier, Some("else".to_string()))
+        {
             self.advance(&mut res);
-            if self.peak_matches(TokenType::OpenBrace, None) {
+            if self.current_matches(TokenType::OpenBrace, None) {
                 else_body = res.register(self.scope(true));
                 ret_on_err!(res);
             } else {
@@ -972,7 +1028,7 @@ impl Parser {
 
         let mut default_value = None;
 
-        if self.peak_matches(TokenType::Equals, None) {
+        if self.current_matches(TokenType::Equals, None) {
             self.advance(&mut res);
             let default_value_option = res.register(self.expression());
             result_ret_on_err!(res);
@@ -991,7 +1047,7 @@ impl Parser {
 
         let mut parameters = Vec::new();
 
-        if self.peak_matches(TokenType::CloseParen, None) {
+        if self.current_matches(TokenType::CloseParen, None) {
             return Ok(parameters);
         }
 
@@ -1041,14 +1097,14 @@ impl Parser {
             ),
         });
 
-        if self.peak_matches(TokenType::Colon, None) {
+        if self.current_matches(TokenType::Colon, None) {
             self.advance(&mut res);
             let ret_type_option = res.register(self.type_expr());
             ret_on_err!(res);
             ret_type = ret_type_option.unwrap();
         }
 
-        if !self.peak_matches(TokenType::OpenBrace, None) {
+        if !self.current_matches(TokenType::OpenBrace, None) {
             res.success(new_mut_rc(FnDeclarationNode {
                 identifier,
                 params_scope: Context::new(),
@@ -1091,13 +1147,13 @@ impl Parser {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
 
-        if self.peak_matches(TokenType::EndStatement, None)
+        if self.current_matches(TokenType::EndStatement, None)
             // So far, no expression can start with '}', so we might as well
             // allow returns to not require a semi-colon if they are the last statement
             // in a scope; so `fn a() { return }` is fine
             // Doesn't check that we are in a scope though,
             // so `fn a() { return } }` wouldn't work if '}' was a valid expression
-            || self.peak_matches(TokenType::CloseBrace, None)
+            || self.current_matches(TokenType::CloseBrace, None)
         {
             res.success(new_mut_rc(ReturnNode {
                 value: None,
@@ -1141,10 +1197,33 @@ impl Parser {
         consume!(OpenBrace, self, res);
 
         let mut fields = Vec::new();
+        let mut methods = Vec::new();
 
         while let Some(next) = self.current_tok() {
             if next.token_type == TokenType::CloseBrace {
                 break;
+            }
+
+            if self
+                .current_matches(TokenType::Identifier, Some("fn".to_string()))
+            {
+                consume!(self, res);
+
+                let fn_decl = res.register(self.fn_expr(false));
+                ret_on_err!(res);
+
+                // assume that a FnDeclarationNode is returned from fn_expr
+                // and dangerously cast to the concrete type
+                unsafe {
+                    let fn_ = &*(&fn_decl as *const dyn Any
+                        as *const Option<MutRc<FnDeclarationNode>>);
+                    methods.push(fn_.clone().unwrap());
+                }
+
+                if self.current_matches(TokenType::CloseBrace, None) {
+                    break;
+                }
+                continue;
             }
 
             let field = self.class_field();
@@ -1154,7 +1233,7 @@ impl Parser {
                 return res;
             }
             fields.push(field.unwrap());
-            if self.peak_matches(TokenType::CloseBrace, None) {
+            if self.current_matches(TokenType::CloseBrace, None) {
                 break;
             }
 
@@ -1166,14 +1245,13 @@ impl Parser {
         res.success(new_mut_rc(ClassDeclarationNode {
             identifier,
             fields,
+            methods,
             position: (start, self.last_tok().unwrap().end.clone()),
         }));
         res
     }
 
-    fn class_init_field(
-        &mut self,
-    ) -> Result<(String, MutRc<dyn Node>), Error> {
+    fn class_init_field(&mut self) -> Result<(String, MutRc<dyn Node>), Error> {
         let mut res = ParseResults::new();
 
         result_consume!(identifier = Identifier, self, res);
@@ -1194,34 +1272,10 @@ impl Parser {
         consume!(OpenBrace, self, res);
 
         let mut fields = Vec::new();
-        let mut methods = Vec::new();
 
         while let Some(next) = self.current_tok() {
             if next.token_type == TokenType::CloseBrace {
                 break;
-            }
-
-            if self.peak_matches(TokenType::Identifier, Some("fn".to_string())) {
-                self.advance(&mut res);
-
-                if !self.peak_matches(TokenType::Identifier, None) {
-                    res.failure(
-                        syntax_error("Expected identifier after 'fn'".to_owned()),
-                        Some(self.last_tok().unwrap().end.clone()),
-                        None,
-                    );
-                    return res;
-                }
-                let identifier = self.current_tok().unwrap().clone().literal.unwrap();
-
-                let fn_decl = res.register(self.fn_expr(false));
-                ret_on_err!(res);
-
-                methods.push((identifier, fn_decl.unwrap()));
-                if self.peak_matches(TokenType::CloseBrace, None) {
-                    break;
-                }
-                continue;
             }
 
             let field = self.class_init_field();
@@ -1232,7 +1286,7 @@ impl Parser {
             }
             fields.push(field.unwrap());
 
-            if self.peak_matches(TokenType::CloseBrace, None) {
+            if self.current_matches(TokenType::CloseBrace, None) {
                 break;
             }
             self.consume(&mut res, TokenType::Comma);

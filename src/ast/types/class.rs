@@ -1,18 +1,20 @@
+use crate::ast::types::function::FnType;
 use crate::ast::types::Type;
 use std::fmt;
-use std::rc::Rc;
+use std::ops::Deref;
+use crate::util::MutRc;
 
 #[derive(Clone, Debug)]
 pub struct ClassFieldType {
     pub name: String,
-    pub type_: Rc<dyn Type>,
+    pub type_: MutRc<dyn Type>,
 }
 impl ClassFieldType {
     fn str(&self) -> String {
         if self.name == "" {
-            self.type_.str()
+            self.type_.borrow_mut().str()
         } else {
-            format!("{}: {}", self.name, self.type_.str())
+            format!("{}: {}", self.name, self.type_.borrow_mut().str())
         }
     }
 }
@@ -21,14 +23,22 @@ impl ClassFieldType {
 pub struct ClassType {
     pub name: String,
     pub fields: Vec<ClassFieldType>,
+    pub methods: Vec<MutRc<FnType>>,
 }
 
 impl ClassType {
-    pub fn field_type(&self, field: &str) -> Option<Rc<dyn Type>> {
+    pub fn field_type(&self, field: &str) -> Option<MutRc<dyn Type>> {
         self.fields
             .iter()
             .find(|f| f.name == field)
             .map(|f| f.type_.clone())
+    }
+
+    pub fn method_type(&self, field: &str) -> Option<MutRc<FnType>> {
+        self.methods
+            .iter()
+            .find(|f| f.borrow().name == field)
+            .map(|f| f.clone())
     }
 
     pub fn field_offset(&self, field: String) -> usize {
@@ -59,10 +69,10 @@ impl Type for ClassType {
         self.name.clone()
     }
 
-    fn contains(&self, t: Rc<dyn Type>) -> bool {
+    fn contains(&self, t: MutRc<dyn Type>) -> bool {
         // compare values of pointers...
         // TODO to this properly
-        format!("{:p}", self) == format!("{:p}", t.as_ref())
+        format!("{:p}", self) == format!("{:p}", t.borrow().deref())
     }
 
     fn as_class(&self) -> Option<ClassType> {

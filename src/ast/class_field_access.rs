@@ -20,6 +20,7 @@ impl Node for FieldAccessNode {
             .borrow_mut()
             .type_check(ctx.clone())?
             .0
+            .borrow_mut()
             .as_class()
             .unwrap()
             .field_offset(self.field_name.clone().literal.unwrap());
@@ -40,11 +41,11 @@ impl Node for FieldAccessNode {
     ) -> Result<TypeCheckRes, Error> {
         let (base_type_any, _) =
             self.base.borrow_mut().type_check(ctx.clone())?;
-        let base_type = base_type_any.as_class();
+        let base_type = base_type_any.borrow().as_class();
         if base_type.is_none() {
             return Err(type_error(format!(
                 "Cannot access field of non-class type '{}'",
-                base_type_any.str()
+                base_type_any.borrow().str()
             ))
             .set_interval(self.position.clone()));
         }

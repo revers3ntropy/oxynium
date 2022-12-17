@@ -67,6 +67,7 @@ impl Node for IfNode {
             .borrow_mut()
             .get_dec_from_id("Bool")?
             .type_
+            .borrow()
             .contains(comp_type)
         {
             return Err(type_error("if condition must be a bool".to_string())
@@ -81,11 +82,11 @@ impl Node for IfNode {
 
             if let Some(body_ret) = body_ret_type.take() {
                 if let Some(else_ret_type) = else_ret_type {
-                    if !body_ret.contains(else_ret_type.clone()) {
+                    if !body_ret.borrow().contains(else_ret_type.clone()) {
                         return Err(type_error(format!(
                             "if statement branches cannot return different types: {} and {}",
-                            body_ret.str(),
-                            else_ret_type.str()
+                            body_ret.borrow().str(),
+                            else_ret_type.borrow().str()
                         )));
                     }
                 }

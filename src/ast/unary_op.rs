@@ -54,7 +54,7 @@ impl Node for UnaryOpNode {
         };
 
         let (value_type, _) = self.rhs.borrow_mut().type_check(ctx.clone())?;
-        if !t.contains(value_type.clone()) {
+        if !t.borrow().contains(value_type.clone()) {
             return Err(mismatched_types(t.clone(), value_type.clone()));
         }
 

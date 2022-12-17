@@ -5,8 +5,7 @@ use crate::context::Context;
 use crate::error::{syntax_error, type_error, unknown_symbol, Error};
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
-use crate::util::MutRc;
-use std::rc::Rc;
+use crate::util::{MutRc, new_mut_rc};
 
 #[derive(Debug)]
 pub struct Parameter {
@@ -130,11 +129,11 @@ impl Node for FnDeclarationNode {
                 }
                 let default_value_type =
                     default_value.borrow_mut().type_check(ctx.clone())?.0;
-                if !param_type.contains(default_value_type.clone()) {
+                if !param_type.borrow().contains(default_value_type.clone()) {
                     return Err(type_error(format!(
                         "Default value for parameter {} is not of type {}",
                         identifier,
-                        param_type.str()
+                        param_type.borrow().str()
                     )));
                 }
             } else {
@@ -165,7 +164,7 @@ impl Node for FnDeclarationNode {
             })?;
         }
 
-        let this_type = Rc::new(FnType {
+        let this_type = new_mut_rc(FnType {
             name: self.identifier.clone(),
             ret_type: ret_type.clone(),
             parameters,
@@ -185,12 +184,12 @@ impl Node for FnDeclarationNode {
         if let Some(body) = self.body.take() {
             let (body_ret_type, _) =
                 body.borrow_mut().type_check(self.params_scope.clone())?;
-            if !ret_type.contains(body_ret_type.clone()) {
+            if !ret_type.borrow().contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
                     "Function {} has return type {} but found {}",
                     self.identifier,
-                    ret_type.str(),
-                    body_ret_type.str()
+                    ret_type.borrow().str(),
+                    body_ret_type.borrow().str()
                 )));
             }
             self.body = Some(body);

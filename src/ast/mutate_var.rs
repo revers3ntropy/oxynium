@@ -62,7 +62,7 @@ impl Node for MutateVar {
                 self.id()
             )));
         }
-        if !symbol.type_.contains(assign_type.clone()) {
+        if !symbol.type_.borrow().contains(assign_type.clone()) {
             return Err(mismatched_types(
                 symbol.type_.clone(),
                 assign_type.clone(),
