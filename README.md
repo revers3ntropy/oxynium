@@ -9,6 +9,10 @@ Tested on Ubuntu.
 - nasm
 - gcc
 
+# Installation
+
+`curl https://raw.githubusercontent.com/revers3ntropy/oxynium/master/scripts/install | sh`
+
 ## Dev Requirements
 
 - cargo
@@ -18,12 +22,12 @@ Tested on Ubuntu.
 See `spec/*` for more examples
 
 ```shell
-$ oxy -e 'print("Hello, World!")' && ./out
+$ oxy -e 'print("Hello, World!")' && ./oxy-out
 Hello, world!
 ```
 
 ```shell
-$ oxy hello_world.oxy && ./out
+$ oxy hello_world.oxy && ./oxy-out
 Hello, world!
 ```
 
