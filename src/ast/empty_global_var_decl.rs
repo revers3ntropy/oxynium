@@ -2,14 +2,13 @@ use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{syntax_error, Error};
 use crate::position::Interval;
-use crate::symbols::{is_valid_identifier, SymbolDec};
+use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
 use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct EmptyGlobalConstNode {
     pub identifier: String,
     pub type_: MutRc<dyn Node>,
-    pub is_const: bool,
     pub is_external: bool,
     pub position: Interval,
 }
@@ -18,15 +17,15 @@ impl Node for EmptyGlobalConstNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
-                "Cannot declare global {} '{}' inside function. Try using 'let' instead.",
-                if self.is_const {
-                    "constant"
-                } else {
-                    "variable"
-                },
+                "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
                 self.identifier
             )));
         }
+        ctx.borrow_mut().define(SymbolDef {
+            name: self.identifier.clone(),
+            data: Some(format!("dq 0")),
+            text: None,
+        })?;
         Ok("".to_owned())
     }
     fn type_check(
@@ -51,7 +50,7 @@ impl Node for EmptyGlobalConstNode {
         ctx.borrow_mut().declare(SymbolDec {
             name: self.identifier.clone(),
             id,
-            is_constant: self.is_const,
+            is_constant: true,
             is_type: false,
             require_init: !self.is_external,
             is_defined: false,

@@ -24,56 +24,6 @@ expect_err 'TypeError' '
     const a = 2;
 '
 
-
-describe 'Defining Global Variables'
-
-expect '7' '
-  var a = 1;
-  var b = 6;
-  print((a + b).str());
-'
-expect '41' '
-    const a = 1;
-    print((a * 4).str());
-    print(a.str());
-'
-expect_err 'TypeError' 'print = 1'
-expect_err 'SyntaxError' 'true = 1'
-expect_err 'SyntaxError' 'true = false'
-expect_err 'SyntaxError' 'true = true'
-expect_err 'TypeError' 'const a = 1; a = 1'
-expect_err 'TypeError' '
-    var a = 1;
-    var a = 2;
-'
-
-
-describe 'Mutating Variables'
-
-expect '2' '
-    var a = 1;
-    a = 2;
-    print(a.str());
-'
-expect '9' '
-    var a = 1;
-    a = 5;
-    a = a + 4;
-    print(a.str());
-'
-expect_err 'TypeError' '
-    var a = 1;
-    a = true;
-'
-expect_err 'TypeError' '
-    var a = 1;
-    a = "hi";
-'
-expect_err 'TypeError' '
-    var a = "";
-'
-
-
 describe 'Local Variables'
 
 expect '1' '
@@ -84,7 +34,7 @@ expect '1' '
     f();
 '
 expect '1' '
-    var a = 2;
+    const a = 2;
     fn f() {
         let a = 1;
         print(a.str());
@@ -92,7 +42,7 @@ expect '1' '
     f();
 '
 expect_err 'TypeError' '
-    var a = "";
+    const a = "";
     fn f() {
         let a = 1;
         print(a);
@@ -100,7 +50,7 @@ expect_err 'TypeError' '
     f();
 '
 expect '42' '
-    var a = 2;
+    const a = 2;
     fn f() {
         let mut a = 1;
         a = 4;
@@ -110,7 +60,7 @@ expect '42' '
     print(a.str());
 '
 expect_err 'TypeError' '
-    fn f() {
+    fn main() {
         let a = 1;
         let a = 2;
     };
@@ -128,13 +78,7 @@ expect_err 'TypeError' '
     };
 '
 expect_err 'SyntaxError' '
-    fn f() { var a = 0; };
-'
-expect_err 'SyntaxError' '
     fn f() { const a; };
-'
-expect_err 'SyntaxError' '
-    fn f() { var a; };
 '
 expect_err 'SyntaxError' '
     fn f() {
@@ -218,29 +162,6 @@ expect '1' '
 
 describe 'Invalid Variable Names'
 
-expect_err 'SyntaxError' 'var 1 = 1'
-expect_err 'SyntaxError' 'var 1a = 1'
-# shellcheck disable=SC2016
-expect_err 'SyntaxError' 'var _$_ = 1'
-# shellcheck disable=SC2016
-expect_err 'SyntaxError' 'var _$_a = 1'
-expect_err 'SyntaxError' 'var mut = 1'
-expect_err 'SyntaxError' 'var fn = 1'
-
-expect '' 'var _ = 1'
-expect '' 'var __ = 1'
-expect '' 'var __hi = 1'
-expect '' 'var __hi__ = 1'
-expect '' 'var a$j = 1'
-# Cannot start with '_$'
-expect_err 'SyntaxError' 'var _$ = 1'
-expect_err 'SyntaxError' 'var _$0 = 1'
-# Cannot start with '$'
-expect_err 'SyntaxError' 'var $1 = 1'
-expect_err 'SyntaxError' 'var $ = 1'
-expect_err 'SyntaxError' 'var $$ = 1'
-expect_err 'SyntaxError' 'var $_ = 1'
-
 expect_err 'SyntaxError' 'const 1 = 1'
 expect_err 'SyntaxError' 'const 1a = 1'
 # shellcheck disable=SC2016
@@ -267,26 +188,3 @@ expect_err 'SyntaxError' 'fn f() { let mut _$_ = 1; }'
 expect_err 'SyntaxError' 'fn f() { let mut _$_a = 1; }'
 expect_err 'SyntaxError' 'fn f() { let mut mut = 1; }'
 expect_err 'SyntaxError' 'fn f() { let mut fn = 1; }'
-
-
-describe 'Variables get default value on definition'
-
-expect '22' '
-    var i = 0;
-    for {
-        var a = 1;
-        a = a + 1;
-        print(a.str());
-        if i >= 1 { break };
-        i = i + 1;
-    };
-'
-expect '22' '
-    var i = 0;
-    for {
-        const a = 1;
-        print((a+1).str());
-        if i >= 1 { break };
-        i = i + 1;
-    };
-'

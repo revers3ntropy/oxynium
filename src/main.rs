@@ -19,8 +19,8 @@ mod parse;
 mod position;
 mod post_process;
 mod symbols;
-mod util;
 pub mod types;
+mod util;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 

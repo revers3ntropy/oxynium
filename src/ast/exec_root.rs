@@ -1,7 +1,7 @@
 use crate::ast::STD_ASM;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::Error;
+use crate::error::{syntax_error, Error};
 use crate::position::Interval;
 use crate::util::MutRc;
 
@@ -12,7 +12,7 @@ pub struct ExecRootNode {
 
 impl Node for ExecRootNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
-        let res = self.statements.borrow_mut().asm(ctx.clone())?;
+        let mut res = self.statements.borrow_mut().asm(ctx.clone())?;
         let mut_ref = ctx.borrow_mut();
         let (data_decls, text_decls) = mut_ref.get_definitions();
         let data = data_decls
@@ -23,7 +23,16 @@ impl Node for ExecRootNode {
 
         let text = text_decls
             .iter()
-            .map(|k| format!("{}: \n{}", k.name, k.text.as_ref().unwrap()))
+            .map(|k| {
+                if k.name == "main" {
+                    format!(
+                        "_$_oxy_main: \n{}\npush 0\ncall exit",
+                        k.text.as_ref().unwrap()
+                    )
+                } else {
+                    format!("{}: \n{}", k.name, k.text.as_ref().unwrap())
+                }
+            })
             .collect::<Vec<String>>()
             .join("\n");
 
@@ -37,6 +46,18 @@ impl Node for ExecRootNode {
                     {text}
             "
             ));
+        }
+
+        let has_main = text_decls.iter().find(|k| k.name == "main").is_some();
+
+        if has_main && res != "" {
+            return Err(syntax_error(format!(
+                "Cannot have top level statements and 'main' function"
+            )));
+        }
+
+        if has_main {
+            res = "call _$_oxy_main".to_string();
         }
 
         Ok(format!(

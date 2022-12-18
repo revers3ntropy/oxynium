@@ -1,4 +1,3 @@
-use std::any::Any;
 use crate::ast::fn_declaration::FnDeclarationNode;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
@@ -9,6 +8,7 @@ use crate::types::class::{ClassFieldType, ClassType};
 use crate::types::function::FnType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
+use std::any::Any;
 
 pub fn method_id(class_name: String, method_name: String) -> String {
     format!("{}.{}", class_name, method_name)
@@ -91,7 +91,7 @@ impl Node for ClassDeclarationNode {
                     "Method '{}' must have 'self' parameter",
                     method.identifier.clone().literal.unwrap()
                 ))
-                    .set_interval(method.pos()));
+                .set_interval(method.pos()));
             }
 
             let (first_param_type, _) = method.params[0]
@@ -104,7 +104,7 @@ impl Node for ClassDeclarationNode {
                     method.identifier.clone().literal.unwrap(),
                     this_type.borrow().str()
                 ))
-                    .set_interval(method.pos()));
+                .set_interval(method.pos()));
             }
 
             unsafe {

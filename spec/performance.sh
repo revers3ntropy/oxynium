@@ -1,25 +1,27 @@
 describe 'Performance'
 
 perf_test_comp_cpp 1 '149995000' '
-    var sum = 0;
     const n = 10000;
-    var i = 0;
-    for {
-        if i >= n {
-            break;
-        };
-        var j = 0;
+    fn main () {
+        let mut sum = 0;
+        let mut i = 0;
         for {
-            if j >= n {
+            if i >= n {
                 break;
             };
-            sum = sum + 1;
-            j = j + 1;
+            let mut j = 0;
+            for {
+                if j >= n {
+                    break;
+                };
+                sum = sum + 1;
+                j = j + 1;
+            };
+            sum = sum + i;
+            i = i + 1;
         };
-        sum = sum + i;
-        i = i + 1;
-    };
-    print(sum.str());
+        print(sum.str());
+    }
 ' '
     #include <iostream>
 

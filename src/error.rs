@@ -1,5 +1,5 @@
-use crate::types::Type;
 use crate::position::{Interval, Position};
+use crate::types::Type;
 use crate::util::MutRc;
 
 #[derive(Debug, Clone)]

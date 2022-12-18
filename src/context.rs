@@ -157,11 +157,7 @@ impl Context {
                 symbol.name
             )));
         }
-        if !self
-            .declarations
-            .get(&name.clone())
-            .is_some()
-        {
+        if !self.declarations.get(&name.clone()).is_some() {
             return Err(type_error(format!(
                 "Symbol {} is not declared",
                 symbol.name

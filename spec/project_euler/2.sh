@@ -1,22 +1,23 @@
 describe 'Project Euler #2: Even Fibonacci numbers'
 
 perf_test_comp_cpp 100 '4613732' '
-    var sum = 0;
-    var a = 1;
-    var b = 2;
-    var c = 0;
-    for {
-        if b % 2 == 0 {
-            sum = sum + b;
+    fn main () {
+        let mut sum = 0;
+        let mut a = 1;
+        let mut b = 2;
+        for {
+            if b % 2 == 0 {
+                sum = sum + b;
+            };
+            let c = a + b;
+            a = b;
+            b = c;
+            if b >= 4000000 {
+                break;
+            };
         };
-        c = a + b;
-        a = b;
-        b = c;
-        if b >= 4000000 {
-            break;
-        };
-    };
-    print(sum.str());
+        print(sum.str());
+    }
 ' '
     #include <iostream>
 

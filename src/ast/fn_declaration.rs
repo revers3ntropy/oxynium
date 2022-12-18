@@ -1,6 +1,5 @@
-use crate::types::function::{FnParamType, FnType};
-use crate::ast::{Node, TypeCheckRes};
 use crate::ast::class_declaration::method_id;
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::CallStackFrame;
 use crate::context::Context;
 use crate::error::{invalid_symbol, syntax_error, type_error, Error};
@@ -8,6 +7,7 @@ use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
 use crate::types::class::ClassType;
+use crate::types::function::{FnParamType, FnType};
 use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug, Clone)]
@@ -26,7 +26,7 @@ pub struct FnDeclarationNode {
     pub params_scope: MutRc<Context>,
     pub is_external: bool,
     pub position: Interval,
-    pub class: Option<MutRc<ClassType>>
+    pub class: Option<MutRc<ClassType>>,
 }
 
 impl FnDeclarationNode {
@@ -34,9 +34,9 @@ impl FnDeclarationNode {
         match &self.class {
             Some(class) => method_id(
                 class.borrow().name.clone(),
-                self.identifier.literal.clone().unwrap()
+                self.identifier.literal.clone().unwrap(),
             ),
-            None => self.identifier.literal.clone().unwrap()
+            None => self.identifier.literal.clone().unwrap(),
         }
     }
 }
@@ -49,7 +49,6 @@ impl Node for FnDeclarationNode {
                 self.identifier.str()
             )));
         }
-
 
         if self.body.is_none() {
             return Ok("".to_string());
@@ -117,7 +116,8 @@ impl Node for FnDeclarationNode {
                 return Err(type_error(format!(
                     "Symbol {} is already defined",
                     self.identifier.clone().literal.unwrap()
-                )).set_interval(self.position.clone()));
+                ))
+                .set_interval(self.position.clone()));
             }
         }
         let (ret_type, _) =
@@ -206,8 +206,13 @@ impl Node for FnDeclarationNode {
         if let Some(body) = self.body.take() {
             let (_, body_ret_type) =
                 body.borrow_mut().type_check(self.params_scope.clone())?;
-            let body_ret_type = body_ret_type
-                .unwrap_or(ctx.borrow_mut().get_dec_from_id("Void").unwrap().type_.clone());
+            let body_ret_type = body_ret_type.unwrap_or(
+                ctx.borrow_mut()
+                    .get_dec_from_id("Void")
+                    .unwrap()
+                    .type_
+                    .clone(),
+            );
             if !ret_type.borrow().contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
                     "Function {} has return type {} but found {}",

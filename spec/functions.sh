@@ -90,8 +90,8 @@ expect '1' '
 '
 
 expect '12' '
-    var i = 0;
     fn f() {
+        let mut i = 0;
         for {
             i = i + 1;
             if i > 2 { return };
@@ -296,3 +296,50 @@ expect_err 'TypeError' '
 expect_err 'SyntaxError' 'fn f(true: Bool) {}'
 expect_err 'SyntaxError' 'fn f(fn: Bool) {}'
 expect_err 'SyntaxError' 'fn f(while: Bool) {}'
+
+
+describe 'main function'
+
+expect 'hi' '
+    fn main() {
+        print("hi");
+    };
+'
+expect_err 'SyntaxError' '
+    fn f () {};
+    fn main() {
+        print("hi");
+    };
+    f();
+'
+expect_err 'SyntaxError' '
+    fn f () {};
+    f();
+    fn main() {
+        print("hi");
+    };
+'
+expect_err 'SyntaxError' '
+    fn main() {
+        print("hi");
+    };
+    if true {};
+'
+expect_err 'SyntaxError' '
+    if false {};
+    fn main() {
+        print("hi");
+    };
+'
+expect 'Hello' '
+    const s = "Hello";
+    fn main() {
+        print(s);
+    };
+'
+expect '16' '
+    const s = 16;
+    fn main() {
+        print(s.str());
+    };
+'

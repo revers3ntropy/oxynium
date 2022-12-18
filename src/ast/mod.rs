@@ -1,9 +1,9 @@
-use std::fmt::Debug;
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
-use crate::util::MutRc;
 use crate::types::Type;
+use crate::util::MutRc;
+use std::fmt::Debug;
 
 pub mod bin_op;
 pub mod bool;
