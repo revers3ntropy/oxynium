@@ -1,5 +1,6 @@
 class Void;
 class Str;
+
 class Bool {
     fn str(self): Str {
         if self {
@@ -8,10 +9,11 @@ class Bool {
             return "false";
         }
     }
-};
+}
+
 class Int {
-    extern fn str(self): Str
-};
+    extern fn str(self): Str,
+}
 
 extern fn print(msg: Str): Void;
 extern fn print_nl(): Void;

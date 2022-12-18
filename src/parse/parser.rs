@@ -147,6 +147,26 @@ impl Parser {
         self.current_tok()
     }
 
+    fn add_end_statement (&mut self, res: &mut ParseResults) {
+        let start;
+        let end;
+        if self.tok_idx >= self.tokens.len() {
+            start = self.last_tok().unwrap().end.clone();
+            end = self.last_tok().unwrap().end.clone();
+        } else {
+            start = self.current_tok().unwrap().end.clone();
+            end = self.current_tok().unwrap().end.clone();
+        }
+        self.tokens.insert(self.tok_idx,  Token {
+            token_type: TokenType::EndStatement,
+            literal: None,
+            start,
+            end
+        });
+        self.reverse(1);
+        self.advance(res);
+    }
+
     fn consume(
         &mut self,
         res: &mut ParseResults,
@@ -429,7 +449,7 @@ impl Parser {
         }
         if self.current_matches(TokenType::Identifier, Some("fn".to_string())) {
             self.advance(&mut res);
-            res.node = res.register(self.fn_expr(false, None));
+            res.node = res.register(self.fn_def_expr(false, None));
             return res;
         }
         if self
@@ -447,7 +467,7 @@ impl Parser {
                 .current_matches(TokenType::Identifier, Some("fn".to_string()))
             {
                 self.advance(&mut res);
-                res.node = res.register(self.fn_expr(true, None));
+                res.node = res.register(self.fn_def_expr(true, None));
             } else if self.current_matches(
                 TokenType::Identifier,
                 Some("const".to_string()),
@@ -963,6 +983,9 @@ impl Parser {
         let statements = res.register(self.scope(true));
         ret_on_err!(res);
 
+        self.add_end_statement(&mut res);
+        ret_on_err!(res);
+
         res.success(new_mut_rc(WhileLoopNode {
             condition,
             statements: statements.unwrap(),
@@ -995,6 +1018,9 @@ impl Parser {
                 else_body = Some(else_expr_option.unwrap());
             }
         }
+
+        self.add_end_statement(&mut res);
+        ret_on_err!(res);
 
         res.success(new_mut_rc(IfNode {
             comparison: comparison.unwrap(),
@@ -1070,7 +1096,7 @@ impl Parser {
         Err(e)
     }
 
-    fn fn_expr(
+    fn fn_def_expr(
         &mut self,
         is_external: bool,
         class_name: Option<String>,
@@ -1130,7 +1156,7 @@ impl Parser {
                     type_: new_mut_rc(TypeNode {
                         identifier: Token {
                             token_type: TokenType::Identifier,
-                            literal: Some(class_name.unwrap()),
+                            literal: Some(class_name.clone().unwrap()),
                             start: Position::unknown(),
                             end: Position::unknown(),
                         },
@@ -1185,6 +1211,11 @@ impl Parser {
 
         let body = res.register(self.scope(false));
         ret_on_err!(res);
+
+        if class_name.is_none() {
+            self.add_end_statement(&mut res);
+            ret_on_err!(res);
+        }
 
         res.success(new_mut_rc(FnDeclarationNode {
             identifier,
@@ -1276,7 +1307,7 @@ impl Parser {
                 consume!(self, res);
 
                 let fn_decl =
-                    res.register(self.fn_expr(false, Some(identifier.clone())));
+                    res.register(self.fn_def_expr(false, Some(identifier.clone())));
                 ret_on_err!(res);
 
                 // assume that a FnDeclarationNode is returned from fn_expr
@@ -1301,7 +1332,7 @@ impl Parser {
                 consume!(Identifier, self, res);
 
                 let fn_decl =
-                    res.register(self.fn_expr(true, Some(identifier.clone())));
+                    res.register(self.fn_def_expr(true, Some(identifier.clone())));
                 ret_on_err!(res);
 
                 // assume that a FnDeclarationNode is returned from fn_expr
@@ -1334,6 +1365,8 @@ impl Parser {
         }
 
         consume!(CloseBrace, self, res);
+        self.add_end_statement(&mut res);
+        ret_on_err!(res);
 
         res.success(new_mut_rc(ClassDeclarationNode {
             identifier,
