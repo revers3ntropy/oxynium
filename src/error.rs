@@ -1,4 +1,4 @@
-use crate::ast::types::Type;
+use crate::types::Type;
 use crate::position::{Interval, Position};
 use crate::util::MutRc;
 

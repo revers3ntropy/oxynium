@@ -1,8 +1,8 @@
 pub mod r#class;
 pub mod function;
 
-use crate::ast::types::function::FnType;
-use crate::ast::types::r#class::ClassType;
+use crate::types::function::FnType;
+use crate::types::r#class::ClassType;
 use crate::util::MutRc;
 use std::fmt::Debug;
 

@@ -1,5 +1,5 @@
-use crate::ast::types::function::FnType;
-use crate::ast::types::Type;
+use crate::types::function::FnType;
+use crate::types::Type;
 use crate::util::MutRc;
 use std::fmt;
 use std::ops::Deref;

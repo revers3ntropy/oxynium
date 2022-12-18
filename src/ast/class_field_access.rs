@@ -1,9 +1,9 @@
-use crate::ast::types::Type;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
+use crate::types::Type;
 use crate::util::MutRc;
 
 #[derive(Debug)]

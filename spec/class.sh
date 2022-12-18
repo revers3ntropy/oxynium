@@ -129,9 +129,19 @@ expect_err 'TypeError' '
         fn log() {}
     }
 '
+expect '' '
+    class S {
+        x: Int,
+        fn f1(self: S)
+        fn f2(self: S)
+        y: Int,
+        fn f3(self: S) {}
+        z: Str
+    }
+'
 expect_err 'TypeError' '
     class S {
-        fn log();
+        fn log()
     }
 '
 expect_err 'TypeError' '

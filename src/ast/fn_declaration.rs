@@ -1,13 +1,13 @@
-use crate::ast::types::function::{FnParamType, FnType};
+use crate::types::function::{FnParamType, FnType};
 use crate::ast::{Node, TypeCheckRes};
 use crate::ast::class_declaration::method_id;
-use crate::ast::types::class::ClassType;
 use crate::context::CallStackFrame;
 use crate::context::Context;
 use crate::error::{invalid_symbol, syntax_error, type_error, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
+use crate::types::class::ClassType;
 use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug, Clone)]

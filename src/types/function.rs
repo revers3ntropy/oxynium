@@ -1,4 +1,4 @@
-use crate::ast::types::Type;
+use crate::types::Type;
 use crate::ast::Node;
 use crate::util::MutRc;
 use std::fmt;

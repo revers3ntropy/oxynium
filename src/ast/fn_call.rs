@@ -1,10 +1,10 @@
-use crate::ast::types::function::{FnParamType, FnType};
-use crate::ast::types::Type;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{mismatched_types, unknown_symbol, Error};
 use crate::position::Interval;
 use crate::symbols::is_valid_identifier;
+use crate::types::function::{FnParamType, FnType};
+use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug)]

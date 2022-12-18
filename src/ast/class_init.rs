@@ -1,10 +1,10 @@
-use crate::ast::types::Type;
+use std::collections::HashMap;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::position::Interval;
 use crate::util::{intersection, MutRc};
-use std::collections::HashMap;
+use crate::types::Type;
 
 #[derive(Debug)]
 pub struct ClassInitNode {

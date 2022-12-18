@@ -1,14 +1,14 @@
+use std::any::Any;
 use crate::ast::fn_declaration::FnDeclarationNode;
-use crate::ast::types::function::FnType;
-use crate::ast::types::r#class::{ClassFieldType, ClassType};
-use crate::ast::types::Type;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec};
+use crate::types::class::{ClassFieldType, ClassType};
+use crate::types::function::FnType;
+use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
-use std::any::Any;
 
 pub fn method_id(class_name: String, method_name: String) -> String {
     format!("{}.{}", class_name, method_name)

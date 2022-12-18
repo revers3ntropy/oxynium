@@ -1,4 +1,4 @@
-use crate::ast::types::Type;
+use crate::types::Type;
 use crate::util::MutRc;
 
 const RESERVED_KEYWORDS: [&str; 53] = [

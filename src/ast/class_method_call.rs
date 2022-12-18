@@ -1,11 +1,11 @@
 use crate::ast::class_declaration::method_id;
-use crate::ast::types::function::{FnParamType, FnType};
-use crate::ast::types::Type;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{mismatched_types, type_error, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
+use crate::types::function::{FnParamType, FnType};
+use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug)]

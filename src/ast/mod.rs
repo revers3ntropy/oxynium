@@ -1,9 +1,9 @@
-use crate::ast::types::Type;
+use std::fmt::Debug;
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
 use crate::util::MutRc;
-use std::fmt::Debug;
+use crate::types::Type;
 
 pub mod bin_op;
 pub mod bool;
@@ -32,7 +32,6 @@ pub mod statements;
 pub mod str;
 pub mod symbol_access;
 pub mod type_expr;
-pub mod types;
 pub mod unary_op;
 
 pub const ANON_PREFIX: &str = "_$_";
