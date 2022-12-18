@@ -434,7 +434,7 @@ impl Parser {
         }
         if self.current_matches(TokenType::Identifier, Some("fn".to_string())) {
             self.advance(&mut res);
-            res.node = res.register(self.fn_expr(false));
+            res.node = res.register(self.fn_expr(false, None));
             return res;
         }
         if self
@@ -452,7 +452,7 @@ impl Parser {
                 .current_matches(TokenType::Identifier, Some("fn".to_string()))
             {
                 self.advance(&mut res);
-                res.node = res.register(self.fn_expr(true));
+                res.node = res.register(self.fn_expr(true, None));
             } else if self
                 .current_matches(TokenType::Identifier, Some("var".to_string()))
             {
@@ -1071,7 +1071,7 @@ impl Parser {
         Err(e)
     }
 
-    fn fn_expr(&mut self, is_external: bool) -> ParseResults {
+    fn fn_expr(&mut self, is_external: bool, class_name: Option<String>) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
 
@@ -1079,10 +1079,59 @@ impl Parser {
 
         consume!(OpenParen, self, res);
 
-        let params = self.parameters();
-        if params.is_err() {
-            res.failure(params.err().unwrap(), None, None);
-            return res;
+        let mut other_params = true;
+
+        if class_name.is_some() {
+            consume!(self_tok = Identifier, self, res);
+            if self_tok.literal.unwrap() != "self" {
+                res.failure(
+                    syntax_error("Expected 'self'".to_owned()),
+                    Some(self_tok.start),
+                    Some(self_tok.end),
+                );
+                return res;
+            }
+            if self.current_matches(TokenType::Comma, None) {
+                consume!(Comma, self, res);
+            } else {
+                other_params = false;
+
+                if self.current_matches(TokenType::Colon, None) {
+                    res.failure(syntax_error(format!(
+                            "Cannot give type annotation to parameter 'self' on method '{}'",
+                            identifier.clone().literal.unwrap()
+                        )),
+                        Some(self.last_tok().unwrap().start),
+                        Some(self.last_tok().unwrap().end),
+                    );
+                }
+            }
+        }
+        let mut params = Ok(vec![]);
+        if other_params {
+            params = self.parameters();
+            if params.is_err() {
+                res.failure(params.err().unwrap(), None, None);
+                return res;
+            }
+        }
+
+        let mut params = params.unwrap();
+
+        if class_name.is_some() {
+            // insert 'self' parameter separately as it's type is not given
+            params.insert(0, Parameter {
+                identifier: "self".to_owned(),
+                type_: new_mut_rc(TypeNode {
+                    identifier: Token {
+                        token_type: TokenType::Identifier,
+                        literal: Some(class_name.unwrap()),
+                        start: Position::unknown(),
+                        end: Position::unknown(),
+                    },
+                }),
+                default_value: None,
+            });
         }
 
         consume!(CloseParen, self, res);
@@ -1109,7 +1158,7 @@ impl Parser {
                 params_scope: Context::new(),
                 ret_type,
                 is_external,
-                params: params.unwrap(),
+                params,
                 body: None,
                 position: (start, self.last_tok().unwrap().end.clone()),
                 class: None,
@@ -1135,7 +1184,7 @@ impl Parser {
             identifier,
             params_scope: Context::new(),
             ret_type,
-            params: params.unwrap(),
+            params,
             body: Some(body.unwrap()),
             is_external: false,
             position: (start, self.last_tok().unwrap().end.clone()),
@@ -1215,12 +1264,12 @@ impl Parser {
                 break;
             }
 
-            if self
-                .current_matches(TokenType::Identifier, Some("fn".to_string()))
+            if self.current_matches(TokenType::Identifier, Some("fn".to_string()))
             {
                 consume!(self, res);
 
-                let fn_decl = res.register(self.fn_expr(false));
+                let fn_decl = res.register(self.fn_expr(
+                    false, Some(identifier.clone())));
                 ret_on_err!(res);
 
                 // assume that a FnDeclarationNode is returned from fn_expr
@@ -1234,6 +1283,30 @@ impl Parser {
                 if self.current_matches(TokenType::CloseBrace, None) {
                     break;
                 }
+                continue;
+            }
+
+            if self.current_matches(TokenType::Identifier, Some("extern".to_string()))
+            {
+                consume!(self, res);
+                consume!(Identifier, self, res);
+
+                let fn_decl = res.register(self.fn_expr(
+                    true, Some(identifier.clone())));
+                ret_on_err!(res);
+
+                // assume that a FnDeclarationNode is returned from fn_expr
+                // and dangerously cast to the concrete type
+                unsafe {
+                    let fn_ = &*(&fn_decl as *const dyn Any
+                        as *const Option<MutRc<FnDeclarationNode>>);
+                    methods.push(fn_.clone().unwrap());
+                }
+
+                if self.current_matches(TokenType::CloseBrace, None) {
+                    break;
+                }
+                consume!(Comma, self, res);
                 continue;
             }
 

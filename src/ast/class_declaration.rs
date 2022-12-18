@@ -79,12 +79,19 @@ impl Node for ClassDeclarationNode {
             // method's context is attached to the global context tree
             let (method_type, _) = method.type_check(ctx.clone())?;
 
+            if !method.is_external && method.body.is_none() {
+                return Err(type_error(format!(
+                    "Non-external method '{}' requires a body",
+                    method.identifier.clone().literal.unwrap()
+                )));
+            }
+
             if method.params.len() < 1 {
                 return Err(type_error(format!(
                     "Method '{}' must have 'self' parameter",
                     method.identifier.clone().literal.unwrap()
                 ))
-                .set_interval(method.pos()));
+                    .set_interval(method.pos()));
             }
 
             let (first_param_type, _) = method.params[0]
@@ -97,7 +104,7 @@ impl Node for ClassDeclarationNode {
                     method.identifier.clone().literal.unwrap(),
                     this_type.borrow().str()
                 ))
-                .set_interval(method.pos()));
+                    .set_interval(method.pos()));
             }
 
             unsafe {

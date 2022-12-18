@@ -103,7 +103,7 @@ describe 'Methods'
 expect 'x = 1, x = 2, ' '
     class S {
         x: Int,
-        fn log(self: S): Void {
+        fn log(self): Void {
            print("x = ");
            print(self.x.str());
            print(", ");
@@ -114,17 +114,22 @@ expect 'x = 1, x = 2, ' '
 '
 expect_err 'TypeError' '
     class S {
-        fn log(self: S) {
+        fn log(self) {
            self.x;
         }
     }
 '
-expect_err 'TypeError' '
+expect_err 'SyntaxError' '
+    class S {
+        fn log(self: S) {}
+    }
+'
+expect_err 'SyntaxError' '
     class S {
         fn log(self: Int) {}
     }
 '
-expect_err 'TypeError' '
+expect_err 'SyntaxError' '
     class S {
         fn log() {}
     }
@@ -132,49 +137,45 @@ expect_err 'TypeError' '
 expect '' '
     class S {
         x: Int,
-        fn f1(self: S)
-        fn f2(self: S)
+        extern fn f1(self),
+        fn f2(self) {}
+        extern fn f3(self),
         y: Int,
-        fn f3(self: S) {}
+        fn f4(self) {}
         z: Str
     }
 '
 expect_err 'TypeError' '
     class S {
-        fn log()
-    }
-'
-expect_err 'TypeError' '
-    class S {
-        fn f(self: S, a: Int) {}
+        fn f(self, a: Int) {}
     };
     new S{}.f();
 '
 expect_err 'TypeError' '
     class S {
-        fn f(self: S, a: Int) {}
+        fn f(self, a: Int) {}
     };
     new S{}.f("");
 '
 expect '' '
     class S {
-        fn f(self: S, a: Int) {}
+        fn f(self, a: Int) {}
     };
     new S{}.f(1);
 '
 expect_err 'TypeError' '
-    class S {};
-    new S{}.f();
+    class S;
+    new S.f();
 '
 expect_err 'TypeError' '
     class S {
-        fn f(self: S){}
+        fn f(self){}
     };
     new S.g();
 '
 expect 'hi' '
     class S {
-        fn f(self: S, msg: Str = "hi") {
+        fn f(self, msg: Str = "hi") {
             print(msg);
         }
     };
@@ -182,12 +183,12 @@ expect 'hi' '
 '
 expect 'hello world' '
     class A {
-        fn f(self: A, msg: Str = "hello") {
+        fn f(self, msg: Str = "hello") {
             print(msg);
         }
     };
     class B {
-        fn f(self: B, msg: Str = " world") {
+        fn f(self, msg: Str = " world") {
             print(msg);
         }
     };

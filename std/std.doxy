@@ -1,7 +1,7 @@
 class Void;
 class Str;
 class Bool {
-    fn str(self: Bool): Str {
+    fn str(self): Str {
         if self {
             return "true";
         } else {
@@ -10,7 +10,7 @@ class Bool {
     }
 };
 class Int {
-    fn str(self: Int): Str
+    extern fn str(self): Str
 };
 
 extern fn print(msg: Str): Void;
