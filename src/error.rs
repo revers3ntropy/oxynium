@@ -54,6 +54,10 @@ pub fn unknown_symbol(message: String) -> Error {
     Error::new("UnknownSymbolError", message)
 }
 
+pub fn invalid_symbol(message: String) -> Error {
+    Error::new("SyntaxError", format!("Symbol '{}' is not allowed", message))
+}
+
 pub fn numeric_overflow(message: String) -> Error {
     Error::new("NumericOverflow", message)
 }

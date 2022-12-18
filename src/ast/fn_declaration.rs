@@ -2,12 +2,13 @@ use crate::ast::types::function::{FnParamType, FnType};
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::CallStackFrame;
 use crate::context::Context;
-use crate::error::{syntax_error, type_error, unknown_symbol, Error};
+use crate::error::{syntax_error, type_error, Error, invalid_symbol};
+use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
 use crate::util::{MutRc, new_mut_rc};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Parameter {
     pub identifier: String,
     pub type_: MutRc<dyn Node>,
@@ -16,7 +17,7 @@ pub struct Parameter {
 
 #[derive(Debug)]
 pub struct FnDeclarationNode {
-    pub identifier: String,
+    pub identifier: Token,
     pub ret_type: MutRc<dyn Node>,
     pub params: Vec<Parameter>,
     pub body: Option<MutRc<dyn Node>>,
@@ -30,7 +31,7 @@ impl Node for FnDeclarationNode {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare function '{}' inside of another function.",
-                self.identifier
+                self.identifier.str()
             )));
         }
 
@@ -40,7 +41,7 @@ impl Node for FnDeclarationNode {
 
         let end_label = ctx.borrow_mut().get_anon_label();
         ctx.borrow_mut().stack_frame_push(CallStackFrame {
-            name: self.identifier.clone(),
+            name: self.identifier.clone().literal.unwrap(),
             params: self.params.iter().map(|a| a.identifier.clone()).collect(),
             ret_lbl: end_label.clone(),
         });
@@ -57,7 +58,7 @@ impl Node for FnDeclarationNode {
             return Err(type_error("Nested functions not allowed".to_string()));
         }
         ctx.borrow_mut().define(SymbolDef {
-            name: self.identifier.clone(),
+            name: self.identifier.clone().literal.unwrap(),
             data: None,
             text: Some(format!(
                 "
@@ -82,8 +83,9 @@ impl Node for FnDeclarationNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        if !can_declare_with_identifier(&self.identifier) {
-            return Err(unknown_symbol(self.identifier.clone()));
+        if !can_declare_with_identifier(&self.identifier.clone().literal.unwrap()) {
+            return Err(invalid_symbol(self.identifier.clone().literal.unwrap())
+                .set_interval(self.identifier.interval()));
         }
         self.params_scope.borrow_mut().set_parent(ctx.clone());
         self.params_scope.borrow_mut().allow_local_var_decls = true;
@@ -93,11 +95,11 @@ impl Node for FnDeclarationNode {
         if !ctx.borrow_mut().allow_overrides {
             if ctx
                 .borrow_mut()
-                .has_dec_with_id(self.identifier.clone().as_str())
+                .has_dec_with_id(self.identifier.clone().literal.unwrap().as_str())
             {
                 return Err(type_error(format!(
                     "Symbol {} is already defined",
-                    self.identifier
+                    self.identifier.clone().literal.unwrap()
                 )));
             }
         }
@@ -113,7 +115,7 @@ impl Node for FnDeclarationNode {
                 identifier,
                 type_,
                 default_value,
-            } = self.params.pop().unwrap();
+            } = self.params[self.params.len()-i-1].clone();
 
             if !can_declare_with_identifier(&identifier) {
                 return Err(syntax_error("Invalid parameter name".to_string()));
@@ -165,14 +167,14 @@ impl Node for FnDeclarationNode {
         }
 
         let this_type = new_mut_rc(FnType {
-            name: self.identifier.clone(),
+            name: self.identifier.clone().literal.unwrap(),
             ret_type: ret_type.clone(),
             parameters,
         });
         // declare in the parent context
         ctx.borrow_mut().declare(SymbolDec {
-            name: self.identifier.clone(),
-            id: self.identifier.clone(),
+            name: self.identifier.clone().literal.unwrap(),
+            id: self.identifier.clone().literal.unwrap(),
             is_constant: true,
             is_type: false,
             require_init: !self.is_external,
@@ -187,7 +189,7 @@ impl Node for FnDeclarationNode {
             if !ret_type.borrow().contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
                     "Function {} has return type {} but found {}",
-                    self.identifier,
+                    self.identifier.clone().literal.unwrap(),
                     ret_type.borrow().str(),
                     body_ret_type.borrow().str()
                 )));

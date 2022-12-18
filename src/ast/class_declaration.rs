@@ -1,9 +1,11 @@
+use std::any::Any;
 use crate::ast::fn_declaration::FnDeclarationNode;
-use crate::ast::types::function::{FnParamType, FnType};
+use crate::ast::types::function::FnType;
 use crate::ast::types::r#class::{ClassFieldType, ClassType};
 use crate::ast::{Node, TypeCheckRes};
+use crate::ast::types::Type;
 use crate::context::Context;
-use crate::error::{unknown_symbol, Error};
+use crate::error::{unknown_symbol, Error, type_error};
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec};
 use crate::util::{MutRc, new_mut_rc};
@@ -31,9 +33,9 @@ impl Node for ClassDeclarationNode {
         for method in self.methods.iter() {
             let id = method_id(
                 self.identifier.clone(),
-                method.borrow().identifier.clone(),
+                method.borrow().identifier.clone().literal.unwrap(),
             );
-            method.borrow_mut().identifier = id.clone();
+            method.borrow_mut().identifier.literal = Some(id.clone());
             method.borrow_mut().asm(ctx.clone())?;
         }
 
@@ -73,33 +75,35 @@ impl Node for ClassDeclarationNode {
         }
 
         for method in self.methods.iter() {
-            let old_id = method.borrow().identifier.clone();
             let mut method = method.borrow_mut();
             // This is where the context reference is handed down so the
             // method's context is attached to the global context tree
-            let (ret_type, _) = method.type_check(ctx.clone())?;
-            let params = method
-                .params
-                .iter()
-                .map(|param| {
-                    let type_ =
-                        param.type_.borrow_mut().type_check(ctx.clone())?;
-                    Ok(FnParamType {
-                        name: param.identifier.clone(),
-                        type_: type_.0,
-                        default_value: param.default_value.clone(),
-                    })
-                })
-                .collect::<Result<Vec<FnParamType>, Error>>()?;
+            let (method_type, _) = method.type_check(ctx.clone())?;
+
+            if method.params.len() < 1 {
+                return Err(type_error(format!(
+                    "Method '{}' must have 'self' parameter",
+                    method.identifier.clone().literal.unwrap()
+                )).set_interval(method.pos()));
+            }
+
+            let (first_param_type, _) = method.params[0].type_.borrow_mut()
+                .type_check(ctx.clone())?;
+            if !this_type.borrow().contains(first_param_type) {
+                return Err(type_error(format!(
+                    "Method '{}' must have 'self' parameter of type '{}'",
+                    method.identifier.clone().literal.unwrap(), this_type.borrow().str()
+                )).set_interval(method.pos()));
+            }
 
             // doesn't matter as type checking doesn't happen on this declaration,
-            // but otherwise the context complains tht we are defining an undeclared
-            // symbol
+            // but otherwise the context complains that we are defining an undeclared
+            // symbol 'ClassName.method_name'
             let void =
-                ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone();
+                ctx.borrow().get_dec_from_id("Void")?.type_.clone();
             let id = method_id(
                 self.identifier.clone(),
-                method.identifier.clone(),
+                method.identifier.clone().literal.unwrap(),
             );
             ctx.borrow_mut().declare(SymbolDec {
                 name: id.clone(),
@@ -112,11 +116,10 @@ impl Node for ClassDeclarationNode {
                 is_param: false,
             })?;
 
-            this_type.borrow_mut().methods.push(new_mut_rc(FnType {
-                name: old_id,
-                parameters: params,
-                ret_type,
-            }))
+            unsafe {
+                let fn_ = &*(&method_type as *const dyn Any as *const Option<MutRc<FnType>>);
+                this_type.borrow_mut().methods.push(fn_.clone().unwrap());
+            }
         }
 
         Ok((this_type, None))

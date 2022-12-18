@@ -1075,8 +1075,7 @@ impl Parser {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
 
-        consume!(id_tok = Identifier, self, res);
-        let identifier = id_tok.literal.unwrap();
+        consume!(identifier = Identifier, self, res);
 
         consume!(OpenParen, self, res);
 
@@ -1204,9 +1203,7 @@ impl Parser {
                 break;
             }
 
-            if self
-                .current_matches(TokenType::Identifier, Some("fn".to_string()))
-            {
+            if self.current_matches(TokenType::Identifier, Some("fn".to_string())) {
                 consume!(self, res);
 
                 let fn_decl = res.register(self.fn_expr(false));
@@ -1215,8 +1212,7 @@ impl Parser {
                 // assume that a FnDeclarationNode is returned from fn_expr
                 // and dangerously cast to the concrete type
                 unsafe {
-                    let fn_ = &*(&fn_decl as *const dyn Any
-                        as *const Option<MutRc<FnDeclarationNode>>);
+                    let fn_ = &*(&fn_decl as *const dyn Any as *const Option<MutRc<FnDeclarationNode>>);
                     methods.push(fn_.clone().unwrap());
                 }
 

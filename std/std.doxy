@@ -1,7 +1,16 @@
-class Str {};
-class Bool {};
-class Int {};
 class Void {};
+class Str {};
+class Bool {
+    fn str(self: Bool): Str {
+        if self {
+            return "true";
+        };
+        return "false";
+    }
+};
+class Int {
+
+};
 
 extern fn print(msg: Str): Void;
 extern fn print_int(int: Int): Void;

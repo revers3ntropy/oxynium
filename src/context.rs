@@ -95,27 +95,27 @@ impl Context {
         self.declarations.insert(symbol.name.clone(), symbol);
         Ok(())
     }
-    pub fn has_dec_with_id(&mut self, id: &str) -> bool {
+    pub fn has_dec_with_id(&self, id: &str) -> bool {
         if self.declarations.get(id).is_some() {
             true
         } else if self.parent.is_some() {
             self.parent
                 .as_ref()
                 .unwrap()
-                .borrow_mut()
+                .borrow()
                 .has_dec_with_id(id)
         } else {
             false
         }
     }
-    pub fn get_dec_from_id(&mut self, id: &str) -> Result<SymbolDec, Error> {
+    pub fn get_dec_from_id(&self, id: &str) -> Result<SymbolDec, Error> {
         if self.declarations.get(id).is_some() {
             Ok(self.declarations.get(id).unwrap().clone())
         } else if self.parent.is_some() {
             self.parent
                 .as_ref()
                 .unwrap()
-                .borrow_mut()
+                .borrow()
                 .get_dec_from_id(id)
         } else {
             Err(type_error(format!("Symbol {} is not declared", id)))
@@ -138,7 +138,7 @@ impl Context {
         }
     }
 
-    pub fn get_new_local_var_offset(&mut self) -> usize {
+    pub fn get_new_local_var_offset(&self) -> usize {
         if self.allow_local_var_decls || self.parent.is_none() {
             let idx =
                 self.declarations.iter().filter(|d| !d.1.is_param).count();
@@ -147,7 +147,7 @@ impl Context {
             self.parent
                 .as_ref()
                 .unwrap()
-                .borrow_mut()
+                .borrow()
                 .get_new_local_var_offset()
         }
     }

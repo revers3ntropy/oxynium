@@ -1,6 +1,6 @@
 describe 'Performance'
 
-perf_test_comp_cpp '149995000' '
+perf_test_comp_cpp 1 '149995000' '
     var sum = 0;
     const n = 10000;
     var i = 0;

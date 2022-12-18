@@ -145,10 +145,16 @@ function expect_expr_bool() {
     expect "$1" "print_bool($2)"
 }
 
+oxy_comp=()
+oxy_exec=()
+cpp_comp=()
+cpp_exec=()
+num_perf_tests=0
 function perf_test_comp_cpp() {
-    expected="$1"
-    oxy="$2"
-    cpp="$3"
+    n="$1"
+    expected="$2"
+    oxy="$3"
+    cpp="$4"
 
     expect "$expected" "$oxy"
 
@@ -163,32 +169,60 @@ function perf_test_comp_cpp() {
         test_failed "$oxy" 'no errors' "$errors"
     fi
 
-    echo "Oxy Compilation: $(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)"
+    oxy_comp+=("$(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)")
     perf_timer_start=$(date +"%s.%3N")
 
-    ./test-out > /dev/null
+    for ((i=0;i<"$n";i++)); do
+        ./test-out > /dev/null
+    done
 
-    echo "Oxy Execution: $(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)"
+    oxy_exec+=("$(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)")
     perf_timer_start=$(date +"%s.%3N")
 
     echo "$cpp" > out.cpp
 
-    gcc out.cpp -lstdc++
+    gcc out.cpp -O1 -lstdc++
 
-    echo "C++ Compilation: $(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)"
+    cpp_comp+=("$(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)")
     perf_timer_start=$(date +"%s.%3N")
 
     cpp_out=$(./a.out)
+    for ((i=1;i<"$n";i++)); do
+        ./a.out > /dev/null
+    done
 
-    echo "C++ Execution: $(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)"
+    cpp_exec+=("$(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)")
     perf_timer_start=$(date +"%s.%3N")
 
+    num_perf_tests=$((num_perf_tests+1))
+
     if [ "$cpp_out" != "$expected" ]; then
-        test_failed "C++ performance code" "$expected" "$cpp_out"
+        test_failed "C++ performance comparison" "$expected" "$cpp_out"
     fi
 }
 
 function results() {
+
+    printf "Oxy Comp: ${oxy_comp[*]}\n"
+    printf "C++ Comp: ${cpp_comp[*]}\n"
+    printf "Oxy Exec: ${oxy_exec[*]}\n"
+    printf "C++ Exec: ${cpp_exec[*]}\n"
+
+    comp_ratio_average=0
+    exec_ratio_average=0
+
+    for i in "${!oxy_comp[@]}"; do
+        comp_ratio=$(echo "${cpp_comp[$i]} / ${oxy_comp[$i]}" | bc -l)
+        exec_ratio=$(echo "${cpp_exec[$i]} / ${oxy_exec[$i]}" | bc -l)
+        comp_ratio_average=$(echo "$comp_ratio_average + $comp_ratio" | bc -l)
+        exec_ratio_average=$(echo "$exec_ratio_average + $exec_ratio" | bc -l)
+    done
+
+    comp_ratio_average=$(echo "$comp_ratio_average / $num_perf_tests" | bc -l)
+    exec_ratio_average=$(echo "$exec_ratio_average / $num_perf_tests" | bc -l)
+
+    printf "Mean comp time ratio oxy:cpp=1:%.*f\n" 3 "$comp_ratio_average"
+    printf "Mean exec time ratio oxy:cpp=1:%.*f\n" 3 "$exec_ratio_average"
 
     end=$(date +"%s.%3N")
     runtime=$(echo "$end - $start" | bc -l)
@@ -218,7 +252,7 @@ run_cargo_tests
 
 setup
 
-for f in ./spec/*; do
+for f in $(find ./spec -name '*.sh' | sort); do
   current_spec_file="$f"
   # shellcheck disable=SC1090
   source "$f";

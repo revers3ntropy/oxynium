@@ -86,3 +86,71 @@ expect_err 'TypeError' '
     class S { x: Int };
     print(new S { x: 1 }.x);
 '
+
+describe 'Methods'
+
+expect 'x = 1, x = 2, ' '
+    class S {
+        x: Int,
+        fn log(self: S): Void {
+           print("x = ");
+           print_int(self.x);
+           print(", ");
+        }
+    };
+    new S { x: 1 }.log();
+    new S { x: 2 }.log();
+'
+expect_err 'TypeError' '
+    class S {
+        fn log(self: S) {
+           self.x;
+        }
+    }
+'
+expect_err 'TypeError' '
+    class S {
+        fn log(self: Int) {}
+    }
+'
+expect_err 'TypeError' '
+    class S {
+        fn log() {}
+    }
+'
+expect_err 'TypeError' '
+    class S {
+        fn f(self: S, a: Int) {}
+    };
+    new S{}.f();
+'
+expect_err 'TypeError' '
+    class S {
+        fn f(self: S, a: Int) {}
+    };
+    new S{}.f("");
+'
+expect '' '
+    class S {
+        fn f(self: S, a: Int) {}
+    };
+    new S{}.f(1);
+'
+expect_err 'TypeError' '
+    class S {};
+    new S{}.f();
+'
+expect_err 'TypeError' '
+    class S {
+        fn f(self: S){}
+    };
+    new S{}.g();
+'
+expect 'hi' '
+    class S {
+        fn f(self: S, msg: Str = "hi") {
+            print(msg);
+        }
+    };
+    new S{}.f();
+'
