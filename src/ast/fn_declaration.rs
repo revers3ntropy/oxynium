@@ -1,12 +1,14 @@
 use crate::ast::types::function::{FnParamType, FnType};
 use crate::ast::{Node, TypeCheckRes};
+use crate::ast::class_declaration::method_id;
+use crate::ast::types::class::ClassType;
 use crate::context::CallStackFrame;
 use crate::context::Context;
-use crate::error::{syntax_error, type_error, Error, invalid_symbol};
+use crate::error::{invalid_symbol, syntax_error, type_error, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
-use crate::util::{MutRc, new_mut_rc};
+use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug, Clone)]
 pub struct Parameter {
@@ -24,6 +26,19 @@ pub struct FnDeclarationNode {
     pub params_scope: MutRc<Context>,
     pub is_external: bool,
     pub position: Interval,
+    pub class: Option<MutRc<ClassType>>
+}
+
+impl FnDeclarationNode {
+    fn id(&self) -> String {
+        match &self.class {
+            Some(class) => method_id(
+                class.borrow().name.clone(),
+                self.identifier.literal.clone().unwrap()
+            ),
+            None => self.identifier.literal.clone().unwrap()
+        }
+    }
 }
 
 impl Node for FnDeclarationNode {
@@ -35,13 +50,14 @@ impl Node for FnDeclarationNode {
             )));
         }
 
+
         if self.body.is_none() {
             return Ok("".to_string());
         }
 
         let end_label = ctx.borrow_mut().get_anon_label();
         ctx.borrow_mut().stack_frame_push(CallStackFrame {
-            name: self.identifier.clone().literal.unwrap(),
+            name: self.id(),
             params: self.params.iter().map(|a| a.identifier.clone()).collect(),
             ret_lbl: end_label.clone(),
         });
@@ -58,7 +74,7 @@ impl Node for FnDeclarationNode {
             return Err(type_error("Nested functions not allowed".to_string()));
         }
         ctx.borrow_mut().define(SymbolDef {
-            name: self.identifier.clone().literal.unwrap(),
+            name: self.id(),
             data: None,
             text: Some(format!(
                 "
@@ -83,9 +99,13 @@ impl Node for FnDeclarationNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        if !can_declare_with_identifier(&self.identifier.clone().literal.unwrap()) {
-            return Err(invalid_symbol(self.identifier.clone().literal.unwrap())
-                .set_interval(self.identifier.interval()));
+        if !can_declare_with_identifier(
+            &self.identifier.clone().literal.unwrap(),
+        ) {
+            return Err(invalid_symbol(
+                self.identifier.clone().literal.unwrap(),
+            )
+            .set_interval(self.identifier.interval()));
         }
         self.params_scope.borrow_mut().set_parent(ctx.clone());
         self.params_scope.borrow_mut().allow_local_var_decls = true;
@@ -93,14 +113,11 @@ impl Node for FnDeclarationNode {
         // don't use param_scope so that the function can have params
         // with the same name as the function
         if !ctx.borrow_mut().allow_overrides {
-            if ctx
-                .borrow_mut()
-                .has_dec_with_id(self.identifier.clone().literal.unwrap().as_str())
-            {
+            if ctx.borrow_mut().has_dec_with_id(self.id().as_str()) {
                 return Err(type_error(format!(
                     "Symbol {} is already defined",
                     self.identifier.clone().literal.unwrap()
-                )));
+                )).set_interval(self.position.clone()));
             }
         }
         let (ret_type, _) =
@@ -115,10 +132,11 @@ impl Node for FnDeclarationNode {
                 identifier,
                 type_,
                 default_value,
-            } = self.params[self.params.len()-i-1].clone();
+            } = self.params[self.params.len() - i - 1].clone();
 
             if !can_declare_with_identifier(&identifier) {
-                return Err(syntax_error("Invalid parameter name".to_string()));
+                return Err(syntax_error("Invalid parameter name".to_string())
+                    .set_interval(self.position.clone()));
             }
 
             let param_type = type_.borrow_mut().type_check(ctx.clone())?.0;
@@ -127,16 +145,18 @@ impl Node for FnDeclarationNode {
                     return Err(type_error(format!(
                         "Parameters after '{}' must have default values",
                         identifier
-                    )));
+                    ))
+                    .set_interval(self.position.clone()));
                 }
                 let default_value_type =
                     default_value.borrow_mut().type_check(ctx.clone())?.0;
                 if !param_type.borrow().contains(default_value_type.clone()) {
                     return Err(type_error(format!(
-                        "Default value for parameter {} is not of type {}",
+                        "Default value for parameter '{}' is not of type {}",
                         identifier,
                         param_type.borrow().str()
-                    )));
+                    ))
+                    .set_interval(self.position.clone()));
                 }
             } else {
                 seen_param_without_default = true;
@@ -167,14 +187,14 @@ impl Node for FnDeclarationNode {
         }
 
         let this_type = new_mut_rc(FnType {
-            name: self.identifier.clone().literal.unwrap(),
+            name: self.id(),
             ret_type: ret_type.clone(),
             parameters,
         });
         // declare in the parent context
         ctx.borrow_mut().declare(SymbolDec {
-            name: self.identifier.clone().literal.unwrap(),
-            id: self.identifier.clone().literal.unwrap(),
+            name: self.id(),
+            id: self.id(),
             is_constant: true,
             is_type: false,
             require_init: !self.is_external,
@@ -184,15 +204,18 @@ impl Node for FnDeclarationNode {
         })?;
 
         if let Some(body) = self.body.take() {
-            let (body_ret_type, _) =
+            let (_, body_ret_type) =
                 body.borrow_mut().type_check(self.params_scope.clone())?;
+            let body_ret_type = body_ret_type
+                .unwrap_or(ctx.borrow_mut().get_dec_from_id("Void").unwrap().type_.clone());
             if !ret_type.borrow().contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
                     "Function {} has return type {} but found {}",
                     self.identifier.clone().literal.unwrap(),
                     ret_type.borrow().str(),
                     body_ret_type.borrow().str()
-                )));
+                ))
+                .set_interval(self.position.clone()));
             }
             self.body = Some(body);
         }

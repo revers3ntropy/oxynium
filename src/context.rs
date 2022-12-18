@@ -99,11 +99,7 @@ impl Context {
         if self.declarations.get(id).is_some() {
             true
         } else if self.parent.is_some() {
-            self.parent
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .has_dec_with_id(id)
+            self.parent.as_ref().unwrap().borrow().has_dec_with_id(id)
         } else {
             false
         }
@@ -112,11 +108,7 @@ impl Context {
         if self.declarations.get(id).is_some() {
             Ok(self.declarations.get(id).unwrap().clone())
         } else if self.parent.is_some() {
-            self.parent
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .get_dec_from_id(id)
+            self.parent.as_ref().unwrap().borrow().get_dec_from_id(id)
         } else {
             Err(type_error(format!("Symbol {} is not declared", id)))
         }
@@ -158,7 +150,8 @@ impl Context {
         if self.parent.is_some() && !self.allow_local_var_decls {
             return self.parent.as_ref().unwrap().borrow_mut().define(symbol);
         }
-        if self.definitions.get(symbol.name.clone().as_str()).is_some() {
+        let name = symbol.name.clone();
+        if self.definitions.get(&name.clone()).is_some() {
             return Err(type_error(format!(
                 "Symbol {} is already defined",
                 symbol.name
@@ -166,7 +159,7 @@ impl Context {
         }
         if !self
             .declarations
-            .get(symbol.name.clone().as_str())
+            .get(&name.clone())
             .is_some()
         {
             return Err(type_error(format!(
@@ -174,7 +167,7 @@ impl Context {
                 symbol.name
             )));
         }
-        let name = symbol.name.clone();
+
         self.definitions.insert(name.clone(), symbol);
         Ok(())
     }

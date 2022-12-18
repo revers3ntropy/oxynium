@@ -1,8 +1,9 @@
 use crate::ast::types::function::FnType;
 use crate::ast::types::Type;
+use crate::util::MutRc;
 use std::fmt;
 use std::ops::Deref;
-use crate::util::MutRc;
+use crate::ast::class_declaration::method_id;
 
 #[derive(Clone, Debug)]
 pub struct ClassFieldType {
@@ -34,10 +35,11 @@ impl ClassType {
             .map(|f| f.type_.clone())
     }
 
-    pub fn method_type(&self, field: &str) -> Option<MutRc<FnType>> {
+    pub fn method_type(&self, method: &str) -> Option<MutRc<FnType>> {
         self.methods
             .iter()
-            .find(|f| f.borrow().name == field)
+            .find(|f| f.borrow().name == method_id(
+                self.name.clone(), method.to_string()))
             .map(|f| f.clone())
     }
 

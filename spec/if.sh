@@ -13,16 +13,16 @@ expect 'hi' '
 expect '' 'if true { 1 }'
 expect '2' '
     if false {
-      print_int(1);
+      print(1.str());
     } else {
-      print_int(2);
+      print(2.str());
     }
 '
 expect '1' '
     if true {
-      print_int(1);
+      print(1.str());
     } else {
-      print_int(2);
+      print(2.str());
     }
 '
 expect '2' '
@@ -34,26 +34,26 @@ expect '2' '
 '
 expect '2' '
     if false {
-      print_int(1);
+      print(1.str());
     } else if true {
-      print_int(2);
+      print(2.str());
     } else {
-      print_int(3);
+      print(3.str());
     }
 '
 expect '3' '
     if false {
-      print_int(1);
+      print(1.str());
     } else if false {
-      print_int(2);
+      print(2.str());
     } else {
-      print_int(3);
+      print(3.str());
     }
 '
 
 expect_err 'SyntaxError' 'if'
 expect_err 'SyntaxError' 'if ()'
-expect_err 'SyntaxError' 'if (false) print_int(2);'
+expect_err 'SyntaxError' 'if (false) print(2.str());'
 expect_err 'SyntaxError' 'if {}'
 expect_err 'SyntaxError' 'if { print(); }'
 expect_err 'SyntaxError' 'if { print(); }'

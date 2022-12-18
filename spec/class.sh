@@ -56,15 +56,15 @@ expect '' '
 '
 expect '1' '
     class S { x: Int };
-    print_int(new S { x: 1 }.x);
+    print(new S { x: 1 }.x.str());
 '
 expect '456' '
     class S { x: Int, };
     class S2 { s: S };
     // different bracket permutations
-    print_int(new S2 { s: new S { x: 4 }}.s.x);
-    print_int((new S2 { s: new S { x: 5 }}).s.x);
-    print_int((new S2 { s: new S { x: 6 }}.s).x);
+    print(new S2 { s: new S { x: 4 }}.s.x.str());
+    print((new S2 { s: new S { x: 5 }}).s.x.str());
+    print((new S2 { s: new S { x: 6 }}.s).x.str());
 '
 expect '9hi' '
     class S {
@@ -73,7 +73,7 @@ expect '9hi' '
     };
     fn f () {
         let s = new S { x: 9, y: "hi" };
-        print_int(s.x);
+        print(s.x.str());
         print(s.y);
     };
     f();
@@ -94,7 +94,7 @@ expect 'x = 1, x = 2, ' '
         x: Int,
         fn log(self: S): Void {
            print("x = ");
-           print_int(self.x);
+           print(self.x.str());
            print(", ");
         }
     };

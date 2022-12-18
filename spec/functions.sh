@@ -37,7 +37,7 @@ expect '3' '
     fn f() {
         1;
         g();
-        print_int(3);
+        print(3.str());
         3;
     };
     f();
@@ -50,7 +50,7 @@ expect 'Hello' '
 '
 expect '22' '
       fn sum_and_log(a: Int, b: Int, c: Int) {
-          print_int(a + b + c);
+          print((a + b + c).str());
       };
       sum_and_log(5, 8, 9);
 '
@@ -95,7 +95,7 @@ expect '12' '
         for {
             i = i + 1;
             if i > 2 { return };
-            print_int(i);
+            print(i.str());
         };
     };
     f();
@@ -104,7 +104,7 @@ expect '1' '
     fn f(): Int {
         return 1;
     };
-    print_int(f());
+    print(f().str());
 '
 
 expect_err 'TypeError' '
@@ -129,39 +129,39 @@ expect_err 'TypeError' '
     };
 '
 expect_err 'TypeError' '
-    fn f(): Int {
-      print_int(1);
+    fn f(): Str {
+        print(1.str());
     };
 '
 expect_err 'TypeError' '
     fn f(): Void {
-      return 1;
+        return 1;
     };
 '
 expect '' '
     fn f(): Void {
-      return;
+        return;
     };
     f();
 '
 expect '' '
     fn f(): Void {
-      1;
+        1;
     };
     f();
 '
 expect 'hi' '
     fn f(): Void {
-      print("hi");
+        print("hi");
     };
     f();
 '
 expect '1' '
     fn f(): Int {
-      return 1;
-      print("hi");
+        return 1;
+        print("hi");
     };
-    print_int(f());
+    print(f().str());
 '
 expect 'hi' '
     fn f(): Str {
@@ -173,54 +173,54 @@ expect 'false' '
     fn f(): Bool {
       return 1 == 2;
     };
-    print_bool(f());
+    print(f().str());
 '
 expect 'true' '
     fn f(): Bool {
       return true;
     };
-    print_bool(f());
+    print(f().str());
 '
 expect_err 'TypeError' '
     fn f(): Str {
         return "";
     };
-    print_bool(f());
+    print(f().str());
 '
 expect_err 'TypeError' '
     fn f(): Void {};
-    print_bool(f());
+    print(f().str());
 '
 expect '16' '
     fn square(n: Int): Int {
         return n * n;
     };
-    print_int(square(4));
+    print(square(4).str());
 '
 expect '17' '
     fn square(n: Int): Int {
         return n * n;
     };
-    print_int(square(4) + square(-1));
+    print((square(4) + square(-1)).str());
 '
 expect '90' '
     fn sum(a: Int, b: Int, c: Int): Int {
         return a + b + c;
     };
-    print_int(sum(1, 2, 3) * sum(4, 5, 6));
+    print((sum(1, 2, 3) * sum(4, 5, 6)).str());
 '
 expect '49' '
     fn f(n: Int): Int {
         return n;
     };
-    print_int(f(4));
-    print_int(f(4) + f(5));
+    print(f(4).str());
+    print((f(4) + f(5)).str());
 '
 expect '49' '
     fn g() {
-        print_int(49);
+        print(49.str());
         return;
-        print_bool(true);
+        print(true.str());
     };
     fn f(n: Int): Void {
         return g();
@@ -252,16 +252,16 @@ describe 'Default Arguments'
 
 expect '123' '
     fn f(a: Int, b: Int = 2, c: Int = 3) {
-        print_int(a);
-        print_int(b);
-        print_int(c);
+        print(a.str());
+        print(b.str());
+        print(c.str());
     };
     f(1);
 '
 expect '14' '
     const a = 1;
     fn f(a: Int = a) {
-        print_int(a);
+        print(a.str());
     };
     f();
     f(4);
@@ -269,19 +269,19 @@ expect '14' '
 expect '44' '
     const u = 1;
     fn f(a: Int, b: Int = 5-u) {
-        print_int(a);
-        print_int(b);
+        print(a.str());
+        print(b.str());
     };
     f(4);
 '
 expect 'true2hi3' '
     fn f(a: Bool, b: Int = 2, c: Str = "hi"): Int {
-        print_bool(a);
-        print_int(b);
+        print(a.str());
+        print(b.str());
         print(c);
         return b + 1;
     };
-    print_int(f(true));
+    print(f(true).str());
 '
 expect_err 'TypeError' '
     fn f(a: Int = "") {};

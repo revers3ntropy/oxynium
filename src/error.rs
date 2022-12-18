@@ -55,17 +55,27 @@ pub fn unknown_symbol(message: String) -> Error {
 }
 
 pub fn invalid_symbol(message: String) -> Error {
-    Error::new("SyntaxError", format!("Symbol '{}' is not allowed", message))
+    Error::new(
+        "SyntaxError",
+        format!("Symbol '{}' is not allowed", message),
+    )
 }
 
 pub fn numeric_overflow(message: String) -> Error {
     Error::new("NumericOverflow", message)
 }
 
-pub fn mismatched_types(expected: MutRc<dyn Type>, got: MutRc<dyn Type>) -> Error {
+pub fn mismatched_types(
+    expected: MutRc<dyn Type>,
+    got: MutRc<dyn Type>,
+) -> Error {
     Error::new(
         "TypeError",
-        format!("expected '{}', got '{}'", expected.borrow().str(), got.borrow().str()),
+        format!(
+            "expected '{}', got '{}'",
+            expected.borrow().str(),
+            got.borrow().str()
+        ),
     )
 }
 

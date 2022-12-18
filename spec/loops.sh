@@ -4,7 +4,7 @@ expect '1' '
     var i = 0;
     for {
         i = i + 1;
-        print_int(i);
+        print(i.str());
         break;
     }
 '
@@ -27,7 +27,7 @@ expect '5' '
         if i < 5 {
             continue;
         };
-        print_int(i);
+        print(i.str());
         break;
     };
 '
@@ -37,7 +37,7 @@ expect '12345678910' '
     var i = 0;
     for {
         i = i + 1;
-        print_int(i);
+        print(i.str());
         print("");
         if i > n {
             break;
@@ -52,7 +52,7 @@ expect '234 468 6912' '
         j = 1;
         for {
             j = j + 1;
-            print_int(i*j);
+            print((i*j).str());
             if j > 3 {
                 break;
             };

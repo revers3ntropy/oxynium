@@ -4,19 +4,16 @@ class Bool {
     fn str(self: Bool): Str {
         if self {
             return "true";
-        };
-        return "false";
+        } else {
+            return "false";
+        }
     }
 };
 class Int {
-
+    fn str(self: Int): Str
 };
 
 extern fn print(msg: Str): Void;
-extern fn print_int(int: Int): Void;
-extern fn print_bool(bool: Bool): Void;
-extern fn print_true(): Void;
-extern fn print_false(): Void;
 extern fn print_nl(): Void;
 extern fn exit(code: Int = 0): Void;
 extern fn input(prompt: Str = "", buffer_size: Int = 1000): Str;

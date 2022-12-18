@@ -47,14 +47,20 @@ impl Node for StatementsNode {
         }
 
         for ret_type in ret_types.iter() {
-            if !ret_type.borrow().contains(ret_types.first().unwrap().clone()) {
+            if !ret_type
+                .borrow()
+                .contains(ret_types.first().unwrap().clone())
+            {
                 return Err(type_error(
                     "All return types must be the same".to_string(),
                 ));
             }
         }
 
-        Ok((ret_types[0].clone(), None))
+        Ok((
+            ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),
+            Some(ret_types[0].clone()),
+        ))
     }
 
     fn pos(&mut self) -> Interval {

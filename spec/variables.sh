@@ -8,12 +8,12 @@ describe 'Defining Global Constants'
 
 expect '1' '
     const a = 1;
-    print_int(a)
+    print(a.str())
 '
 expect '3' '
     const a = 1;
     const b = 2;
-    print_int(a + b);
+    print((a + b).str());
 '
 expect 'Some String' '
     const a = "Some String";
@@ -30,14 +30,14 @@ describe 'Defining Global Variables'
 expect '7' '
   var a = 1;
   var b = 6;
-  print_int(a + b);
+  print((a + b).str());
 '
 expect '41' '
     const a = 1;
-    print_int(a * 4);
-    print_int(a);
+    print((a * 4).str());
+    print(a.str());
 '
-expect_err 'TypeError' 'print_int = 1'
+expect_err 'TypeError' 'print = 1'
 expect_err 'SyntaxError' 'true = 1'
 expect_err 'SyntaxError' 'true = false'
 expect_err 'SyntaxError' 'true = true'
@@ -53,13 +53,13 @@ describe 'Mutating Variables'
 expect '2' '
     var a = 1;
     a = 2;
-    print_int(a);
+    print(a.str());
 '
 expect '9' '
     var a = 1;
     a = 5;
     a = a + 4;
-    print_int(a);
+    print(a.str());
 '
 expect_err 'TypeError' '
     var a = 1;
@@ -78,8 +78,8 @@ describe 'Local Variables'
 
 expect '1' '
     fn f() {
-        let a = 1;
-        print_int(a);
+        let a = "1";
+        print(a);
     };
     f();
 '
@@ -87,7 +87,15 @@ expect '1' '
     var a = 2;
     fn f() {
         let a = 1;
-        print_int(a);
+        print(a.str());
+    };
+    f();
+'
+expect_err 'TypeError' '
+    var a = "";
+    fn f() {
+        let a = 1;
+        print(a);
     };
     f();
 '
@@ -96,10 +104,10 @@ expect '42' '
     fn f() {
         let mut a = 1;
         a = 4;
-        print_int(a);
+        print(a.str());
     };
     f();
-    print_int(a);
+    print(a.str());
 '
 expect_err 'TypeError' '
     fn f() {
@@ -157,7 +165,7 @@ expect '4' '
         a = a - 1;
         return a / 2;
     };
-    print_int(f(2));
+    print(f(2).str());
 '
 expect '4' '
     fn f(n: Int): Int {
@@ -169,7 +177,7 @@ expect '4' '
         };
         return a * 2;
     };
-    print_int(f(3));
+    print(f(3).str());
 '
 expect '5' '
     fn f(n: Int): Int {
@@ -179,7 +187,7 @@ expect '5' '
         };
         return n;
     };
-    print_int(f(2));
+    print(f(2).str());
 '
 expect_err 'UnknownSymbolError' '
     fn f(): Int {
@@ -204,7 +212,7 @@ expect '1' '
         a = 1;
         return a;
     };
-    print_int(f());
+    print(f().str());
 '
 
 
@@ -268,7 +276,7 @@ expect '22' '
     for {
         var a = 1;
         a = a + 1;
-        print_int(a);
+        print(a.str());
         if i >= 1 { break };
         i = i + 1;
     };
@@ -277,7 +285,7 @@ expect '22' '
     var i = 0;
     for {
         const a = 1;
-        print_int(a+1);
+        print((a+1).str());
         if i >= 1 { break };
         i = i + 1;
     };

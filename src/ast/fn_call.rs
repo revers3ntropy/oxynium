@@ -5,7 +5,7 @@ use crate::context::Context;
 use crate::error::{mismatched_types, unknown_symbol, Error};
 use crate::position::Interval;
 use crate::symbols::is_valid_identifier;
-use crate::util::{MutRc, new_mut_rc};
+use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug)]
 pub struct FnCallNode {
@@ -51,7 +51,8 @@ impl Node for FnCallNode {
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
-            return Err(unknown_symbol(self.identifier.clone()));
+            return Err(unknown_symbol(self.identifier.clone())
+                .set_interval(self.position.clone()));
         }
 
         let mut args: Vec<FnParamType> = Vec::new();
@@ -69,7 +70,8 @@ impl Node for FnCallNode {
             return Err(unknown_symbol(format!(
                 "undefined function {}",
                 self.identifier
-            )));
+            ))
+            .set_interval(self.position.clone()));
         }
 
         let fn_type = ctx
@@ -83,7 +85,8 @@ impl Node for FnCallNode {
             return Err(unknown_symbol(format!(
                 "'{}' is not a function",
                 self.identifier
-            )));
+            ))
+            .set_interval(self.position.clone()));
         }
         let fn_type = fn_type.unwrap();
 
@@ -97,7 +100,8 @@ impl Node for FnCallNode {
             return Err(mismatched_types(
                 new_mut_rc(fn_type),
                 call_signature_type.clone(),
-            ));
+            )
+            .set_interval(self.position.clone()));
         }
 
         // fill out default arguments

@@ -19,7 +19,7 @@ perf_test_comp_cpp 1 '149995000' '
         sum = sum + i;
         i = i + 1;
     };
-    print_int(sum);
+    print(sum.str());
 ' '
     #include <iostream>
 

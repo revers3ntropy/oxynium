@@ -1,14 +1,14 @@
-use std::any::Any;
 use crate::ast::fn_declaration::FnDeclarationNode;
 use crate::ast::types::function::FnType;
 use crate::ast::types::r#class::{ClassFieldType, ClassType};
-use crate::ast::{Node, TypeCheckRes};
 use crate::ast::types::Type;
+use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{unknown_symbol, Error, type_error};
+use crate::error::{type_error, unknown_symbol, Error};
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec};
-use crate::util::{MutRc, new_mut_rc};
+use crate::util::{new_mut_rc, MutRc};
+use std::any::Any;
 
 pub fn method_id(class_name: String, method_name: String) -> String {
     format!("{}.{}", class_name, method_name)
@@ -30,16 +30,13 @@ pub struct ClassDeclarationNode {
 
 impl Node for ClassDeclarationNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+        let mut asm = "".to_string();
         for method in self.methods.iter() {
-            let id = method_id(
-                self.identifier.clone(),
-                method.borrow().identifier.clone().literal.unwrap(),
-            );
-            method.borrow_mut().identifier.literal = Some(id.clone());
-            method.borrow_mut().asm(ctx.clone())?;
+            let res = method.borrow_mut().asm(ctx.clone())?;
+            asm.push_str(res.as_str());
         }
 
-        Ok("".to_string())
+        Ok(asm)
     }
     fn type_check(
         &mut self,
@@ -52,7 +49,7 @@ impl Node for ClassDeclarationNode {
         let this_type = new_mut_rc(ClassType {
             name: self.identifier.clone(),
             fields: vec![],
-            methods: vec![]
+            methods: vec![],
         });
 
         ctx.borrow_mut().declare(SymbolDec {
@@ -76,6 +73,8 @@ impl Node for ClassDeclarationNode {
 
         for method in self.methods.iter() {
             let mut method = method.borrow_mut();
+            method.class = Some(this_type.clone());
+
             // This is where the context reference is handed down so the
             // method's context is attached to the global context tree
             let (method_type, _) = method.type_check(ctx.clone())?;
@@ -84,40 +83,26 @@ impl Node for ClassDeclarationNode {
                 return Err(type_error(format!(
                     "Method '{}' must have 'self' parameter",
                     method.identifier.clone().literal.unwrap()
-                )).set_interval(method.pos()));
+                ))
+                .set_interval(method.pos()));
             }
 
-            let (first_param_type, _) = method.params[0].type_.borrow_mut()
+            let (first_param_type, _) = method.params[0]
+                .type_
+                .borrow_mut()
                 .type_check(ctx.clone())?;
             if !this_type.borrow().contains(first_param_type) {
                 return Err(type_error(format!(
                     "Method '{}' must have 'self' parameter of type '{}'",
-                    method.identifier.clone().literal.unwrap(), this_type.borrow().str()
-                )).set_interval(method.pos()));
+                    method.identifier.clone().literal.unwrap(),
+                    this_type.borrow().str()
+                ))
+                .set_interval(method.pos()));
             }
 
-            // doesn't matter as type checking doesn't happen on this declaration,
-            // but otherwise the context complains that we are defining an undeclared
-            // symbol 'ClassName.method_name'
-            let void =
-                ctx.borrow().get_dec_from_id("Void")?.type_.clone();
-            let id = method_id(
-                self.identifier.clone(),
-                method.identifier.clone().literal.unwrap(),
-            );
-            ctx.borrow_mut().declare(SymbolDec {
-                name: id.clone(),
-                id,
-                is_constant: true,
-                is_type: false,
-                type_: void,
-                require_init: false,
-                is_defined: false,
-                is_param: false,
-            })?;
-
             unsafe {
-                let fn_ = &*(&method_type as *const dyn Any as *const Option<MutRc<FnType>>);
+                let fn_ = &*(&method_type as *const dyn Any
+                    as *const Option<MutRc<FnType>>);
                 this_type.borrow_mut().methods.push(fn_.clone().unwrap());
             }
         }

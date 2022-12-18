@@ -1,12 +1,12 @@
 use crate::ast::class_declaration::method_id;
+use crate::ast::types::function::{FnParamType, FnType};
 use crate::ast::types::Type;
 use crate::ast::{Node, TypeCheckRes};
-use crate::ast::types::function::{FnParamType, FnType};
 use crate::context::Context;
-use crate::error::{type_error, Error, mismatched_types};
+use crate::error::{mismatched_types, type_error, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
-use crate::util::{MutRc, new_mut_rc};
+use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug)]
 pub struct ClassMethodCallNode {
@@ -59,7 +59,6 @@ impl Node for ClassMethodCallNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-
         // put 'self' as first argument
         self.args.insert(0, self.base.clone());
 

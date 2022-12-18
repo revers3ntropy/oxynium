@@ -16,7 +16,7 @@ perf_test_comp_cpp 100 '4613732' '
             break;
         };
     };
-    print_int(sum);
+    print(sum.str());
 ' '
     #include <iostream>
 
