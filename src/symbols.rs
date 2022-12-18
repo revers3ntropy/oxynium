@@ -1,14 +1,14 @@
 use crate::types::Type;
 use crate::util::MutRc;
 
-const RESERVED_KEYWORDS: [&str; 52] = [
+const RESERVED_KEYWORDS: [&str; 53] = [
     "if", "else", "while", "for", "in", "break", "continue", "return", "let",
     "const", "let", "mut", "var", "type", "fn", "extern", "class", "struct",
     "enum", "trait", "impl", "use", "as", "mod", "import", "export", "is",
     "async", "await", "yield", "with", "unless", "pass", "case", "match",
     "compl", "del", "do", "inline", "new", "priv", "pub", "abstract",
     "virtual", "try", "catch", "static", "except", "macro", "typeof", "true",
-    "false",
+    "false", "primitive"
 ];
 
 pub fn is_valid_identifier(s: &str) -> bool {

@@ -59,8 +59,6 @@ impl Node for ClassMethodCallNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        // put 'self' as first argument
-        self.args.insert(0, self.base.clone());
 
         let mut args: Vec<FnParamType> = Vec::new();
         for arg in self.args.iter_mut() {

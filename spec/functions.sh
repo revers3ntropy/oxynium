@@ -163,6 +163,12 @@ expect '1' '
     };
     print(f().str());
 '
+expect_err 'TypeError' '
+    fn f(): Int {
+        return 1;
+        return true;
+    };
+'
 expect 'hi' '
     fn f(): Str {
       return "hi";
@@ -181,11 +187,17 @@ expect 'true' '
     };
     print(f().str());
 '
-expect_err 'TypeError' '
+expect '' '
     fn f(): Str {
         return "";
     };
     print(f().str());
+'
+expect_err 'TypeError' '
+    fn f(): Str {
+        return "";
+    };
+    print((f() + 2).str());
 '
 expect_err 'TypeError' '
     fn f(): Void {};

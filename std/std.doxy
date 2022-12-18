@@ -1,18 +1,21 @@
 class Void;
-class Str;
-
-class Bool {
+class Str {
     fn str(self): Str {
-        if self {
-            return "true";
-        } else {
-            return "false";
-        }
+        return self
     }
 }
 
-class Int {
-    extern fn str(self): Str,
+primitive Bool {
+    fn str(self): Str {
+        if self {
+            return "true"
+        }
+        return "false"
+    }
+}
+
+primitive Int {
+    extern fn str(self): Str
 }
 
 extern fn print(msg: Str): Void;

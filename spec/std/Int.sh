@@ -1,3 +1,8 @@
+describe 'Int'
+
+expect '0' 'print(new Int.str())'
+
+
 describe 'fn Int.str'
 
 expect '1' 'print(1.str())'

@@ -1,6 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{mismatched_types, Error};
+use crate::error::{mismatched_types, Error, syntax_error};
 use crate::parse::token::{Token, TokenType};
 use crate::position::Interval;
 use crate::util::MutRc;
@@ -93,7 +93,8 @@ impl Node for BinOpNode {
                     _ => "setle",
                 }
             )),
-            _ => panic!("Invalid operator: {:?}", self.operator),
+            _ => Err(syntax_error(format!("Invalid operator: {}",
+                                          self.operator.clone().literal.unwrap()))),
         }
     }
 

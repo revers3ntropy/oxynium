@@ -8,7 +8,7 @@ use std::ops::Deref;
 #[derive(Clone, Debug)]
 pub struct ClassFieldType {
     pub name: String,
-    pub type_: MutRc<dyn Type>,
+    pub type_: MutRc<dyn Type>
 }
 impl ClassFieldType {
     fn str(&self) -> String {
@@ -25,6 +25,7 @@ pub struct ClassType {
     pub name: String,
     pub fields: Vec<ClassFieldType>,
     pub methods: Vec<MutRc<FnType>>,
+    pub is_primitive: bool,
 }
 
 impl ClassType {

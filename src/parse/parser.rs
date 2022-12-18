@@ -456,7 +456,14 @@ impl Parser {
             .current_matches(TokenType::Identifier, Some("class".to_string()))
         {
             self.advance(&mut res);
-            res.node = res.register(self.class_def_expr());
+            res.node = res.register(self.class_def_expr(false));
+            return res;
+        }
+        if self
+            .current_matches(TokenType::Identifier, Some("primitive".to_string()))
+        {
+            self.advance(&mut res);
+            res.node = res.register(self.class_def_expr(true));
             return res;
         }
         if self
@@ -744,6 +751,10 @@ impl Parser {
             }
         }
         consume!(CloseParen, self, res);
+
+        // put 'self' as first argument
+        args.insert(0, base.clone());
+
         res.success(new_mut_rc(ClassMethodCallNode {
             base,
             name: name_tok,
@@ -776,7 +787,10 @@ impl Parser {
             consume!(name_tok = Identifier, self, res);
 
             if self.current_matches(TokenType::OpenParen, None) {
-                return self.method_call(start, base, name_tok);
+                let base_option = res.register(self.method_call(
+                    start.clone(), base, name_tok.clone()));
+                ret_on_err!(res);
+                return self.compound(Some(base_option.unwrap()));
             }
 
             return self.compound(Some(new_mut_rc(FieldAccessNode {
@@ -1274,7 +1288,7 @@ impl Parser {
         })
     }
 
-    fn class_def_expr(&mut self) -> ParseResults {
+    fn class_def_expr(&mut self, is_primitive: bool) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
 
@@ -1290,6 +1304,7 @@ impl Parser {
                 fields,
                 methods,
                 position: (start, self.last_tok().unwrap().end.clone()),
+                is_primitive
             }));
             return res;
         }
@@ -1368,11 +1383,22 @@ impl Parser {
         self.add_end_statement(&mut res);
         ret_on_err!(res);
 
+        if is_primitive && fields.len() > 0 {
+            res.failure(syntax_error(
+                    "Primitive classes (pclass) cannot have fields".to_owned(),
+                ),
+                Some(self.last_tok().unwrap().start.clone()),
+                Some(self.last_tok().unwrap().end.clone()),
+            );
+            return res;
+        }
+
         res.success(new_mut_rc(ClassDeclarationNode {
             identifier,
             fields,
             methods,
             position: (start, self.last_tok().unwrap().end.clone()),
+            is_primitive
         }));
         res
     }

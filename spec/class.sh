@@ -24,7 +24,28 @@ expect_err 'TypeError' '
 expect_err 'TypeError' '
     class Bool {};
 '
-
+expect '' '
+    fn main () {
+        class C;
+    }
+'
+expect_err 'UnknownSymbolError' '
+    fn main () {
+        class C
+    }
+    fn f(a: C);
+'
+expect_err 'UnknownSymbolError' '
+    fn f(a: C);
+    fn main () {
+        class C
+    }
+'
+expect_err 'SyntaxError' '
+    class A {
+        class B {}
+    }
+'
 
 describe 'Class Instantiation'
 
@@ -195,3 +216,91 @@ expect 'hello world' '
     new A.f();
     new B.f();
 '
+expect_err 'UnknownSymbolError' 'new s'
+expect_err 'SyntaxError' 'new 1'
+expect_err 'SyntaxError' 'new ""'
+expect_err 'SyntaxError' 'new new C'
+expect_err 'SyntaxError' 'new C()'
+
+
+describe 'Primitives'
+
+expect '' '
+    primitive Q {}
+    primitive P
+'
+expect '' '
+    primitive P {
+        fn f(self) {}
+    }
+'
+expect '' '
+    primitive P {
+        extern fn f(self): Int,
+        fn g(self) {}
+    }
+'
+expect 'hi hi ' '
+    primitive P {
+        fn log(self) {
+            print("hi ");
+        }
+    }
+    new P{}.log();
+    new P.log();
+'
+expect_err 'SyntaxError' '
+    primitive P {
+        x: Int
+    }
+'
+expect_err 'SyntaxError' '
+    primitive P {
+        fn f(self) {}
+        x: Int
+    }
+'
+
+
+describe 'Composition'
+
+expect '13' '
+    class S {
+        x: Int,
+        y: Int
+    }
+    class S2 {
+        s: S,
+        z: Int
+    }
+    fn main () {
+        let s2 = new S2 {
+            s: new S {
+                x: 1, y: 2
+            },
+            z: 3
+        };
+        print(s2.s.x.str());
+        print(s2.z.str());
+    }
+'
+
+expect '12' '
+    class S2 {
+        x: Int
+    }
+    class S {
+        x: Int,
+        fn make_s2(self): S2 {
+            return new S2 {
+                x: self.x
+            }
+        }
+    }
+    fn main () {
+        print(new S { x: 1 }.make_s2().x.str());
+        let s = new S { x: 2 };
+        print(s.make_s2().x.str());
+    }
+'
+

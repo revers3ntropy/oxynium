@@ -1,4 +1,11 @@
-describe 'fn Bool.sh'
+describe 'Bool'
+
+expect 'false' 'print(new Bool.str())'
+expect 'false' 'print(false.str())'
+expect 'true' 'print(true.str())'
+
+
+describe 'fn Bool.str'
 
 expect 'true' 'print(true.str())'
 expect 'false' 'print(false.str())'
@@ -24,3 +31,6 @@ expect 'false' '
     };
     f();
 '
+
+
+describe 'Bool'

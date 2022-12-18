@@ -53,29 +53,51 @@ impl Node for ClassInitNode {
             asm.push_str(&format!("{}\n", field_asm[name]));
         }
 
-        asm.push_str(&format!(
-            "
-            mov rdi, {}
-            call malloc WRT ..plt
-        ",
-            fields.len() * 8
-        ));
+        let class_type = ctx
+            .borrow_mut()
+            .get_dec_from_id(&self.identifier)?
+            .type_
+            .clone()
+            .borrow()
+            .as_class()
+            .unwrap();
+        let is_primitive = class_type.is_primitive;
 
-        for i in 0..fields.len() {
-            asm.push_str(&format!(
-                "
+        if fields.len() > 0 {
+            asm.push_str(&format!("
+                mov rdi, {}
+                call malloc WRT ..plt
+            ",
+                fields.len() * 8
+            ));
+
+            for i in 0..fields.len() {
+                asm.push_str(&format!(
+                    "
                 pop rdx
                 mov qword [rax + {}], rdx
             ",
-                (fields.len() - i - 1) * 8
-            ));
+                    (fields.len() - i - 1) * 8
+                ));
+            }
+        } else {
+            asm.push_str(&format!("
+                mov rdi, 8
+                call malloc WRT ..plt
+                mov qword [rax], 0
+            "));
         }
 
-        asm.push_str(&format!(
-            "
-            push rax
-        "
-        ));
+        if is_primitive {
+            asm.push_str(&format!("
+                push qword [rax]
+            "));
+        } else {
+            asm.push_str(&format!("
+                push rax
+            "));
+        }
+
 
         Ok(asm)
     }
