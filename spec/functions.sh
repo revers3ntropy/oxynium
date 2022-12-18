@@ -92,7 +92,7 @@ expect '1' '
 expect '12' '
     fn f() {
         let mut i = 0;
-        for {
+        while {
             i = i + 1;
             if i > 2 { return };
             print(i.str());

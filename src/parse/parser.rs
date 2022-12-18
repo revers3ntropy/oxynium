@@ -18,7 +18,7 @@ use crate::ast::pass::PassNode;
 use crate::ast::r#break::BreakNode;
 use crate::ast::r#continue::ContinueNode;
 use crate::ast::r#if::IfNode;
-use crate::ast::r#loop::LoopNode;
+use crate::ast::r#while::WhileLoopNode;
 use crate::ast::r#return::ReturnNode;
 use crate::ast::scope::ScopeNode;
 use crate::ast::statements::StatementsNode;
@@ -389,10 +389,11 @@ impl Parser {
             res.node = res.register(self.local_var_decl());
             return res;
         }
-        if self.current_matches(TokenType::Identifier, Some("for".to_string()))
+        if self
+            .current_matches(TokenType::Identifier, Some("while".to_string()))
         {
             self.advance(&mut res);
-            res.node = res.register(self.for_loop());
+            res.node = res.register(self.while_loop());
             return res;
         }
         if self.current_matches(TokenType::Identifier, Some("if".to_string())) {
@@ -504,10 +505,7 @@ impl Parser {
         res
     }
 
-    fn global_const_decl(
-        &mut self,
-        is_external: bool,
-    ) -> ParseResults {
+    fn global_const_decl(&mut self, is_external: bool) -> ParseResults {
         let mut res = ParseResults::new();
         let name;
         let start = self.last_tok().unwrap().start.clone();
@@ -943,14 +941,30 @@ impl Parser {
         res
     }
 
-    fn for_loop(&mut self) -> ParseResults {
+    fn while_loop(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
+
+        let mut condition = None;
+
+        if !self.current_matches(TokenType::OpenBrace, None) {
+            condition = res.register(self.expression());
+            ret_on_err!(res);
+            if condition.is_none() {
+                res.failure(
+                    syntax_error("Expected expression".to_owned()),
+                    Some(self.last_tok().unwrap().start),
+                    Some(self.last_tok().unwrap().end),
+                );
+                return res;
+            }
+        }
 
         let statements = res.register(self.scope(true));
         ret_on_err!(res);
 
-        res.success(new_mut_rc(LoopNode {
+        res.success(new_mut_rc(WhileLoopNode {
+            condition,
             statements: statements.unwrap(),
             position: (start, self.last_tok().unwrap().end.clone()),
         }));

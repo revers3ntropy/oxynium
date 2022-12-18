@@ -23,7 +23,7 @@ pub mod global_var_decl;
 pub mod r#if;
 pub mod int;
 pub mod local_var_decl;
-pub mod r#loop;
+pub mod r#while;
 pub mod mutate_var;
 pub mod pass;
 pub mod r#return;

@@ -4,14 +4,11 @@ perf_test_comp_cpp 100 '233168' '
     fn main () {
         let mut sum = 0;
         let mut i = 0;
-        for {
+        while i < 1000 {
             if i % 3 == 0 || i % 5 == 0 {
                 sum = sum + i;
             };
             i = i + 1;
-            if i >= 1000 {
-                break;
-            };
         };
         print(sum.str());
     }
@@ -21,14 +18,11 @@ perf_test_comp_cpp 100 '233168' '
     int main () {
         int sum = 0;
         int i = 0;
-        while (true) {
+        while (i < 1000) {
             if (i % 3 == 0 || i % 5 == 0) {
                 sum = sum + i;
             }
             i = i + 1;
-            if (i >= 1000) {
-                break;
-            }
         }
         std::cout << sum;
     }

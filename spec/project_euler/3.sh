@@ -5,7 +5,7 @@ perf_test_comp_cpp 150 '6857' '
         let mut n = 600851475143;
         let mut i = 2;
         let mut max = 0;
-        for {
+        while {
             if i * i > n {
                 break;
             };

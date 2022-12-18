@@ -5,7 +5,7 @@ perf_test_comp_cpp 100 '4613732' '
         let mut sum = 0;
         let mut a = 1;
         let mut b = 2;
-        for {
+        while {
             if b % 2 == 0 {
                 sum = sum + b;
             };

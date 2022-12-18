@@ -3,29 +3,27 @@ describe 'Loops'
 expect '1' '
     fn main () {
         let mut i = 0;
-        for {
+        while {
             i = i + 1;
             print(i.str());
             break;
         }
     }
 '
-
 expect 'hello there' '
-    for {
+    while {
         print("hello");
         break;
     };
-    for {
+    while {
         print(" there");
         break;
     };
 '
-
 expect '5' '
     fn main () {
         let mut i = 0;
-        for {
+        while {
             i = i + 1;
             if i < 5 {
                 continue;
@@ -35,12 +33,11 @@ expect '5' '
         };
     }
 '
-
 expect '12345678910' '
     const n = 9;
     fn main () {
         let mut i = 0;
-        for {
+        while {
             i = i + 1;
             print(i.str());
             print("");
@@ -50,14 +47,13 @@ expect '12345678910' '
         };
     }
 '
-
 expect '234 468 6912' '
     fn main () {
         let mut i = 1;
         let mut j = 1;
-        for {
+        while {
             j = 1;
-            for {
+            while {
                 j = j + 1;
                 print((i*j).str());
                 if j > 3 {
@@ -72,4 +68,34 @@ expect '234 468 6912' '
             print(" ");
         };
     }
+'
+expect '012345678' '
+    const n = 9;
+    fn main () {
+        let mut i = 0;
+        while i < n {
+            print(i.str());
+            i = i + 1;
+        };
+    }
+'
+expect_err 'TypeError' '
+    while 1 {};
+'
+expect_err 'TypeError' '
+    while "" {};
+'
+expect_err 'TypeError' '
+    class C;
+    while C {};
+'
+expect_err 'TypeError' '
+    class C;
+    while new C {} {};
+'
+expect 'hi' '
+    while true {
+        print("hi");
+        break;
+    };
 '

@@ -5,12 +5,12 @@ perf_test_comp_cpp 1 '149995000' '
     fn main () {
         let mut sum = 0;
         let mut i = 0;
-        for {
+        while {
             if i >= n {
                 break;
             };
             let mut j = 0;
-            for {
+            while {
                 if j >= n {
                     break;
                 };
