@@ -1,5 +1,5 @@
-class Void {};
-class Str {};
+class Void;
+class Str;
 class Bool {
     fn str(self: Bool): Str {
         if self {

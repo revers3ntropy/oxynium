@@ -10,15 +10,12 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  test:
+    name: Test
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Install Dependencies
       run: sudo apt-get -y install nasm
-    - name: Build
-      run: cargo build --verbose
     - name: Run tests
       run: bin/test

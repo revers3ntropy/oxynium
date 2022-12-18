@@ -11,8 +11,18 @@ expect '' '
         y: Int
     };
 '
-expect_err '' '
+expect '' '
     class S { s: S };
+'
+expect '' '
+    class S;
+'
+expect_err 'TypeError' '
+    class S {};
+    class S {};
+'
+expect_err 'TypeError' '
+    class Bool {};
 '
 
 
@@ -87,6 +97,7 @@ expect_err 'TypeError' '
     print(new S { x: 1 }.x);
 '
 
+
 describe 'Methods'
 
 expect 'x = 1, x = 2, ' '
@@ -120,6 +131,11 @@ expect_err 'TypeError' '
 '
 expect_err 'TypeError' '
     class S {
+        fn log();
+    }
+'
+expect_err 'TypeError' '
+    class S {
         fn f(self: S, a: Int) {}
     };
     new S{}.f();
@@ -144,7 +160,7 @@ expect_err 'TypeError' '
     class S {
         fn f(self: S){}
     };
-    new S{}.g();
+    new S.g();
 '
 expect 'hi' '
     class S {
@@ -153,4 +169,18 @@ expect 'hi' '
         }
     };
     new S{}.f();
+'
+expect 'hello world' '
+    class A {
+        fn f(self: A, msg: Str = "hello") {
+            print(msg);
+        }
+    };
+    class B {
+        fn f(self: B, msg: Str = " world") {
+            print(msg);
+        }
+    };
+    new A.f();
+    new B.f();
 '

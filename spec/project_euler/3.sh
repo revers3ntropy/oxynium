@@ -23,9 +23,9 @@ perf_test_comp_cpp 150 '6857' '
     #include <iostream>
 
     int main () {
-        long n = 600851475143;
-        int i = 2;
-        int max = 0;
+        long long n = 600851475143;
+        long long i = 2;
+        long long max = 0;
         while (true) {
             if (i * i > n) {
                 break;
@@ -41,5 +41,6 @@ perf_test_comp_cpp 150 '6857' '
             max = n;
         }
         std::cout << max;
+        return 0;
     }
 '

@@ -441,7 +441,7 @@ impl Parser {
             .current_matches(TokenType::Identifier, Some("class".to_string()))
         {
             self.advance(&mut res);
-            res.node = res.register(self.class_expr());
+            res.node = res.register(self.class_def_expr());
             return res;
         }
         if self
@@ -1173,7 +1173,7 @@ impl Parser {
         res
     }
 
-    fn class_field(&mut self) -> Result<ClassField, Error> {
+    fn class_def_field(&mut self) -> Result<ClassField, Error> {
         let mut res = ParseResults::new();
 
         result_consume!(identifier = Identifier, self, res);
@@ -1188,17 +1188,27 @@ impl Parser {
         })
     }
 
-    fn class_expr(&mut self) -> ParseResults {
+    fn class_def_expr(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
 
         consume!(id_tok = Identifier, self, res);
         let identifier = id_tok.literal.unwrap();
 
-        consume!(OpenBrace, self, res);
-
         let mut fields = Vec::new();
         let mut methods = Vec::new();
+
+        if !self.current_matches(TokenType::OpenBrace, None) {
+            res.success(new_mut_rc(ClassDeclarationNode {
+                identifier,
+                fields,
+                methods,
+                position: (start, self.last_tok().unwrap().end.clone()),
+            }));
+            return res;
+        }
+
+        consume!(OpenBrace, self, res);
 
         while let Some(next) = self.current_tok() {
             if next.token_type == TokenType::CloseBrace {
@@ -1227,7 +1237,7 @@ impl Parser {
                 continue;
             }
 
-            let field = self.class_field();
+            let field = self.class_def_field();
             if field.is_err() {
                 // don't override more precise position of error
                 res.failure(field.err().unwrap(), None, None);
@@ -1270,9 +1280,18 @@ impl Parser {
 
         consume!(identifier_tok = Identifier, self, res);
 
-        consume!(OpenBrace, self, res);
-
         let mut fields = Vec::new();
+
+        if !self.current_matches(TokenType::OpenBrace, None) {
+            res.success(new_mut_rc(ClassInitNode {
+                identifier: identifier_tok.literal.unwrap(),
+                fields,
+                position: (start, self.last_tok().unwrap().end.clone()),
+            }));
+            return res;
+        }
+
+        consume!(OpenBrace, self, res);
 
         while let Some(next) = self.current_tok() {
             if next.token_type == TokenType::CloseBrace {
