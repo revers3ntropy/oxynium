@@ -23,7 +23,6 @@ pub mod global_var_decl;
 pub mod r#if;
 pub mod int;
 pub mod local_var_decl;
-pub mod r#while;
 pub mod mutate_var;
 pub mod pass;
 pub mod r#return;
@@ -33,6 +32,7 @@ pub mod str;
 pub mod symbol_access;
 pub mod type_expr;
 pub mod unary_op;
+pub mod r#while;
 
 pub const ANON_PREFIX: &str = "_$_";
 pub const STD_ASM: &str = include_str!("../../std/std.asm");
@@ -56,11 +56,7 @@ pub trait Node: Debug {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        Ok((
-            get_type!(ctx, "Void"),
-            None,
-        ))
+        Ok((get_type!(ctx, "Void"), None))
     }
     fn pos(&mut self) -> Interval;
 }
-

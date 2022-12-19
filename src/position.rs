@@ -1,6 +1,7 @@
+use std::fmt::{Debug, Formatter};
+
 pub type Interval = (Position, Position);
 
-#[derive(Debug)]
 pub struct Position {
     pub file: String,
     pub idx: i64,
@@ -40,6 +41,12 @@ impl Position {
         } else {
             format!("'{}' {}:{}", self.file, self.line + 1, self.col + 1)
         }
+    }
+}
+
+impl Debug for Position {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.str())
     }
 }
 

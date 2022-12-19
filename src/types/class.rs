@@ -8,7 +8,7 @@ use std::ops::Deref;
 #[derive(Clone, Debug)]
 pub struct ClassFieldType {
     pub name: String,
-    pub type_: MutRc<dyn Type>
+    pub type_: MutRc<dyn Type>,
 }
 impl ClassFieldType {
     fn str(&self) -> String {
@@ -70,6 +70,7 @@ impl Type for ClassType {
     fn is_ptr(&self) -> bool {
         true
     }
+
     fn str(&self) -> String {
         self.name.clone()
     }

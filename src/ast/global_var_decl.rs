@@ -48,7 +48,7 @@ impl Node for GlobalConstNode<i64> {
             is_defined: true,
             is_param: false,
             type_: int,
-            position: self.pos()
+            position: self.pos(),
         })?;
         Ok((ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(), None))
     }

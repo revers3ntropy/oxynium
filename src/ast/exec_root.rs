@@ -1,7 +1,7 @@
-use crate::ast::{STD_ASM, STD_DATA_ASM};
 use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{STD_ASM, STD_DATA_ASM};
 use crate::context::Context;
-use crate::error::{syntax_error, Error, type_error};
+use crate::error::{syntax_error, type_error, Error};
 use crate::position::Interval;
 use crate::types::function::FnType;
 use crate::types::Type;
@@ -28,10 +28,7 @@ impl Node for ExecRootNode {
             .iter()
             .map(|k| {
                 if k.name == "main" {
-                    format!(
-                        "_$_oxy_main: \n{}",
-                        k.text.as_ref().unwrap()
-                    )
+                    format!("_$_oxy_main: \n{}", k.text.as_ref().unwrap())
                 } else {
                     format!("{}: \n{}", k.name, k.text.as_ref().unwrap())
                 }
@@ -82,7 +79,8 @@ impl Node for ExecRootNode {
             if !has_main {
                 return Err(syntax_error(format!(
                     "if main function is declared it must be defined"
-                )).set_interval(main_fn.position.clone()));
+                ))
+                .set_interval(main_fn.position.clone()));
             }
         }
 

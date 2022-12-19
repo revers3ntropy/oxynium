@@ -183,7 +183,7 @@ impl Node for FnDeclarationNode {
                 is_defined: true,
                 is_param: true,
                 type_: param_type.clone(),
-                position: self.position.clone()
+                position: self.position.clone(),
             })?;
         }
 
@@ -202,7 +202,7 @@ impl Node for FnDeclarationNode {
             is_defined: self.body.is_some(),
             is_param: false,
             type_: this_type.clone(),
-            position: self.pos()
+            position: self.pos(),
         })?;
 
         if let Some(body) = self.body.take() {

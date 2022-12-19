@@ -72,7 +72,7 @@ pub fn mismatched_types(
     Error::new(
         "TypeError",
         format!(
-            "expected '{}', got '{}'",
+            "expected '{}', found '{}'",
             expected.borrow().str(),
             got.borrow().str()
         ),

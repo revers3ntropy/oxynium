@@ -18,8 +18,8 @@ use crate::ast::pass::PassNode;
 use crate::ast::r#break::BreakNode;
 use crate::ast::r#continue::ContinueNode;
 use crate::ast::r#if::IfNode;
-use crate::ast::r#while::WhileLoopNode;
 use crate::ast::r#return::ReturnNode;
+use crate::ast::r#while::WhileLoopNode;
 use crate::ast::scope::ScopeNode;
 use crate::ast::statements::StatementsNode;
 use crate::ast::str::StrNode;
@@ -147,7 +147,7 @@ impl Parser {
         self.current_tok()
     }
 
-    fn add_end_statement (&mut self, res: &mut ParseResults) {
+    fn add_end_statement(&mut self, res: &mut ParseResults) {
         let start;
         let end;
         if self.tok_idx >= self.tokens.len() {
@@ -157,12 +157,15 @@ impl Parser {
             start = self.current_tok().unwrap().end.clone();
             end = self.current_tok().unwrap().end.clone();
         }
-        self.tokens.insert(self.tok_idx,  Token {
-            token_type: TokenType::EndStatement,
-            literal: None,
-            start,
-            end
-        });
+        self.tokens.insert(
+            self.tok_idx,
+            Token {
+                token_type: TokenType::EndStatement,
+                literal: None,
+                start,
+                end,
+            },
+        );
         self.reverse(1);
         self.advance(res);
     }
@@ -459,9 +462,10 @@ impl Parser {
             res.node = res.register(self.class_def_expr(false));
             return res;
         }
-        if self
-            .current_matches(TokenType::Identifier, Some("primitive".to_string()))
-        {
+        if self.current_matches(
+            TokenType::Identifier,
+            Some("primitive".to_string()),
+        ) {
             self.advance(&mut res);
             res.node = res.register(self.class_def_expr(true));
             return res;
@@ -767,9 +771,6 @@ impl Parser {
         }
         consume!(CloseParen, self, res);
 
-        // put 'self' as first argument
-        args.insert(0, base.clone());
-
         res.success(new_mut_rc(ClassMethodCallNode {
             base,
             name: name_tok,
@@ -803,7 +804,10 @@ impl Parser {
 
             if self.current_matches(TokenType::OpenParen, None) {
                 let base_option = res.register(self.method_call(
-                    start.clone(), base, name_tok.clone()));
+                    start.clone(),
+                    base,
+                    name_tok.clone(),
+                ));
                 ret_on_err!(res);
                 return self.compound(Some(base_option.unwrap()));
             }
@@ -857,7 +861,7 @@ impl Parser {
                 } else {
                     res.failure(
                         syntax_error(format!(
-                            "Expected ',' or ')', got '{}'",
+                            "Expected ',' or ')', found '{}'",
                             t.str()
                         )),
                         Some(fn_identifier_tok.start),
@@ -867,7 +871,7 @@ impl Parser {
                 }
             } else {
                 res.failure(
-                    syntax_error("Expected ',' or ')', got EOF".to_owned()),
+                    syntax_error("Expected ',' or ')', found EOF".to_owned()),
                     Some(fn_identifier_tok.start),
                     Some(fn_identifier_tok.end),
                 );
@@ -1117,7 +1121,7 @@ impl Parser {
             parameters.push(self.parameter()?);
         }
 
-        let mut e = syntax_error("Expected ',' or ')', got EOF".to_owned());
+        let mut e = syntax_error("Expected ',' or ')', found EOF".to_owned());
         e.set_pos(
             self.last_tok().unwrap().start.clone(),
             self.last_tok().unwrap().end.clone(),
@@ -1319,7 +1323,7 @@ impl Parser {
                 fields,
                 methods,
                 position: (start, self.last_tok().unwrap().end.clone()),
-                is_primitive
+                is_primitive,
             }));
             return res;
         }
@@ -1336,8 +1340,9 @@ impl Parser {
             {
                 consume!(self, res);
 
-                let fn_decl =
-                    res.register(self.fn_def_expr(false, Some(identifier.clone())));
+                let fn_decl = res.register(
+                    self.fn_def_expr(false, Some(identifier.clone())),
+                );
                 ret_on_err!(res);
 
                 // assume that a FnDeclarationNode is returned from fn_expr
@@ -1361,8 +1366,8 @@ impl Parser {
                 consume!(self, res);
                 consume!(Identifier, self, res);
 
-                let fn_decl =
-                    res.register(self.fn_def_expr(true, Some(identifier.clone())));
+                let fn_decl = res
+                    .register(self.fn_def_expr(true, Some(identifier.clone())));
                 ret_on_err!(res);
 
                 // assume that a FnDeclarationNode is returned from fn_expr
@@ -1399,7 +1404,8 @@ impl Parser {
         ret_on_err!(res);
 
         if is_primitive && fields.len() > 0 {
-            res.failure(syntax_error(
+            res.failure(
+                syntax_error(
                     "Primitive classes (pclass) cannot have fields".to_owned(),
                 ),
                 Some(self.last_tok().unwrap().start.clone()),
@@ -1413,7 +1419,7 @@ impl Parser {
             fields,
             methods,
             position: (start, self.last_tok().unwrap().end.clone()),
-            is_primitive
+            is_primitive,
         }));
         res
     }

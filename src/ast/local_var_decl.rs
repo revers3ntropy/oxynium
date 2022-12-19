@@ -1,6 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{syntax_error, Error, type_error};
+use crate::error::{syntax_error, type_error, Error};
 use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::Interval;
@@ -60,7 +60,8 @@ impl Node for LocalVarNode {
             ))
             .set_interval(self.identifier.interval()));
         }
-        let (mut value_type, _) = self.value.borrow_mut().type_check(ctx.clone())?;
+        let (mut value_type, _) =
+            self.value.borrow_mut().type_check(ctx.clone())?;
         self.stack_offset = ctx.borrow_mut().get_new_local_var_offset();
 
         if self.type_annotation.is_some() {
@@ -88,7 +89,7 @@ impl Node for LocalVarNode {
             is_defined: true,
             is_param: false,
             type_: value_type.clone(),
-            position: self.pos()
+            position: self.pos(),
         })?;
         Ok((get_type!(ctx, "Void"), None))
     }

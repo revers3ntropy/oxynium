@@ -64,7 +64,8 @@ impl Node for ClassInitNode {
         let is_primitive = class_type.is_primitive;
 
         if fields.len() > 0 {
-            asm.push_str(&format!("
+            asm.push_str(&format!(
+                "
                 push {}
                 call _$_allocate
                 pop rcx
@@ -82,23 +83,28 @@ impl Node for ClassInitNode {
                 ));
             }
         } else {
-            asm.push_str(&format!("
+            asm.push_str(&format!(
+                "
                 mov rdi, 8
                 call malloc WRT ..plt
                 mov qword [rax], 0
-            "));
+            "
+            ));
         }
 
         if is_primitive {
-            asm.push_str(&format!("
+            asm.push_str(&format!(
+                "
                 push qword [rax]
-            "));
+            "
+            ));
         } else {
-            asm.push_str(&format!("
+            asm.push_str(&format!(
+                "
                 push rax
-            "));
+            "
+            ));
         }
-
 
         Ok(asm)
     }

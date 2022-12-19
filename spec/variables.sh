@@ -166,6 +166,12 @@ expect '1' '
         print(a.str());
     };
 '
+expect '4' '
+    fn main() {
+        let a: Int = 4;
+        print(a.str());
+    };
+'
 expect_err 'TypeError' '
     fn main() {
         let a: Int = "";

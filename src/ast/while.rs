@@ -22,17 +22,25 @@ impl Node for WhileLoopNode {
         ctx.borrow_mut().loop_labels_pop();
 
         if self.condition.is_none() {
-            return Ok(format!("
+            return Ok(format!(
+                "
                 {start_lbl}:
                     {body}
                     jmp {start_lbl}
                 {end_lbl}:
-            "));
+            "
+            ));
         }
 
-        let cond = self.condition.take().unwrap().borrow_mut().asm(ctx.clone())?;
+        let cond = self
+            .condition
+            .take()
+            .unwrap()
+            .borrow_mut()
+            .asm(ctx.clone())?;
 
-        Ok(format!("
+        Ok(format!(
+            "
             {start_lbl}:
                 {cond}
                 pop rax
@@ -41,7 +49,8 @@ impl Node for WhileLoopNode {
                 {body}
                 jmp {start_lbl}
             {end_lbl}:
-        "))
+        "
+        ))
     }
 
     fn type_check(

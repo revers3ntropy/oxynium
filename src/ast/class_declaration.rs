@@ -51,7 +51,7 @@ impl Node for ClassDeclarationNode {
             name: self.identifier.clone(),
             fields: vec![],
             methods: vec![],
-            is_primitive: self.is_primitive
+            is_primitive: self.is_primitive,
         });
 
         ctx.borrow_mut().declare(SymbolDec {
@@ -63,14 +63,14 @@ impl Node for ClassDeclarationNode {
             is_defined: true,
             is_param: false,
             type_: this_type.clone(),
-            position: self.pos()
+            position: self.pos(),
         })?;
 
         for field in self.fields.iter() {
             let type_ = field.type_.borrow_mut().type_check(ctx.clone())?;
             this_type.borrow_mut().fields.push(ClassFieldType {
                 name: field.identifier.clone(),
-                type_: type_.0
+                type_: type_.0,
             });
         }
 

@@ -1,6 +1,7 @@
+use std::fmt::Debug;
 use crate::position::{Interval, Position};
 
-#[derive(Clone, Debug, PartialEq, Copy)]
+#[derive(Clone, PartialEq, Debug, Copy)]
 pub enum TokenType {
     Int,          // 123
     Plus,         // +
@@ -31,7 +32,6 @@ pub enum TokenType {
     Colon,        // :
 }
 
-#[derive(Debug)]
 pub struct Token {
     pub token_type: TokenType,
     pub literal: Option<String>,
@@ -100,5 +100,13 @@ impl Token {
             TokenType::NotEquals => "!=".to_string(),
             TokenType::Colon => ":".to_string(),
         }
+    }
+}
+
+
+impl Debug for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Token<{:?}>{{ '{}' @ {:?} - {:?} }}",
+               self.token_type, self.str(), self.start, self.end)
     }
 }

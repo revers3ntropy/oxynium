@@ -1,8 +1,10 @@
 pub mod r#class;
 pub mod function;
+pub mod r#type;
 
 use crate::types::function::FnType;
 use crate::types::r#class::ClassType;
+use crate::types::r#type::TypeType;
 use crate::util::MutRc;
 use std::fmt::Debug;
 
@@ -16,6 +18,9 @@ pub trait Type: Debug {
         None
     }
     fn as_class(&self) -> Option<ClassType> {
+        None
+    }
+    fn as_type_type(&self) -> Option<TypeType> {
         None
     }
 }

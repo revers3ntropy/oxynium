@@ -4,7 +4,8 @@ use crate::error::{type_error, unknown_symbol, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::is_valid_identifier;
-use crate::util::MutRc;
+use crate::types::r#type::TypeType;
+use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug)]
 pub struct SymbolAccess {
@@ -25,6 +26,10 @@ impl Node for SymbolAccess {
                 "Cannot use uninitialized variable '{}'",
                 self.id()
             )));
+        }
+
+        if decl.is_type {
+            return Ok("".to_string());
         }
 
         Ok(format!(
@@ -49,10 +54,16 @@ impl Node for SymbolAccess {
             )));
         }
         if ctx.borrow_mut().get_dec_from_id(&self.id())?.is_type {
-            return Err(type_error(format!(
-                "'{}' is a type and does not exist at runtime",
-                self.id()
-            )));
+            return Ok((
+                new_mut_rc(TypeType {
+                    instance_type: ctx
+                        .borrow_mut()
+                        .get_dec_from_id(&self.id())?
+                        .type_
+                        .clone(),
+                }),
+                None,
+            ));
         }
         Ok((
             ctx.borrow_mut().get_dec_from_id(&self.id())?.type_.clone(),
@@ -61,6 +72,6 @@ impl Node for SymbolAccess {
     }
 
     fn pos(&mut self) -> Interval {
-        (self.identifier.start.clone(), self.identifier.end.clone())
+        self.identifier.interval()
     }
 }
