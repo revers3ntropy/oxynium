@@ -133,6 +133,10 @@ function expect_err() {
     split_arr=(${output//:/ })
     output_err="${split_arr[0]}"
 
+    if [[ "$output" == *"Unknown error location!"* ]]; then
+        test_failed "$code" "$expected" "$output"
+    fi
+
     if [ "$expected" != "$output_err" ]; then
         test_failed "$code" "$expected" "$output"
     fi

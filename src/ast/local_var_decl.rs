@@ -3,7 +3,7 @@ use crate::context::Context;
 use crate::error::{syntax_error, type_error, Error};
 use crate::get_type;
 use crate::parse::token::Token;
-use crate::position::Interval;
+use crate::position::{Interval, Position};
 use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
 use crate::util::MutRc;
 
@@ -14,6 +14,7 @@ pub struct LocalVarNode {
     pub mutable: bool,
     pub stack_offset: usize,
     pub type_annotation: Option<MutRc<dyn Node>>,
+    pub start: Position,
 }
 
 impl LocalVarNode {
@@ -26,17 +27,20 @@ impl Node for LocalVarNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_none() {
             return Err(syntax_error(format!(
-                "Cannot declare local variable '{}' outside of function. Try using 'var' or 'const' instead.",
+                "Cannot declare local variable '{}' outside of function. Try using 'const' instead.",
                 self.identifier.literal.as_ref().unwrap()
-            )));
+            )).set_interval((self.pos().0, self.identifier.end.clone())));
         }
 
         // just so that space is made on stack
-        ctx.borrow_mut().define(SymbolDef {
-            name: self.identifier.str(),
-            data: Some("".to_string()),
-            text: None,
-        })?;
+        ctx.borrow_mut().define(
+            SymbolDef {
+                name: self.identifier.str(),
+                data: Some("".to_string()),
+                text: None,
+            },
+            self.pos(),
+        )?;
 
         Ok(format!(
             "
@@ -80,24 +84,24 @@ impl Node for LocalVarNode {
             value_type = type_annotation_type;
         }
 
-        ctx.borrow_mut().declare(SymbolDec {
-            name: self.id(),
-            id: format!("qword [rbp - {}]", self.stack_offset),
-            is_constant: !self.mutable,
-            is_type: false,
-            require_init: true,
-            is_defined: true,
-            is_param: false,
-            type_: value_type.clone(),
-            position: self.pos(),
-        })?;
+        ctx.borrow_mut().declare(
+            SymbolDec {
+                name: self.id(),
+                id: format!("qword [rbp - {}]", self.stack_offset),
+                is_constant: !self.mutable,
+                is_type: false,
+                require_init: true,
+                is_defined: true,
+                is_param: false,
+                type_: value_type.clone(),
+                position: self.pos(),
+            },
+            self.identifier.interval(),
+        )?;
         Ok((get_type!(ctx, "Void"), None))
     }
 
     fn pos(&mut self) -> Interval {
-        (
-            self.identifier.start.clone(),
-            self.value.borrow_mut().pos().1,
-        )
+        (self.start.clone(), self.value.borrow_mut().pos().1)
     }
 }

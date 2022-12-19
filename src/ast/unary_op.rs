@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{mismatched_types, Error};
+use crate::get_type;
 use crate::parse::token::{Token, TokenType};
 use crate::position::Interval;
 use crate::util::MutRc;
@@ -47,15 +48,14 @@ impl Node for UnaryOpNode {
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
         let t = match self.operator.token_type {
-            TokenType::Sub => {
-                ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone()
-            }
-            _ => ctx.borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
+            TokenType::Sub => get_type!(ctx, "Int"),
+            _ => get_type!(ctx, "Bool"),
         };
 
         let (value_type, _) = self.rhs.borrow_mut().type_check(ctx.clone())?;
         if !t.borrow().contains(value_type.clone()) {
-            return Err(mismatched_types(t.clone(), value_type.clone()));
+            return Err(mismatched_types(t.clone(), value_type.clone())
+                .set_interval(self.rhs.borrow_mut().pos()));
         }
 
         Ok((t, None))

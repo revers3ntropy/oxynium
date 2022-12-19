@@ -54,33 +54,37 @@ impl Node for ExecRootNode {
         if has_main && res != "" {
             return Err(syntax_error(format!(
                 "Cannot have top level statements and 'main' function"
-            )));
+            ))
+            .set_interval(ctx_ref.get_dec_from_id("main").position.clone()));
         }
 
         if has_main {
             res = "call _$_oxy_main".to_string();
 
-            let main_decl = ctx_ref.get_dec_from_id("main")?;
+            let main_decl = ctx_ref.get_dec_from_id("main");
             let main_type = main_decl.type_.clone();
             let main_signature = FnType {
                 name: "main".to_string(),
-                ret_type: ctx_ref.get_dec_from_id("Void")?.type_.clone(),
+                ret_type: ctx_ref.get_dec_from_id("Void").type_,
                 parameters: vec![],
             };
 
             if !main_signature.contains(main_type) {
                 return Err(type_error(format!(
                     "main function must have signature 'main(): Void'"
-                )));
+                ))
+                .set_interval(main_decl.position.clone()));
             }
         }
 
-        if let Ok(main_fn) = ctx_ref.get_dec_from_id("main") {
+        if ctx_ref.has_dec_with_id("main") {
             if !has_main {
                 return Err(syntax_error(format!(
                     "if main function is declared it must be defined"
                 ))
-                .set_interval(main_fn.position.clone()));
+                .set_interval(
+                    ctx_ref.get_dec_from_id("main").position.clone(),
+                ));
             }
         }
 

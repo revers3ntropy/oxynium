@@ -60,10 +60,12 @@ impl ParseResults {
         start: Option<Position>,
         end: Option<Position>,
     ) -> &ParseResults {
-        error.set_pos(
-            start.unwrap_or(Position::unknown()),
-            end.unwrap_or(Position::unknown()),
-        );
+        if start.is_some() && error.start.is_unknown() {
+            error.start = start.unwrap();
+        }
+        if end.is_some() && error.start.is_unknown() {
+            error.end = end.unwrap();
+        }
         self.error = Some(error);
         self
     }

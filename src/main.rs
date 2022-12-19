@@ -1,6 +1,6 @@
 use crate::args::{get_args_cmd, get_cli_args, Args};
 use crate::context::Context;
-use crate::error::{io_error, Error, arg_error};
+use crate::error::{arg_error, io_error, Error};
 use crate::parse::lexer::Lexer;
 use crate::parse::parser::Parser;
 use crate::post_process::format_asm::post_process;
@@ -149,16 +149,19 @@ fn main() -> std::io::Result<()> {
         io_error(format!(
             "STD file '{}' does not exist or is not accessible\n",
             args.std_path
-        )).print_stderr();
+        ))
+        .print_stderr();
         return Ok(());
     }
 
     if !args.eval.is_empty() {
         let args_ = args.clone();
-        let res = compile_and_assemble(args.eval.clone(), "CLI".to_owned(), &args_);
+        let res =
+            compile_and_assemble(args.eval.clone(), "CLI".to_owned(), &args_);
         if res.is_err() {
-            res.err().unwrap()
-                    .pretty_print_stderr(args.eval, "CLI".to_string())
+            res.err()
+                .unwrap()
+                .pretty_print_stderr(args.eval, "CLI".to_string())
         }
         return Ok(());
     }
@@ -174,10 +177,12 @@ fn main() -> std::io::Result<()> {
         let mut input = String::new();
         input_file.read_to_string(&mut input)?;
 
-        let res = compile_and_assemble(input.clone(), args.input.clone(), &args);
+        let res =
+            compile_and_assemble(input.clone(), args.input.clone(), &args);
         if res.is_err() {
-            res.err().unwrap()
-                        .pretty_print_stderr(input, args.input.clone())
+            res.err()
+                .unwrap()
+                .pretty_print_stderr(input, args.input.clone())
         }
         return Ok(());
     }

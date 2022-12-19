@@ -3,6 +3,7 @@ use crate::ast::{Node, TypeCheckRes};
 use crate::context::CallStackFrame;
 use crate::context::Context;
 use crate::error::{invalid_symbol, syntax_error, type_error, Error};
+use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
@@ -47,7 +48,8 @@ impl Node for FnDeclarationNode {
             return Err(syntax_error(format!(
                 "Cannot declare function '{}' inside of another function.",
                 self.identifier.str()
-            )));
+            ))
+            .set_interval((self.pos().0, self.identifier.end.clone())));
         }
 
         if self.body.is_none() {
@@ -67,16 +69,20 @@ impl Node for FnDeclarationNode {
             .unwrap()
             .borrow_mut()
             .asm(self.params_scope.clone())?;
-        let params_scope = self.params_scope.borrow_mut();
+        let params_scope = self.params_scope.clone();
+        let params_scope = params_scope.borrow_mut();
         let (data_defs, text_defs) = params_scope.get_definitions();
         if text_defs.len() > 0 {
             return Err(type_error("Nested functions not allowed".to_string()));
         }
-        ctx.borrow_mut().define(SymbolDef {
-            name: self.id(),
-            data: None,
-            text: Some(format!(
-                "
+
+        let self_pos = self.pos();
+        ctx.borrow_mut().define(
+            SymbolDef {
+                name: self.id(),
+                data: None,
+                text: Some(format!(
+                    "
                     push rbp
                     mov rbp, rsp
                     times {} push 0
@@ -86,9 +92,11 @@ impl Node for FnDeclarationNode {
                     pop rbp
                     ret
                  ",
-                data_defs.len()
-            )),
-        })?;
+                    data_defs.len()
+                )),
+            },
+            self_pos,
+        )?;
 
         ctx.borrow_mut().stack_frame_pop();
         Ok("".to_string())
@@ -171,20 +179,24 @@ impl Node for FnDeclarationNode {
                 },
             );
 
-            self.params_scope.borrow_mut().declare(SymbolDec {
-                name: identifier.clone(),
-                id: format!(
-                    "qword [rbp + {}]",
-                    8 * ((num_params - (i + 1)) + 2)
-                ),
-                is_constant: true,
-                is_type: false,
-                require_init: false,
-                is_defined: true,
-                is_param: true,
-                type_: param_type.clone(),
-                position: self.position.clone(),
-            })?;
+            let self_pos = self.pos();
+            self.params_scope.borrow_mut().declare(
+                SymbolDec {
+                    name: identifier.clone(),
+                    id: format!(
+                        "qword [rbp + {}]",
+                        8 * ((num_params - (i + 1)) + 2)
+                    ),
+                    is_constant: true,
+                    is_type: false,
+                    require_init: false,
+                    is_defined: true,
+                    is_param: true,
+                    type_: param_type.clone(),
+                    position: self.position.clone(),
+                },
+                self_pos,
+            )?;
         }
 
         let this_type = new_mut_rc(FnType {
@@ -193,28 +205,25 @@ impl Node for FnDeclarationNode {
             parameters,
         });
         // declare in the parent context
-        ctx.borrow_mut().declare(SymbolDec {
-            name: self.id(),
-            id: self.id(),
-            is_constant: true,
-            is_type: false,
-            require_init: !self.is_external,
-            is_defined: self.body.is_some(),
-            is_param: false,
-            type_: this_type.clone(),
-            position: self.pos(),
-        })?;
+        ctx.borrow_mut().declare(
+            SymbolDec {
+                name: self.id(),
+                id: self.id(),
+                is_constant: true,
+                is_type: false,
+                require_init: !self.is_external,
+                is_defined: self.body.is_some(),
+                is_param: false,
+                type_: this_type.clone(),
+                position: self.pos(),
+            },
+            self.pos(),
+        )?;
 
         if let Some(body) = self.body.take() {
             let (_, body_ret_type) =
                 body.borrow_mut().type_check(self.params_scope.clone())?;
-            let body_ret_type = body_ret_type.unwrap_or(
-                ctx.borrow_mut()
-                    .get_dec_from_id("Void")
-                    .unwrap()
-                    .type_
-                    .clone(),
-            );
+            let body_ret_type = body_ret_type.unwrap_or(get_type!(ctx, "Void"));
             if !ret_type.borrow().contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
                     "Function {} has return type {} but found {}",

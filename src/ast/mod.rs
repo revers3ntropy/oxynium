@@ -14,12 +14,12 @@ pub mod class_init;
 pub mod class_method_call;
 pub mod r#continue;
 pub mod empty_exec_root;
-pub mod empty_global_var_decl;
+pub mod empty_global_const_decl;
 pub mod empty_local_var_decl;
 pub mod exec_root;
 pub mod fn_call;
 pub mod fn_declaration;
-pub mod global_var_decl;
+pub mod global_const_decl;
 pub mod r#if;
 pub mod int;
 pub mod local_var_decl;
@@ -41,7 +41,7 @@ pub const STD_DATA_ASM: &str = include_str!("../../std/std-data.asm");
 #[macro_export]
 macro_rules! get_type {
     ($ctx:expr, $name:expr) => {
-        $ctx.borrow_mut().get_dec_from_id($name)?.type_.clone()
+        $ctx.borrow_mut().get_dec_from_id($name).type_.clone()
     };
 }
 

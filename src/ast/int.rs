@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::Error;
+use crate::get_type;
 use crate::position::Interval;
 use crate::util::MutRc;
 
@@ -25,7 +26,7 @@ impl Node for IntNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        Ok((ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone(), None))
+        Ok((get_type!(ctx, "Int"), None))
     }
 
     fn pos(&mut self) -> Interval {

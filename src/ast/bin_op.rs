@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{mismatched_types, syntax_error, Error};
+use crate::get_type;
 use crate::parse::token::{Token, TokenType};
 use crate::position::Interval;
 use crate::util::MutRc;
@@ -96,7 +97,8 @@ impl Node for BinOpNode {
             _ => Err(syntax_error(format!(
                 "Invalid operator: {}",
                 self.operator.clone().literal.unwrap()
-            ))),
+            ))
+            .set_interval(self.pos())),
         }
     }
 
@@ -115,10 +117,8 @@ impl Node for BinOpNode {
             | TokenType::GT
             | TokenType::LT
             | TokenType::GTE
-            | TokenType::LTE => {
-                ctx.borrow_mut().get_dec_from_id("Int")?.type_.clone()
-            }
-            _ => ctx.borrow_mut().get_dec_from_id("Bool")?.type_.clone(),
+            | TokenType::LTE => get_type!(ctx, "Int"),
+            _ => get_type!(ctx, "Bool"),
         };
 
         let (lhs_type, _) = self.lhs.borrow_mut().type_check(ctx.clone())?;
@@ -126,14 +126,16 @@ impl Node for BinOpNode {
             return Err(mismatched_types(
                 operand_types.clone(),
                 lhs_type.clone(),
-            ));
+            )
+            .set_interval(self.lhs.borrow_mut().pos()));
         }
         let (rhs_type, _) = self.rhs.borrow_mut().type_check(ctx.clone())?;
         if !operand_types.borrow().contains(rhs_type.clone()) {
             return Err(mismatched_types(
                 operand_types.clone(),
                 rhs_type.clone(),
-            ));
+            )
+            .set_interval(self.rhs.borrow_mut().pos()));
         }
 
         return Ok((
@@ -142,18 +144,8 @@ impl Node for BinOpNode {
                 | TokenType::Plus
                 | TokenType::Sub
                 | TokenType::Astrix
-                | TokenType::FSlash => ctx
-                    .clone()
-                    .borrow_mut()
-                    .get_dec_from_id("Int")?
-                    .type_
-                    .clone(),
-                _ => ctx
-                    .clone()
-                    .borrow_mut()
-                    .get_dec_from_id("Bool")?
-                    .type_
-                    .clone(),
+                | TokenType::FSlash => get_type!(ctx, "Int"),
+                _ => get_type!(ctx, "Bool"),
             },
             None,
         ));

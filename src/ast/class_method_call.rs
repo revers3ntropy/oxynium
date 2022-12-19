@@ -159,7 +159,7 @@ impl Node for ClassMethodCallNode {
             return Err(mismatched_types(
                 new_mut_rc(method_type),
                 call_signature_type.clone(),
-            ));
+            ).set_interval(self.pos()));
         }
 
         // fill out default arguments

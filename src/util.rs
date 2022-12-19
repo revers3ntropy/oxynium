@@ -35,6 +35,15 @@ pub fn intersection<T: Eq + Hash + Clone, U, V>(
     (in_first, in_both, in_second)
 }
 
+pub fn num_digits(mut n: i64) -> usize {
+    let mut digits = 0;
+    while n > 0 {
+        n /= 10;
+        digits += 1;
+    }
+    digits
+}
+
 #[macro_export]
 macro_rules! strings_vec {
     ($($x:expr),*$(,)?) => (vec![$($x.to_string()),*]);

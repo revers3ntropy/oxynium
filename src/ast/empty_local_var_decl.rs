@@ -39,17 +39,20 @@ impl Node for EmptyLocalVarNode {
 
         let (type_, _) = self.type_.borrow_mut().type_check(ctx.clone())?;
 
-        ctx.borrow_mut().declare(SymbolDec {
-            name: self.identifier.clone(),
-            id: format!("qword [rbp - {}]", self.stack_offset),
-            is_constant: false,
-            is_type: false,
-            require_init: true,
-            is_defined: false,
-            is_param: false,
-            type_: type_.clone(),
-            position: self.pos(),
-        })?;
+        ctx.borrow_mut().declare(
+            SymbolDec {
+                name: self.identifier.clone(),
+                id: format!("qword [rbp - {}]", self.stack_offset),
+                is_constant: false,
+                is_type: false,
+                require_init: true,
+                is_defined: false,
+                is_param: false,
+                type_: type_.clone(),
+                position: self.pos(),
+            },
+            self.pos(),
+        )?;
         Ok((type_.clone(), None))
     }
 

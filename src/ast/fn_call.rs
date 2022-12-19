@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{mismatched_types, unknown_symbol, Error};
+use crate::get_type;
 use crate::position::Interval;
 use crate::symbols::is_valid_identifier;
 use crate::types::function::{FnParamType, FnType};
@@ -76,7 +77,7 @@ impl Node for FnCallNode {
 
         let fn_type = ctx
             .borrow_mut()
-            .get_dec_from_id(&self.identifier)?
+            .get_dec_from_id(&self.identifier)
             .type_
             .clone()
             .borrow()
@@ -113,10 +114,8 @@ impl Node for FnCallNode {
             );
         }
 
-        self.use_return_value = !fn_type
-            .ret_type
-            .borrow()
-            .contains(ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone());
+        self.use_return_value =
+            !fn_type.ret_type.borrow().contains(get_type!(ctx, "Void"));
         Ok((fn_type.ret_type.clone(), None))
     }
 

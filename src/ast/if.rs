@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, Error};
+use crate::get_type;
 use crate::position::Interval;
 use crate::util::MutRc;
 
@@ -63,13 +64,7 @@ impl Node for IfNode {
 
         let (comp_type, _) =
             self.comparison.borrow_mut().type_check(ctx.clone())?;
-        if !ctx
-            .borrow_mut()
-            .get_dec_from_id("Bool")?
-            .type_
-            .borrow()
-            .contains(comp_type)
-        {
+        if !get_type!(ctx, "Bool").borrow().contains(comp_type) {
             return Err(type_error("if condition must be a bool".to_string())
                 .set_interval(self.comparison.borrow_mut().pos()));
         }
@@ -95,10 +90,7 @@ impl Node for IfNode {
                 body_ret_type = else_ret_type;
             }
         }
-        Ok((
-            ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),
-            body_ret_type,
-        ))
+        Ok((get_type!(ctx, "Void"), body_ret_type))
     }
 
     fn pos(&mut self) -> Interval {

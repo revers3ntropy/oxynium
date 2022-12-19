@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
+use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::types::Type;
 use crate::util::{intersection, MutRc};
@@ -8,7 +9,7 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct ClassInitNode {
-    pub identifier: String,
+    pub identifier: Token,
     pub fields: Vec<(String, MutRc<dyn Node>)>,
     pub position: Interval,
 }
@@ -53,9 +54,19 @@ impl Node for ClassInitNode {
             asm.push_str(&format!("{}\n", field_asm[name]));
         }
 
+        if !ctx
+            .borrow_mut()
+            .has_dec_with_id(&self.identifier.clone().literal.unwrap())
+        {
+            return Err(unknown_symbol(
+                self.identifier.clone().literal.unwrap(),
+            )
+            .set_interval(self.identifier.interval()));
+        }
+
         let class_type = ctx
             .borrow_mut()
-            .get_dec_from_id(&self.identifier)?
+            .get_dec_from_id(&self.identifier.clone().literal.unwrap())
             .type_
             .clone()
             .borrow()
@@ -113,20 +124,36 @@ impl Node for ClassInitNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        if !ctx.borrow_mut().has_dec_with_id(&self.identifier) {
-            return Err(unknown_symbol(self.identifier.clone())
-                .set_interval(self.position.clone()));
+        if !ctx
+            .borrow_mut()
+            .has_dec_with_id(&self.identifier.clone().literal.unwrap())
+        {
+            return Err(unknown_symbol(
+                self.identifier.clone().literal.unwrap(),
+            )
+            .set_interval(self.position.clone()));
         }
+
+        if !ctx
+            .borrow_mut()
+            .has_dec_with_id(&self.identifier.clone().literal.unwrap())
+        {
+            return Err(unknown_symbol(
+                self.identifier.clone().literal.unwrap(),
+            )
+            .set_interval(self.identifier.interval()));
+        }
+
         let type_ = ctx
             .borrow_mut()
-            .get_dec_from_id(&self.identifier)?
+            .get_dec_from_id(&self.identifier.clone().literal.unwrap())
             .type_
             .clone();
         let class_type = type_.borrow().as_class();
         if class_type.is_none() {
             return Err(type_error(format!(
                 "{} is not a class",
-                self.identifier
+                self.identifier.clone().literal.unwrap()
             )));
         }
         let class_type = class_type.unwrap();
@@ -149,7 +176,7 @@ impl Node for ClassInitNode {
                     .map(|s| s.clone())
                     .collect::<Vec<String>>()
                     .join(", ")
-            )));
+            )).set_interval(self.pos()));
         }
 
         if missing.len() > 0 {
@@ -160,7 +187,7 @@ impl Node for ClassInitNode {
                     .map(|s| s.clone())
                     .collect::<Vec<String>>()
                     .join(", ")
-            )));
+            )).set_interval(self.pos()));
         }
 
         for field in fields {
@@ -174,7 +201,7 @@ impl Node for ClassInitNode {
                     "Type mismatch in class initialization field '{field}': Expected {} but found {}",
                     type_fields_hashmap.get(&field).unwrap().borrow().str(),
                     instance_fields_hashmap.get(&field).unwrap().borrow().str(),
-                )));
+                )).set_interval(self.pos()));
             }
         }
 

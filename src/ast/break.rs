@@ -15,7 +15,8 @@ impl Node for BreakNode {
         if labels.is_none() {
             return Err(syntax_error(
                 "'break' statement outside of loop".to_string(),
-            ));
+            )
+            .set_interval(self.pos()));
         }
         Ok(format!(
             "

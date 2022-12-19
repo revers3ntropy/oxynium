@@ -20,12 +20,13 @@ impl SymbolAccess {
 
 impl Node for SymbolAccess {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
-        let decl = ctx.borrow_mut().get_dec_from_id(&self.id()).unwrap();
+        let decl = ctx.borrow_mut().get_dec_from_id(&self.id());
         if decl.require_init && !decl.is_defined {
             return Err(type_error(format!(
                 "Cannot use uninitialized variable '{}'",
                 self.id()
-            )));
+            ))
+            .set_interval(self.pos()));
         }
 
         if decl.is_type {
@@ -36,7 +37,7 @@ impl Node for SymbolAccess {
             "
             push {}
         ",
-            ctx.borrow_mut().get_dec_from_id(&self.id())?.id
+            ctx.borrow_mut().get_dec_from_id(&self.id()).id
         ))
     }
 
@@ -51,14 +52,15 @@ impl Node for SymbolAccess {
             return Err(unknown_symbol(format!(
                 "Symbol '{}' does not exist",
                 self.id()
-            )));
+            ))
+            .set_interval(self.pos()));
         }
-        if ctx.borrow_mut().get_dec_from_id(&self.id())?.is_type {
+        if ctx.borrow_mut().get_dec_from_id(&self.id()).is_type {
             return Ok((
                 new_mut_rc(TypeType {
                     instance_type: ctx
                         .borrow_mut()
-                        .get_dec_from_id(&self.id())?
+                        .get_dec_from_id(&self.id())
                         .type_
                         .clone(),
                 }),
@@ -66,7 +68,7 @@ impl Node for SymbolAccess {
             ));
         }
         Ok((
-            ctx.borrow_mut().get_dec_from_id(&self.id())?.type_.clone(),
+            ctx.borrow_mut().get_dec_from_id(&self.id()).type_.clone(),
             None,
         ))
     }

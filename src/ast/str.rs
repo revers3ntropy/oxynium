@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::Error;
+use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::SymbolDef;
@@ -19,12 +20,15 @@ impl StrNode {
 
 impl Node for StrNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
-        let anon_id = ctx.borrow_mut().define_anon(SymbolDef {
-            name: "".to_string(),
-            // ,0 is the null terminator
-            data: Some(format!("dq \"{}\", 0", self.val())),
-            text: None,
-        })?;
+        let anon_id = ctx.borrow_mut().define_anon(
+            SymbolDef {
+                name: "".to_string(),
+                // ,0 is the null terminator
+                data: Some(format!("dq \"{}\", 0", self.val())),
+                text: None,
+            },
+            self.value.interval(),
+        )?;
 
         Ok(format!(
             "
@@ -37,7 +41,7 @@ impl Node for StrNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        Ok((ctx.borrow_mut().get_dec_from_id("Str")?.type_.clone(), None))
+        Ok((get_type!(ctx, "Str"), None))
     }
 
     fn pos(&mut self) -> Interval {

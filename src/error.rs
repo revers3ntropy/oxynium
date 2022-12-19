@@ -1,7 +1,8 @@
-use std::io::Write;
 use crate::position::{Interval, Position};
 use crate::types::Type;
-use crate::util::MutRc;
+use crate::util::{num_digits, MutRc};
+use std::cmp::{max, min};
+use std::io::Write;
 
 #[derive(Debug, Clone)]
 pub struct Error {
@@ -47,12 +48,12 @@ impl Error {
     }
 
     pub fn str_pretty(&self, source_code: String, file_name: String) -> String {
-        let mut out = format!("{}:\n{}\n", self.name, self.message);
+        let mut out = format!("{}:\n  {}\n", self.name, self.message);
         out.push('\n');
 
         let lines: Vec<&str> = source_code.split('\n').collect();
 
-        let start = self.start.clone();
+        let mut start = self.start.clone();
         let mut end = self.end.clone();
 
         if end.is_unknown() {
@@ -63,31 +64,50 @@ impl Error {
             end = start.clone();
         }
 
-        out.push_str(&format!(
-            "'{}' lines {}-{}:\n",
-            file_name,
-            start.line + 1,
-            end.line + 1
-        ));
+        let max_digits_in_line_number = num_digits(end.line + 2);
 
-        let mut line_idx = start.line as usize;
-        let mut is_first_line = true;
-        let mut is_last_line = false;
-        for line in start.line..end.line {
+        if start.idx == end.idx {
+            out.push_str(&format!(
+                "{}--> '{}' {}:{}\n",
+                " ".repeat(max_digits_in_line_number + 2),
+                file_name,
+                start.line + 1,
+                start.col + 1
+            ));
+
+            // to correctly show location of error with '^'s
+            start.idx -= 1;
+            start.col -= 1;
+        } else {
+            out.push_str(&format!(
+                "{}--> '{}' {}:{} to {}:{}\n",
+                " ".repeat(max_digits_in_line_number + 2),
+                file_name,
+                start.line + 1,
+                start.col + 1,
+                end.line + 1,
+                end.col + 1
+            ));
+        }
+
+        let mut line_idx = max(start.line - 1, 0);
+        for line in line_idx..=min(end.line + 1, lines.len() as i64 - 1) {
             let line = lines[line as usize];
-            if line_idx == end.line as usize {
-                is_last_line = true;
-            }
 
-            let pre_line = format!("  {} | ", line_idx + 1);
+            let padding = " "
+                .repeat(max_digits_in_line_number - num_digits(line_idx + 1));
+            let pre_line = format!("  {}{padding} | ", line_idx + 1);
+
             out.push_str(pre_line.as_str());
             out.push_str(line);
             out.push('\n');
-            if is_first_line {
-                for _ in 0..start.col + (pre_line.len() as i64) {
+            if line_idx as i64 == start.line {
+                // first line of error
+                for _ in 0..(start.col + (pre_line.len() as i64)) {
                     out.push(' ');
                 }
                 if end.line == line_idx as i64 {
+                    // single-line error
                     for _ in start.col..end.col {
                         out.push('^');
                     }
@@ -96,39 +116,41 @@ impl Error {
                         out.push('^');
                     }
                 }
-
-            } else if is_last_line {
+                out.push('\n');
+            } else if line_idx as i64 == end.line {
+                // last line of error
                 for _ in 0..pre_line.len() {
                     out.push(' ');
                 }
-                for _ in 0..end.col+1 {
+                for _ in 0..=end.col {
                     out.push('^');
                 }
-            } else { // middle line
+                out.push('\n');
+            } else if line_idx as i64 > start.line
+                && (line_idx as i64) < end.line
+            {
+                // middle line
                 for _ in 0..pre_line.len() {
                     out.push(' ');
                 }
                 for _ in 0..line.len() {
                     out.push('^');
                 }
+                out.push('\n');
             }
-            out.push('\n');
             line_idx += 1;
-            is_first_line = false;
         }
 
         out
     }
 
     pub fn pretty_print_stderr(&self, source_code: String, file_name: String) {
-        let _ = std::io::stderr().write(format!(
-            "{}\n",
-            self.str_pretty(source_code, file_name)
-        ).as_bytes());
+        let _ = std::io::stderr().write(
+            format!("{}\n", self.str_pretty(source_code, file_name)).as_bytes(),
+        );
     }
     pub fn print_stderr(&self) {
-        let _ = std::io::stderr()
-            .write(format!("{}\n", self.str()).as_bytes());
+        let _ = std::io::stderr().write(format!("{}\n", self.str()).as_bytes());
     }
 }
 
@@ -139,7 +161,7 @@ pub fn syntax_error(message: String) -> Error {
 pub fn invalid_symbol(message: String) -> Error {
     Error::new(
         "SyntaxError",
-        format!("Symbol '{}' is not allowed", message),
+        format!("The symbol '{}' cannot be used here", message),
     )
 }
 
@@ -158,7 +180,7 @@ pub fn mismatched_types(
     Error::new(
         "TypeError",
         format!(
-            "expected '{}', found '{}'",
+            "Expected '{}', found '{}'",
             expected.borrow().str(),
             got.borrow().str()
         ),

@@ -1,5 +1,6 @@
 use crate::ast::ANON_PREFIX;
 use crate::error::{type_error, Error};
+use crate::position::Interval;
 use crate::symbols::{SymbolDec, SymbolDef};
 use crate::util::{new_mut_rc, MutRc};
 use std::cell::RefCell;
@@ -78,9 +79,18 @@ impl Context {
 
     // Declarations
 
-    pub fn declare(&mut self, symbol: SymbolDec) -> Result<(), Error> {
+    pub fn declare(
+        &mut self,
+        symbol: SymbolDec,
+        trace_interval: Interval,
+    ) -> Result<(), Error> {
         if self.parent.is_some() && !self.allow_local_var_decls {
-            return self.parent.as_ref().unwrap().borrow_mut().declare(symbol);
+            return self
+                .parent
+                .as_ref()
+                .unwrap()
+                .borrow_mut()
+                .declare(symbol, trace_interval);
         }
         if let Some(duplicate) =
             self.declarations.get(symbol.name.clone().as_str())
@@ -89,7 +99,8 @@ impl Context {
                 return Err(type_error(format!(
                     "Symbol {} is already declared",
                     symbol.name
-                )));
+                ))
+                .set_interval(trace_interval));
             }
         }
         self.declarations.insert(symbol.name.clone(), symbol);
@@ -104,16 +115,20 @@ impl Context {
             false
         }
     }
-    pub fn get_dec_from_id(&self, id: &str) -> Result<SymbolDec, Error> {
+    pub fn get_dec_from_id(&self, id: &str) -> SymbolDec {
         if self.declarations.get(id).is_some() {
-            Ok(self.declarations.get(id).unwrap().clone())
+            self.declarations.get(id).unwrap().clone()
         } else if self.parent.is_some() {
             self.parent.as_ref().unwrap().borrow().get_dec_from_id(id)
         } else {
-            Err(type_error(format!("Symbol {} is not declared", id)))
+            panic!("Symbol {} not found", id);
         }
     }
-    pub fn set_dec_as_defined(&mut self, id: &str) -> Result<(), Error> {
+    pub fn set_dec_as_defined(
+        &mut self,
+        id: &str,
+        trace_interval: Interval,
+    ) -> Result<(), Error> {
         if self.declarations.get(id).is_some() {
             let mut dec = self.declarations.get(id).unwrap().clone();
             dec.is_defined = true;
@@ -124,9 +139,10 @@ impl Context {
                 .as_ref()
                 .unwrap()
                 .borrow_mut()
-                .set_dec_as_defined(id)
+                .set_dec_as_defined(id, trace_interval)
         } else {
-            Err(type_error(format!("Symbol {} is not declared", id)))
+            Err(type_error(format!("Symbol {id} is not declared"))
+                .set_interval(trace_interval))
         }
     }
 
@@ -134,7 +150,7 @@ impl Context {
         if self.allow_local_var_decls || self.parent.is_none() {
             let idx =
                 self.declarations.iter().filter(|d| !d.1.is_param).count();
-            8 * (1 + idx)
+            (1 + idx) * 8
         } else {
             self.parent
                 .as_ref()
@@ -146,22 +162,33 @@ impl Context {
 
     // Definitions
 
-    pub fn define(&mut self, symbol: SymbolDef) -> Result<(), Error> {
+    pub fn define(
+        &mut self,
+        symbol: SymbolDef,
+        trace_interval: Interval,
+    ) -> Result<(), Error> {
         if self.parent.is_some() && !self.allow_local_var_decls {
-            return self.parent.as_ref().unwrap().borrow_mut().define(symbol);
+            return self
+                .parent
+                .as_ref()
+                .unwrap()
+                .borrow_mut()
+                .define(symbol, trace_interval);
         }
         let name = symbol.name.clone();
         if self.definitions.get(&name.clone()).is_some() {
             return Err(type_error(format!(
                 "Symbol {} is already defined",
                 symbol.name
-            )));
+            ))
+            .set_interval(trace_interval));
         }
         if !self.declarations.get(&name.clone()).is_some() {
             return Err(type_error(format!(
                 "Symbol {} is not declared",
                 symbol.name
-            )));
+            ))
+            .set_interval(trace_interval));
         }
 
         self.definitions.insert(name.clone(), symbol);
@@ -170,6 +197,7 @@ impl Context {
     pub fn define_anon(
         &mut self,
         mut symbol: SymbolDef,
+        trace_interval: Interval,
     ) -> Result<String, Error> {
         if self.parent.is_some() {
             return self
@@ -177,14 +205,15 @@ impl Context {
                 .as_ref()
                 .unwrap()
                 .borrow_mut()
-                .define_anon(symbol);
+                .define_anon(symbol, trace_interval);
         }
         symbol.name = self.get_anon_label();
         if self.definitions.get(symbol.name.clone().as_str()).is_some() {
             return Err(type_error(format!(
                 "Symbol {} is already defined",
                 symbol.name
-            )));
+            ))
+            .set_interval(trace_interval));
         }
         let name = symbol.name.clone();
         self.definitions.insert(name.clone(), symbol);

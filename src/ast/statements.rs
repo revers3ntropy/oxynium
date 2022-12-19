@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, Error};
+use crate::get_type;
 use crate::position::Interval;
 use crate::util::MutRc;
 
@@ -32,35 +33,31 @@ impl Node for StatementsNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        let mut ret_types = Vec::new();
+        let mut ret_type = None;
         for statement in self.statements.iter_mut() {
             let t = statement.borrow_mut().type_check(ctx.clone())?;
-            if t.1.is_some() {
-                ret_types.push(t.1.unwrap())
+            if t.1.is_none() {
+                continue;
             }
-        }
-        if ret_types.len() < 1 {
-            return Ok((
-                ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),
-                None,
-            ));
-        }
-
-        for ret_type in ret_types.iter() {
+            if ret_type.is_none() {
+                ret_type = t.1.clone();
+            }
             if !ret_type
+                .clone()
+                .unwrap()
                 .borrow()
-                .contains(ret_types.first().unwrap().clone())
+                .contains(t.1.clone().unwrap())
             {
-                return Err(type_error(
-                    "All return types must be the same".to_string(),
-                ));
+                return Err(type_error(format!(
+                    "Cannot return different types, expected `{}` found `{}`",
+                    ret_type.unwrap().borrow().str(),
+                    t.1.unwrap().borrow().str()
+                ))
+                .set_interval(statement.borrow_mut().pos()));
             }
         }
 
-        Ok((
-            ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),
-            Some(ret_types[0].clone()),
-        ))
+        Ok((get_type!(ctx, "Void"), ret_type))
     }
 
     fn pos(&mut self) -> Interval {

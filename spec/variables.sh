@@ -218,3 +218,12 @@ expect_err 'SyntaxError' 'fn f() { let mut _$_ = 1; }'
 expect_err 'SyntaxError' 'fn f() { let mut _$_a = 1; }'
 expect_err 'SyntaxError' 'fn f() { let mut mut = 1; }'
 expect_err 'SyntaxError' 'fn f() { let mut fn = 1; }'
+
+
+describe 'Invalid Assignment'
+
+expect_err 'TypeError' 'const a = 1; a = 2'
+expect_err 'TypeError' 'Str = 1'
+expect_err 'TypeError' 'class C; C = 1'
+expect_err 'TypeError' 'Int = 1'
+expect_err 'TypeError' 'print = 1'

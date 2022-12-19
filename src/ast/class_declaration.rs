@@ -1,7 +1,8 @@
 use crate::ast::fn_declaration::FnDeclarationNode;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{type_error, unknown_symbol, Error};
+use crate::error::{invalid_symbol, type_error, Error};
+use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec};
 use crate::types::class::{ClassFieldType, ClassType};
@@ -22,7 +23,7 @@ pub struct ClassField {
 
 #[derive(Debug)]
 pub struct ClassDeclarationNode {
-    pub identifier: String,
+    pub identifier: Token,
     pub fields: Vec<ClassField>,
     pub methods: Vec<MutRc<FnDeclarationNode>>,
     pub position: Interval,
@@ -43,28 +44,36 @@ impl Node for ClassDeclarationNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        if !can_declare_with_identifier(&self.identifier) {
-            return Err(unknown_symbol(self.identifier.clone()));
+        if !can_declare_with_identifier(
+            &self.identifier.clone().literal.unwrap(),
+        ) {
+            return Err(invalid_symbol(
+                self.identifier.clone().literal.unwrap(),
+            )
+            .set_interval(self.identifier.interval()));
         }
 
         let this_type = new_mut_rc(ClassType {
-            name: self.identifier.clone(),
+            name: self.identifier.clone().literal.unwrap(),
             fields: vec![],
             methods: vec![],
             is_primitive: self.is_primitive,
         });
 
-        ctx.borrow_mut().declare(SymbolDec {
-            name: self.identifier.clone(),
-            id: self.identifier.clone(),
-            is_constant: true,
-            is_type: true,
-            require_init: false,
-            is_defined: true,
-            is_param: false,
-            type_: this_type.clone(),
-            position: self.pos(),
-        })?;
+        ctx.borrow_mut().declare(
+            SymbolDec {
+                name: self.identifier.clone().literal.unwrap(),
+                id: self.identifier.clone().literal.unwrap(),
+                is_constant: true,
+                is_type: true,
+                require_init: false,
+                is_defined: true,
+                is_param: false,
+                type_: this_type.clone(),
+                position: self.pos(),
+            },
+            (self.pos().0, self.identifier.interval().1),
+        )?;
 
         for field in self.fields.iter() {
             let type_ = field.type_.borrow_mut().type_check(ctx.clone())?;
@@ -74,6 +83,7 @@ impl Node for ClassDeclarationNode {
             });
         }
 
+        let self_pos = self.pos();
         for method in self.methods.iter() {
             let mut method = method.borrow_mut();
             method.class = Some(this_type.clone());
@@ -86,7 +96,8 @@ impl Node for ClassDeclarationNode {
                 return Err(type_error(format!(
                     "Non-external method '{}' requires a body",
                     method.identifier.clone().literal.unwrap()
-                )));
+                ))
+                .set_interval(self_pos));
             }
 
             if method.params.len() < 1 {

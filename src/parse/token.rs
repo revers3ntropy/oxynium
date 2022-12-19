@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use crate::position::{Interval, Position};
+use std::fmt::Debug;
 
 #[derive(Clone, PartialEq, Debug, Copy)]
 pub enum TokenType {
@@ -103,10 +103,15 @@ impl Token {
     }
 }
 
-
 impl Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Token<{:?}>{{ '{}' @ {:?} - {:?} }}",
-               self.token_type, self.str(), self.start, self.end)
+        write!(
+            f,
+            "Token<{:?}>{{ '{}' @ {:?} - {:?} }}",
+            self.token_type,
+            self.str(),
+            self.start,
+            self.end
+        )
     }
 }

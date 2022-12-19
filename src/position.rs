@@ -23,7 +23,7 @@ impl Position {
         Position::new("".to_string(), -2, -2, -2)
     }
 
-    pub fn advance(&mut self, current_char: Option<char>) -> &mut Position {
+    pub fn advance(&mut self, current_char: Option<char>) -> Position {
         self.idx += 1;
         self.col += 1;
 
@@ -32,7 +32,7 @@ impl Position {
             self.col = 0;
         }
 
-        self
+        self.clone()
     }
 
     pub fn str(&self) -> String {
@@ -50,7 +50,7 @@ impl Position {
 
 impl Debug for Position {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.str())
+        write!(f, "{}:{}:{}(idx:{})", self.file, self.line, self.col, self.idx)
     }
 }
 

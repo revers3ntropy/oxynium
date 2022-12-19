@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, Error};
+use crate::get_type;
 use crate::position::Interval;
 use crate::util::MutRc;
 
@@ -60,13 +61,7 @@ impl Node for WhileLoopNode {
         if let Some(condition) = &self.condition {
             let (cond_type, _) =
                 condition.borrow_mut().type_check(ctx.clone())?;
-            if !ctx
-                .borrow_mut()
-                .get_dec_from_id("Bool")?
-                .type_
-                .borrow()
-                .contains(cond_type)
-            {
+            if !get_type!(ctx, "Bool").borrow().contains(cond_type) {
                 return Err(type_error(
                     "while loop condition must be a bool".to_string(),
                 )

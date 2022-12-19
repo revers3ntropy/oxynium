@@ -5,12 +5,12 @@ use crate::ast::class_field_access::FieldAccessNode;
 use crate::ast::class_init::ClassInitNode;
 use crate::ast::class_method_call::ClassMethodCallNode;
 use crate::ast::empty_exec_root::EmptyExecRootNode;
-use crate::ast::empty_global_var_decl::EmptyGlobalConstNode;
+use crate::ast::empty_global_const_decl::EmptyGlobalConstNode;
 use crate::ast::empty_local_var_decl::EmptyLocalVarNode;
 use crate::ast::exec_root::ExecRootNode;
 use crate::ast::fn_call::FnCallNode;
 use crate::ast::fn_declaration::{FnDeclarationNode, Parameter};
-use crate::ast::global_var_decl::GlobalConstNode;
+use crate::ast::global_const_decl::GlobalConstNode;
 use crate::ast::int::IntNode;
 use crate::ast::local_var_decl::LocalVarNode;
 use crate::ast::mutate_var::MutateVar;
@@ -182,17 +182,20 @@ impl Parser {
             }
 
             let err = syntax_error(format!(
-                "Expected token type: {:?}, got: {:?}",
+                "Expected token type: {:?}, found {:?}",
                 tok_type, tok.token_type
             ));
-            res.failure(err, Some(tok.start.clone()), Some(tok.end.clone()));
+            res.failure(err,
+                        Some(tok.start.clone().advance(None)),
+                        None
+            );
+        } else {
+            res.failure(
+                syntax_error(format!("Expected {:?}, found EOF", tok_type)),
+                Some(self.last_tok().unwrap().end.clone().advance(None)),
+                None,
+            );
         }
-
-        res.failure(
-            syntax_error(format!("Unexpected EOF, expected {:?}", tok_type)),
-            Some(self.last_tok().unwrap().start.clone()),
-            Some(self.last_tok().unwrap().end.clone()),
-        );
         Token::new(
             TokenType::EndStatement,
             None,
@@ -542,13 +545,13 @@ impl Parser {
         let start = self.last_tok().unwrap().start.clone();
 
         if self.current_matches(TokenType::Identifier, None) {
-            name = Some(self.current_tok().unwrap().literal.unwrap());
+            name = self.current_tok().unwrap();
             self.advance(&mut res);
         } else {
             res.failure(
                 syntax_error("Expected identifier".to_string()),
-                Some(self.tokens[self.tok_idx - 1].start.clone()),
-                Some(self.tokens[self.tok_idx - 1].end.clone()),
+                Some(self.last_tok().unwrap().end.clone().advance(None)),
+                None,
             );
             return res;
         }
@@ -571,7 +574,7 @@ impl Parser {
                 return res;
             }
             res.success(new_mut_rc(EmptyGlobalConstNode {
-                identifier: name.unwrap(),
+                identifier: name,
                 type_: type_.unwrap(),
                 is_external,
                 position: (start, self.last_tok().unwrap().end.clone()),
@@ -595,7 +598,7 @@ impl Parser {
             self.advance(&mut res);
             let value = tok.literal.unwrap().parse::<i64>().unwrap();
             res.success(new_mut_rc(GlobalConstNode {
-                identifier: name.unwrap(),
+                identifier: name,
                 value,
                 position: (start, self.last_tok().unwrap().end.clone()),
             }));
@@ -603,16 +606,18 @@ impl Parser {
         } else if tok.token_type == TokenType::String {
             self.advance(&mut res);
             res.success(new_mut_rc(GlobalConstNode {
-                identifier: name.unwrap(),
+                identifier: name,
                 value: tok.literal.unwrap(),
                 position: (start, self.last_tok().unwrap().end.clone()),
             }));
             return res;
         }
         res.failure(
-            syntax_error("Expected int or str".to_string()),
-            Some(self.last_tok().unwrap().start.clone()),
-            Some(self.last_tok().unwrap().end.clone()),
+            syntax_error(format!(
+                "Can only have integers or strings as global constants"
+            )),
+            Some(self.current_tok().unwrap().start.clone()),
+            Some(self.current_tok().unwrap().end.clone()),
         );
         res
     }
@@ -649,8 +654,8 @@ impl Parser {
                         "Cannot declare uninitialized local constant"
                             .to_string(),
                     ),
-                    Some(start),
-                    Some(self.current_tok().unwrap().end.clone()),
+                    Some(self.last_tok().unwrap().end.clone()),
+                    None,
                 );
                 return res;
             }
@@ -658,8 +663,8 @@ impl Parser {
             if type_annotation.is_none() {
                 res.failure(
                     syntax_error("Expected type annotation".to_string()),
-                    Some(start),
-                    Some(self.current_tok().unwrap().end.clone()),
+                    Some(self.last_tok().unwrap().end.clone()),
+                    None,
                 );
                 return res;
             }
@@ -683,6 +688,7 @@ impl Parser {
             value: expr.unwrap(),
             mutable,
             type_annotation,
+            start,
             stack_offset: 0, // overridden
         }));
         res
@@ -1309,17 +1315,17 @@ impl Parser {
 
     fn class_def_expr(&mut self, is_primitive: bool) -> ParseResults {
         let mut res = ParseResults::new();
-        let start = self.last_tok().unwrap().start;
+        let start = self.last_tok().unwrap().start.clone();
 
         consume!(id_tok = Identifier, self, res);
-        let identifier = id_tok.literal.unwrap();
+        let identifier = id_tok.clone().literal.unwrap();
 
         let mut fields = Vec::new();
         let mut methods = Vec::new();
 
         if !self.current_matches(TokenType::OpenBrace, None) {
             res.success(new_mut_rc(ClassDeclarationNode {
-                identifier,
+                identifier: id_tok,
                 fields,
                 methods,
                 position: (start, self.last_tok().unwrap().end.clone()),
@@ -1415,7 +1421,7 @@ impl Parser {
         }
 
         res.success(new_mut_rc(ClassDeclarationNode {
-            identifier,
+            identifier: id_tok,
             fields,
             methods,
             position: (start, self.last_tok().unwrap().end.clone()),
@@ -1446,7 +1452,7 @@ impl Parser {
 
         if !self.current_matches(TokenType::OpenBrace, None) {
             res.success(new_mut_rc(ClassInitNode {
-                identifier: identifier_tok.literal.unwrap(),
+                identifier: identifier_tok,
                 fields,
                 position: (start, self.last_tok().unwrap().end.clone()),
             }));
@@ -1479,7 +1485,7 @@ impl Parser {
         ret_on_err!(res);
 
         res.success(new_mut_rc(ClassInitNode {
-            identifier: identifier_tok.literal.unwrap(),
+            identifier: identifier_tok,
             fields,
             position: (start, self.last_tok().unwrap().end.clone()),
         }));

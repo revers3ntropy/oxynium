@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{syntax_error, Error};
+use crate::get_type;
 use crate::position::Interval;
 use crate::util::MutRc;
 
@@ -45,12 +46,9 @@ impl Node for ReturnNode {
     ) -> Result<TypeCheckRes, Error> {
         if let Some(ref mut value) = self.value {
             let (t, _) = value.borrow_mut().type_check(ctx.clone())?;
-            Ok((
-                ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),
-                Some(t),
-            ))
+            Ok((get_type!(ctx, "Void"), Some(t)))
         } else {
-            let void = ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone();
+            let void = get_type!(ctx, "Void");
             Ok((void.clone(), Some(void)))
         }
     }
