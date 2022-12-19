@@ -68,19 +68,15 @@ impl Error {
 
         if start.idx == end.idx {
             out.push_str(&format!(
-                "{}--> '{}' {}:{}\n",
+                "{}--> {}:{}:{}\n",
                 " ".repeat(max_digits_in_line_number + 2),
                 file_name,
                 start.line + 1,
                 start.col + 1
             ));
-
-            // to correctly show location of error with '^'s
-            end.idx += 1;
-            end.col += 1;
         } else {
             out.push_str(&format!(
-                "{}--> '{}' {}:{} to {}:{}\n",
+                "{}--> {} {}:{} to {}:{}\n",
                 " ".repeat(max_digits_in_line_number + 2),
                 file_name,
                 start.line + 1,
@@ -94,48 +90,42 @@ impl Error {
         for line in line_idx..=min(end.line + 1, lines.len() as i64 - 1) {
             let line = lines[line as usize];
 
-            let padding = " "
-                .repeat(max_digits_in_line_number - num_digits(line_idx + 1));
-            let pre_line = format!("  {}{padding} | ", line_idx + 1);
+            let pre_line = format!(
+                "  {}{} | ",
+                line_idx + 1,
+                " ".repeat(
+                    max_digits_in_line_number - num_digits(line_idx + 1)
+                )
+            );
 
             out.push_str(pre_line.as_str());
             out.push_str(line);
             out.push('\n');
             if line_idx as i64 == start.line {
                 // first line of error
-                for _ in 0..(start.col + (pre_line.len() as i64)) {
-                    out.push(' ');
-                }
+                out.push_str(
+                    &" ".repeat((start.col as usize) + pre_line.len()),
+                );
                 if end.line == line_idx as i64 {
                     // single-line error
-                    for _ in start.col..end.col {
-                        out.push('^');
-                    }
+                    out.push_str(
+                        &"^".repeat((end.col + 1 - start.col) as usize),
+                    );
                 } else {
-                    for _ in start.col..line.len() as i64 {
-                        out.push('^');
-                    }
+                    out.push_str(&"^".repeat(line.len() - start.col as usize));
                 }
                 out.push('\n');
             } else if line_idx as i64 == end.line {
                 // last line of error
-                for _ in 0..pre_line.len() {
-                    out.push(' ');
-                }
-                for _ in 0..=end.col {
-                    out.push('^');
-                }
+                out.push_str(&" ".repeat(pre_line.len()));
+                out.push_str(&"^".repeat((end.col + 2) as usize));
                 out.push('\n');
             } else if line_idx as i64 > start.line
                 && (line_idx as i64) < end.line
             {
                 // middle line
-                for _ in 0..pre_line.len() {
-                    out.push(' ');
-                }
-                for _ in 0..line.len() {
-                    out.push('^');
-                }
+                out.push_str(&" ".repeat(pre_line.len()));
+                out.push_str(&"^".repeat(line.len()));
                 out.push('\n');
             }
             line_idx += 1;

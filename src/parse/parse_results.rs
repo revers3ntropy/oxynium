@@ -63,7 +63,7 @@ impl ParseResults {
         if start.is_some() && error.start.is_unknown() {
             error.start = start.unwrap();
         }
-        if end.is_some() && error.start.is_unknown() {
+        if end.is_some() && error.end.is_unknown() {
             error.end = end.unwrap();
         }
         self.error = Some(error);

@@ -120,13 +120,13 @@ impl Parser {
         };
 
         if self.tok_idx < self.tokens.len() {
+            let current = self.current_tok().unwrap();
+            println!("current: {:?}", current);
+            println!("{:?} {:?}", current.start.clone(), current.end.clone());
             res.failure(
-                syntax_error(format!(
-                    "Unexpected token {:?}",
-                    self.tokens[self.tok_idx].str()
-                )),
-                Some(self.current_tok().unwrap().start.clone()),
-                Some(self.current_tok().unwrap().end.clone()),
+                syntax_error(format!("Unexpected token {:?}", current.str())),
+                Some(current.start.clone()),
+                Some(current.end.clone()),
             );
             return res;
         }
@@ -184,7 +184,7 @@ impl Parser {
                     "Expected token type: {:?}, found {:?}",
                     tok_type, tok.token_type
                 )),
-                Some(tok.start.clone().advance(None)),
+                Some(tok.start.clone()),
                 None,
             );
         } else {
@@ -353,8 +353,8 @@ impl Parser {
         if self.current_tok().is_none() {
             res.failure(
                 syntax_error("Expected statement or '}'".to_string()),
-                Some(start.clone()),
-                Some(start.clone()),
+                Some(start.clone().advance(None)),
+                None,
             );
             return res;
         }
@@ -877,8 +877,8 @@ impl Parser {
             } else {
                 res.failure(
                     syntax_error("Expected ',' or ')', found EOF".to_owned()),
-                    Some(self.last_tok().unwrap().start.clone().advance(None)),
                     Some(self.last_tok().unwrap().end.clone().advance(None)),
+                    None,
                 );
                 return res;
             }
@@ -989,11 +989,12 @@ impl Parser {
             }
             _ => {
                 res.failure(
-                    syntax_error(
-                        "Expected number, identifier or '('".to_owned(),
-                    ),
-                    Some(tok.start),
-                    Some(tok.end),
+                    syntax_error(format!(
+                        "Expected number, identifier, keyword, string or '(' but found '{}'",
+                        tok.str()
+                    )),
+                    Some(tok.start.clone()),
+                    None,
                 );
             }
         };
@@ -1129,12 +1130,11 @@ impl Parser {
             parameters.push(self.parameter()?);
         }
 
-        let mut e = syntax_error("Expected ',' or ')', found EOF".to_owned());
-        e.set_pos(
-            self.last_tok().unwrap().start.clone(),
-            self.last_tok().unwrap().end.clone(),
-        );
-        Err(e)
+        Err(syntax_error("Expected ',' or ')', found EOF".to_owned())
+            .set_interval((
+                self.last_tok().unwrap().end.clone().advance(None),
+                Position::unknown(),
+            )))
     }
 
     fn fn_def_expr(

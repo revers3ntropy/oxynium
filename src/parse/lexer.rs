@@ -113,7 +113,7 @@ impl Lexer {
                             .to_string())],
                     None,
                     start,
-                    self.position.clone(),
+                    self.position.clone().advance(None),
                 ));
                 self.advance();
                 self.advance();
@@ -130,7 +130,8 @@ impl Lexer {
                 return Err(syntax_error(format!(
                     "Unexpected character '{}'",
                     c
-                )));
+                ))
+                .set_interval((self.position.clone(), self.position.clone())));
             }
         }
 

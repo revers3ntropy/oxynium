@@ -107,7 +107,7 @@ impl Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Token<{:?}>{{ '{}' @ {:?} - {:?} }}",
+            "Token<{:?}>{{ '{}' at {:?} to {:?} }}",
             self.token_type,
             self.str(),
             self.start,

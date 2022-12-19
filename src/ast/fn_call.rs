@@ -161,7 +161,7 @@ impl Node for FnCallNode {
                 .has_dec_with_id(&self.identifier.clone().literal.unwrap())
             {
                 return Err(unknown_symbol(format!(
-                    "undefined function {}",
+                    "Cannot find function `{}`",
                     self.identifier.clone().literal.unwrap()
                 ))
                 .set_interval(self.identifier.interval()));
