@@ -121,8 +121,6 @@ impl Parser {
 
         if self.tok_idx < self.tokens.len() {
             let current = self.current_tok().unwrap();
-            println!("current: {:?}", current);
-            println!("{:?} {:?}", current.start.clone(), current.end.clone());
             res.failure(
                 syntax_error(format!("Unexpected token {:?}", current.str())),
                 Some(current.start.clone()),
@@ -1172,8 +1170,9 @@ impl Parser {
                             identifier.clone().literal.unwrap()
                         )),
                         Some(self.last_tok().unwrap().start),
-                        Some(self.last_tok().unwrap().end),
+                        Some(self.current_tok().unwrap().end),
                     );
+                    return res;
                 }
             }
         }
