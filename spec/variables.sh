@@ -159,6 +159,30 @@ expect '1' '
     print(f().str());
 '
 
+expect '1' '
+    fn main() {
+        let mut a: Int = 0;
+        a = 1;
+        print(a.str());
+    };
+'
+expect_err 'TypeError' '
+    fn main() {
+        let a: Int = "";
+    };
+'
+expect_err 'TypeError' '
+    fn main() {
+        let mut a: Int = "";
+    };
+'
+expect_err 'TypeError' '
+    fn main() {
+        let mut a: Int = 0;
+        a = ""
+    };
+'
+
 
 describe 'Invalid Variable Names'
 

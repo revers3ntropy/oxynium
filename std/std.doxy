@@ -22,3 +22,9 @@ extern fn print(msg: Str): Void;
 extern fn print_nl(): Void;
 extern fn exit(code: Int = 0): Void;
 extern fn input(prompt: Str = "", buffer_size: Int = 1000): Str;
+
+// primitive Ptr {
+//     fn deref(self): Int {
+//
+//     }
+// }

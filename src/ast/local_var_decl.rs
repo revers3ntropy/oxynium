@@ -1,6 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{syntax_error, Error};
+use crate::error::{syntax_error, Error, type_error};
+use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
@@ -12,6 +13,7 @@ pub struct LocalVarNode {
     pub value: MutRc<dyn Node>,
     pub mutable: bool,
     pub stack_offset: usize,
+    pub type_annotation: Option<MutRc<dyn Node>>,
 }
 
 impl LocalVarNode {
@@ -58,8 +60,24 @@ impl Node for LocalVarNode {
             ))
             .set_interval(self.identifier.interval()));
         }
-        let (type_, _) = self.value.borrow_mut().type_check(ctx.clone())?;
+        let (mut value_type, _) = self.value.borrow_mut().type_check(ctx.clone())?;
         self.stack_offset = ctx.borrow_mut().get_new_local_var_offset();
+
+        if self.type_annotation.is_some() {
+            let type_annotation = self.type_annotation.as_ref().unwrap();
+            let (type_annotation_type, _) =
+                type_annotation.borrow_mut().type_check(ctx.clone())?;
+            if !type_annotation_type.borrow().contains(value_type.clone()) {
+                return Err(type_error(format!(
+                    "Cannot assign value of type '{}' to variable '{}' of type '{}'",
+                    value_type.borrow().str(),
+                    self.id(),
+                    type_annotation_type.borrow().str()
+                ))
+                .set_interval(self.pos()));
+            }
+            value_type = type_annotation_type;
+        }
 
         ctx.borrow_mut().declare(SymbolDec {
             name: self.id(),
@@ -69,10 +87,10 @@ impl Node for LocalVarNode {
             require_init: true,
             is_defined: true,
             is_param: false,
-            type_: type_.clone(),
+            type_: value_type.clone(),
             position: self.pos()
         })?;
-        Ok((type_.clone(), None))
+        Ok((get_type!(ctx, "Void"), None))
     }
 
     fn pos(&mut self) -> Interval {

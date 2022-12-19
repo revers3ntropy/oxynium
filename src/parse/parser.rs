@@ -628,16 +628,21 @@ impl Parser {
 
         let name = name_tok.literal.as_ref().unwrap().clone();
 
+        let mut type_annotation = None;
+
         if self.current_matches(TokenType::Colon, None) {
             self.advance(&mut res);
 
             let type_ = res.register(self.type_expr());
             ret_on_err!(res);
+            type_annotation = Some(type_.unwrap());
+        }
 
+        if !self.current_matches(TokenType::Equals, None) {
             if !mutable {
                 res.failure(
                     syntax_error(
-                        "Cannot declare uninitialsied local constant"
+                        "Cannot declare uninitialized local constant"
                             .to_string(),
                     ),
                     Some(start),
@@ -646,9 +651,18 @@ impl Parser {
                 return res;
             }
 
+            if type_annotation.is_none() {
+                res.failure(
+                    syntax_error("Expected type annotation".to_string()),
+                    Some(start),
+                    Some(self.current_tok().unwrap().end.clone()),
+                );
+                return res;
+            }
+
             res.success(new_mut_rc(EmptyLocalVarNode {
                 identifier: name,
-                type_: type_.unwrap(),
+                type_: type_annotation.unwrap(),
                 stack_offset: 0,
                 position: (start, self.last_tok().unwrap().end.clone()),
             }));
@@ -664,6 +678,7 @@ impl Parser {
             identifier: name_tok,
             value: expr.unwrap(),
             mutable,
+            type_annotation,
             stack_offset: 0, // overridden
         }));
         res

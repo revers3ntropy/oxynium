@@ -38,6 +38,13 @@ pub const ANON_PREFIX: &str = "_$_";
 pub const STD_ASM: &str = include_str!("../../std/std.asm");
 pub const STD_DATA_ASM: &str = include_str!("../../std/std-data.asm");
 
+#[macro_export]
+macro_rules! get_type {
+    ($ctx:expr, $name:expr) => {
+        $ctx.borrow_mut().get_dec_from_id($name)?.type_.clone()
+    };
+}
+
 // (type of result of node, type of returned values from node and children)
 pub type TypeCheckRes = (MutRc<dyn Type>, Option<MutRc<dyn Type>>);
 
@@ -50,9 +57,10 @@ pub trait Node: Debug {
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
         Ok((
-            ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),
+            get_type!(ctx, "Void"),
             None,
         ))
     }
     fn pos(&mut self) -> Interval;
 }
+

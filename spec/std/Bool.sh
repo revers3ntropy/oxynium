@@ -31,6 +31,3 @@ expect 'false' '
     };
     f();
 '
-
-
-describe 'Bool'
