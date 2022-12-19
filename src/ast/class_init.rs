@@ -176,7 +176,8 @@ impl Node for ClassInitNode {
                     .map(|s| s.clone())
                     .collect::<Vec<String>>()
                     .join(", ")
-            )).set_interval(self.pos()));
+            ))
+            .set_interval(self.pos()));
         }
 
         if missing.len() > 0 {
@@ -187,7 +188,8 @@ impl Node for ClassInitNode {
                     .map(|s| s.clone())
                     .collect::<Vec<String>>()
                     .join(", ")
-            )).set_interval(self.pos()));
+            ))
+            .set_interval(self.pos()));
         }
 
         for field in fields {

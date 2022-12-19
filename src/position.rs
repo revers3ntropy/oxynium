@@ -50,7 +50,11 @@ impl Position {
 
 impl Debug for Position {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}:{}:{}(idx:{})", self.file, self.line, self.col, self.idx)
+        write!(
+            f,
+            "{}:{}:{}(idx:{})",
+            self.file, self.line, self.col, self.idx
+        )
     }
 }
 

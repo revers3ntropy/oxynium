@@ -3,7 +3,6 @@ use crate::ast::bool::BoolNode;
 use crate::ast::class_declaration::{ClassDeclarationNode, ClassField};
 use crate::ast::class_field_access::FieldAccessNode;
 use crate::ast::class_init::ClassInitNode;
-use crate::ast::class_method_call::ClassMethodCallNode;
 use crate::ast::empty_exec_root::EmptyExecRootNode;
 use crate::ast::empty_global_const_decl::EmptyGlobalConstNode;
 use crate::ast::empty_local_var_decl::EmptyLocalVarNode;
@@ -185,10 +184,7 @@ impl Parser {
                 "Expected token type: {:?}, found {:?}",
                 tok_type, tok.token_type
             ));
-            res.failure(err,
-                        Some(tok.start.clone().advance(None)),
-                        None
-            );
+            res.failure(err, Some(tok.start.clone().advance(None)), None);
         } else {
             res.failure(
                 syntax_error(format!("Expected {:?}, found EOF", tok_type)),
@@ -777,9 +773,9 @@ impl Parser {
         }
         consume!(CloseParen, self, res);
 
-        res.success(new_mut_rc(ClassMethodCallNode {
-            base,
-            name: name_tok,
+        res.success(new_mut_rc(FnCallNode {
+            object: Some(base),
+            identifier: name_tok,
             args,
             position: (start, self.last_tok().unwrap().end.clone()),
             // default value which is always overridden
@@ -841,7 +837,8 @@ impl Parser {
             if t.token_type == TokenType::CloseParen {
                 self.advance(&mut res);
                 res.success(new_mut_rc(FnCallNode {
-                    identifier: fn_identifier_tok.literal.unwrap(),
+                    object: None,
+                    identifier: fn_identifier_tok,
                     args: Vec::new(),
                     // default value always overridden
                     use_return_value: true,
@@ -888,7 +885,8 @@ impl Parser {
         consume!(CloseParen, self, res);
 
         res.success(new_mut_rc(FnCallNode {
-            identifier: fn_identifier_tok.literal.unwrap(),
+            object: None,
+            identifier: fn_identifier_tok,
             args,
             // default value always overridden
             use_return_value: true,

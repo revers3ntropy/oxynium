@@ -11,7 +11,6 @@ pub mod r#break;
 pub mod class_declaration;
 pub mod class_field_access;
 pub mod class_init;
-pub mod class_method_call;
 pub mod r#continue;
 pub mod empty_exec_root;
 pub mod empty_global_const_decl;
