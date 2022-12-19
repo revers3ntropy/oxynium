@@ -1,8 +1,10 @@
 use crate::ast::{STD_ASM, STD_DATA_ASM};
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{syntax_error, Error};
+use crate::error::{syntax_error, Error, type_error};
 use crate::position::Interval;
+use crate::types::function::FnType;
+use crate::types::Type;
 use crate::util::MutRc;
 
 #[derive(Debug)]
@@ -13,8 +15,9 @@ pub struct ExecRootNode {
 impl Node for ExecRootNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         let mut res = self.statements.borrow_mut().asm(ctx.clone())?;
-        let mut_ref = ctx.borrow_mut();
-        let (data_decls, text_decls) = mut_ref.get_definitions();
+        let ctx_ref = ctx.borrow_mut();
+
+        let (data_decls, text_decls) = ctx_ref.get_definitions();
         let data = data_decls
             .iter()
             .map(|k| format!("{} {}", k.name, k.data.as_ref().unwrap()))
@@ -36,7 +39,7 @@ impl Node for ExecRootNode {
             .collect::<Vec<String>>()
             .join("\n");
 
-        if mut_ref.exec_mode == 1 {
+        if ctx_ref.exec_mode == 1 {
             return Ok(format!(
                 "
                 section	.note.GNU-stack
@@ -48,7 +51,8 @@ impl Node for ExecRootNode {
             ));
         }
 
-        let has_main = text_decls.iter().find(|k| k.name == "main").is_some();
+        let main_decl_option = text_decls.iter().find(|k| k.name == "main");
+        let has_main = main_decl_option.is_some();
 
         if has_main && res != "" {
             return Err(syntax_error(format!(
@@ -58,6 +62,28 @@ impl Node for ExecRootNode {
 
         if has_main {
             res = "call _$_oxy_main".to_string();
+
+            let main_decl = ctx_ref.get_dec_from_id("main")?;
+            let main_type = main_decl.type_.clone();
+            let main_signature = FnType {
+                name: "main".to_string(),
+                ret_type: ctx_ref.get_dec_from_id("Void")?.type_.clone(),
+                parameters: vec![],
+            };
+
+            if !main_signature.contains(main_type) {
+                return Err(type_error(format!(
+                    "main function must have signature 'main(): Void'"
+                )));
+            }
+        }
+
+        if let Ok(main_fn) = ctx_ref.get_dec_from_id("main") {
+            if !has_main {
+                return Err(syntax_error(format!(
+                    "if main function is declared it must be defined"
+                )).set_interval(main_fn.position.clone()));
+            }
         }
 
         Ok(format!(
@@ -78,7 +104,7 @@ impl Node for ExecRootNode {
                 push 0
                 call exit
         ",
-            mut_ref.std_asm_path
+            ctx_ref.std_asm_path
         ))
     }
 

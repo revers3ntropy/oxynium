@@ -355,3 +355,25 @@ expect '16' '
         print(s.str());
     };
 '
+expect_err 'TypeError' '
+    fn main(a: Int) {}
+'
+expect_err 'TypeError' '
+    fn main() {
+        return "hi"
+    }
+'
+expect_err 'TypeError' '
+    fn main() {
+        return 1;
+    };
+'
+expect_err 'TypeError' '
+    fn main(): Str {};
+'
+expect_err 'SyntaxError' '
+    fn main();
+'
+expect_err 'SyntaxError' '
+    extern fn main();
+'

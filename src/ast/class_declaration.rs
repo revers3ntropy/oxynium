@@ -63,7 +63,7 @@ impl Node for ClassDeclarationNode {
             is_defined: true,
             is_param: false,
             type_: this_type.clone(),
-
+            position: self.pos()
         })?;
 
         for field in self.fields.iter() {

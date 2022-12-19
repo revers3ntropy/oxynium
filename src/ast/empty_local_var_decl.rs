@@ -48,6 +48,7 @@ impl Node for EmptyLocalVarNode {
             is_defined: false,
             is_param: false,
             type_: type_.clone(),
+            position: self.pos()
         })?;
         Ok((type_.clone(), None))
     }

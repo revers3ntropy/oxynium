@@ -309,3 +309,19 @@ expect '12' '
     }
 '
 
+a="
+describe 'Static Functions'
+
+expect 'hi' '
+    class S {
+        msg: Str,
+        fn f(self): Str {
+            return self.msg;
+        }
+    }
+    fn main () {
+        let s = new S { msg: \"hi\" };
+        print(S.f(s));
+    }
+'
+"

@@ -70,6 +70,7 @@ impl Node for LocalVarNode {
             is_defined: true,
             is_param: false,
             type_: type_.clone(),
+            position: self.pos()
         })?;
         Ok((type_.clone(), None))
     }

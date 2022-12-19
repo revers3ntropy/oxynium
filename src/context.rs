@@ -190,7 +190,15 @@ impl Context {
         self.definitions.insert(name.clone(), symbol);
         Ok(name.clone())
     }
-
+    pub fn get_def_from_id(&self, id: &str) -> Result<SymbolDef, Error> {
+        if self.definitions.get(id).is_some() {
+            Ok(self.definitions.get(id).unwrap().clone())
+        } else if self.parent.is_some() {
+            self.parent.as_ref().unwrap().borrow().get_def_from_id(id)
+        } else {
+            Err(type_error(format!("Symbol {} is not defined", id)))
+        }
+    }
     pub fn get_definitions(&self) -> (Vec<&SymbolDef>, Vec<&SymbolDef>) {
         let mut data = Vec::new();
         let mut text = Vec::new();

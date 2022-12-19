@@ -57,11 +57,15 @@ _$_allocate: ; [size: int, cb: *] => *int
     push rbp
     mov rbp, rsp
 
+    xor rax, rax
+
     mov rdi, qword [rbp + 16]
+    cmp rdi, 0
+    jle _$_allocate_end
     call malloc WRT ..plt
 
-    cmp rax, 0
-    je _$_allocate_error
+    test rax, rax ; if rax is nullptr, fail
+    jz _$_allocate_error
 
     mov rdi, rax
     mov rsi, 0

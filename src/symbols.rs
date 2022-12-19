@@ -1,3 +1,4 @@
+use crate::position::Interval;
 use crate::types::Type;
 use crate::util::MutRc;
 
@@ -6,7 +7,7 @@ const RESERVED_KEYWORDS: [&str; 53] = [
     "const", "let", "mut", "var", "type", "fn", "extern", "class", "struct",
     "enum", "trait", "impl", "use", "as", "mod", "import", "export", "is",
     "async", "await", "yield", "with", "unless", "pass", "case", "match",
-    "compl", "del", "do", "inline", "new", "priv", "pub", "abstract",
+    "comp", "del", "do", "inline", "new", "priv", "pub", "abstract",
     "virtual", "try", "catch", "static", "except", "macro", "typeof", "true",
     "false", "primitive"
 ];
@@ -35,6 +36,7 @@ pub struct SymbolDec {
     pub require_init: bool,
     pub is_defined: bool,
     pub is_param: bool,
+    pub position: Interval,
 }
 
 impl SymbolDec {

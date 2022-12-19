@@ -56,6 +56,7 @@ impl Node for EmptyGlobalConstNode {
             is_defined: false,
             is_param: false,
             type_,
+            position: self.pos()
         })?;
         Ok((
             ctx.borrow_mut().get_dec_from_id("Void")?.type_.clone(),
