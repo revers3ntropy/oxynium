@@ -220,8 +220,8 @@ Int.str: ; [number: int, cb: *] => char*
 
         push r11 ; save r11
         mov rdi, r14
+        add rdi, 2 ; space for '-' sign and null terminator
         imul rdi, 8
-        add rdi, 16 ; space for '-' sign and null terminator
         call malloc WRT ..plt
         mov r12, rax ; r12 = string pointer
         pop r11
@@ -234,7 +234,7 @@ Int.str: ; [number: int, cb: *] => char*
 
         _$_Int.str_end_print_negative:
             mov qword [r12], '-'
-            add r13, 8
+            mov r13, 8
 
         _$_Int.str_end_print_loop:
                 ; print digits in reverse of reverse order

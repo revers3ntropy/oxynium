@@ -29,7 +29,8 @@ impl Node for FieldAccessNode {
             "
             {}
             pop rax
-            push qword [rax + {offset}]
+            mov rdx, qword [rax + {offset}]
+            push rdx
         ",
             self.base.borrow_mut().asm(ctx.clone())?,
         ))

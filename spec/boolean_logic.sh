@@ -37,6 +37,7 @@ expect_err 'TypeError' 'false || false || ""'
 expect_err 'TypeError' 'false || 1'
 expect_err 'TypeError' '1 || false'
 
+
 describe 'Boolean Not'
 
 expect_expr_bool 'false' '!true'

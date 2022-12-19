@@ -47,14 +47,19 @@ expect_err 'SyntaxError' '
     }
 '
 
+
 describe 'Class Instantiation'
 
 expect '' '
+    class S { x: Int }
+    new S { x: 1 };
+'
+expect '' '
     class S {
         x: Int,
-        y: Int,
+        y: Bool,
     };
-    new S { x: 1, y: 2 };
+    new S { x: 1, y: true };
 '
 expect_err 'TypeError' '
     class S { x: Int };
