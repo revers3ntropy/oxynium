@@ -161,10 +161,13 @@ fn main() -> std::io::Result<()> {
 
     if !args.eval.is_empty() {
         let args_ = args.clone();
-        let res = compile_and_assemble(args.eval, "CLI".to_owned(), &args_);
+        let res = compile_and_assemble(args.eval.clone(), "CLI".to_owned(), &args_);
         if res.is_err() {
-            let _ =
-                e.write(format!("{}\n", res.err().unwrap().str()).as_bytes());
+            let _ = e.write(format!(
+                "{}\n",
+                res.err().unwrap()
+                    .str_pretty(args.eval, "CLI".to_string())
+            ).as_bytes());
         }
         return Ok(());
     }
@@ -181,10 +184,13 @@ fn main() -> std::io::Result<()> {
         let mut input = String::new();
         input_file.read_to_string(&mut input)?;
 
-        let res = compile_and_assemble(input, args.input.clone(), &args);
+        let res = compile_and_assemble(input.clone(), args.input.clone(), &args);
         if res.is_err() {
-            let _ =
-                e.write(format!("{}\n", res.err().unwrap().str()).as_bytes());
+            let _ = e.write(format!(
+                    "{}\n",
+                    res.err().unwrap()
+                        .str_pretty(input, args.input.clone())
+                ).as_bytes());
         }
         return Ok(());
     }

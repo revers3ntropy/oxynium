@@ -44,6 +44,70 @@ impl Error {
             )
         }
     }
+
+    pub fn str_pretty(&self, source_code: String, file_name: String) -> String {
+        let mut out = format!("{}:\n{}\n", self.name, self.message);
+        out.push('\n');
+        out.push('\n');
+
+        let lines: Vec<&str> = source_code.split('\n').collect();
+
+        out.push_str(&format!(
+            "'{}' lines {}-{}:\n",
+            file_name,
+            self.start.line + 1,
+            self.end.line + 1
+        ));
+
+        let mut line_idx = self.start.line as usize;
+        let mut is_first_line = true;
+        let mut is_last_line = false;
+        for line in self.start.line..self.end.line + 1 {
+            let line = lines[line as usize];
+            if line_idx == self.end.line as usize {
+                is_last_line = true;
+            }
+
+            let pre_line = format!("  {} | ", line_idx + 1);
+            out.push_str(pre_line.as_str());
+            out.push_str(line);
+            out.push('\n');
+            if is_first_line {
+                for _ in 0..self.start.col + (pre_line.len() as i64) {
+                    out.push(' ');
+                }
+                if self.end.line == line_idx as i64 {
+                    for _ in self.start.col..self.end.col {
+                        out.push('^');
+                    }
+                } else {
+                    for _ in self.start.col..line.len() as i64 {
+                        out.push('^');
+                    }
+                }
+
+            } else if is_last_line {
+                for _ in 0..pre_line.len() {
+                    out.push(' ');
+                }
+                for _ in 0..self.end.col+1 {
+                    out.push('^');
+                }
+            } else { // middle line
+                for _ in 0..pre_line.len() {
+                    out.push(' ');
+                }
+                for _ in 0..line.len() {
+                    out.push('^');
+                }
+            }
+            out.push('\n');
+            line_idx += 1;
+            is_first_line = false;
+        }
+
+        out
+    }
 }
 
 pub fn syntax_error(message: String) -> Error {
