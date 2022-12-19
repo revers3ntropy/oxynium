@@ -42,6 +42,10 @@ impl Position {
             format!("'{}' {}:{}", self.file, self.line + 1, self.col + 1)
         }
     }
+
+    pub fn is_unknown(&self) -> bool {
+        self.idx == -2
+    }
 }
 
 impl Debug for Position {

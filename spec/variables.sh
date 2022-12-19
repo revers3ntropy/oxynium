@@ -133,7 +133,7 @@ expect '5' '
     };
     print(f(2).str());
 '
-expect_err 'UnknownSymbolError' '
+expect_err 'UnknownSymbol' '
     fn f(): Int {
         return a;
         let a = 5;

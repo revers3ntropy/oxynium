@@ -29,13 +29,13 @@ expect '' '
         class C;
     }
 '
-expect_err 'UnknownSymbolError' '
+expect_err 'UnknownSymbol' '
     fn main () {
         class C
     }
     fn f(a: C);
 '
-expect_err 'UnknownSymbolError' '
+expect_err 'UnknownSymbol' '
     fn f(a: C);
     fn main () {
         class C
@@ -221,7 +221,7 @@ expect 'hello world' '
     new A.f();
     new B.f();
 '
-expect_err 'UnknownSymbolError' 'new s'
+expect_err 'UnknownSymbol' 'new s'
 expect_err 'SyntaxError' 'new 1'
 expect_err 'SyntaxError' 'new ""'
 expect_err 'SyntaxError' 'new new C'

@@ -1,6 +1,6 @@
 use crate::args::{get_args_cmd, get_cli_args, Args};
 use crate::context::Context;
-use crate::error::{io_error, Error};
+use crate::error::{io_error, Error, arg_error};
 use crate::parse::lexer::Lexer;
 use crate::parse::parser::Parser;
 use crate::post_process::format_asm::post_process;
@@ -138,24 +138,18 @@ fn print_usage() {
 }
 
 fn main() -> std::io::Result<()> {
-    let mut e = std::io::stderr();
-
     let args = get_cli_args();
 
     if !args.input.is_empty() && !args.eval.is_empty() {
-        let _ = e.write(
-            "Cannot specify both 'input' and 'eval' options\n".as_bytes(),
-        );
+        arg_error("Cannot specify both 'input' and 'eval' options\n")
+            .print_stderr();
         return Ok(());
     }
     if args.exec_mode != 1 && !Path::new(&args.std_path).exists() {
-        let _ = e.write(
-            format!(
-                "STD file '{}' does not exist or is not accessible\n",
-                args.std_path
-            )
-            .as_bytes(),
-        );
+        io_error(format!(
+            "STD file '{}' does not exist or is not accessible\n",
+            args.std_path
+        )).print_stderr();
         return Ok(());
     }
 
@@ -163,20 +157,16 @@ fn main() -> std::io::Result<()> {
         let args_ = args.clone();
         let res = compile_and_assemble(args.eval.clone(), "CLI".to_owned(), &args_);
         if res.is_err() {
-            let _ = e.write(format!(
-                "{}\n",
-                res.err().unwrap()
-                    .str_pretty(args.eval, "CLI".to_string())
-            ).as_bytes());
+            res.err().unwrap()
+                    .pretty_print_stderr(args.eval, "CLI".to_string())
         }
         return Ok(());
     }
 
     if !args.input.is_empty() {
         if !Path::new(args.input.as_str()).exists() {
-            let _ = e.write(
-                format!("Path '{}' doesn't exist\n", args.input).as_bytes(),
-            );
+            io_error(format!("Path '{}' doesn't exist\n", args.input))
+                .print_stderr();
             return Ok(());
         }
 
@@ -186,11 +176,8 @@ fn main() -> std::io::Result<()> {
 
         let res = compile_and_assemble(input.clone(), args.input.clone(), &args);
         if res.is_err() {
-            let _ = e.write(format!(
-                    "{}\n",
-                    res.err().unwrap()
-                        .str_pretty(input, args.input.clone())
-                ).as_bytes());
+            res.err().unwrap()
+                        .pretty_print_stderr(input, args.input.clone())
         }
         return Ok(());
     }
