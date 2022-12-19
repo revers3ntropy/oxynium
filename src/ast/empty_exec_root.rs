@@ -1,5 +1,5 @@
 use crate::ast::Node;
-use crate::ast::STD_ASM;
+use crate::ast::{STD_ASM, STD_DATA_ASM};
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
@@ -22,6 +22,8 @@ impl Node for EmptyExecRootNode {
             Ok(format!(
                 "
                 section	.note.GNU-stack
+                section .data
+                    {STD_DATA_ASM}
                 section .text
                     global main
                     {STD_ASM}

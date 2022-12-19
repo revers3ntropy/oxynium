@@ -1,4 +1,4 @@
-    extern malloc, _read
+    extern malloc, _read, memset
 
 _$_print_digit: ; [number: int, cb: *]  => Void
     push rbp
@@ -36,35 +36,49 @@ _$_clear_memory: ; [start: *, size: int, cb: *] => Void
     push rbp
     mov rbp, rsp
 
-    mov rsi, rbp
-    add rsi, 16 ; rsi points to size
+    mov r15, qword [rbp + 24] ; r15 = start
+    mov r14, qword [rbp + 16]
+    add r14, r15 ; r14 = end
 
-    mov rdx, rbp
-    add rdx, 24 ; rdx points to start
+    _$_clear_memory_loop:
+        cmp r15, r14
+        jge _$_clear_memory_end
 
-    ; set up syscall
-    mov rax, 9
-    mov rdi, 0
+        ;mov byte [r15], 0
+        add r15, 1
+        jmp _$_clear_memory_loop
 
-    syscall
+    _$_clear_memory_end:
+        mov rsp, rbp
+        pop rbp
+        ret
 
-    mov rsp, rbp
-    pop rbp
-    ret
-
-_$_malloc: ; [size: int, cb: *] => *int
+_$_allocate: ; [size: int, cb: *] => *int
     push rbp
     mov rbp, rsp
 
-    mov rdi, qword [rbp+16]
+    mov rdi, qword [rbp + 16]
     call malloc WRT ..plt
 
-    push rax
-    push qword [rbp+16]
-    call _$_clear_memory
-    pop rax
+    cmp rax, 0
+    je _$_allocate_error
 
-    ret
+    mov rdi, rax
+    mov rsi, 0
+    mov rdx, qword [rbp + 16]
+    call memset WRT ..plt
+
+    _$_allocate_end:
+        mov rsp, rbp
+        pop rbp
+        ret
+
+    _$_allocate_error:
+        push _$_alloc_err_msg
+        call print
+        pop rax
+        jmp _$_allocate_end
+
 
 print: ; [string: char*, cb: *] => Void
        ; prints characters until null byte is reached

@@ -1,4 +1,4 @@
-use crate::ast::STD_ASM;
+use crate::ast::{STD_ASM, STD_DATA_ASM};
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{syntax_error, Error};
@@ -26,7 +26,7 @@ impl Node for ExecRootNode {
             .map(|k| {
                 if k.name == "main" {
                     format!(
-                        "_$_oxy_main: \n{}\npush 0\ncall exit",
+                        "_$_oxy_main: \n{}",
                         k.text.as_ref().unwrap()
                     )
                 } else {
@@ -65,6 +65,7 @@ impl Node for ExecRootNode {
             %include \"{}\"
             section	.note.GNU-stack
             section .data
+                {STD_DATA_ASM}
                 {data}
             section .text
                 global main

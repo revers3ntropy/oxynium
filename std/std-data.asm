@@ -1,0 +1,1 @@
+_$_alloc_err_msg dq "Failed to allocate memory", 0

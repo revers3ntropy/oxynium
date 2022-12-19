@@ -65,8 +65,9 @@ impl Node for ClassInitNode {
 
         if fields.len() > 0 {
             asm.push_str(&format!("
-                mov rdi, {}
-                call malloc WRT ..plt
+                push {}
+                call _$_allocate
+                pop rcx
             ",
                 fields.len() * 8
             ));

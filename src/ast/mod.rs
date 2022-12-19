@@ -36,6 +36,7 @@ pub mod unary_op;
 
 pub const ANON_PREFIX: &str = "_$_";
 pub const STD_ASM: &str = include_str!("../../std/std.asm");
+pub const STD_DATA_ASM: &str = include_str!("../../std/std-data.asm");
 
 // (type of result of node, type of returned values from node and children)
 pub type TypeCheckRes = (MutRc<dyn Type>, Option<MutRc<dyn Type>>);
