@@ -141,7 +141,7 @@ impl Node for FnDeclarationNode {
                 identifier,
                 type_,
                 default_value,
-                position
+                position,
             } = self.params[self.params.len() - i - 1].clone();
 
             if !can_declare_with_identifier(&identifier) {
@@ -178,7 +178,7 @@ impl Node for FnDeclarationNode {
                     name: identifier.clone(),
                     type_: param_type.clone(),
                     default_value,
-                    position
+                    position,
                 },
             );
 

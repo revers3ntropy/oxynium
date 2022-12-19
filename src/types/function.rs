@@ -1,8 +1,8 @@
 use crate::ast::Node;
+use crate::position::Interval;
 use crate::types::Type;
 use crate::util::MutRc;
 use std::fmt;
-use crate::position::Interval;
 
 #[derive(Clone, Debug)]
 pub struct FnParamType {

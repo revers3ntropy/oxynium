@@ -153,6 +153,7 @@ impl Lexer {
     fn make_identifier(&mut self) -> Token {
         let mut identifier = String::new();
         let start = self.position.clone();
+
         while self.current_char.is_some()
             && IDENTIFIER_CHARS.contains(self.current_char.unwrap())
         {
@@ -163,7 +164,7 @@ impl Lexer {
             TokenType::Identifier,
             Some(identifier),
             start,
-            self.position.clone(),
+            self.position.clone().reverse(None),
         )
     }
 

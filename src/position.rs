@@ -39,6 +39,18 @@ impl Position {
         self.clone()
     }
 
+    pub fn reverse(&mut self, current_char: Option<char>) -> Position {
+        self.idx -= 1;
+        self.col -= 1;
+
+        if current_char.is_some() && current_char.unwrap() == '\n' {
+            self.line -= 1;
+            self.col = 0;
+        }
+
+        self.clone()
+    }
+
     pub fn str(&self) -> String {
         if self.idx == -2 {
             "<unknown>".to_string()

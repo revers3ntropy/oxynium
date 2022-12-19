@@ -179,12 +179,14 @@ impl Parser {
                 self.advance(res);
                 return tok;
             }
-
-            let err = syntax_error(format!(
-                "Expected token type: {:?}, found {:?}",
-                tok_type, tok.token_type
-            ));
-            res.failure(err, Some(tok.start.clone().advance(None)), None);
+            res.failure(
+                syntax_error(format!(
+                    "Expected token type: {:?}, found {:?}",
+                    tok_type, tok.token_type
+                )),
+                Some(tok.start.clone().advance(None)),
+                None,
+            );
         } else {
             res.failure(
                 syntax_error(format!("Expected {:?}, found EOF", tok_type)),
@@ -564,8 +566,8 @@ impl Parser {
             if type_.is_none() {
                 res.failure(
                     syntax_error("Expected type annotation".to_string()),
-                    Some(self.tokens[self.tok_idx - 1].start.clone()),
-                    Some(self.tokens[self.tok_idx - 1].end.clone()),
+                    Some(self.last_tok().unwrap().start.clone().advance(None)),
+                    None,
                 );
                 return res;
             }
@@ -582,8 +584,8 @@ impl Parser {
         if self.current_tok().is_none() {
             res.failure(
                 syntax_error("Unexpected EOF".to_string()),
-                Some(self.last_tok().unwrap().start.clone()),
-                Some(self.last_tok().unwrap().end.clone()),
+                Some(self.last_tok().unwrap().end.clone().advance(None)),
+                None,
             );
             return res;
         }
@@ -875,8 +877,8 @@ impl Parser {
             } else {
                 res.failure(
                     syntax_error("Expected ',' or ')', found EOF".to_owned()),
-                    Some(fn_identifier_tok.start),
-                    Some(fn_identifier_tok.end),
+                    Some(self.last_tok().unwrap().start.clone().advance(None)),
+                    Some(self.last_tok().unwrap().end.clone().advance(None)),
                 );
                 return res;
             }
@@ -918,8 +920,8 @@ impl Parser {
         if token_option.is_none() {
             res.failure(
                 syntax_error("Unexpected EOF".to_string()),
-                Some(self.tokens[self.tok_idx - 1].start.clone()),
-                Some(self.tokens[self.tok_idx - 1].end.clone()),
+                Some(self.last_tok().unwrap().end.clone().advance(None)),
+                None,
             );
             return res;
         }
@@ -1201,7 +1203,7 @@ impl Parser {
                         },
                     }),
                     default_value: None,
-                    position: Position::unknown_interval()
+                    position: Position::unknown_interval(),
                 },
             );
         }

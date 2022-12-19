@@ -1,7 +1,7 @@
 use crate::ast::class_declaration::method_id;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{unknown_symbol, Error, type_error};
+use crate::error::{type_error, unknown_symbol, Error};
 use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::{Interval, Position};
@@ -68,7 +68,7 @@ impl Node for FnCallNode {
             if self.object.is_some() {
                 method_id(
                     self.class_id(ctx.clone()),
-                    self.identifier.clone().literal.unwrap()
+                    self.identifier.clone().literal.unwrap(),
                 )
             } else {
                 self.identifier.clone().literal.unwrap()
@@ -97,18 +97,20 @@ impl Node for FnCallNode {
         let fn_type = if let Some(obj) = self.object.clone() {
             let mut calling_through_instance = true;
             // getting function type on method call
-            let (base_type_any, _) = obj.borrow_mut().type_check(ctx.clone())?;
+            let (base_type_any, _) =
+                obj.borrow_mut().type_check(ctx.clone())?;
             let mut base_type = base_type_any.borrow().as_class();
             if base_type.is_none() {
                 if let Some(type_type) = base_type_any.borrow().as_type_type() {
-                    let class_type = type_type.instance_type.borrow().as_class();
+                    let class_type =
+                        type_type.instance_type.borrow().as_class();
 
                     if class_type.is_none() {
                         return Err(type_error(format!(
                             "Cannot access methods statically for type '{}'",
                             type_type.str()
                         ))
-                            .set_interval(self.position.clone()));
+                        .set_interval(self.position.clone()));
                     }
 
                     // if the type is a TypeType,
@@ -125,20 +127,20 @@ impl Node for FnCallNode {
                         "Cannot access method of non-class type '{}'",
                         base_type_any.borrow_mut().str()
                     ))
-                        .set_interval(self.position.clone()));
+                    .set_interval(self.position.clone()));
                 }
             }
             let base_type = base_type.unwrap();
 
-            let method_type =
-                base_type.method_type(&self.identifier.clone().literal.unwrap());
+            let method_type = base_type
+                .method_type(&self.identifier.clone().literal.unwrap());
             if method_type.is_none() {
                 return Err(type_error(format!(
                     "Class '{}' does not have method '{}'",
                     base_type.str(),
                     self.identifier.clone().literal.unwrap(),
                 ))
-                    .set_interval(self.position.clone()));
+                .set_interval(self.position.clone()));
             }
 
             if calling_through_instance {
@@ -146,33 +148,38 @@ impl Node for FnCallNode {
                     name: "self".to_string(),
                     type_: base_type_any.clone(),
                     default_value: None,
-                    position: Position::unknown_interval()
+                    position: Position::unknown_interval(),
                 });
                 num_args += 1;
             }
 
             method_type.unwrap().borrow().as_fn().unwrap()
-
         } else {
             // getting function type on normal function call
-            if !ctx.borrow_mut().has_dec_with_id(&self.identifier.clone().literal.unwrap()) {
+            if !ctx
+                .borrow_mut()
+                .has_dec_with_id(&self.identifier.clone().literal.unwrap())
+            {
                 return Err(unknown_symbol(format!(
                     "undefined function {}",
                     self.identifier.clone().literal.unwrap()
                 ))
-                    .set_interval(self.identifier.interval()));
+                .set_interval(self.identifier.interval()));
             }
 
-            let fn_type_option = ctx.borrow_mut()
+            let fn_type_option = ctx
+                .borrow_mut()
                 .get_dec_from_id(&self.identifier.clone().literal.unwrap())
-                .type_.clone()
-                .borrow().as_fn();
+                .type_
+                .clone()
+                .borrow()
+                .as_fn();
             if fn_type_option.is_none() {
                 return Err(unknown_symbol(format!(
                     "'{}' is not a function",
                     self.identifier.clone().literal.unwrap()
                 ))
-                    .set_interval(self.identifier.interval()));
+                .set_interval(self.identifier.interval()));
             }
 
             fn_type_option.unwrap()
@@ -185,12 +192,15 @@ impl Node for FnCallNode {
                 name: "".to_string(),
                 type_: arg_type,
                 default_value: None,
-                position: arg.borrow_mut().pos()
+                position: arg.borrow_mut().pos(),
             });
         }
 
-        let required_params = fn_type.parameters.iter()
-            .filter(|a| a.default_value.is_none()).count();
+        let required_params = fn_type
+            .parameters
+            .iter()
+            .filter(|a| a.default_value.is_none())
+            .count();
 
         if args.len() < required_params {
             return Err(type_error(format!(

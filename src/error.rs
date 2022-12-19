@@ -53,7 +53,7 @@ impl Error {
 
         let lines: Vec<&str> = source_code.split('\n').collect();
 
-        let mut start = self.start.clone();
+        let start = self.start.clone();
         let mut end = self.end.clone();
 
         if end.is_unknown() {
@@ -76,8 +76,8 @@ impl Error {
             ));
 
             // to correctly show location of error with '^'s
-            start.idx -= 1;
-            start.col -= 1;
+            end.idx += 1;
+            end.col += 1;
         } else {
             out.push_str(&format!(
                 "{}--> '{}' {}:{} to {}:{}\n",
