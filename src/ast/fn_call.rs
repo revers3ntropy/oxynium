@@ -1,13 +1,13 @@
 use crate::ast::class_declaration::method_id;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{mismatched_types, unknown_symbol, Error, type_error};
+use crate::error::{unknown_symbol, Error, type_error};
 use crate::get_type;
 use crate::parse::token::Token;
-use crate::position::Interval;
-use crate::types::function::{FnParamType, FnType};
+use crate::position::{Interval, Position};
+use crate::types::function::FnParamType;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct FnCallNode {
@@ -146,6 +146,7 @@ impl Node for FnCallNode {
                     name: "self".to_string(),
                     type_: base_type_any.clone(),
                     default_value: None,
+                    position: Position::unknown_interval()
                 });
                 num_args += 1;
             }
@@ -159,7 +160,7 @@ impl Node for FnCallNode {
                     "undefined function {}",
                     self.identifier.clone().literal.unwrap()
                 ))
-                    .set_interval(self.position.clone()));
+                    .set_interval(self.identifier.interval()));
             }
 
             let fn_type_option = ctx.borrow_mut()
@@ -171,7 +172,7 @@ impl Node for FnCallNode {
                     "'{}' is not a function",
                     self.identifier.clone().literal.unwrap()
                 ))
-                    .set_interval(self.position.clone()));
+                    .set_interval(self.identifier.interval()));
             }
 
             fn_type_option.unwrap()
@@ -184,21 +185,47 @@ impl Node for FnCallNode {
                 name: "".to_string(),
                 type_: arg_type,
                 default_value: None,
+                position: arg.borrow_mut().pos()
             });
         }
 
-        let call_signature_type = new_mut_rc(FnType {
-            name: self.identifier.clone().literal.unwrap(),
-            ret_type: fn_type.ret_type.clone(),
-            parameters: args,
-        });
+        let required_params = fn_type.parameters.iter()
+            .filter(|a| a.default_value.is_none()).count();
 
-        if !fn_type.contains(call_signature_type.clone()) {
-            return Err(mismatched_types(
-                new_mut_rc(fn_type),
-                call_signature_type.clone(),
-            )
-            .set_interval(self.position.clone()));
+        if args.len() < required_params {
+            return Err(type_error(format!(
+                "Too few arguments to function '{}', expected {} but found only {}",
+                self.identifier.clone().literal.unwrap(),
+                required_params,
+                args.len()
+            ))
+                .set_interval(self.identifier.interval()));
+        }
+        if args.len() > fn_type.parameters.len() {
+            return Err(type_error(format!(
+                "Too many arguments to function '{}', expected only {} but found {}",
+                self.identifier.clone().literal.unwrap(),
+                fn_type.parameters.len(),
+                args.len()
+            ))
+                .set_interval(self.identifier.interval()));
+        }
+
+        for i in 0..args.len() {
+            if !fn_type.parameters[i]
+                .type_
+                .borrow()
+                .contains(args[i].type_.clone())
+            {
+                return Err(type_error(format!(
+                    "Argument {} to function '{}' is of type '{}' but expected type '{}'",
+                    i + 1,
+                    self.identifier.clone().literal.unwrap(),
+                    args[i].type_.borrow().str(),
+                    fn_type.parameters[i].type_.borrow().str()
+                ))
+                    .set_interval(args[i].position.clone()));
+            }
         }
 
         // fill out default arguments

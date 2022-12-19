@@ -2,12 +2,14 @@ use crate::ast::Node;
 use crate::types::Type;
 use crate::util::MutRc;
 use std::fmt;
+use crate::position::Interval;
 
 #[derive(Clone, Debug)]
 pub struct FnParamType {
     pub name: String,
     pub type_: MutRc<dyn Type>,
     pub default_value: Option<MutRc<dyn Node>>,
+    pub position: Interval,
 }
 impl FnParamType {
     fn str(&self) -> String {

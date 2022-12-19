@@ -23,6 +23,10 @@ impl Position {
         Position::new("".to_string(), -2, -2, -2)
     }
 
+    pub fn unknown_interval() -> Interval {
+        (Position::unknown(), Position::unknown())
+    }
+
     pub fn advance(&mut self, current_char: Option<char>) -> Position {
         self.idx += 1;
         self.col += 1;

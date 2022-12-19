@@ -1083,6 +1083,7 @@ impl Parser {
         let mut res = ParseResults::new();
 
         result_consume!(identifier = Identifier, self, res);
+        let start = self.last_tok().unwrap().start;
         result_consume!(Colon, self, res);
 
         let type_expr = res.register(self.type_expr());
@@ -1101,6 +1102,7 @@ impl Parser {
             identifier: identifier.literal.unwrap(),
             type_: type_expr.unwrap(),
             default_value,
+            position: (start, self.last_tok().unwrap().end.clone()),
         })
     }
 
@@ -1199,6 +1201,7 @@ impl Parser {
                         },
                     }),
                     default_value: None,
+                    position: Position::unknown_interval()
                 },
             );
         }

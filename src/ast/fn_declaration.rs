@@ -16,6 +16,7 @@ pub struct Parameter {
     pub identifier: String,
     pub type_: MutRc<dyn Node>,
     pub default_value: Option<MutRc<dyn Node>>,
+    pub position: Interval,
 }
 
 #[derive(Debug)]
@@ -140,6 +141,7 @@ impl Node for FnDeclarationNode {
                 identifier,
                 type_,
                 default_value,
+                position
             } = self.params[self.params.len() - i - 1].clone();
 
             if !can_declare_with_identifier(&identifier) {
@@ -176,6 +178,7 @@ impl Node for FnDeclarationNode {
                     name: identifier.clone(),
                     type_: param_type.clone(),
                     default_value,
+                    position
                 },
             );
 
