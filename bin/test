@@ -2,9 +2,11 @@
 
 GREEN="\033[0;32m"
 RED='\033[0;31m'
+ORANGE='\033[0;33m'
 NC='\033[0m'
 
 fails=0
+warnings=0
 tests=0
 
 current_spec_name=""
@@ -102,6 +104,24 @@ function test_failed() {
         printf "    Errors:   '%s'\n\n" "$errors"
     fi
 }
+function emit_warning() {
+    code="$1"
+    expected="$2"
+    output="$3"
+    info="$4"
+
+    warnings=$((warnings+1))
+
+    # shellcheck disable=SC2059
+    printf "${ORANGE}#${current_spec_num_tests}${NC}\n"
+    printf "   ${ORANGE} Warning: %s\n${NC}" "$info"
+    printf "    Executing: '%s'\n" "$code"
+    printf "    Expected:  '%s'\n" "$expected"
+    printf "    Got:       '%s'\n\n" "$output"
+    if [ "$errors" != "" ]; then
+        printf "    Errors:   '%s'\n\n" "$errors"
+    fi
+}
 
 function expect() {
     expected="$1"
@@ -134,7 +154,7 @@ function expect_err() {
     output_err="${split_arr[0]}"
 
     if [[ "$output" == *"Unknown error location!"* ]]; then
-        test_failed "$code" "$expected" "$output"
+        emit_warning "$code" "$expected" "$output" "Unknown error locations are bad"
     fi
 
     if [ "$expected" != "$output_err" ]; then
@@ -231,6 +251,11 @@ function results() {
     end=$(date +"%s.%3N")
     runtime=$(echo "$end - $start" | bc -l)
     echo "Tests ran in $runtime s"
+
+    if [ "$warnings" -gt 0 ]; then
+        # shellcheck disable=SC2059
+        printf "${ORANGE}  ${warnings} warnings${NC}\n"
+    fi
 
     if [ "$fails" -eq 0 ]; then
         # shellcheck disable=SC2059

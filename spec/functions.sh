@@ -4,8 +4,8 @@ expect '' 'fn a()'
 expect '' 'fn a(a: Int, b: Bool, c: Str)'
 expect '' 'fn a(): Void'
 expect '' 'fn a(a: Int): Str'
-expect_err 'SyntaxError' 'fn a(a): Str'
-expect_err 'SyntaxError' 'fn a(a)'
+expect_err 'TypeError' 'fn a(a): Str'
+expect_err 'TypeError' 'fn a(a)'
 expect_err 'SyntaxError' 'fn()'
 expect_err 'SyntaxError' 'fn 0()'
 expect_err 'SyntaxError' 'fn 0g()'
@@ -287,7 +287,7 @@ expect '44' '
     f(4);
 '
 expect 'true2hi3' '
-    fn f(a: Bool, b: Int = 2, c: Str = "hi"): Int {
+    fn f(a: Bool, b = 2, c: Str = "hi"): Int {
         print(a.str());
         print(b.str());
         print(c);
@@ -304,7 +304,6 @@ expect_err 'TypeError' '
 expect_err 'TypeError' '
     fn f(a: Int, b: Int = 1, c: Int) {};
 '
-
 expect_err 'SyntaxError' 'fn f(true: Bool) {}'
 expect_err 'SyntaxError' 'fn f(fn: Bool) {}'
 expect_err 'SyntaxError' 'fn f(while: Bool) {}'
@@ -374,6 +373,23 @@ expect_err 'TypeError' '
 expect_err 'SyntaxError' '
     fn main();
 '
+
+describe 'External Functions'
+
 expect_err 'SyntaxError' '
     extern fn main();
+'
+expect_err 'TypeError' '
+    extern fn print()
+'
+expect '' '
+    extern fn f();
+    extern fn g(p: Int, a: Str = "hi"): Str;
+'
+expect_err 'IoError' '
+    extern fn f();
+    f()
+'
+expect_err 'SyntaxError' '
+    extern fn f() {}
 '

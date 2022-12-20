@@ -3,6 +3,7 @@ use crate::context::Context;
 use crate::error::{arg_error, io_error, Error};
 use crate::parse::lexer::Lexer;
 use crate::parse::parser::Parser;
+use crate::position::Position;
 use crate::post_process::format_asm::post_process;
 use crate::util::MutRc;
 use std::fs;
@@ -82,7 +83,13 @@ fn compile_and_assemble(
     file_name: String,
     args: &Args,
 ) -> Result<(), Error> {
-    let compile_res = compile(input, file_name, args)?;
+    let start_pos = Position {
+        file: file_name.clone(),
+        idx: 0,
+        line: 0,
+        col: 0,
+    };
+    let compile_res = compile(input, file_name.clone(), args)?;
 
     let asm_out_file = format!("{}.asm", args.out);
     let o_out_file = format!("{}.o", args.out);
@@ -106,7 +113,8 @@ fn compile_and_assemble(
         .output()
         .expect("Could not assemble");
     if !nasm_out.status.success() {
-        return Err(io_error(String::from_utf8(nasm_out.stderr).unwrap()));
+        return Err(io_error(String::from_utf8(nasm_out.stderr).unwrap())
+            .set_pos(start_pos.clone(), Position::unknown()));
     }
 
     if args.exec_mode == 0 {
@@ -121,7 +129,8 @@ fn compile_and_assemble(
             .output()
             .expect("Could not assemble");
         if !ls_out.status.success() {
-            return Err(io_error(String::from_utf8(ls_out.stderr).unwrap()));
+            return Err(io_error(String::from_utf8(ls_out.stderr).unwrap())
+                .set_pos(start_pos.clone(), Position::unknown()));
         }
     }
 

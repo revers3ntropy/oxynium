@@ -14,7 +14,7 @@ use crate::util::{new_mut_rc, MutRc};
 #[derive(Debug, Clone)]
 pub struct Parameter {
     pub identifier: String,
-    pub type_: MutRc<dyn Node>,
+    pub type_: Option<MutRc<dyn Node>>,
     pub default_value: Option<MutRc<dyn Node>>,
     pub position: Interval,
 }
@@ -149,7 +149,11 @@ impl Node for FnDeclarationNode {
                     .set_interval(self.position.clone()));
             }
 
-            let param_type = type_.borrow_mut().type_check(ctx.clone())?.0;
+            let mut param_type = None;
+            if let Some(type_) = type_ {
+                param_type =
+                    Some(type_.borrow_mut().type_check(ctx.clone())?.0);
+            }
             if let Some(default_value) = default_value.clone() {
                 if seen_param_without_default {
                     return Err(type_error(format!(
@@ -160,23 +164,40 @@ impl Node for FnDeclarationNode {
                 }
                 let default_value_type =
                     default_value.borrow_mut().type_check(ctx.clone())?.0;
-                if !param_type.borrow().contains(default_value_type.clone()) {
+
+                if param_type.is_none() {
+                    param_type = Some(default_value_type.clone());
+                }
+                if !param_type
+                    .clone()
+                    .unwrap()
+                    .borrow()
+                    .contains(default_value_type.clone())
+                {
                     return Err(type_error(format!(
                         "Default value for parameter '{}' is not of type {}",
                         identifier,
-                        param_type.borrow().str()
+                        param_type.unwrap().borrow().str()
                     ))
-                    .set_interval(self.position.clone()));
+                    .set_interval(default_value.borrow_mut().pos()));
                 }
             } else {
                 seen_param_without_default = true;
+            }
+
+            if param_type.is_none() {
+                return Err(type_error(format!(
+                    "Parameter '{}' must have a type",
+                    identifier
+                ))
+                .set_interval(position));
             }
 
             parameters.insert(
                 0,
                 FnParamType {
                     name: identifier.clone(),
-                    type_: param_type.clone(),
+                    type_: param_type.clone().unwrap(),
                     default_value,
                     position,
                 },
@@ -195,7 +216,7 @@ impl Node for FnDeclarationNode {
                     require_init: false,
                     is_defined: true,
                     is_param: true,
-                    type_: param_type.clone(),
+                    type_: param_type.unwrap().clone(),
                     position: self.position.clone(),
                 },
                 self_pos,
@@ -229,12 +250,12 @@ impl Node for FnDeclarationNode {
             let body_ret_type = body_ret_type.unwrap_or(get_type!(ctx, "Void"));
             if !ret_type.borrow().contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
-                    "Function {} has return type {} but found {}",
+                    "Function `{}` has return type `{}` but found `{}`",
                     self.identifier.clone().literal.unwrap(),
                     ret_type.borrow().str(),
                     body_ret_type.borrow().str()
                 ))
-                .set_interval(self.position.clone()));
+                .set_interval(self.identifier.interval()));
             }
             self.body = Some(body);
         }

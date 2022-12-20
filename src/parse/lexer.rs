@@ -182,7 +182,7 @@ impl Lexer {
             TokenType::String,
             Some(string),
             start,
-            self.position.clone(),
+            self.position.clone().reverse(None),
         )
     }
 }

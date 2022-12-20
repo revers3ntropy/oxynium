@@ -1,0 +1,15 @@
+fn interp(value: Str): Str {
+    return value;
+}
+
+fn repl() {
+    while {
+        let inp = input("> ");
+        if inp == "exit" { break }
+        print(interp(inp));
+    }
+}
+
+fn main() {
+    repl();
+}

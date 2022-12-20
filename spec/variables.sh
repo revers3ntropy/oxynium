@@ -188,6 +188,14 @@ expect_err 'TypeError' '
         a = ""
     };
 '
+expect_err 'TypeError' '
+    fn main () {
+        let a = 1;
+        if true {
+            let a = 2;
+        }
+    }
+'
 
 
 describe 'Invalid Variable Names'

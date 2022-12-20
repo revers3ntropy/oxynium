@@ -108,8 +108,18 @@ impl Node for ClassDeclarationNode {
                 .set_interval(method.pos()));
             }
 
-            let (first_param_type, _) = method.params[0]
-                .type_
+            let method_first_param = method.params[0].type_.take();
+            if method_first_param.is_none() {
+                return Err(type_error(format!(
+                    "Method '{}' must have 'self' parameter",
+                    method.identifier.clone().literal.unwrap()
+                ))
+                .set_interval(method.pos()));
+            }
+
+            let (first_param_type, _) = method_first_param
+                .clone()
+                .unwrap()
                 .borrow_mut()
                 .type_check(ctx.clone())?;
             if !this_type.borrow().contains(first_param_type) {
@@ -120,6 +130,8 @@ impl Node for ClassDeclarationNode {
                 ))
                 .set_interval(method.pos()));
             }
+            // give back after taking
+            method.params[0].type_ = Some(method_first_param.unwrap());
 
             unsafe {
                 let fn_ = &*(&method_type as *const dyn Any

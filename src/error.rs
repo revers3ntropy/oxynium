@@ -22,7 +22,7 @@ impl Error {
         }
     }
 
-    pub fn set_pos(&mut self, start: Position, end: Position) -> &mut Error {
+    pub fn set_pos(mut self, start: Position, end: Position) -> Error {
         self.start = start;
         self.end = end;
         self
@@ -118,7 +118,7 @@ impl Error {
             } else if line_idx as i64 == end.line {
                 // last line of error
                 out.push_str(&" ".repeat(pre_line.len()));
-                out.push_str(&"^".repeat((end.col + 2) as usize));
+                out.push_str(&"^".repeat((end.col + 1) as usize));
                 out.push('\n');
             } else if line_idx as i64 > start.line
                 && (line_idx as i64) < end.line
@@ -182,7 +182,7 @@ pub fn type_error(message: String) -> Error {
 }
 
 pub fn io_error(message: String) -> Error {
-    Error::new("IOError", message)
+    Error::new("IoError", message)
 }
 
 pub fn arg_error(message: &str) -> Error {

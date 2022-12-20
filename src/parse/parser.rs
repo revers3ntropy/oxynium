@@ -1085,13 +1085,15 @@ impl Parser {
 
         result_consume!(identifier = Identifier, self, res);
         let start = self.last_tok().unwrap().start;
-        result_consume!(Colon, self, res);
 
-        let type_expr = res.register(self.type_expr());
-        result_ret_on_err!(res);
+        let mut type_expr = None;
+        if self.current_matches(TokenType::Colon, None) {
+            result_consume!(Colon, self, res);
+            type_expr = res.register(self.type_expr());
+            result_ret_on_err!(res);
+        }
 
         let mut default_value = None;
-
         if self.current_matches(TokenType::Equals, None) {
             self.advance(&mut res);
             let default_value_option = res.register(self.expression());
@@ -1101,7 +1103,7 @@ impl Parser {
 
         Ok(Parameter {
             identifier: identifier.literal.unwrap(),
-            type_: type_expr.unwrap(),
+            type_: type_expr,
             default_value,
             position: (start, self.last_tok().unwrap().end.clone()),
         })
@@ -1144,7 +1146,6 @@ impl Parser {
         let start = self.last_tok().unwrap().start;
 
         consume!(identifier = Identifier, self, res);
-
         consume!(OpenParen, self, res);
 
         let mut other_params = true;
@@ -1193,14 +1194,14 @@ impl Parser {
                 0,
                 Parameter {
                     identifier: "self".to_owned(),
-                    type_: new_mut_rc(TypeNode {
+                    type_: Some(new_mut_rc(TypeNode {
                         identifier: Token {
                             token_type: TokenType::Identifier,
                             literal: Some(class_name.clone().unwrap()),
                             start: Position::unknown(),
                             end: Position::unknown(),
                         },
-                    }),
+                    })),
                     default_value: None,
                     position: Position::unknown_interval(),
                 },
@@ -1244,8 +1245,8 @@ impl Parser {
                 syntax_error(
                     "External functions cannot have a body".to_owned(),
                 ),
-                None,
-                None,
+                Some(start),
+                Some(self.current_tok().unwrap().end.clone()),
             );
             return res;
         }

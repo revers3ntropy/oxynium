@@ -3,6 +3,7 @@ class Str {
     fn str(self): Str {
         return self
     }
+    //extern fn at(self, i: Int): Str
 }
 
 primitive Bool {

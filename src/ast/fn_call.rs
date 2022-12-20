@@ -227,12 +227,12 @@ impl Node for FnCallNode {
                 .borrow()
                 .contains(args[i].type_.clone())
             {
+                let expected = fn_type.parameters[i].type_.borrow().str();
+                let found = args[i].type_.borrow().str();
                 return Err(type_error(format!(
-                    "Argument {} to function '{}' is of type '{}' but expected type '{}'",
+                    "Expected argument {} to function '{}' to be of type '{expected}' but found type '{found}'",
                     i + 1,
                     self.identifier.clone().literal.unwrap(),
-                    args[i].type_.borrow().str(),
-                    fn_type.parameters[i].type_.borrow().str()
                 ))
                     .set_interval(args[i].position.clone()));
             }
