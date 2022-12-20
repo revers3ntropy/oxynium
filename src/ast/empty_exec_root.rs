@@ -1,5 +1,4 @@
 use crate::ast::Node;
-use crate::ast::{STD_ASM, STD_DATA_ASM};
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
@@ -7,7 +6,7 @@ use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct EmptyExecRootNode {
-    pub(crate) position: Interval,
+    pub position: Interval,
 }
 
 impl Node for EmptyExecRootNode {
@@ -21,15 +20,13 @@ impl Node for EmptyExecRootNode {
         } else {
             Ok(format!(
                 "
-                section	.note.GNU-stack
-                section .data
-                    {STD_DATA_ASM}
+                section	.note.GNU-stack#            
                 section .text
                     global main
-                    {STD_ASM}
-                main:
-                    push 0
-                    call exit
+                    main:
+                        mov rax, 60
+                        mov rdi, 0
+                        syscall
             "
             ))
         }

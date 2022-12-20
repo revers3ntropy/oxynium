@@ -4,7 +4,7 @@ use std::fmt;
 
 #[derive(Clone)]
 pub struct TypeType {
-    pub(crate) instance_type: MutRc<dyn Type>,
+    pub instance_type: MutRc<dyn Type>,
 }
 
 impl Type for TypeType {

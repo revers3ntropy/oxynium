@@ -6,7 +6,7 @@ use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct BreakNode {
-    pub(crate) position: Interval,
+    pub position: Interval,
 }
 
 impl Node for BreakNode {
