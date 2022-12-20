@@ -35,10 +35,7 @@ impl Node for FieldAccessNode {
         ))
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         let (base_type_any, _) =
             self.base.borrow_mut().type_check(ctx.clone())?;
         let base_type = base_type_any.borrow().as_class();
@@ -64,7 +61,7 @@ impl Node for FieldAccessNode {
         Ok((field_type.unwrap(), None))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

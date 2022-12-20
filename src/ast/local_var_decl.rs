@@ -12,7 +12,6 @@ pub struct LocalVarNode {
     pub identifier: Token,
     pub value: MutRc<dyn Node>,
     pub mutable: bool,
-    pub stack_offset: usize,
     pub type_annotation: Option<MutRc<dyn Node>>,
     pub start: Position,
 }
@@ -42,21 +41,19 @@ impl Node for LocalVarNode {
             self.pos(),
         )?;
 
+        let id = ctx.borrow_mut().get_dec_from_id(&self.id()).id;
+
         Ok(format!(
             "
             {}
             pop rax
-            mov qword [rbp - {}], rax
+            mov {id}, rax
         ",
-            self.value.borrow_mut().asm(ctx)?,
-            self.stack_offset
+            self.value.borrow_mut().asm(ctx)?
         ))
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !can_declare_with_identifier(&self.id()) {
             return Err(syntax_error(format!(
                 "Invalid local variable '{}'",
@@ -65,13 +62,12 @@ impl Node for LocalVarNode {
             .set_interval(self.identifier.interval()));
         }
         let (mut value_type, _) =
-            self.value.borrow_mut().type_check(ctx.clone())?;
-        self.stack_offset = ctx.borrow_mut().get_new_local_var_offset();
+            self.value.borrow().type_check(ctx.clone())?;
 
         if self.type_annotation.is_some() {
             let type_annotation = self.type_annotation.as_ref().unwrap();
             let (type_annotation_type, _) =
-                type_annotation.borrow_mut().type_check(ctx.clone())?;
+                type_annotation.borrow().type_check(ctx.clone())?;
             if !type_annotation_type.borrow().contains(value_type.clone()) {
                 return Err(type_error(format!(
                     "Cannot assign value of type '{}' to variable '{}' of type '{}'",
@@ -84,10 +80,11 @@ impl Node for LocalVarNode {
             value_type = type_annotation_type;
         }
 
+        let offset = ctx.borrow_mut().get_new_local_var_offset();
         ctx.borrow_mut().declare(
             SymbolDec {
                 name: self.id(),
-                id: format!("qword [rbp - {}]", self.stack_offset),
+                id: format!("qword [rbp - {offset}]"),
                 is_constant: !self.mutable,
                 is_type: false,
                 require_init: true,
@@ -101,7 +98,7 @@ impl Node for LocalVarNode {
         Ok((get_type!(ctx, "Void"), None))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         (self.start.clone(), self.value.borrow_mut().pos().1)
     }
 }

@@ -37,14 +37,11 @@ impl Node for StrNode {
         ))
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         Ok((get_type!(ctx, "Str"), None))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.value.interval()
     }
 }

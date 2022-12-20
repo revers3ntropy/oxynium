@@ -1,6 +1,7 @@
 pub mod r#class;
 pub mod function;
 pub mod r#type;
+pub mod unknown;
 
 use crate::types::function::FnType;
 use crate::types::r#class::ClassType;
@@ -22,5 +23,8 @@ pub trait Type: Debug {
     }
     fn as_type_type(&self) -> Option<TypeType> {
         None
+    }
+    fn is_unknown(&self) -> bool {
+        false
     }
 }

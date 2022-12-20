@@ -43,10 +43,7 @@ impl Node for UnaryOpNode {
         })
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         let t = match self.operator.token_type {
             TokenType::Sub => get_type!(ctx, "Int"),
             _ => get_type!(ctx, "Bool"),
@@ -61,7 +58,7 @@ impl Node for UnaryOpNode {
         Ok((t, None))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         (self.operator.start.clone(), self.rhs.borrow_mut().pos().1)
     }
 }

@@ -39,10 +39,7 @@ impl Node for MutateVar {
         ))
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.id())
             || !ctx.borrow_mut().has_dec_with_id(&self.id())
         {
@@ -76,7 +73,7 @@ impl Node for MutateVar {
         Ok((get_type!(ctx, "Void"), None))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         (
             self.identifier.start.clone(),
             self.value.borrow_mut().pos().1,

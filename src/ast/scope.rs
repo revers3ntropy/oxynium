@@ -16,15 +16,12 @@ impl Node for ScopeNode {
         self.body.borrow_mut().asm(self.ctx.clone())
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         self.ctx.borrow_mut().set_parent(ctx.clone());
         self.body.borrow_mut().type_check(self.ctx.clone())
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

@@ -120,10 +120,7 @@ impl Node for ClassInitNode {
         Ok(asm)
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !ctx
             .borrow_mut()
             .has_dec_with_id(&self.identifier.clone().literal.unwrap())
@@ -210,7 +207,7 @@ impl Node for ClassInitNode {
         Ok((type_, None))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

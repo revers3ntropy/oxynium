@@ -54,10 +54,7 @@ impl Node for WhileLoopNode {
         ))
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if let Some(condition) = &self.condition {
             let (cond_type, _) =
                 condition.borrow_mut().type_check(ctx.clone())?;
@@ -71,7 +68,7 @@ impl Node for WhileLoopNode {
         self.statements.borrow_mut().type_check(ctx.clone())
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

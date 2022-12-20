@@ -40,12 +40,9 @@ impl Node for ReturnNode {
         ))
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        if let Some(ref mut value) = self.value {
-            let (t, _) = value.borrow_mut().type_check(ctx.clone())?;
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+        if let Some(ref value) = self.value {
+            let (t, _) = value.borrow().type_check(ctx.clone())?;
             Ok((get_type!(ctx, "Void"), Some(t)))
         } else {
             let void = get_type!(ctx, "Void");
@@ -53,7 +50,7 @@ impl Node for ReturnNode {
         }
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

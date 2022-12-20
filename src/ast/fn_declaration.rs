@@ -103,10 +103,7 @@ impl Node for FnDeclarationNode {
         Ok("".to_string())
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !can_declare_with_identifier(
             &self.identifier.clone().literal.unwrap(),
         ) {
@@ -244,9 +241,9 @@ impl Node for FnDeclarationNode {
             self.pos(),
         )?;
 
-        if let Some(body) = self.body.take() {
+        if let Some(ref body) = self.body {
             let (_, body_ret_type) =
-                body.borrow_mut().type_check(self.params_scope.clone())?;
+                body.borrow().type_check(self.params_scope.clone())?;
             let body_ret_type = body_ret_type.unwrap_or(get_type!(ctx, "Void"));
             if !ret_type.borrow().contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
@@ -257,13 +254,12 @@ impl Node for FnDeclarationNode {
                 ))
                 .set_interval(self.identifier.interval()));
             }
-            self.body = Some(body);
         }
 
         Ok((this_type, None))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

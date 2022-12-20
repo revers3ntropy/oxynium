@@ -16,14 +16,11 @@ impl Node for BoolNode {
         Ok(format!("\n push {} \n", if self.value { 1 } else { 0 }))
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         Ok((get_type!(ctx, "Bool"), None))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

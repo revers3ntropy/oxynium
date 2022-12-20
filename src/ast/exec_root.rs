@@ -110,14 +110,11 @@ impl Node for ExecRootNode {
         ))
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         self.statements.borrow_mut().type_check(ctx.clone())
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.statements.borrow_mut().pos()
     }
 }

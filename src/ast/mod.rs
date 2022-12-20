@@ -51,11 +51,8 @@ pub trait Node: Debug {
     fn asm(&mut self, _ctx: MutRc<Context>) -> Result<String, Error> {
         Ok("".to_string())
     }
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         Ok((get_type!(ctx, "Void"), None))
     }
-    fn pos(&mut self) -> Interval;
+    fn pos(&self) -> Interval;
 }

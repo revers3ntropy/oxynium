@@ -7,7 +7,7 @@ pub struct PassNode {
 }
 
 impl Node for PassNode {
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

@@ -668,7 +668,6 @@ impl Parser {
             res.success(new_mut_rc(EmptyLocalVarNode {
                 identifier: name,
                 type_: type_annotation.unwrap(),
-                stack_offset: 0,
                 position: (start, self.last_tok().unwrap().end.clone()),
             }));
             return res;
@@ -685,7 +684,6 @@ impl Parser {
             mutable,
             type_annotation,
             start,
-            stack_offset: 0, // overridden
         }));
         res
     }
@@ -778,8 +776,6 @@ impl Parser {
             identifier: name_tok,
             args,
             position: (start, self.last_tok().unwrap().end.clone()),
-            // default value which is always overridden
-            use_return_value: true,
         }));
         return res;
     }
@@ -840,8 +836,6 @@ impl Parser {
                     object: None,
                     identifier: fn_identifier_tok,
                     args: Vec::new(),
-                    // default value always overridden
-                    use_return_value: true,
                     position: (start, self.last_tok().unwrap().end.clone()),
                 }));
                 return res;
@@ -888,8 +882,6 @@ impl Parser {
             object: None,
             identifier: fn_identifier_tok,
             args,
-            // default value always overridden
-            use_return_value: true,
             position: (start, self.last_tok().unwrap().end.clone()),
         }));
         res

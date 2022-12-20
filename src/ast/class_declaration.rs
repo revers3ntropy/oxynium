@@ -40,10 +40,7 @@ impl Node for ClassDeclarationNode {
 
         Ok(asm)
     }
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !can_declare_with_identifier(
             &self.identifier.clone().literal.unwrap(),
         ) {
@@ -143,7 +140,7 @@ impl Node for ClassDeclarationNode {
         Ok((this_type, None))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

@@ -29,13 +29,10 @@ impl Node for StatementsNode {
         Ok(asm)
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         let mut ret_type = None;
-        for statement in self.statements.iter_mut() {
-            let t = statement.borrow_mut().type_check(ctx.clone())?;
+        for statement in self.statements.iter() {
+            let t = statement.borrow().type_check(ctx.clone())?;
             if t.1.is_none() {
                 continue;
             }
@@ -53,14 +50,14 @@ impl Node for StatementsNode {
                     ret_type.unwrap().borrow().str(),
                     t.1.unwrap().borrow().str()
                 ))
-                .set_interval(statement.borrow_mut().pos()));
+                .set_interval(statement.borrow().pos()));
             }
         }
 
         Ok((get_type!(ctx, "Void"), ret_type))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         (
             self.statements[0].borrow_mut().pos().0,
             self.statements[self.statements.len() - 1]

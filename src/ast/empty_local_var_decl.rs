@@ -8,7 +8,6 @@ use crate::util::MutRc;
 #[derive(Debug)]
 pub struct EmptyLocalVarNode {
     pub identifier: String,
-    pub stack_offset: usize,
     pub type_: MutRc<dyn Node>,
     pub position: Interval,
 }
@@ -24,10 +23,7 @@ impl Node for EmptyLocalVarNode {
         Ok(format!(""))
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(syntax_error(format!(
                 "Invalid local variable '{}'",
@@ -35,14 +31,14 @@ impl Node for EmptyLocalVarNode {
             ))
             .set_interval(self.position.clone()));
         }
-        self.stack_offset = ctx.borrow_mut().get_new_local_var_offset();
 
         let (type_, _) = self.type_.borrow_mut().type_check(ctx.clone())?;
 
+        let stack_offset = ctx.borrow_mut().get_new_local_var_offset();
         ctx.borrow_mut().declare(
             SymbolDec {
                 name: self.identifier.clone(),
-                id: format!("qword [rbp - {}]", self.stack_offset),
+                id: format!("qword [rbp - {stack_offset}]"),
                 is_constant: false,
                 is_type: false,
                 require_init: true,
@@ -56,7 +52,7 @@ impl Node for EmptyLocalVarNode {
         Ok((type_.clone(), None))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

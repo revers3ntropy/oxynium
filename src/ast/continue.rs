@@ -24,7 +24,7 @@ impl Node for ContinueNode {
             labels.unwrap().0
         ))
     }
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

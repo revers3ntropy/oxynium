@@ -102,10 +102,7 @@ impl Node for BinOpNode {
         }
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         let operand_types = match self.operator.token_type {
             TokenType::Percent
             | TokenType::Plus
@@ -150,7 +147,7 @@ impl Node for BinOpNode {
             None,
         ));
     }
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         (self.lhs.borrow_mut().pos().0, self.rhs.borrow_mut().pos().1)
     }
 }

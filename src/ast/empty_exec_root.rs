@@ -34,7 +34,7 @@ impl Node for EmptyExecRootNode {
             ))
         }
     }
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

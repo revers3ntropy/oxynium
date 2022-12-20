@@ -55,10 +55,7 @@ impl Node for IfNode {
         }
     }
 
-    fn type_check(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         let (_, mut body_ret_type) =
             self.body.borrow_mut().type_check(ctx.clone())?;
 
@@ -70,10 +67,12 @@ impl Node for IfNode {
         }
 
         if self.else_body.is_some() {
-            let else_body = self.else_body.take().unwrap();
-            let (_, else_ret_type) =
-                else_body.borrow_mut().type_check(ctx.clone())?;
-            self.else_body = Some(else_body);
+            let (_, else_ret_type) = self
+                .else_body
+                .clone()
+                .unwrap()
+                .borrow_mut()
+                .type_check(ctx.clone())?;
 
             if let Some(body_ret) = body_ret_type.take() {
                 if let Some(else_ret_type) = else_ret_type {
@@ -93,7 +92,7 @@ impl Node for IfNode {
         Ok((get_type!(ctx, "Void"), body_ret_type))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

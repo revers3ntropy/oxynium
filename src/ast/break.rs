@@ -25,7 +25,7 @@ impl Node for BreakNode {
             labels.unwrap().1
         ))
     }
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }

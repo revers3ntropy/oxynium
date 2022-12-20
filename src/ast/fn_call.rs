@@ -5,7 +5,7 @@ use crate::error::{type_error, unknown_symbol, Error};
 use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::{Interval, Position};
-use crate::types::function::FnParamType;
+use crate::types::function::{FnParamType, FnType};
 use crate::types::Type;
 use crate::util::MutRc;
 
@@ -14,7 +14,6 @@ pub struct FnCallNode {
     pub object: Option<MutRc<dyn Node>>,
     pub identifier: Token,
     pub args: Vec<MutRc<dyn Node>>,
-    pub use_return_value: bool,
     pub position: Interval,
 }
 
@@ -43,58 +42,12 @@ impl FnCallNode {
 
         panic!("invalid type on class method call");
     }
-}
 
-impl Node for FnCallNode {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
-        let mut asm = format!("");
-
-        for arg in self.args.iter_mut().rev() {
-            asm.push_str(&arg.borrow_mut().asm(ctx.clone())?);
-            asm.push_str("\n");
-        }
-
-        if let Some(obj) = self.object.clone() {
-            asm.push_str(&obj.borrow_mut().asm(ctx.clone())?);
-            asm.push_str("\n");
-        }
-
-        asm.push_str(&format!(
-            "
-            call {}
-            {}
-            {}
-        ",
-            if self.object.is_some() {
-                method_id(
-                    self.class_id(ctx.clone()),
-                    self.identifier.clone().literal.unwrap(),
-                )
-            } else {
-                self.identifier.clone().literal.unwrap()
-            },
-            if self.args.len() > 0 {
-                format!("times {} pop rcx", self.args.len())
-            } else {
-                "".to_string()
-            },
-            if self.use_return_value {
-                "push rax"
-            } else {
-                ""
-            }
-        ));
-
-        Ok(asm)
-    }
-
-    fn type_check(
-        &mut self,
+    fn get_callee_type(
+        &self,
         ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        let mut args: Vec<FnParamType> = Vec::new();
-        let mut num_args = self.args.len();
-        let fn_type = if let Some(obj) = self.object.clone() {
+    ) -> Result<(FnType, bool, Option<MutRc<dyn Type>>), Error> {
+        if let Some(obj) = self.object.clone() {
             let mut calling_through_instance = true;
             // getting function type on method call
             let (base_type_any, _) =
@@ -143,56 +96,124 @@ impl Node for FnCallNode {
                 .set_interval(self.position.clone()));
             }
 
-            if calling_through_instance {
-                args.push(FnParamType {
-                    name: "self".to_string(),
-                    type_: base_type_any.clone(),
-                    default_value: None,
-                    position: Position::unknown_interval(),
-                });
-                num_args += 1;
-            }
+            return Ok((
+                method_type.unwrap().borrow().as_fn().unwrap(),
+                calling_through_instance,
+                Some(base_type_any.clone()),
+            ));
+        }
+        // getting function type on normal function call
+        if !ctx
+            .borrow_mut()
+            .has_dec_with_id(&self.identifier.clone().literal.unwrap())
+        {
+            return Err(unknown_symbol(format!(
+                "Cannot find function `{}`",
+                self.identifier.clone().literal.unwrap()
+            ))
+            .set_interval(self.identifier.interval()));
+        }
 
-            method_type.unwrap().borrow().as_fn().unwrap()
-        } else {
-            // getting function type on normal function call
-            if !ctx
-                .borrow_mut()
-                .has_dec_with_id(&self.identifier.clone().literal.unwrap())
-            {
-                return Err(unknown_symbol(format!(
-                    "Cannot find function `{}`",
-                    self.identifier.clone().literal.unwrap()
-                ))
-                .set_interval(self.identifier.interval()));
-            }
+        let fn_type_option = ctx
+            .borrow_mut()
+            .get_dec_from_id(&self.identifier.clone().literal.unwrap())
+            .type_
+            .clone()
+            .borrow()
+            .as_fn();
+        if fn_type_option.is_none() {
+            return Err(unknown_symbol(format!(
+                "'{}' is not a function",
+                self.identifier.clone().literal.unwrap()
+            ))
+            .set_interval(self.identifier.interval()));
+        }
+        Ok((fn_type_option.unwrap(), false, None))
+    }
+}
 
-            let fn_type_option = ctx
-                .borrow_mut()
-                .get_dec_from_id(&self.identifier.clone().literal.unwrap())
-                .type_
-                .clone()
-                .borrow()
-                .as_fn();
-            if fn_type_option.is_none() {
-                return Err(unknown_symbol(format!(
-                    "'{}' is not a function",
-                    self.identifier.clone().literal.unwrap()
-                ))
-                .set_interval(self.identifier.interval()));
-            }
+impl Node for FnCallNode {
+    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+        let mut asm = format!("");
 
-            fn_type_option.unwrap()
-        };
+        let (fn_type, calling_through_instance, _) =
+            self.get_callee_type(ctx.clone())?;
 
-        for arg in self.args.iter_mut() {
-            let (arg_type, _) = arg.borrow_mut().type_check(ctx.clone())?;
+        let mut args = self.args.clone();
+
+        let num_args =
+            self.args.len() + if calling_through_instance { 1 } else { 0 };
+
+        // fill out default arguments
+        for i in num_args..fn_type.parameters.len() {
+            // add to end of vec
+            args.insert(
+                args.len(),
+                fn_type.parameters[i].default_value.clone().unwrap(),
+            );
+        }
+
+        for arg in args.iter_mut().rev() {
+            asm.push_str(&arg.borrow_mut().asm(ctx.clone())?);
+            asm.push_str("\n");
+        }
+
+        if let Some(obj) = self.object.clone() {
+            asm.push_str(&obj.borrow_mut().asm(ctx.clone())?);
+            asm.push_str("\n");
+        }
+
+        let use_return_value =
+            !fn_type.ret_type.borrow().contains(get_type!(ctx, "Void"));
+
+        asm.push_str(&format!(
+            "
+            call {}
+            {}
+            {}
+        ",
+            if self.object.is_some() {
+                method_id(
+                    self.class_id(ctx.clone()),
+                    self.identifier.clone().literal.unwrap(),
+                )
+            } else {
+                self.identifier.clone().literal.unwrap()
+            },
+            if self.args.len() > 0 {
+                format!("times {} pop rcx", self.args.len())
+            } else {
+                "".to_string()
+            },
+            if use_return_value { "push rax" } else { "" }
+        ));
+
+        Ok(asm)
+    }
+
+    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+        let mut args: Vec<FnParamType> = Vec::new();
+
+        let (fn_type, is_method_call, base_type) =
+            self.get_callee_type(ctx.clone())?;
+
+        if is_method_call {
             args.push(FnParamType {
-                // calling the function, so parameter name is not known
+                name: "self".to_string(),
+                type_: base_type.unwrap(),
+                default_value: None,
+                position: Position::unknown_interval(),
+            });
+        }
+
+        for arg in self.args.iter() {
+            let (arg_type, _) = arg.borrow().type_check(ctx.clone())?;
+            args.push(FnParamType {
+                // calling the function, so parameter name is not known and doesn't matter
                 name: "".to_string(),
                 type_: arg_type,
                 default_value: None,
-                position: arg.borrow_mut().pos(),
+                position: arg.borrow().pos(),
             });
         }
 
@@ -238,21 +259,10 @@ impl Node for FnCallNode {
             }
         }
 
-        // fill out default arguments
-        for i in num_args..fn_type.parameters.len() {
-            // add to end of vec
-            self.args.insert(
-                self.args.len(),
-                fn_type.parameters[i].default_value.clone().unwrap(),
-            );
-        }
-
-        self.use_return_value =
-            !fn_type.ret_type.borrow().contains(get_type!(ctx, "Void"));
         Ok((fn_type.ret_type.clone(), None))
     }
 
-    fn pos(&mut self) -> Interval {
+    fn pos(&self) -> Interval {
         self.position.clone()
     }
 }
