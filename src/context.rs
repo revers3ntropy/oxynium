@@ -55,12 +55,20 @@ impl Context {
         self.parent = Some(parent);
     }
 
-    pub fn with_root<T>(&mut self, cb: &mut impl Fn(&mut Context) -> T) -> T {
-        if self.parent.is_some() {
-            let ref_ = self.parent.take().unwrap();
-            let res = ref_.clone().borrow_mut().with_root(cb);
-            self.parent = Some(ref_);
-            res
+    pub fn with_root<T>(&self, cb: &mut impl Fn(&Context) -> T) -> T {
+        if let Some(ref parent) = self.parent {
+            parent.borrow_mut().with_root(cb)
+        } else {
+            cb(self)
+        }
+    }
+
+    pub fn with_root_mut<T>(
+        &mut self,
+        cb: &mut impl Fn(&mut Context) -> T,
+    ) -> T {
+        if let Some(ref parent) = self.parent {
+            parent.borrow_mut().with_root_mut(cb)
         } else {
             cb(self)
         }
@@ -70,7 +78,7 @@ impl Context {
 
     pub fn get_anon_label(&mut self) -> String {
         if self.parent.is_some() {
-            return self.with_root(&mut |ctx| ctx.get_anon_label());
+            return self.with_root_mut(&mut |ctx| ctx.get_anon_label());
         }
         let symbol = format!("{}L{}", ANON_PREFIX, self.anon_symbol_count);
         self.anon_symbol_count += 1;
@@ -245,7 +253,7 @@ impl Context {
 
     pub fn loop_labels_push(&mut self, start: String, end: String) {
         if self.parent.is_some() {
-            return self.with_root(&mut |ctx| {
+            return self.with_root_mut(&mut |ctx| {
                 ctx.loop_labels_push(start.clone(), end.clone())
             });
         }
@@ -254,12 +262,12 @@ impl Context {
 
     pub fn loop_labels_pop(&mut self) -> Option<(String, String)> {
         if self.parent.is_some() {
-            return self.with_root(&mut |ctx| ctx.loop_labels_pop());
+            return self.with_root_mut(&mut |ctx| ctx.loop_labels_pop());
         }
         self.loop_label_stack.pop()
     }
 
-    pub fn loop_label_peak(&mut self) -> Option<(String, String)> {
+    pub fn loop_label_peak(&self) -> Option<(String, String)> {
         if self.parent.is_some() {
             return self.with_root(&mut |ctx| ctx.loop_label_peak());
         }
@@ -271,18 +279,18 @@ impl Context {
     pub fn stack_frame_push(&mut self, frame: CallStackFrame) {
         if self.parent.is_some() {
             return self
-                .with_root(&mut |ctx| ctx.stack_frame_push(frame.clone()));
+                .with_root_mut(&mut |ctx| ctx.stack_frame_push(frame.clone()));
         }
         self.call_stack.push(frame);
     }
 
     pub fn stack_frame_pop(&mut self) -> Option<CallStackFrame> {
         if self.parent.is_some() {
-            return self.with_root(&mut |ctx| ctx.stack_frame_pop());
+            return self.with_root_mut(&mut |ctx| ctx.stack_frame_pop());
         }
         self.call_stack.pop()
     }
-    pub fn stack_frame_peak(&mut self) -> Option<CallStackFrame> {
+    pub fn stack_frame_peak(&self) -> Option<CallStackFrame> {
         if self.parent.is_some() {
             return self.with_root(&mut |ctx| ctx.stack_frame_peak());
         }

@@ -53,21 +53,15 @@ impl Node for SymbolAccess {
             .set_interval(self.pos()));
         }
         if ctx.borrow_mut().get_dec_from_id(&self.id()).is_type {
-            return Ok((
-                new_mut_rc(TypeType {
-                    instance_type: ctx
-                        .borrow_mut()
-                        .get_dec_from_id(&self.id())
-                        .type_
-                        .clone(),
-                }),
-                None,
-            ));
+            return Ok(TypeCheckRes::from(new_mut_rc(TypeType {
+                instance_type: ctx
+                    .borrow_mut()
+                    .get_dec_from_id(&self.id())
+                    .type_
+                    .clone(),
+            })));
         }
-        Ok((
-            ctx.borrow_mut().get_dec_from_id(&self.id()).type_.clone(),
-            None,
-        ))
+        Ok(TypeCheckRes::from_ctx(&ctx, &self.id()))
     }
 
     fn pos(&self) -> Interval {

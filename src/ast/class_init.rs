@@ -23,7 +23,7 @@ impl ClassInitNode {
         for field in self.fields.clone() {
             instance_fields_hashmap.insert(
                 field.0,
-                field.1.borrow_mut().type_check(ctx.clone())?.0,
+                field.1.borrow_mut().type_check(ctx.clone())?.t,
             );
         }
         Ok(instance_fields_hashmap)
@@ -204,7 +204,7 @@ impl Node for ClassInitNode {
             }
         }
 
-        Ok((type_, None))
+        Ok(TypeCheckRes::from(type_))
     }
 
     fn pos(&self) -> Interval {

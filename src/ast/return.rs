@@ -42,11 +42,11 @@ impl Node for ReturnNode {
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if let Some(ref value) = self.value {
-            let (t, _) = value.borrow().type_check(ctx.clone())?;
-            Ok((get_type!(ctx, "Void"), Some(t)))
+            Ok(TypeCheckRes::from_return(
+                value.borrow().type_check(ctx.clone())?.t,
+            ))
         } else {
-            let void = get_type!(ctx, "Void");
-            Ok((void.clone(), Some(void)))
+            Ok(TypeCheckRes::from_return(get_type!(ctx, "Void")))
         }
     }
 

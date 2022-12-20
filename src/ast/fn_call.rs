@@ -26,7 +26,7 @@ impl FnCallNode {
             .borrow_mut()
             .type_check(ctx.clone())
             .unwrap()
-            .0;
+            .t;
         if let Some(class) = t.borrow().as_class() {
             return class.name.clone();
         }
@@ -50,8 +50,9 @@ impl FnCallNode {
         if let Some(obj) = self.object.clone() {
             let mut calling_through_instance = true;
             // getting function type on method call
-            let (base_type_any, _) =
-                obj.borrow_mut().type_check(ctx.clone())?;
+            let TypeCheckRes {
+                t: base_type_any, ..
+            } = obj.borrow_mut().type_check(ctx.clone())?;
             let mut base_type = base_type_any.borrow().as_class();
             if base_type.is_none() {
                 if let Some(type_type) = base_type_any.borrow().as_type_type() {
@@ -207,7 +208,8 @@ impl Node for FnCallNode {
         }
 
         for arg in self.args.iter() {
-            let (arg_type, _) = arg.borrow().type_check(ctx.clone())?;
+            let TypeCheckRes { t: arg_type, .. } =
+                arg.borrow().type_check(ctx.clone())?;
             args.push(FnParamType {
                 // calling the function, so parameter name is not known and doesn't matter
                 name: "".to_string(),
@@ -259,7 +261,7 @@ impl Node for FnCallNode {
             }
         }
 
-        Ok((fn_type.ret_type.clone(), None))
+        Ok(TypeCheckRes::from(fn_type.ret_type.clone()))
     }
 
     fn pos(&self) -> Interval {

@@ -61,7 +61,7 @@ impl Node for GlobalConstNode<i64> {
             },
             self.identifier.interval(),
         )?;
-        Ok((get_type!(ctx, "Int"), None))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Int"))
     }
 
     fn pos(&self) -> Interval {
@@ -122,7 +122,7 @@ impl Node for GlobalConstNode<String> {
             },
             self.identifier.interval(),
         )?;
-        Ok((get_type!(ctx, "Str"), None))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Str"))
     }
 
     fn pos(&self) -> Interval {

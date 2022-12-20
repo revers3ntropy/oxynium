@@ -1,7 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{mismatched_types, type_error, unknown_symbol, Error};
-use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::is_valid_identifier;
@@ -46,7 +45,7 @@ impl Node for MutateVar {
             return Err(unknown_symbol(self.id().clone()));
         }
 
-        let (assign_type, _) =
+        let TypeCheckRes { t: assign_type, .. } =
             self.value.borrow_mut().type_check(ctx.clone())?;
         let symbol = ctx.borrow_mut().get_dec_from_id(&self.id()).clone();
         if symbol.is_type {
@@ -70,7 +69,7 @@ impl Node for MutateVar {
             )
             .set_interval(self.value.borrow_mut().pos()));
         }
-        Ok((get_type!(ctx, "Void"), None))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Void"))
     }
 
     fn pos(&self) -> Interval {

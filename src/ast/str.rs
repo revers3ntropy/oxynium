@@ -1,7 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::Error;
-use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::SymbolDef;
@@ -38,7 +37,7 @@ impl Node for StrNode {
     }
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        Ok((get_type!(ctx, "Str"), None))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Str"))
     }
 
     fn pos(&self) -> Interval {

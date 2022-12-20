@@ -56,10 +56,13 @@ impl Node for IfNode {
     }
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        let (_, mut body_ret_type) =
-            self.body.borrow_mut().type_check(ctx.clone())?;
+        let TypeCheckRes {
+            t: mut body_ret_type,
+            is_returned: mut body_is_returned,
+            ..
+        } = self.body.borrow_mut().type_check(ctx.clone())?;
 
-        let (comp_type, _) =
+        let TypeCheckRes { t: comp_type, .. } =
             self.comparison.borrow_mut().type_check(ctx.clone())?;
         if !get_type!(ctx, "Bool").borrow().contains(comp_type) {
             return Err(type_error("if condition must be a bool".to_string())
@@ -67,29 +70,37 @@ impl Node for IfNode {
         }
 
         if self.else_body.is_some() {
-            let (_, else_ret_type) = self
+            let TypeCheckRes {
+                t: else_ret_type,
+                is_returned: else_is_returned,
+                ..
+            } = self
                 .else_body
                 .clone()
                 .unwrap()
                 .borrow_mut()
                 .type_check(ctx.clone())?;
 
-            if let Some(body_ret) = body_ret_type.take() {
-                if let Some(else_ret_type) = else_ret_type {
-                    if !body_ret.borrow().contains(else_ret_type.clone()) {
+            if body_is_returned {
+                if else_is_returned {
+                    if !body_ret_type.borrow().contains(else_ret_type.clone()) {
                         return Err(type_error(format!(
                             "if statement branches cannot return different types: {} and {}",
-                            body_ret.borrow().str(),
+                            body_ret_type.borrow().str(),
                             else_ret_type.borrow().str()
                         )));
                     }
                 }
-                body_ret_type = Some(body_ret);
-            } else if else_ret_type.is_some() {
+            } else if else_is_returned {
                 body_ret_type = else_ret_type;
+                body_is_returned = true;
             }
         }
-        Ok((get_type!(ctx, "Void"), body_ret_type))
+        if body_is_returned {
+            Ok(TypeCheckRes::from_return(body_ret_type))
+        } else {
+            Ok(TypeCheckRes::from_ctx(&ctx, "Void"))
+        }
     }
 
     fn pos(&self) -> Interval {

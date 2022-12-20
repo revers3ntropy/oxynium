@@ -1,7 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{syntax_error, type_error, Error};
-use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::{Interval, Position};
 use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
@@ -61,13 +60,16 @@ impl Node for LocalVarNode {
             ))
             .set_interval(self.identifier.interval()));
         }
-        let (mut value_type, _) =
-            self.value.borrow().type_check(ctx.clone())?;
+        let TypeCheckRes {
+            t: mut value_type, ..
+        } = self.value.borrow().type_check(ctx.clone())?;
 
         if self.type_annotation.is_some() {
             let type_annotation = self.type_annotation.as_ref().unwrap();
-            let (type_annotation_type, _) =
-                type_annotation.borrow().type_check(ctx.clone())?;
+            let TypeCheckRes {
+                t: type_annotation_type,
+                ..
+            } = type_annotation.borrow().type_check(ctx.clone())?;
             if !type_annotation_type.borrow().contains(value_type.clone()) {
                 return Err(type_error(format!(
                     "Cannot assign value of type '{}' to variable '{}' of type '{}'",
@@ -95,7 +97,7 @@ impl Node for LocalVarNode {
             },
             self.identifier.interval(),
         )?;
-        Ok((get_type!(ctx, "Void"), None))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Void"))
     }
 
     fn pos(&self) -> Interval {

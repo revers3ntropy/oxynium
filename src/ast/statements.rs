@@ -1,7 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, Error};
-use crate::get_type;
 use crate::position::Interval;
 use crate::util::MutRc;
 
@@ -33,28 +32,27 @@ impl Node for StatementsNode {
         let mut ret_type = None;
         for statement in self.statements.iter() {
             let t = statement.borrow().type_check(ctx.clone())?;
-            if t.1.is_none() {
+            if !t.is_returned {
                 continue;
             }
             if ret_type.is_none() {
-                ret_type = t.1.clone();
+                ret_type = Some(t.t.clone());
             }
-            if !ret_type
-                .clone()
-                .unwrap()
-                .borrow()
-                .contains(t.1.clone().unwrap())
-            {
+            if !ret_type.clone().unwrap().borrow().contains(t.t.clone()) {
                 return Err(type_error(format!(
                     "Cannot return different types, expected `{}` found `{}`",
                     ret_type.unwrap().borrow().str(),
-                    t.1.unwrap().borrow().str()
+                    t.t.borrow().str()
                 ))
                 .set_interval(statement.borrow().pos()));
             }
         }
 
-        Ok((get_type!(ctx, "Void"), ret_type))
+        if let Some(ret_type) = ret_type {
+            return Ok(TypeCheckRes::from_return(ret_type));
+        }
+
+        Ok(TypeCheckRes::from_ctx(&ctx, "Void"))
     }
 
     fn pos(&self) -> Interval {

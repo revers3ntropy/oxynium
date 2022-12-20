@@ -1,7 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
-use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::util::MutRc;
@@ -30,7 +29,7 @@ impl Node for TypeNode {
             ))
             .set_interval(self.pos()));
         }
-        Ok((get_type!(ctx, &self.id()), None))
+        Ok(TypeCheckRes::from_ctx(&ctx, &self.id()))
     }
 
     fn pos(&self) -> Interval {

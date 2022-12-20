@@ -1,7 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::Error;
-use crate::get_type;
 use crate::position::Interval;
 use crate::util::MutRc;
 
@@ -17,7 +16,7 @@ impl Node for BoolNode {
     }
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        Ok((get_type!(ctx, "Bool"), None))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Bool"))
     }
 
     fn pos(&self) -> Interval {

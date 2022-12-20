@@ -1,7 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{syntax_error, Error};
-use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
@@ -41,7 +40,8 @@ impl Node for EmptyGlobalConstNode {
             ))
             .set_interval(self.identifier.interval()));
         }
-        let (type_, _) = self.type_.borrow_mut().type_check(ctx.clone())?;
+        let TypeCheckRes { t: type_, .. } =
+            self.type_.borrow_mut().type_check(ctx.clone())?;
 
         let id = if !type_.borrow().is_ptr() {
             // deref if it shouldn't stay as a pointer
@@ -65,7 +65,7 @@ impl Node for EmptyGlobalConstNode {
             self.pos(),
         )?;
 
-        Ok((get_type!(ctx, "Void"), None))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Void"))
     }
 
     fn pos(&self) -> Interval {

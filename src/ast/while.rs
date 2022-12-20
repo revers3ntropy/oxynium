@@ -56,7 +56,7 @@ impl Node for WhileLoopNode {
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         if let Some(condition) = &self.condition {
-            let (cond_type, _) =
+            let TypeCheckRes { t: cond_type, .. } =
                 condition.borrow_mut().type_check(ctx.clone())?;
             if !get_type!(ctx, "Bool").borrow().contains(cond_type) {
                 return Err(type_error(

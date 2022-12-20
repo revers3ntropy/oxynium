@@ -17,7 +17,10 @@ impl Node for ScopeNode {
     }
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+        // shouldn't really be doing this but assuming that the incoming context is the same
+        // on each pass...
         self.ctx.borrow_mut().set_parent(ctx.clone());
+
         self.body.borrow_mut().type_check(self.ctx.clone())
     }
 

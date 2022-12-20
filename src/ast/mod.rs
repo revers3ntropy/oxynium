@@ -45,14 +45,48 @@ macro_rules! get_type {
 }
 
 // (type of result of node, type of returned values from node and children)
-pub type TypeCheckRes = (MutRc<dyn Type>, Option<MutRc<dyn Type>>);
+pub struct TypeCheckRes {
+    t: MutRc<dyn Type>,
+    is_returned: bool,
+    // unknowns_exist: bool,
+    // progress_made: bool,
+}
+
+impl TypeCheckRes {
+    fn from(t: MutRc<dyn Type>) -> Self {
+        Self {
+            t,
+            is_returned: false,
+            // unknowns_exist: false,
+            // progress_made: false,
+        }
+    }
+
+    fn from_return(t: MutRc<dyn Type>) -> Self {
+        Self {
+            t,
+            is_returned: true,
+            // unknowns_exist: false,
+            // progress_made: false,
+        }
+    }
+
+    fn from_ctx(ctx: &MutRc<Context>, name: &str) -> Self {
+        Self {
+            t: get_type!(ctx, name),
+            is_returned: false,
+            // unknowns_exist: false,
+            // progress_made: false,
+        }
+    }
+}
 
 pub trait Node: Debug {
     fn asm(&mut self, _ctx: MutRc<Context>) -> Result<String, Error> {
         Ok("".to_string())
     }
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        Ok((get_type!(ctx, "Void"), None))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Void"))
     }
     fn pos(&self) -> Interval;
 }

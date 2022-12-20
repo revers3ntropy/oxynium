@@ -126,7 +126,7 @@ impl Node for FnDeclarationNode {
                 .set_interval(self.position.clone()));
             }
         }
-        let (ret_type, _) =
+        let TypeCheckRes { t: ret_type, .. } =
             self.ret_type.borrow_mut().type_check(ctx.clone())?;
 
         let mut parameters: Vec<FnParamType> = Vec::new();
@@ -149,7 +149,7 @@ impl Node for FnDeclarationNode {
             let mut param_type = None;
             if let Some(type_) = type_ {
                 param_type =
-                    Some(type_.borrow_mut().type_check(ctx.clone())?.0);
+                    Some(type_.borrow_mut().type_check(ctx.clone())?.t);
             }
             if let Some(default_value) = default_value.clone() {
                 if seen_param_without_default {
@@ -160,7 +160,7 @@ impl Node for FnDeclarationNode {
                     .set_interval(self.position.clone()));
                 }
                 let default_value_type =
-                    default_value.borrow_mut().type_check(ctx.clone())?.0;
+                    default_value.borrow_mut().type_check(ctx.clone())?.t;
 
                 if param_type.is_none() {
                     param_type = Some(default_value_type.clone());
@@ -242,9 +242,16 @@ impl Node for FnDeclarationNode {
         )?;
 
         if let Some(ref body) = self.body {
-            let (_, body_ret_type) =
-                body.borrow().type_check(self.params_scope.clone())?;
-            let body_ret_type = body_ret_type.unwrap_or(get_type!(ctx, "Void"));
+            let TypeCheckRes {
+                t: body_ret_type,
+                is_returned,
+                ..
+            } = body.borrow().type_check(self.params_scope.clone())?;
+            let body_ret_type = if is_returned {
+                body_ret_type
+            } else {
+                get_type!(ctx, "Void")
+            };
             if !ret_type.borrow().contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
                     "Function `{}` has return type `{}` but found `{}`",
@@ -256,7 +263,7 @@ impl Node for FnDeclarationNode {
             }
         }
 
-        Ok((this_type, None))
+        Ok(TypeCheckRes::from(this_type))
     }
 
     fn pos(&self) -> Interval {

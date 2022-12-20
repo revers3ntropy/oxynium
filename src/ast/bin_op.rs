@@ -118,7 +118,8 @@ impl Node for BinOpNode {
             _ => get_type!(ctx, "Bool"),
         };
 
-        let (lhs_type, _) = self.lhs.borrow_mut().type_check(ctx.clone())?;
+        let TypeCheckRes { t: lhs_type, .. } =
+            self.lhs.borrow_mut().type_check(ctx.clone())?;
         if !operand_types.borrow().contains(lhs_type.clone()) {
             return Err(mismatched_types(
                 operand_types.clone(),
@@ -126,7 +127,8 @@ impl Node for BinOpNode {
             )
             .set_interval(self.lhs.borrow_mut().pos()));
         }
-        let (rhs_type, _) = self.rhs.borrow_mut().type_check(ctx.clone())?;
+        let TypeCheckRes { t: rhs_type, .. } =
+            self.rhs.borrow_mut().type_check(ctx.clone())?;
         if !operand_types.borrow().contains(rhs_type.clone()) {
             return Err(mismatched_types(
                 operand_types.clone(),
@@ -135,17 +137,14 @@ impl Node for BinOpNode {
             .set_interval(self.rhs.borrow_mut().pos()));
         }
 
-        return Ok((
-            match self.operator.token_type {
-                TokenType::Percent
-                | TokenType::Plus
-                | TokenType::Sub
-                | TokenType::Astrix
-                | TokenType::FSlash => get_type!(ctx, "Int"),
-                _ => get_type!(ctx, "Bool"),
-            },
-            None,
-        ));
+        return Ok(TypeCheckRes::from(match self.operator.token_type {
+            TokenType::Percent
+            | TokenType::Plus
+            | TokenType::Sub
+            | TokenType::Astrix
+            | TokenType::FSlash => get_type!(ctx, "Int"),
+            _ => get_type!(ctx, "Bool"),
+        }));
     }
     fn pos(&self) -> Interval {
         (self.lhs.borrow_mut().pos().0, self.rhs.borrow_mut().pos().1)

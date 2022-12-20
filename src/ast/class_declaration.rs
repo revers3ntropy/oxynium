@@ -76,7 +76,7 @@ impl Node for ClassDeclarationNode {
             let type_ = field.type_.borrow_mut().type_check(ctx.clone())?;
             this_type.borrow_mut().fields.push(ClassFieldType {
                 name: field.identifier.clone(),
-                type_: type_.0,
+                type_: type_.t,
             });
         }
 
@@ -87,7 +87,8 @@ impl Node for ClassDeclarationNode {
 
             // This is where the context reference is handed down so the
             // method's context is attached to the global context tree
-            let (method_type, _) = method.type_check(ctx.clone())?;
+            let TypeCheckRes { t: method_type, .. } =
+                method.type_check(ctx.clone())?;
 
             if !method.is_external && method.body.is_none() {
                 return Err(type_error(format!(
@@ -114,7 +115,10 @@ impl Node for ClassDeclarationNode {
                 .set_interval(method.pos()));
             }
 
-            let (first_param_type, _) = method_first_param
+            let TypeCheckRes {
+                t: first_param_type,
+                ..
+            } = method_first_param
                 .clone()
                 .unwrap()
                 .borrow_mut()
@@ -137,7 +141,7 @@ impl Node for ClassDeclarationNode {
             }
         }
 
-        Ok((this_type, None))
+        Ok(TypeCheckRes::from(this_type))
     }
 
     fn pos(&self) -> Interval {
