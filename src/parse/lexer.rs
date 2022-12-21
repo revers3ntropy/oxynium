@@ -177,11 +177,11 @@ impl Lexer {
             if self.current_char.unwrap() == '\\' {
                 self.advance();
                 match self.current_char.unwrap() {
-                    'n' => string.push_str("\\\n"),
-                    't' => string.push_str("\\\t"),
-                    'r' => string.push_str("\\\r"),
-                    '"' => string.push_str("\\\""),
-                    '\\' => string.push_str("\\\\"),
+                    'n' => string.push_str("\n"),
+                    't' => string.push_str("\t"),
+                    'r' => string.push_str("\r"),
+                    '"' => string.push_str("\""),
+                    '\\' => string.push_str("\\"),
                     _ => {
                         return Err(syntax_error(format!(
                             "Invalid escape character '\\{}'",

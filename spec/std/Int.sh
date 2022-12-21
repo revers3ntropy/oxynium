@@ -24,3 +24,32 @@ expect '-106709' '
     };
     f();
 '
+
+
+describe 'fn Int.max'
+
+expect_expr_int '2' '1.max(2)'
+expect_expr_int '2' '2.max(1)'
+expect_expr_int '2' '2.max(2)'
+expect_expr_int '-1' '-1.max(0)'
+expect_expr_int '0' '(-1).max(0)'
+expect_expr_int '1' '(-1).max(1)'
+expect_expr_int '-10' '(-100).max(-10)'
+expect_expr_int '-10' '(-10).max(-100)'
+expect_expr_int '0' '0.max(0)'
+expect_expr_int '1' '0.max(1)'
+expect_expr_int '1' '1.max(0)'
+expect_expr_int '1' '1.max(1)'
+
+describe 'fn Int.min'
+
+expect_expr_int '1' '1.min(2)'
+expect_expr_int '1' '2.min(1)'
+expect_expr_int '2' '2.min(2)'
+expect_expr_int '-1' '(-1).min(0)'
+expect_expr_int '-1' '(-1).min(1)'
+expect_expr_int '-100' '(-100).min(-10)'
+expect_expr_int '0' '0.min(1)'
+expect_expr_int '0' '1.min(0)'
+expect_expr_int '0' '0.min(0)'
+expect_expr_int '1' '1.min(1)'

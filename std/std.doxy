@@ -1,9 +1,15 @@
 class Void;
+
+primitive Char {
+    extern fn str(self): Str,
+}
+
 class Str {
     fn str(self): Str {
         return self
     }
-    //extern fn at(self, i: Int): Str
+    extern fn at(self, i: Int): Char,
+    extern fn len(self): Int,
 }
 
 primitive Bool {
@@ -16,16 +22,22 @@ primitive Bool {
 }
 
 primitive Int {
-    extern fn str(self): Str
+    extern fn str(self): Str,
+    fn max(self, other: Int): Int {
+        if self > other {
+            return self
+        }
+        return other
+    }
+    fn min(self, other: Int): Int {
+        if self < other {
+            return self
+        }
+        return other
+    }
 }
 
 extern fn print(msg: Str): Void;
 extern fn print_nl(): Void;
 extern fn exit(code: Int = 0): Void;
 extern fn input(prompt: Str = "", buffer_size: Int = 1000): Str;
-
-// primitive Ptr {
-//     fn deref(self): Int {
-//
-//     }
-// }

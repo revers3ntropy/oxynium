@@ -19,11 +19,29 @@ impl StrNode {
 
 impl Node for StrNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+        let str = self.val().clone();
+        let symbols = str.chars();
+
+        let mut asm = String::new();
+        for symbol in symbols.clone() {
+            let mut bytes = vec![];
+            for byte in symbol.to_string().bytes() {
+                bytes.push(format!("0x{:x}", byte));
+            }
+            // pad to 8 elements
+            while bytes.len() < 8 {
+                bytes.push("0x0".to_string());
+            }
+            asm.push_str(&bytes.join(","));
+            asm.push_str(",");
+        }
+        asm.pop();
+
         let anon_id = ctx.borrow_mut().define_anon(
             SymbolDef {
                 name: "".to_string(),
                 // ,0 is the null terminator
-                data: Some(format!("dq `{}`, 0", self.val())),
+                data: Some(format!("db {} \ndq 0x0", asm)),
                 text: None,
             },
             self.value.interval(),

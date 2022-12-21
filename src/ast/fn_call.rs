@@ -206,7 +206,15 @@ impl Node for FnCallNode {
         if fn_type.is_none() {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(unknown_symbol(format!(
-                    "Can't find function `{}`",
+                    "Can't find {} `{}`",
+                    if base_type.is_some() {
+                        format!(
+                            "method on type `{}`",
+                            base_type.unwrap().borrow().str()
+                        )
+                    } else {
+                        "function".to_string()
+                    },
                     self.identifier.clone().literal.unwrap()
                 ))
                 .set_interval(self.identifier.interval()));
@@ -282,6 +290,16 @@ impl Node for FnCallNode {
             }
         }
 
+        if fn_type.ret_type.borrow().is_unknown() {
+            if ctx.borrow().throw_on_unknowns() {
+                return Err(unknown_symbol(format!(
+                    "Can't find return type of function `{}`",
+                    self.identifier.clone().literal.unwrap()
+                ))
+                .set_interval(self.identifier.interval()));
+            }
+            unknowns += 1;
+        }
         Ok(TypeCheckRes::from(fn_type.ret_type.clone(), unknowns))
     }
 

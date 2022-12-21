@@ -234,6 +234,9 @@ impl Node for FnDeclarationNode {
                     as *const MutRc<FnType>))
                     .clone();
             }
+            // override with latest data
+            this_type.borrow_mut().parameters = parameters;
+            this_type.borrow_mut().ret_type = ret_type.clone();
         } else {
             this_type = new_mut_rc(FnType {
                 name: self.id(),
@@ -272,7 +275,7 @@ impl Node for FnDeclarationNode {
                 && !ret_type.borrow().contains(get_type!(&ctx, "Void"))
             {
                 return Err(type_error(format!(
-                    "Function '{}' does not always return a value",
+                    "Function '{}' doesn't always return a value",
                     self.id()
                 ))
                 .set_interval(self.identifier.interval()));

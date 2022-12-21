@@ -24,12 +24,14 @@ _$_print_char: ; [ascii_code: int, cb: *] => Void
     mov rsi, rsp
     add rsi, 8 ; rsi points to ascii code
 
-    mov rdx, 2 ; specify length of string (64 bit char)
+    mov rdx, 8 ; specify length of string
     ; set up syscall
     mov rax, 1
     mov rdi, 1
     syscall
 
+    mov rsp, rbp
+    pop rbp
     ret
 
 _$_clear_memory: ; [start: *, size: int, cb: *] => Void
@@ -132,11 +134,11 @@ input: ; [buffer_size: int, prompt: char*, cb: *] => String
     push rbp
     mov rbp, rsp
 
-    push qword [rbp+16]
+    push qword [rbp + 16]
     call print
     pop rax
 
-    mov rdi, qword [rbp+24] ; buffer_size
+    mov rdi, qword [rbp + 24] ; buffer_size
     inc rdi ; extra char for null terminator
     call malloc WRT ..plt
     mov r15, rax ; r15 = string pointer
@@ -144,10 +146,22 @@ input: ; [buffer_size: int, prompt: char*, cb: *] => String
     xor rax, rax
     xor rdi, rdi
     mov rsi, r15
-    mov rdx, qword [rbp+24]
+    mov rdx, qword [rbp + 24]
     syscall
 
     mov rax, r15
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+exit:
+    push rbp
+    mov rbp, rsp
+
+    mov rax, 60
+    mov rdi, qword [rbp + 16]
+    syscall
 
     mov rsp, rbp
     pop rbp
@@ -166,7 +180,7 @@ Int.str: ; [number: int, cb: *] => char*
     push rbp
     mov rbp, rsp
 
-    mov r15, qword [rbp+16] ; pop num
+    mov r15, qword [rbp + 16] ; pop num
 
     mov r10, rsp
 
@@ -273,10 +287,71 @@ Int.str: ; [number: int, cb: *] => char*
         pop rbp
         ret
 
-exit:
+
+Str.len: ; [string: char*, cb: *] => int
+         ; returns length of string in rax
     push rbp
     mov rbp, rsp
 
-    mov rax, 60
+    mov rdx, qword [rbp + 16] ; pop string
+
+    xor rax, rax ; string length
+
+    ; find length of string
+    _$_Str.len_find_length:
+        mov rcx, qword [rdx]
+        test rcx, rcx
+        je _$_Str.len_end
+        inc rax
+        add rdx, 8
+        jmp _$_Str.len_find_length
+
+    _$_Str.len_end:
+        mov rsp, rbp
+        pop rbp
+        ret
+
+Str.at: ; [index: int, string: char*, cb: *] => char
+              ; returns the character at the given index
+    push rbp
+    mov rbp, rsp
+
+    mov r14, qword [rbp + 16] ; r14 = string
+    mov r13, qword [rbp + 24] ; r13 = index
+
+    push r14 ; string
+    call Str.len
+    mov r15, rax ; string.len()
+    pop rcx
+
+    xor rax, rax ; either finish as 0 or overridden with char
+
+    cmp r13, r15  ; index >= string.len()
+    jge _$_Str.char_at_end
+
+    cmp rax, r14 ; 0 > index
+    jg _$_Str.char_at_end
+
+    mov rax, qword [r14 + r13 * 8] ; get char at index
+
+    _$_Str.char_at_end:
+        mov rsp, rbp
+        pop rbp
+        ret
+
+
+Char.str: ; [char: char, cb: *] => char*
+           ; stringifies a single character
+    push rbp
+    mov rbp, rsp
+
+    push 16
+    call _$_allocate
+    pop rcx
+
     mov rdi, qword [rbp+16]
-    syscall
+    mov qword [rax], rdi
+
+    mov rsp, rbp
+    pop rbp
+    ret
