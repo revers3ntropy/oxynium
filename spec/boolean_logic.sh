@@ -36,6 +36,9 @@ expect_expr_bool 'true' 'true || true || true || true'
 expect_err 'TypeError' 'false || false || ""'
 expect_err 'TypeError' 'false || 1'
 expect_err 'TypeError' '1 || false'
+expect_err 'TypeError' '1 || Str'
+expect_err 'TypeError' 'true || Str'
+expect_err 'TypeError' 'false || new Void'
 
 
 describe 'Boolean Not'

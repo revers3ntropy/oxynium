@@ -82,7 +82,7 @@ impl Lexer {
             } else if c.is_whitespace() {
                 self.advance();
             } else if c == '"' {
-                tokens.push(self.make_string());
+                tokens.push(self.make_string()?);
             } else if c == '/'
                 && self.input.chars().nth((self.position.idx + 1) as usize)
                     == Some('/')
@@ -169,20 +169,46 @@ impl Lexer {
         )
     }
 
-    fn make_string(&mut self) -> Token {
+    fn make_string(&mut self) -> Result<Token, Error> {
         let mut string = String::new();
         let start = self.position.clone();
         self.advance();
         while self.current_char.is_some() && self.current_char.unwrap() != '"' {
-            string.push(self.current_char.unwrap());
-            self.advance();
+            if self.current_char.unwrap() == '\\' {
+                self.advance();
+                match self.current_char.unwrap() {
+                    'n' => string.push_str("\\\n"),
+                    't' => string.push_str("\\\t"),
+                    'r' => string.push_str("\\\r"),
+                    '"' => string.push_str("\\\""),
+                    '\\' => string.push_str("\\\\"),
+                    _ => {
+                        return Err(syntax_error(format!(
+                            "Invalid escape character '\\{}'",
+                            self.current_char.unwrap()
+                        ))
+                        .set_interval((
+                            self.position.clone().reverse(None),
+                            self.position.clone(),
+                        )))
+                    }
+                }
+                self.advance();
+            } else {
+                string.push(self.current_char.unwrap());
+                self.advance();
+            }
+        }
+        if self.current_char.is_none() {
+            return Err(syntax_error("Unterminated string".to_string())
+                .set_interval((start, self.position.clone())));
         }
         self.advance();
-        Token::new(
+        Ok(Token::new(
             TokenType::String,
             Some(string),
             start,
             self.position.clone().reverse(None),
-        )
+        ))
     }
 }

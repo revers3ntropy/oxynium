@@ -23,7 +23,7 @@ impl Node for StrNode {
             SymbolDef {
                 name: "".to_string(),
                 // ,0 is the null terminator
-                data: Some(format!("dq \"{}\", 0", self.val())),
+                data: Some(format!("dq `{}`, 0", self.val())),
                 text: None,
             },
             self.value.interval(),
