@@ -4,6 +4,8 @@ expect 'false' 'print(new Bool.str())'
 expect 'false' 'print(false.str())'
 expect 'true' 'print(true.str())'
 
+expect_expr_bool 'true' 'true'
+expect_expr_bool 'false' 'false'
 
 describe 'fn Bool.str'
 

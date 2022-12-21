@@ -20,8 +20,8 @@ impl Type for UnknownType {
         "?".to_string()
     }
 
-    fn contains(&self, other: MutRc<dyn Type>) -> bool {
-        other.borrow().is_unknown()
+    fn contains(&self, _: MutRc<dyn Type>) -> bool {
+        true
     }
 
     fn is_unknown(&self) -> bool {

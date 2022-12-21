@@ -22,7 +22,7 @@ impl Node for IntNode {
     }
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        Ok(TypeCheckRes::from_ctx(&ctx, "Int"))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Int", 0))
     }
 
     fn pos(&self) -> Interval {

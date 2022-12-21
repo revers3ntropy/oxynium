@@ -103,6 +103,7 @@ impl Node for BinOpNode {
     }
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+        let mut unknowns = 0;
         let operand_types = match self.operator.token_type {
             TokenType::Percent
             | TokenType::Plus
@@ -118,33 +119,35 @@ impl Node for BinOpNode {
             _ => get_type!(ctx, "Bool"),
         };
 
-        let TypeCheckRes { t: lhs_type, .. } =
-            self.lhs.borrow_mut().type_check(ctx.clone())?;
-        if !operand_types.borrow().contains(lhs_type.clone()) {
+        let lhs_tr = self.lhs.borrow_mut().type_check(ctx.clone())?;
+        unknowns += lhs_tr.unknowns;
+        if !operand_types.borrow().contains(lhs_tr.t.clone()) {
             return Err(mismatched_types(
                 operand_types.clone(),
-                lhs_type.clone(),
+                lhs_tr.t.clone(),
             )
             .set_interval(self.lhs.borrow_mut().pos()));
         }
-        let TypeCheckRes { t: rhs_type, .. } =
-            self.rhs.borrow_mut().type_check(ctx.clone())?;
-        if !operand_types.borrow().contains(rhs_type.clone()) {
+        let rhs_tr = self.rhs.borrow_mut().type_check(ctx.clone())?;
+        if !operand_types.borrow().contains(rhs_tr.t.clone()) {
             return Err(mismatched_types(
                 operand_types.clone(),
-                rhs_type.clone(),
+                rhs_tr.t.clone(),
             )
             .set_interval(self.rhs.borrow_mut().pos()));
         }
 
-        return Ok(TypeCheckRes::from(match self.operator.token_type {
-            TokenType::Percent
-            | TokenType::Plus
-            | TokenType::Sub
-            | TokenType::Astrix
-            | TokenType::FSlash => get_type!(ctx, "Int"),
-            _ => get_type!(ctx, "Bool"),
-        }));
+        return Ok(TypeCheckRes::from(
+            match self.operator.token_type {
+                TokenType::Percent
+                | TokenType::Plus
+                | TokenType::Sub
+                | TokenType::Astrix
+                | TokenType::FSlash => get_type!(ctx, "Int"),
+                _ => get_type!(ctx, "Bool"),
+            },
+            unknowns,
+        ));
     }
     fn pos(&self) -> Interval {
         (self.lhs.borrow_mut().pos().0, self.rhs.borrow_mut().pos().1)

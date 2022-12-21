@@ -16,7 +16,7 @@ impl Node for BoolNode {
     }
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        Ok(TypeCheckRes::from_ctx(&ctx, "Bool"))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Bool", 0))
     }
 
     fn pos(&self) -> Interval {

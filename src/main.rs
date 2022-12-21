@@ -48,7 +48,7 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
     if asm_error.is_err() {
         return Err(asm_error.err().unwrap());
     }
-
+    ctx.borrow_mut().reset();
     Ok(ctx)
 }
 

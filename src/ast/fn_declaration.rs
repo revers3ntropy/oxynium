@@ -10,6 +10,7 @@ use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
 use crate::types::class::ClassType;
 use crate::types::function::{FnParamType, FnType};
 use crate::util::{new_mut_rc, MutRc};
+use std::any::Any;
 
 #[derive(Debug, Clone)]
 pub struct Parameter {
@@ -117,17 +118,20 @@ impl Node for FnDeclarationNode {
 
         // don't use param_scope so that the function can have params
         // with the same name as the function
-        if !ctx.borrow_mut().allow_overrides {
-            if ctx.borrow_mut().has_dec_with_id(self.id().as_str()) {
-                return Err(type_error(format!(
-                    "Symbol {} is already defined",
-                    self.identifier.clone().literal.unwrap()
-                ))
-                .set_interval(self.position.clone()));
-            }
-        }
-        let TypeCheckRes { t: ret_type, .. } =
-            self.ret_type.borrow_mut().type_check(ctx.clone())?;
+        // if !ctx.borrow_mut().allow_overrides {
+        //     if ctx.borrow_mut().has_dec_with_id(self.id().as_str()) {
+        //         return Err(type_error(format!(
+        //             "Function {} is already defined",
+        //             self.identifier.clone().literal.unwrap()
+        //         ))
+        //         .set_interval(self.position.clone()));
+        //     }
+        // }
+        let TypeCheckRes {
+            t: ret_type,
+            mut unknowns,
+            ..
+        } = self.ret_type.borrow_mut().type_check(ctx.clone())?;
 
         let mut parameters: Vec<FnParamType> = Vec::new();
 
@@ -148,8 +152,10 @@ impl Node for FnDeclarationNode {
 
             let mut param_type = None;
             if let Some(type_) = type_ {
-                param_type =
-                    Some(type_.borrow_mut().type_check(ctx.clone())?.t);
+                let param_type_res =
+                    type_.borrow_mut().type_check(ctx.clone())?;
+                param_type = Some(param_type_res.t);
+                unknowns += param_type_res.unknowns;
             }
             if let Some(default_value) = default_value.clone() {
                 if seen_param_without_default {
@@ -160,16 +166,17 @@ impl Node for FnDeclarationNode {
                     .set_interval(self.position.clone()));
                 }
                 let default_value_type =
-                    default_value.borrow_mut().type_check(ctx.clone())?.t;
+                    default_value.borrow_mut().type_check(ctx.clone())?;
+                unknowns += default_value_type.unknowns;
 
                 if param_type.is_none() {
-                    param_type = Some(default_value_type.clone());
+                    param_type = Some(default_value_type.t.clone());
                 }
                 if !param_type
                     .clone()
                     .unwrap()
                     .borrow()
-                    .contains(default_value_type.clone())
+                    .contains(default_value_type.t.clone())
                 {
                     return Err(type_error(format!(
                         "Default value for parameter '{}' is not of type {}",
@@ -201,52 +208,73 @@ impl Node for FnDeclarationNode {
             );
 
             let self_pos = self.pos();
-            self.params_scope.borrow_mut().declare(
-                SymbolDec {
-                    name: identifier.clone(),
-                    id: format!(
-                        "qword [rbp + {}]",
-                        8 * ((num_params - (i + 1)) + 2)
-                    ),
-                    is_constant: true,
-                    is_type: false,
-                    require_init: false,
-                    is_defined: true,
-                    is_param: true,
-                    type_: param_type.unwrap().clone(),
-                    position: self.position.clone(),
-                },
-                self_pos,
-            )?;
+            if ctx.borrow().is_frozen() {
+                self.params_scope.borrow_mut().update_dec_type(
+                    &identifier.clone(),
+                    param_type.unwrap(),
+                    self_pos,
+                )?;
+            } else {
+                self.params_scope.borrow_mut().declare(
+                    SymbolDec {
+                        name: identifier.clone(),
+                        id: format!(
+                            "qword [rbp + {}]",
+                            8 * ((num_params - (i + 1)) + 2)
+                        ),
+                        is_constant: true,
+                        is_type: false,
+                        require_init: false,
+                        is_defined: true,
+                        is_param: true,
+                        type_: param_type.unwrap().clone(),
+                        position: self.position.clone(),
+                    },
+                    self_pos,
+                )?;
+            }
         }
 
-        let this_type = new_mut_rc(FnType {
-            name: self.id(),
-            ret_type: ret_type.clone(),
-            parameters,
-        });
-        // declare in the parent context
-        ctx.borrow_mut().declare(
-            SymbolDec {
+        let this_type: MutRc<FnType>;
+        if ctx.borrow().is_frozen() {
+            let this_type_any = ctx.borrow().get_dec_from_id(&self.id()).type_;
+            unsafe {
+                this_type = (&*(&this_type_any as *const dyn Any
+                    as *const MutRc<FnType>))
+                    .clone();
+            }
+        } else {
+            this_type = new_mut_rc(FnType {
                 name: self.id(),
-                id: self.id(),
-                is_constant: true,
-                is_type: false,
-                require_init: !self.is_external,
-                is_defined: self.body.is_some(),
-                is_param: false,
-                type_: this_type.clone(),
-                position: self.pos(),
-            },
-            self.pos(),
-        )?;
+                ret_type: ret_type.clone(),
+                parameters,
+            });
+            // declare in the parent context
+            ctx.borrow_mut().declare(
+                SymbolDec {
+                    name: self.id(),
+                    id: self.id(),
+                    is_constant: true,
+                    is_type: false,
+                    require_init: !self.is_external,
+                    is_defined: self.body.is_some(),
+                    is_param: false,
+                    type_: this_type.clone(),
+                    position: self.pos(),
+                },
+                self.pos(),
+            )?;
+        }
 
         if let Some(ref body) = self.body {
             let TypeCheckRes {
                 t: body_ret_type,
                 is_returned,
+                unknowns: body_unknowns,
                 ..
             } = body.borrow().type_check(self.params_scope.clone())?;
+            unknowns += body_unknowns;
+
             let body_ret_type = if is_returned {
                 body_ret_type
             } else {
@@ -263,7 +291,7 @@ impl Node for FnDeclarationNode {
             }
         }
 
-        Ok(TypeCheckRes::from(this_type))
+        Ok(TypeCheckRes::from(this_type, unknowns))
     }
 
     fn pos(&self) -> Interval {

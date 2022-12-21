@@ -49,14 +49,17 @@ impl Node for UnaryOpNode {
             _ => get_type!(ctx, "Bool"),
         };
 
-        let TypeCheckRes { t: value_type, .. } =
-            self.rhs.borrow_mut().type_check(ctx.clone())?;
+        let TypeCheckRes {
+            t: value_type,
+            unknowns,
+            ..
+        } = self.rhs.borrow_mut().type_check(ctx.clone())?;
         if !t.borrow().contains(value_type.clone()) {
             return Err(mismatched_types(t.clone(), value_type.clone())
                 .set_interval(self.rhs.borrow_mut().pos()));
         }
 
-        Ok(TypeCheckRes::from(t))
+        Ok(TypeCheckRes::from(t, unknowns))
     }
 
     fn pos(&self) -> Interval {

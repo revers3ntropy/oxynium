@@ -46,22 +46,29 @@ impl Node for SymbolAccess {
             return Err(unknown_symbol(self.id()));
         }
         if !ctx.borrow_mut().has_dec_with_id(&self.id()) {
-            return Err(unknown_symbol(format!(
-                "Symbol '{}' does not exist",
-                self.id()
-            ))
-            .set_interval(self.pos()));
+            if ctx.borrow().throw_on_unknowns() {
+                return Err(unknown_symbol(format!(
+                    "Symbol '{}' does not exist",
+                    self.id()
+                ))
+                .set_interval(self.pos()));
+            }
+            return Ok(TypeCheckRes::unknown());
         }
         if ctx.borrow_mut().get_dec_from_id(&self.id()).is_type {
-            return Ok(TypeCheckRes::from(new_mut_rc(TypeType {
-                instance_type: ctx
-                    .borrow_mut()
-                    .get_dec_from_id(&self.id())
-                    .type_
-                    .clone(),
-            })));
+            return Ok(TypeCheckRes::from(
+                new_mut_rc(TypeType {
+                    instance_type: ctx
+                        .borrow_mut()
+                        .get_dec_from_id(&self.id())
+                        .type_
+                        .clone(),
+                }),
+                0,
+            ));
         }
-        Ok(TypeCheckRes::from_ctx(&ctx, &self.id()))
+
+        Ok(TypeCheckRes::from_ctx(&ctx, &self.id(), 0))
     }
 
     fn pos(&self) -> Interval {

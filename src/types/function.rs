@@ -46,6 +46,9 @@ impl Type for FnType {
     }
 
     fn contains(&self, t: MutRc<dyn Type>) -> bool {
+        if t.borrow().is_unknown() {
+            return true;
+        }
         if let Some(fn_type) = t.borrow().as_fn() {
             let required_args =
                 self.parameters.iter().filter(|a| a.default_value.is_none());

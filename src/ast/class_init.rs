@@ -18,15 +18,16 @@ impl ClassInitNode {
     fn field_types_hashmap(
         &self,
         ctx: MutRc<Context>,
-    ) -> Result<HashMap<String, MutRc<dyn Type>>, Error> {
+    ) -> Result<(HashMap<String, MutRc<dyn Type>>, usize), Error> {
+        let mut unknowns = 0;
         let mut instance_fields_hashmap = HashMap::new();
         for field in self.fields.clone() {
-            instance_fields_hashmap.insert(
-                field.0,
-                field.1.borrow_mut().type_check(ctx.clone())?.t,
-            );
+            let field_type_res =
+                field.1.borrow_mut().type_check(ctx.clone())?;
+            unknowns += field_type_res.unknowns;
+            instance_fields_hashmap.insert(field.0, field_type_res.t);
         }
-        Ok(instance_fields_hashmap)
+        Ok((instance_fields_hashmap, unknowns))
     }
     fn field_asm_hashmap(
         &self,
@@ -121,6 +122,8 @@ impl Node for ClassInitNode {
     }
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+        let mut unknowns = 0;
+
         if !ctx
             .borrow_mut()
             .has_dec_with_id(&self.identifier.clone().literal.unwrap())
@@ -141,12 +144,12 @@ impl Node for ClassInitNode {
             .set_interval(self.identifier.interval()));
         }
 
-        let type_ = ctx
+        let class_type_raw = ctx
             .borrow_mut()
             .get_dec_from_id(&self.identifier.clone().literal.unwrap())
             .type_
             .clone();
-        let class_type = type_.borrow().as_class();
+        let class_type = class_type_raw.borrow().as_class();
         if class_type.is_none() {
             return Err(type_error(format!(
                 "{} is not a class",
@@ -155,11 +158,13 @@ impl Node for ClassInitNode {
         }
         let class_type = class_type.unwrap();
 
-        let instance_fields_hashmap = self.field_types_hashmap(ctx.clone())?;
+        let (instance_fields_hashmap, field_unknowns) =
+            self.field_types_hashmap(ctx.clone())?;
+        unknowns += field_unknowns;
 
         let mut type_fields_hashmap = HashMap::new();
-        for field in class_type.fields.clone() {
-            type_fields_hashmap.insert(field.name, field.type_.clone());
+        for (name, field) in class_type.fields.clone() {
+            type_fields_hashmap.insert(name, field.type_.clone());
         }
 
         let (extra, fields, missing) =
@@ -204,7 +209,7 @@ impl Node for ClassInitNode {
             }
         }
 
-        Ok(TypeCheckRes::from(type_))
+        Ok(TypeCheckRes::from(class_type_raw, unknowns))
     }
 
     fn pos(&self) -> Interval {

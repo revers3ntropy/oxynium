@@ -44,6 +44,16 @@ pub fn num_digits(mut n: i64) -> usize {
     digits
 }
 
+pub fn indent(s: String, indent: usize) -> String {
+    let mut res = String::new();
+    for line in s.lines() {
+        res.push_str(&" ".repeat(indent));
+        res.push_str(line);
+        res.push_str("\n");
+    }
+    res
+}
+
 #[macro_export]
 macro_rules! strings_vec {
     ($($x:expr),*$(,)?) => (vec![$($x.to_string()),*]);

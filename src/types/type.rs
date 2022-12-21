@@ -17,6 +17,9 @@ impl Type for TypeType {
     }
 
     fn contains(&self, other: MutRc<dyn Type>) -> bool {
+        if other.borrow().is_unknown() {
+            return true;
+        }
         if let Some(other) = other.borrow().as_type_type() {
             self.instance_type
                 .borrow()

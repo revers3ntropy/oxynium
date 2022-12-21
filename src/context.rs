@@ -2,7 +2,8 @@ use crate::ast::ANON_PREFIX;
 use crate::error::{type_error, Error};
 use crate::position::Interval;
 use crate::symbols::{SymbolDec, SymbolDef};
-use crate::util::{new_mut_rc, MutRc};
+use crate::types::Type;
+use crate::util::{indent, new_mut_rc, MutRc};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -30,6 +31,10 @@ pub struct Context {
     pub std_asm_path: String,
     pub allow_overrides: bool,
     pub allow_local_var_decls: bool,
+    // do not allow any more declarations
+    frozen: bool,
+    // throw error on unknown types
+    err_on_unknowns: bool,
 }
 
 impl Context {
@@ -45,7 +50,36 @@ impl Context {
             std_asm_path: String::from("std.asm"),
             allow_overrides: false,
             allow_local_var_decls: false,
+            frozen: false,
+            err_on_unknowns: false,
         })
+    }
+
+    pub fn freeze(&mut self) {
+        self.frozen = true;
+    }
+    pub fn reset(&mut self) {
+        self.frozen = false;
+        self.err_on_unknowns = false;
+    }
+    pub fn is_frozen(&self) -> bool {
+        if let Some(ref parent) = self.parent {
+            parent.borrow().is_frozen()
+        } else {
+            self.frozen
+        }
+    }
+    pub fn throw_on_unknowns(&self) -> bool {
+        if let Some(ref parent) = self.parent {
+            parent.borrow().throw_on_unknowns()
+        } else {
+            self.err_on_unknowns
+        }
+    }
+
+    pub fn finished_resolving_types(&mut self) {
+        self.freeze();
+        self.err_on_unknowns = true;
     }
 
     pub fn set_parent(&mut self, parent: Rc<RefCell<Context>>) {
@@ -91,7 +125,13 @@ impl Context {
         &mut self,
         symbol: SymbolDec,
         trace_interval: Interval,
-    ) -> Result<(), Error> {
+    ) -> Result<SymbolDec, Error> {
+        if self.is_frozen() {
+            if self.has_dec_with_id(&symbol.name) {
+                return Ok(self.get_dec_from_id(&symbol.name));
+            }
+            panic!("(!?) Context is frozen and symbol doesn't exist yet!");
+        }
         if self.parent.is_some() && !self.allow_local_var_decls {
             return self
                 .parent
@@ -111,8 +151,9 @@ impl Context {
                 .set_interval(trace_interval));
             }
         }
-        self.declarations.insert(symbol.name.clone(), symbol);
-        Ok(())
+        self.declarations
+            .insert(symbol.name.clone(), symbol.clone());
+        Ok(symbol)
     }
     pub fn has_dec_with_id(&self, id: &str) -> bool {
         if self.declarations.get(id).is_some() {
@@ -148,6 +189,28 @@ impl Context {
                 .unwrap()
                 .borrow_mut()
                 .set_dec_as_defined(id, trace_interval)
+        } else {
+            Err(type_error(format!("Symbol {id} is not declared"))
+                .set_interval(trace_interval))
+        }
+    }
+    pub fn update_dec_type(
+        &mut self,
+        id: &str,
+        new_type: MutRc<dyn Type>,
+        trace_interval: Interval,
+    ) -> Result<(), Error> {
+        if self.declarations.get(id).is_some() {
+            let mut dec = self.declarations.get(id).unwrap().clone();
+            dec.type_ = new_type;
+            self.declarations.insert(id.to_string(), dec);
+            Ok(())
+        } else if self.parent.is_some() {
+            self.parent.as_ref().unwrap().borrow_mut().update_dec_type(
+                id,
+                new_type,
+                trace_interval,
+            )
         } else {
             Err(type_error(format!("Symbol {id} is not declared"))
                 .set_interval(trace_interval))
@@ -295,5 +358,33 @@ impl Context {
             return self.with_root(&mut |ctx| ctx.stack_frame_peak());
         }
         self.call_stack.last().cloned()
+    }
+
+    // Utils
+
+    pub fn str(&self) -> String {
+        let mut s = format!(
+            "--- Context {}{}---",
+            if self.is_frozen() { "(frozen) " } else { "" },
+            if self.err_on_unknowns {
+                "(do err) "
+            } else {
+                ""
+            }
+        );
+        if self.parent.is_some() {
+            s = format!(
+                "{}",
+                indent(self.parent.clone().unwrap().borrow().str(), 4)
+            );
+        }
+        for (_, dec) in self.declarations.iter() {
+            s.push_str(&format!("\n  {}", dec.str()));
+        }
+        if self.declarations.is_empty() {
+            s.push_str("\n  (Empty)");
+        }
+        s.push_str("\n----------------------------------");
+        s
     }
 }

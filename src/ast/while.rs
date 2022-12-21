@@ -55,9 +55,15 @@ impl Node for WhileLoopNode {
     }
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+        let mut unknowns = 0;
         if let Some(condition) = &self.condition {
-            let TypeCheckRes { t: cond_type, .. } =
-                condition.borrow_mut().type_check(ctx.clone())?;
+            let TypeCheckRes {
+                t: cond_type,
+                unknowns: condition_unknowns,
+                ..
+            } = condition.borrow_mut().type_check(ctx.clone())?;
+            unknowns += condition_unknowns;
+
             if !get_type!(ctx, "Bool").borrow().contains(cond_type) {
                 return Err(type_error(
                     "while loop condition must be a bool".to_string(),
@@ -65,7 +71,12 @@ impl Node for WhileLoopNode {
                 .set_interval(condition.borrow_mut().pos()));
             }
         }
-        self.statements.borrow_mut().type_check(ctx.clone())
+        let statements_tr =
+            self.statements.borrow_mut().type_check(ctx.clone())?;
+        Ok(TypeCheckRes::from(
+            statements_tr.t,
+            statements_tr.unknowns + unknowns,
+        ))
     }
 
     fn pos(&self) -> Interval {

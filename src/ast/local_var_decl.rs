@@ -42,13 +42,16 @@ impl Node for LocalVarNode {
 
         let id = ctx.borrow_mut().get_dec_from_id(&self.id()).id;
 
+        let value_asm = self.value.borrow_mut().asm(ctx.clone())?;
+        ctx.borrow_mut()
+            .set_dec_as_defined(&self.id(), self.pos())?;
+
         Ok(format!(
             "
-            {}
+            {value_asm}
             pop rax
             mov {id}, rax
-        ",
-            self.value.borrow_mut().asm(ctx)?
+        "
         ))
     }
 
@@ -61,15 +64,20 @@ impl Node for LocalVarNode {
             .set_interval(self.identifier.interval()));
         }
         let TypeCheckRes {
-            t: mut value_type, ..
+            t: mut value_type,
+            mut unknowns,
+            ..
         } = self.value.borrow().type_check(ctx.clone())?;
 
         if self.type_annotation.is_some() {
             let type_annotation = self.type_annotation.as_ref().unwrap();
             let TypeCheckRes {
                 t: type_annotation_type,
+                unknowns: type_annotation_unknowns,
                 ..
             } = type_annotation.borrow().type_check(ctx.clone())?;
+            unknowns += type_annotation_unknowns;
+
             if !type_annotation_type.borrow().contains(value_type.clone()) {
                 return Err(type_error(format!(
                     "Cannot assign value of type '{}' to variable '{}' of type '{}'",
@@ -90,14 +98,14 @@ impl Node for LocalVarNode {
                 is_constant: !self.mutable,
                 is_type: false,
                 require_init: true,
-                is_defined: true,
+                is_defined: false,
                 is_param: false,
                 type_: value_type.clone(),
                 position: self.pos(),
             },
             self.identifier.interval(),
         )?;
-        Ok(TypeCheckRes::from_ctx(&ctx, "Void"))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))
     }
 
     fn pos(&self) -> Interval {

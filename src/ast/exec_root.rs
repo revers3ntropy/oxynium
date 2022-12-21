@@ -111,6 +111,32 @@ impl Node for ExecRootNode {
     }
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+        if ctx.borrow().is_frozen() {
+            println!("\n\n  ***  Context is frozen!  *** \n\n");
+        }
+        let TypeCheckRes { mut unknowns, .. } =
+            self.statements.borrow_mut().type_check(ctx.clone())?;
+
+        // so that things aren't redeclared
+        ctx.borrow_mut().freeze();
+
+        // println!("(Pass 0) Unknowns: {} ", unknowns);
+        //let mut i = 0;
+        while unknowns > 0 {
+            //i += 1;
+            let res = self.statements.borrow_mut().type_check(ctx.clone())?;
+            // println!("(Pass {}) Unknowns: {} ", i, res.unknowns);
+
+            if res.unknowns >= unknowns {
+                break;
+            }
+            unknowns = res.unknowns;
+        }
+
+        ctx.borrow_mut().finished_resolving_types();
+
+        // especially while not stable, do this last check every time
+        // but TODO: only run when there are still unknowns but no progress
         self.statements.borrow_mut().type_check(ctx.clone())
     }
 

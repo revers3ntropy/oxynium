@@ -32,8 +32,9 @@ impl Node for EmptyLocalVarNode {
             .set_interval(self.position.clone()));
         }
 
-        let TypeCheckRes { t: type_, .. } =
-            self.type_.borrow_mut().type_check(ctx.clone())?;
+        let TypeCheckRes {
+            t: type_, unknowns, ..
+        } = self.type_.borrow_mut().type_check(ctx.clone())?;
 
         let stack_offset = ctx.borrow_mut().get_new_local_var_offset();
         ctx.borrow_mut().declare(
@@ -50,7 +51,7 @@ impl Node for EmptyLocalVarNode {
             },
             self.pos(),
         )?;
-        Ok(TypeCheckRes::from(type_.clone()))
+        Ok(TypeCheckRes::from(type_.clone(), unknowns))
     }
 
     fn pos(&self) -> Interval {

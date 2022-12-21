@@ -46,13 +46,19 @@ impl FnCallNode {
     fn get_callee_type(
         &self,
         ctx: MutRc<Context>,
-    ) -> Result<(FnType, bool, Option<MutRc<dyn Type>>), Error> {
+    ) -> Result<(Option<FnType>, bool, Option<MutRc<dyn Type>>, usize), Error>
+    {
         if let Some(obj) = self.object.clone() {
             let mut calling_through_instance = true;
             // getting function type on method call
             let TypeCheckRes {
-                t: base_type_any, ..
+                t: base_type_any,
+                unknowns,
+                ..
             } = obj.borrow_mut().type_check(ctx.clone())?;
+            if base_type_any.borrow().is_unknown() {
+                return Ok((None, false, None, unknowns));
+            }
             let mut base_type = base_type_any.borrow().as_class();
             if base_type.is_none() {
                 if let Some(type_type) = base_type_any.borrow().as_type_type() {
@@ -98,9 +104,10 @@ impl FnCallNode {
             }
 
             return Ok((
-                method_type.unwrap().borrow().as_fn().unwrap(),
+                Some(method_type.unwrap().borrow().as_fn().unwrap()),
                 calling_through_instance,
                 Some(base_type_any.clone()),
+                unknowns,
             ));
         }
         // getting function type on normal function call
@@ -108,11 +115,7 @@ impl FnCallNode {
             .borrow_mut()
             .has_dec_with_id(&self.identifier.clone().literal.unwrap())
         {
-            return Err(unknown_symbol(format!(
-                "Cannot find function `{}`",
-                self.identifier.clone().literal.unwrap()
-            ))
-            .set_interval(self.identifier.interval()));
+            return Ok((None, false, None, 0));
         }
 
         let fn_type_option = ctx
@@ -129,7 +132,7 @@ impl FnCallNode {
             ))
             .set_interval(self.identifier.interval()));
         }
-        Ok((fn_type_option.unwrap(), false, None))
+        Ok((Some(fn_type_option.unwrap()), false, None, 0))
     }
 }
 
@@ -137,8 +140,11 @@ impl Node for FnCallNode {
     fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
         let mut asm = format!("");
 
-        let (fn_type, calling_through_instance, _) =
+        let (fn_type, calling_through_instance, _, _) =
             self.get_callee_type(ctx.clone())?;
+        // logically impossible for this to not exist -
+        // would require unresolved unknowns
+        let fn_type = fn_type.unwrap();
 
         let mut args = self.args.clone();
 
@@ -195,8 +201,19 @@ impl Node for FnCallNode {
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         let mut args: Vec<FnParamType> = Vec::new();
 
-        let (fn_type, is_method_call, base_type) =
+        let (fn_type, is_method_call, base_type, mut unknowns) =
             self.get_callee_type(ctx.clone())?;
+        if fn_type.is_none() {
+            if ctx.borrow().throw_on_unknowns() {
+                return Err(unknown_symbol(format!(
+                    "Can't find function `{}`",
+                    self.identifier.clone().literal.unwrap()
+                ))
+                .set_interval(self.identifier.interval()));
+            }
+            return Ok(TypeCheckRes::unknown_and(unknowns));
+        }
+        let fn_type = fn_type.unwrap();
 
         if is_method_call {
             args.push(FnParamType {
@@ -208,8 +225,12 @@ impl Node for FnCallNode {
         }
 
         for arg in self.args.iter() {
-            let TypeCheckRes { t: arg_type, .. } =
-                arg.borrow().type_check(ctx.clone())?;
+            let TypeCheckRes {
+                t: arg_type,
+                unknowns: arg_unknowns,
+                ..
+            } = arg.borrow().type_check(ctx.clone())?;
+            unknowns += arg_unknowns;
             args.push(FnParamType {
                 // calling the function, so parameter name is not known and doesn't matter
                 name: "".to_string(),
@@ -261,7 +282,7 @@ impl Node for FnCallNode {
             }
         }
 
-        Ok(TypeCheckRes::from(fn_type.ret_type.clone()))
+        Ok(TypeCheckRes::from(fn_type.ret_type.clone(), unknowns))
     }
 
     fn pos(&self) -> Interval {

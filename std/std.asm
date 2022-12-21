@@ -273,7 +273,6 @@ Int.str: ; [number: int, cb: *] => char*
         pop rbp
         ret
 
-
 exit:
     push rbp
     mov rbp, rsp

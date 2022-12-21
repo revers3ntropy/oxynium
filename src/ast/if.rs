@@ -59,11 +59,17 @@ impl Node for IfNode {
         let TypeCheckRes {
             t: mut body_ret_type,
             is_returned: mut body_is_returned,
+            mut unknowns,
             ..
         } = self.body.borrow_mut().type_check(ctx.clone())?;
 
-        let TypeCheckRes { t: comp_type, .. } =
-            self.comparison.borrow_mut().type_check(ctx.clone())?;
+        let TypeCheckRes {
+            t: comp_type,
+            unknowns: comp_unknowns,
+            ..
+        } = self.comparison.borrow_mut().type_check(ctx.clone())?;
+        unknowns += comp_unknowns;
+
         if !get_type!(ctx, "Bool").borrow().contains(comp_type) {
             return Err(type_error("if condition must be a bool".to_string())
                 .set_interval(self.comparison.borrow_mut().pos()));
@@ -73,6 +79,7 @@ impl Node for IfNode {
             let TypeCheckRes {
                 t: else_ret_type,
                 is_returned: else_is_returned,
+                unknowns: else_unknowns,
                 ..
             } = self
                 .else_body
@@ -80,6 +87,7 @@ impl Node for IfNode {
                 .unwrap()
                 .borrow_mut()
                 .type_check(ctx.clone())?;
+            unknowns += else_unknowns;
 
             if body_is_returned {
                 if else_is_returned {
@@ -97,9 +105,9 @@ impl Node for IfNode {
             }
         }
         if body_is_returned {
-            Ok(TypeCheckRes::from_return(body_ret_type))
+            Ok(TypeCheckRes::from_return(body_ret_type, unknowns))
         } else {
-            Ok(TypeCheckRes::from_ctx(&ctx, "Void"))
+            Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))
         }
     }
 

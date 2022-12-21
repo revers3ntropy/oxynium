@@ -40,8 +40,9 @@ impl Node for EmptyGlobalConstNode {
             ))
             .set_interval(self.identifier.interval()));
         }
-        let TypeCheckRes { t: type_, .. } =
-            self.type_.borrow_mut().type_check(ctx.clone())?;
+        let TypeCheckRes {
+            t: type_, unknowns, ..
+        } = self.type_.borrow_mut().type_check(ctx.clone())?;
 
         let id = if !type_.borrow().is_ptr() {
             // deref if it shouldn't stay as a pointer
@@ -65,7 +66,7 @@ impl Node for EmptyGlobalConstNode {
             self.pos(),
         )?;
 
-        Ok(TypeCheckRes::from_ctx(&ctx, "Void"))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))
     }
 
     fn pos(&self) -> Interval {

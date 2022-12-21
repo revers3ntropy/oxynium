@@ -1,8 +1,9 @@
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
+use crate::types::unknown::UnknownType;
 use crate::types::Type;
-use crate::util::MutRc;
+use crate::util::{new_mut_rc, MutRc};
 use std::fmt::Debug;
 
 pub mod bin_op;
@@ -48,35 +49,50 @@ macro_rules! get_type {
 pub struct TypeCheckRes {
     t: MutRc<dyn Type>,
     is_returned: bool,
-    // unknowns_exist: bool,
-    // progress_made: bool,
+    unknowns: usize,
 }
 
 impl TypeCheckRes {
-    fn from(t: MutRc<dyn Type>) -> Self {
+    fn from(t: MutRc<dyn Type>, unknowns: usize) -> Self {
         Self {
             t,
             is_returned: false,
-            // unknowns_exist: false,
-            // progress_made: false,
+            unknowns,
         }
     }
 
-    fn from_return(t: MutRc<dyn Type>) -> Self {
+    fn from_return(t: MutRc<dyn Type>, unknowns: usize) -> Self {
         Self {
             t,
             is_returned: true,
-            // unknowns_exist: false,
-            // progress_made: false,
+            unknowns,
         }
     }
 
-    fn from_ctx(ctx: &MutRc<Context>, name: &str) -> Self {
+    fn from_ctx(ctx: &MutRc<Context>, name: &str, mut unknowns: usize) -> Self {
+        let t = get_type!(ctx, name);
+        if t.borrow().is_unknown() {
+            unknowns += 1;
+        }
         Self {
-            t: get_type!(ctx, name),
+            t,
             is_returned: false,
-            // unknowns_exist: false,
-            // progress_made: false,
+            unknowns,
+        }
+    }
+
+    fn unknown() -> Self {
+        Self {
+            t: new_mut_rc(UnknownType {}),
+            is_returned: false,
+            unknowns: 1,
+        }
+    }
+    fn unknown_and(unknowns: usize) -> Self {
+        Self {
+            t: new_mut_rc(UnknownType {}),
+            is_returned: false,
+            unknowns: unknowns + 1,
         }
     }
 }
@@ -86,7 +102,7 @@ pub trait Node: Debug {
         Ok("".to_string())
     }
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        Ok(TypeCheckRes::from_ctx(&ctx, "Void"))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Void", 0))
     }
     fn pos(&self) -> Interval;
 }

@@ -1,31 +1,10 @@
-describe 'Accessing Global Constants'
-
-expect_expr_bool 'true' 'true'
-expect_expr_bool 'false' 'false'
-
-
-describe 'Defining Global Constants'
-
-expect '1' '
-    const a = 1;
-    print(a.str())
-'
-expect '3' '
-    const a = 1;
-    const b = 2;
-    print((a + b).str());
-'
-expect 'Some String' '
-    const a = "Some String";
-    print(a)
-'
-expect_err 'TypeError' '
-    const a = 1;
-    const a = 2;
-'
-
 describe 'Local Variables'
 
+expect_err 'SyntaxError' '
+    fn f(): Int {
+        let a: Int;
+    };
+'
 expect '1' '
     fn f() {
         let a = "1";
@@ -41,14 +20,6 @@ expect '1' '
     };
     f();
 '
-expect_err 'TypeError' '
-    const a = "";
-    fn f() {
-        let a = 1;
-        print(a);
-    };
-    f();
-'
 expect '42' '
     const a = 2;
     fn f() {
@@ -59,6 +30,18 @@ expect '42' '
     f();
     print(a.str());
 '
+expect_err 'TypeError' '
+    const a = "";
+    fn f() {
+        let a = 1;
+        print(a);
+    };
+    f();
+'
+
+
+describe "Don't Allow Redeclaration"
+
 expect_err 'TypeError' '
     fn main() {
         let a = 1;
@@ -77,24 +60,39 @@ expect_err 'TypeError' '
         let mut a = 2;
     };
 '
-expect_err 'SyntaxError' '
-    fn f() { const a; };
-'
-expect_err 'SyntaxError' '
+expect_err 'TypeError' '
     fn f() {
-        const a = 0;
+        let a = 1;
+        a = 2;
     };
 '
+expect_err 'TypeError' '
+    fn main () {
+        let a = 1;
+        if true {
+            let a = 2;
+        }
+    }
+'
+
+
+describe "Don't Allow Local Var Dec in Global Scope"
+
 expect_err 'SyntaxError' '
     let a = 1;
 '
 expect_err 'SyntaxError' '
     let mut a = 1;
 '
-expect_err 'TypeError' '
-    fn f() {
-        let a = 1;
-        a = 2;
+
+
+describe 'Local Var Reassignment'
+
+expect '1' '
+    fn main() {
+        let mut a: Int = 0;
+        a = 1;
+        print(a.str());
     };
 '
 expect_err 'TypeError' '
@@ -133,39 +131,6 @@ expect '5' '
     };
     print(f(2).str());
 '
-expect_err 'UnknownSymbol' '
-    fn f(): Int {
-        return a;
-        let a = 5;
-    };
-'
-expect_err 'SyntaxError' '
-    fn f(): Int {
-        let a: Int;
-    };
-'
-expect_err 'TypeError' '
-    fn f(): Int {
-        let mut a: Int;
-        return a;
-    };
-'
-expect '1' '
-    fn f(): Int {
-        let mut a: Int;
-        a = 1;
-        return a;
-    };
-    print(f().str());
-'
-
-expect '1' '
-    fn main() {
-        let mut a: Int = 0;
-        a = 1;
-        print(a.str());
-    };
-'
 expect '4' '
     fn main() {
         let a: Int = 4;
@@ -188,13 +153,23 @@ expect_err 'TypeError' '
         a = ""
     };
 '
+
+
+describe 'Empty Local Var Declarations'
+
 expect_err 'TypeError' '
-    fn main () {
-        let a = 1;
-        if true {
-            let a = 2;
-        }
-    }
+    fn f(): Int {
+        let mut a: Int;
+        return a;
+    };
+'
+expect '1' '
+    fn f(): Int {
+        let mut a: Int;
+        a = 1;
+        return a;
+    };
+    print(f().str());
 '
 
 
@@ -228,7 +203,7 @@ expect_err 'SyntaxError' 'fn f() { let mut mut = 1; }'
 expect_err 'SyntaxError' 'fn f() { let mut fn = 1; }'
 
 
-describe 'Invalid Assignment'
+describe 'Invalid Reassignment'
 
 expect_err 'TypeError' 'const a = 1; a = 2'
 expect_err 'TypeError' 'Str = 1'

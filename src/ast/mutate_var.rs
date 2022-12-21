@@ -45,8 +45,11 @@ impl Node for MutateVar {
             return Err(unknown_symbol(self.id().clone()));
         }
 
-        let TypeCheckRes { t: assign_type, .. } =
-            self.value.borrow_mut().type_check(ctx.clone())?;
+        let TypeCheckRes {
+            t: assign_type,
+            unknowns,
+            ..
+        } = self.value.borrow_mut().type_check(ctx.clone())?;
         let symbol = ctx.borrow_mut().get_dec_from_id(&self.id()).clone();
         if symbol.is_type {
             return Err(type_error(format!(
@@ -69,7 +72,7 @@ impl Node for MutateVar {
             )
             .set_interval(self.value.borrow_mut().pos()));
         }
-        Ok(TypeCheckRes::from_ctx(&ctx, "Void"))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))
     }
 
     fn pos(&self) -> Interval {

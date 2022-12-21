@@ -1,6 +1,7 @@
 use crate::position::Interval;
 use crate::types::Type;
 use crate::util::MutRc;
+use std::fmt::Debug;
 
 const RESERVED_KEYWORDS: [&str; 50] = [
     "if",
@@ -88,6 +89,10 @@ impl SymbolDec {
             && self.name == s.name
             && self.is_constant == s.is_constant
             && self.is_type == s.is_type
+    }
+
+    pub fn str(&self) -> String {
+        format!("{}: {}", self.name, self.type_.borrow().str())
     }
 }
 
