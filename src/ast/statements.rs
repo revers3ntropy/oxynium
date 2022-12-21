@@ -30,14 +30,21 @@ impl Node for StatementsNode {
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
         let mut ret_type = None;
+        let mut always_returns = false;
         let mut unknowns = 0;
 
         for statement in self.statements.iter() {
+            if always_returns {
+                // TODO: warn about unreachable code
+            }
             let t = statement.borrow().type_check(ctx.clone())?;
             unknowns += t.unknowns;
 
             if !t.is_returned {
                 continue;
+            }
+            if t.always_returns {
+                always_returns = true;
             }
             if ret_type.is_none() {
                 ret_type = Some(t.t.clone());
@@ -53,7 +60,11 @@ impl Node for StatementsNode {
         }
 
         if let Some(ret_type) = ret_type {
-            return Ok(TypeCheckRes::from_return(ret_type, unknowns));
+            return Ok(TypeCheckRes::returns(
+                always_returns,
+                ret_type,
+                unknowns,
+            ));
         }
 
         Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))

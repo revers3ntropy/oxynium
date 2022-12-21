@@ -49,6 +49,7 @@ macro_rules! get_type {
 pub struct TypeCheckRes {
     t: MutRc<dyn Type>,
     is_returned: bool,
+    always_returns: bool,
     unknowns: usize,
 }
 
@@ -57,14 +58,16 @@ impl TypeCheckRes {
         Self {
             t,
             is_returned: false,
+            always_returns: false,
             unknowns,
         }
     }
 
-    fn from_return(t: MutRc<dyn Type>, unknowns: usize) -> Self {
+    fn returns(always: bool, t: MutRc<dyn Type>, unknowns: usize) -> Self {
         Self {
             t,
             is_returned: true,
+            always_returns: always,
             unknowns,
         }
     }
@@ -77,6 +80,7 @@ impl TypeCheckRes {
         Self {
             t,
             is_returned: false,
+            always_returns: false,
             unknowns,
         }
     }
@@ -85,6 +89,7 @@ impl TypeCheckRes {
         Self {
             t: new_mut_rc(UnknownType {}),
             is_returned: false,
+            always_returns: false,
             unknowns: 1,
         }
     }
@@ -92,6 +97,7 @@ impl TypeCheckRes {
         Self {
             t: new_mut_rc(UnknownType {}),
             is_returned: false,
+            always_returns: false,
             unknowns: unknowns + 1,
         }
     }

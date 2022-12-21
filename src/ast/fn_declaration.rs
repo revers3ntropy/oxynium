@@ -118,15 +118,6 @@ impl Node for FnDeclarationNode {
 
         // don't use param_scope so that the function can have params
         // with the same name as the function
-        // if !ctx.borrow_mut().allow_overrides {
-        //     if ctx.borrow_mut().has_dec_with_id(self.id().as_str()) {
-        //         return Err(type_error(format!(
-        //             "Function {} is already defined",
-        //             self.identifier.clone().literal.unwrap()
-        //         ))
-        //         .set_interval(self.position.clone()));
-        //     }
-        // }
         let TypeCheckRes {
             t: ret_type,
             mut unknowns,
@@ -270,10 +261,22 @@ impl Node for FnDeclarationNode {
             let TypeCheckRes {
                 t: body_ret_type,
                 is_returned,
+                always_returns,
                 unknowns: body_unknowns,
                 ..
             } = body.borrow().type_check(self.params_scope.clone())?;
             unknowns += body_unknowns;
+
+            if is_returned
+                && !always_returns
+                && !ret_type.borrow().contains(get_type!(&ctx, "Void"))
+            {
+                return Err(type_error(format!(
+                    "Function '{}' does not always return a value",
+                    self.id()
+                ))
+                .set_interval(self.identifier.interval()));
+            }
 
             let body_ret_type = if is_returned {
                 body_ret_type

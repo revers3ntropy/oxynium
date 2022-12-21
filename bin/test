@@ -250,7 +250,8 @@ function results() {
 
     end=$(date +"%s.%3N")
     runtime=$(echo "$end - $start" | bc -l)
-    echo "Tests ran in $runtime s"
+    time_per_test=$(echo "$runtime * 1000 / $tests" | bc -l)
+    printf "Tests ran in ${ORANGE}%ss${NC} (%.*fms per test)\n" "$runtime" 1 "$time_per_test"
 
     if [ "$warnings" -gt 0 ]; then
         # shellcheck disable=SC2059

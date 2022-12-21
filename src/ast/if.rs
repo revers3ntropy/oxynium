@@ -59,6 +59,7 @@ impl Node for IfNode {
         let TypeCheckRes {
             t: mut body_ret_type,
             is_returned: mut body_is_returned,
+            mut always_returns,
             mut unknowns,
             ..
         } = self.body.borrow_mut().type_check(ctx.clone())?;
@@ -79,6 +80,7 @@ impl Node for IfNode {
             let TypeCheckRes {
                 t: else_ret_type,
                 is_returned: else_is_returned,
+                always_returns: else_always_returns,
                 unknowns: else_unknowns,
                 ..
             } = self
@@ -88,6 +90,8 @@ impl Node for IfNode {
                 .borrow_mut()
                 .type_check(ctx.clone())?;
             unknowns += else_unknowns;
+
+            always_returns = always_returns && else_always_returns;
 
             if body_is_returned {
                 if else_is_returned {
@@ -105,7 +109,11 @@ impl Node for IfNode {
             }
         }
         if body_is_returned {
-            Ok(TypeCheckRes::from_return(body_ret_type, unknowns))
+            Ok(TypeCheckRes::returns(
+                always_returns && self.else_body.is_some(),
+                body_ret_type,
+                unknowns,
+            ))
         } else {
             Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))
         }

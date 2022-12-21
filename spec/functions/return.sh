@@ -175,3 +175,82 @@ expect '' '
     f(4, 6);
 '
 
+
+describe 'All Execution Paths Must Return'
+
+expect_err 'TypeError' '
+    fn f(): Int {
+        if true {
+            return 1
+        } else {
+
+        }
+    }
+'
+expect '' '
+    fn f(): Int {
+        if true {
+            return 1
+        } else {
+            return 2
+        }
+    }
+'
+expect_err 'TypeError' '
+    fn f(): Int {}
+'
+expect '' '
+    fn f(): Int {
+        return 1
+    }
+'
+expect_err 'TypeError' '
+    fn f(): Int {
+        if true {
+            return 1
+        }
+    }
+'
+expect_err 'TypeError' '
+    fn f(): Int {
+        if true {
+            if false {
+                return 1
+            }
+        } else {
+            return 2
+        }
+    }
+'
+expect '' '
+    fn f(): Int {
+        if true {
+            if false {
+                return 1
+            }
+        }
+        return 2
+    }
+'
+expect '' '
+    fn f(): Int {
+        while {
+            return 1
+        }
+    }
+'
+expect '' '
+    fn f(a: Bool): Int {
+        while a {
+            return 1
+        }
+        return 2
+    }
+'
+expect_err 'TypeError' '
+    fn f(a: Bool): Int {
+        while a {
+            return 1
+        }
+    }
+'

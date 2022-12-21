@@ -71,12 +71,12 @@ impl Node for WhileLoopNode {
                 .set_interval(condition.borrow_mut().pos()));
             }
         }
-        let statements_tr =
+        let mut statements_tr =
             self.statements.borrow_mut().type_check(ctx.clone())?;
-        Ok(TypeCheckRes::from(
-            statements_tr.t,
-            statements_tr.unknowns + unknowns,
-        ))
+        statements_tr.unknowns += unknowns;
+        statements_tr.always_returns =
+            statements_tr.always_returns && self.condition.is_none();
+        Ok(statements_tr)
     }
 
     fn pos(&self) -> Interval {

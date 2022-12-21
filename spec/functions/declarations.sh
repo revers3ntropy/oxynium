@@ -12,6 +12,8 @@ expect_err 'SyntaxError' 'fn 0g ()'
 expect_err 'TypeError' 'fn g (); fn g()'
 expect_err 'TypeError' 'fn g (a: Int, a: Str) {}'
 expect_err 'TypeError' 'fn g (a: Int, a: Int) {}'
+expect '' 'fn g (g=1) {}'
+expect '' 'fn g (g: Str) {}'
 expect_err 'SyntaxError' '
     fn g() {
         fn f() {};

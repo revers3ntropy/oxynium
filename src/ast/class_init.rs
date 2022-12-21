@@ -89,7 +89,7 @@ impl Node for ClassInitNode {
                 asm.push_str(&format!(
                     "
                 pop rdx
-                mov qword [rax - {}], rdx
+                mov qword [rax + {}], rdx
             ",
                     (fields.len() - i - 1) * 8
                 ));
