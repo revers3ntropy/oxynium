@@ -1,15 +1,7 @@
 class Void;
 
 primitive Char {
-    extern fn str(self): Str,
-}
-
-class Str {
-    fn str(self): Str {
-        return self
-    }
-    extern fn at(self, i: Int): Char,
-    extern fn len(self): Int,
+    extern fn str(self): Str
 }
 
 primitive Bool {
@@ -35,6 +27,14 @@ primitive Int {
         }
         return other
     }
+}
+
+class Str {
+    fn str(self): Str {
+        return self
+    }
+    extern fn at(self, i: Int): Char,
+    extern fn len(self): Int,
 }
 
 extern fn print(msg: Str): Void;

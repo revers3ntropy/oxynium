@@ -75,32 +75,38 @@ impl Node for ClassInitNode {
             .unwrap();
         let is_primitive = class_type.is_primitive;
 
-        if fields.len() > 0 {
-            asm.push_str(&format!(
-                "
-                push {}
+        if fields.len() < 1 {
+            return Ok(if is_primitive {
+                format!("\n push 0 \n")
+            } else {
+                format!(
+                    "
+                push 1
                 call _$_allocate
                 pop rcx
-            ",
-                fields.len() * 8
-            ));
+                mov qword [rax], 0
+                push rax
+            "
+                )
+            });
+        }
 
-            for i in 0..fields.len() {
-                asm.push_str(&format!(
-                    "
-                pop rdx
-                mov qword [rax + {}], rdx
-            ",
-                    (fields.len() - i - 1) * 8
-                ));
-            }
-        } else {
+        asm.push_str(&format!(
+            "
+            push {}
+            call _$_allocate
+            pop rcx
+        ",
+            fields.len() * 8
+        ));
+
+        for i in 0..fields.len() {
             asm.push_str(&format!(
                 "
-                mov rdi, 8
-                call malloc WRT ..plt
-                mov qword [rax], 0
-            "
+            pop rdx
+            mov qword [rax + {}], rdx
+        ",
+                (fields.len() - i - 1) * 8
             ));
         }
 

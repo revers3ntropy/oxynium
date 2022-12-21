@@ -73,7 +73,14 @@ impl TypeCheckRes {
     }
 
     fn from_ctx(ctx: &MutRc<Context>, name: &str, mut unknowns: usize) -> Self {
-        let t = get_type!(ctx, name);
+        let t: MutRc<dyn Type>;
+        if !ctx.borrow().has_dec_with_id(name) {
+            unknowns += 1;
+            t = new_mut_rc(UnknownType {});
+        } else {
+            t = get_type!(ctx, name);
+        }
+
         if t.borrow().is_unknown() {
             unknowns += 1;
         }

@@ -100,9 +100,7 @@ impl Node for ExecRootNode {
             {STD_ASM}
             {text}
             main:
-                mov rbp, rsp
                 {res}
-                mov rsp, rbp
                 push 0
                 call exit
         ",
