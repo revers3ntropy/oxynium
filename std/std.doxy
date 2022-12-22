@@ -1,7 +1,7 @@
 class Void;
 
 primitive Char {
-    extern fn str(self): Str
+    extern fn str(self): Str,
 }
 
 primitive Bool {
@@ -17,8 +17,6 @@ primitive Bool {
 }
 
 primitive Int {
-    extern fn str(self): Str,
-
     fn max(self, other: Int): Int {
         if self > other {
             return self
@@ -31,6 +29,8 @@ primitive Int {
         }
         return other
     }
+
+    extern fn str(self): Str,
 
     extern fn + (self, n: Int): Int,
     extern fn - (self, n: Int): Int,
@@ -49,6 +49,18 @@ class Str {
     fn str(self): Str {
         return self
     }
+    fn concat(self, other: Str): Str {
+        return self + other
+    }
+    fn repeat(self, n: Int): Str {
+        if n < 1 {
+            return ""
+        }
+        // TODO: helper function in assembly to do this without allocating
+        //       a new string each time through the loop
+        return self + self.repeat(n - 1)
+    }
+
     extern fn at(self, i: Int): Char,
     extern fn len(self): Int,
 
@@ -64,4 +76,4 @@ fn println(msg: Str, line_end="\n"): Void {
 }
 extern fn print_nl();
 extern fn exit(code: Int = 0);
-extern fn input(prompt: Str = "", buffer_size: Int = 1000): Str
+extern fn input(prompt: Str = "", buffer_size: Int = 1000): Str;

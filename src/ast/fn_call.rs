@@ -226,8 +226,8 @@ impl Node for FnCallNode {
             } else {
                 self.identifier.clone().literal.unwrap()
             },
-            if self.args.len() > 0 {
-                format!("times {} pop rcx", self.args.len())
+            if num_args > 0 {
+                format!("times {} pop rcx", num_args)
             } else {
                 "".to_string()
             },

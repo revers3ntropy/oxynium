@@ -110,3 +110,27 @@ expect 'abc' 'print("a" + "b" + "c" + "")'
 expect 'abc' 'print("" + "a" + "b" + "c")'
 expect 'abc' 'print("" + "a" + "b" + "c" + "")'
 expect '💖 ﷽' 'print("💖" + " " + "﷽")'
+
+
+describe 'fn Str.concat'
+
+expect 'abc' 'print("".concat("abc"))'
+expect 'abc' 'print("a".concat("bc"))'
+expect 'abc' 'print("ab".concat("c"))'
+expect 'abc' 'print("abc".concat(""))'
+expect 'abc' 'print("a".concat("b").concat("c"))'
+expect 'abc' 'print("a".concat("b").concat("c").concat(""))'
+expect '💖﷽' 'print("💖".concat("﷽"))'
+
+
+describe 'fn Str.repeat'
+
+expect '' 'print("".repeat(0))'
+expect '' 'print("".repeat(1))'
+expect '' 'print("".repeat(2))'
+expect 'a' 'print("a".repeat(1))'
+expect 'aa' 'print("a".repeat(2))'
+expect 'aaa' 'print("a".repeat(3))'
+expect '💖💖💖' 'print("💖".repeat(3))'
+expect '' 'print("💖".repeat(0))'
+expect '' 'print("💖".repeat(-1))'

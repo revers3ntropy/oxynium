@@ -32,7 +32,8 @@ pub fn post_process(asm: String, args: &Args) -> String {
 
     let mut indent = 4;
 
-    let indent_re: Regex = Regex::new(":$").unwrap();
+    let indent_re: Regex =
+        Regex::new(r#"^(section ?.+)|(.+:)$"#).unwrap();
 
     for line in optimise(parse_asm_lines(asm), args) {
         let should_unindent =
