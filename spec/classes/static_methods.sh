@@ -1,4 +1,4 @@
-describe 'Static Functions'
+describe 'Calling Methods Statically'
 
 expect 'hi' '
     class S {
@@ -31,4 +31,14 @@ expect 'hello' '
     fn main () {
         print(S.f(new S, 1));
     }
+'
+expect_err 'TypeError' '
+    class S;
+    new S.f();
+'
+expect_err 'TypeError' '
+    class S {
+        fn f(self){}
+    };
+    new S.g();
 '

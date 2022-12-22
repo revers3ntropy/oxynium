@@ -4,7 +4,7 @@ use crate::context::CallStackFrame;
 use crate::context::Context;
 use crate::error::{invalid_symbol, syntax_error, type_error, Error};
 use crate::get_type;
-use crate::parse::token::Token;
+use crate::parse::token::{Token, TokenType};
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
 use crate::types::class::ClassType;
@@ -34,12 +34,20 @@ pub struct FnDeclarationNode {
 
 impl FnDeclarationNode {
     fn id(&self) -> String {
-        match &self.class {
-            Some(class) => method_id(
-                class.borrow().name.clone(),
-                self.identifier.literal.clone().unwrap(),
-            ),
-            None => self.identifier.literal.clone().unwrap(),
+        if self.identifier.token_type == TokenType::Identifier {
+            let self_id = self.identifier.literal.clone().unwrap();
+            match &self.class {
+                Some(class) => method_id(class.borrow().name.clone(), self_id),
+                None => self_id,
+            }
+        } else {
+            method_id(
+                self.class.clone().unwrap().borrow().name.clone(),
+                format!(
+                    "_$_operator_{}",
+                    self.identifier.overload_op_id().unwrap()
+                ),
+            )
         }
     }
 }
@@ -105,14 +113,17 @@ impl Node for FnDeclarationNode {
     }
 
     fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        if !can_declare_with_identifier(
-            &self.identifier.clone().literal.unwrap(),
-        ) {
-            return Err(invalid_symbol(
-                self.identifier.clone().literal.unwrap(),
-            )
-            .set_interval(self.identifier.interval()));
+        if self.identifier.token_type == TokenType::Identifier {
+            if !can_declare_with_identifier(
+                &self.identifier.clone().literal.unwrap(),
+            ) {
+                return Err(invalid_symbol(
+                    self.identifier.clone().literal.unwrap(),
+                )
+                .set_interval(self.identifier.interval()));
+            }
         }
+
         self.params_scope.borrow_mut().set_parent(ctx.clone());
         self.params_scope.borrow_mut().allow_local_var_decls = true;
 
@@ -289,7 +300,7 @@ impl Node for FnDeclarationNode {
             if !ret_type.borrow().contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
                     "Function `{}` has return type `{}` but found `{}`",
-                    self.identifier.clone().literal.unwrap(),
+                    self.identifier.str(),
                     ret_type.borrow().str(),
                     body_ret_type.borrow().str()
                 ))

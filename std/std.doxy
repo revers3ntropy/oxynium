@@ -27,6 +27,19 @@ primitive Int {
         }
         return other
     }
+    fn + (self, other: Int): Int {
+        return 1
+    }
+    extern fn - (self, other: Int): Int,
+    extern fn * (self, other: Int): Int,
+    extern fn / (self, other: Int): Int,
+    extern fn % (self, other: Int): Int,
+    extern fn == (self, other: Int): Bool,
+    extern fn != (self, other: Int): Bool,
+    extern fn < (self, other: Int): Bool,
+    extern fn <= (self, other: Int): Bool,
+    extern fn > (self, other: Int): Bool,
+    extern fn >= (self, other: Int): Bool
 }
 
 class Str {
@@ -34,10 +47,14 @@ class Str {
         return self
     }
     extern fn at(self, i: Int): Char,
-    extern fn len(self): Int,
+    extern fn len(self): Int
 }
 
 extern fn print(msg: Str): Void;
+fn println(msg: Str, line_end="\n"): Void {
+    print(msg);
+    print(line_end)
+}
 extern fn print_nl(): Void;
 extern fn exit(code: Int = 0): Void;
-extern fn input(prompt: Str = "", buffer_size: Int = 1000): Str;
+extern fn input(prompt: Str = "", buffer_size: Int = 1000): Str

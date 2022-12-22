@@ -1,4 +1,4 @@
-describe 'Class Field Access'
+describe 'Class Instance Field Access'
 
 expect '' '
     class S { x: Int };

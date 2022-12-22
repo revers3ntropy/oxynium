@@ -1137,7 +1137,45 @@ impl Parser {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
 
-        consume!(identifier = Identifier, self, res);
+        if self.current_tok().is_none() {
+            res.failure(
+                syntax_error("Expected identifier after 'fn'".to_owned()),
+                Some(self.last_tok().unwrap().end.clone().advance(None)),
+                None,
+            );
+            return res;
+        }
+
+        let identifier;
+        if !self.current_matches(TokenType::Identifier, None) {
+            if self.current_tok().unwrap().overload_op_id().is_none() {
+                res.failure(
+                    syntax_error(format!(
+                        "'{}' is not an overloadable operator",
+                        self.current_tok().unwrap().str()
+                    )),
+                    Some(self.last_tok().unwrap().start.clone()),
+                    Some(self.last_tok().unwrap().end.clone()),
+                );
+                return res;
+            }
+            if class_name.is_none() {
+                res.failure(
+                    syntax_error(format!(
+                        "'{}' is not a valid function name",
+                        self.current_tok().unwrap().str()
+                    )),
+                    Some(self.last_tok().unwrap().start.clone()),
+                    Some(self.last_tok().unwrap().end.clone()),
+                );
+                return res;
+            }
+            identifier = self.current_tok().unwrap();
+            self.advance(&mut res);
+        } else {
+            consume!(id_tok = Identifier, self, res);
+            identifier = id_tok;
+        }
         consume!(OpenParen, self, res);
 
         let mut other_params = true;
@@ -1160,7 +1198,7 @@ impl Parser {
                 if self.current_matches(TokenType::Colon, None) {
                     res.failure(syntax_error(format!(
                             "Cannot give type annotation to parameter 'self' on method '{}'",
-                            identifier.clone().literal.unwrap()
+                            identifier.str()
                         )),
                         Some(self.last_tok().unwrap().start),
                         Some(self.current_tok().unwrap().end),

@@ -81,7 +81,7 @@ impl Node for ClassInitNode {
             } else {
                 format!(
                     "
-                push 1
+                push 8
                 call _$_allocate
                 pop rcx
                 mov qword [rax], 0

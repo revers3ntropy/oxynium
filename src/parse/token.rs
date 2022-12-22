@@ -101,6 +101,26 @@ impl Token {
             TokenType::Colon => ":".to_string(),
         }
     }
+
+    pub fn overload_op_id(&self) -> Option<&str> {
+        return match self.token_type {
+            TokenType::Plus => Some("add"),
+            TokenType::Sub => Some("sub"),
+            TokenType::Astrix => Some("mul"),
+            TokenType::FSlash => Some("div"),
+            TokenType::Percent => Some("mod"),
+            TokenType::GTE => Some("gte"),
+            TokenType::LTE => Some("lte"),
+            TokenType::GT => Some("gt"),
+            TokenType::LT => Some("lt"),
+            TokenType::DblEquals => Some("eq"),
+            TokenType::NotEquals => Some("neq"),
+            TokenType::Or => Some("or"),
+            TokenType::And => Some("and"),
+            TokenType::Not => Some("not"),
+            _ => None,
+        };
+    }
 }
 
 impl Debug for Token {

@@ -1,4 +1,4 @@
-describe 'Class Instantiation'
+describe 'Class Instance Instantiation'
 
 expect '' '
     class S { x: Int }
@@ -32,3 +32,8 @@ expect_err 'TypeError' '
     class S { x: Int };
     new S { x: 1, y: 2 };
 '
+expect_err 'UnknownSymbol' 'new s'
+expect_err 'SyntaxError' 'new 1'
+expect_err 'SyntaxError' 'new ""'
+expect_err 'SyntaxError' 'new new C'
+expect_err 'SyntaxError' 'new C()'

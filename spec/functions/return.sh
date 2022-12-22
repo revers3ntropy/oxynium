@@ -1,4 +1,4 @@
-describe 'Return'
+describe 'Return from Functions'
 
 expect '' '
     fn f() {
@@ -173,6 +173,35 @@ expect '' '
       return g("");
     };
     f(4, 6);
+'
+
+
+describe 'Do Not Allow Return in Top-Level'
+
+expect_err 'SyntaxError' '
+    return;
+'
+expect_err 'SyntaxError' '
+    return 1;
+'
+expect_err 'SyntaxError' '
+    return 1 + 2;
+'
+expect_err 'SyntaxError' '
+    return;
+    fn main() {}
+'
+expect_err 'SyntaxError' '
+    fn main() {
+        return
+    }
+    return
+'
+expect_err 'SyntaxError' '
+    fn main() {
+        return
+    }
+    return 1
 '
 
 

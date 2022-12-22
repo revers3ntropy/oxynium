@@ -1,4 +1,4 @@
-describe 'Default Arguments'
+describe 'Default Arguments to Functions'
 
 expect '123' '
     fn f(a: Int, b: Int = 2, c: Int = 3) {

@@ -1,4 +1,4 @@
-describe 'Composition'
+describe 'Composition with Classes'
 
 expect '13' '
     class S {

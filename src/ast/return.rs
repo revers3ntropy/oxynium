@@ -17,7 +17,8 @@ impl Node for ReturnNode {
         if frame.is_none() {
             return Err(syntax_error(
                 "'return' statement outside of function".to_string(),
-            ));
+            )
+            .set_interval(self.pos()));
         }
         let frame = frame.unwrap();
 

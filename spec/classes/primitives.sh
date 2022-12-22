@@ -1,4 +1,4 @@
-describe 'Primitives'
+describe 'Primitive Declaration'
 
 expect '' '
     primitive Q {}

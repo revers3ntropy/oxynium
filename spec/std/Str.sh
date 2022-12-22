@@ -3,6 +3,34 @@ describe 'Str'
 expect '' 'print(new Str.str().str())'
 expect '' 'print(new Str.str())'
 expect '' 'print(new Str)'
+expect 'Hi' 'print("Hi")'
+expect_err 'SyntaxError' 'print("hi'
+expect_err 'SyntaxError' '"hi'
+
+describe 'UTF-8 Support'
+
+expect 'ݫݨݫ' 'print("ݫݨݫ")'
+expect '' 'print("")'
+expect '⸻' 'print("⸻")'
+expect '﷽' 'print("﷽")'
+expect 'In UTF-8 The longest character is "﷽"' 'print("In UTF-8 The longest character is \"﷽\"")'
+expect ' ௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌ' 'print(" ௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌௌ")'
+expect 'This is a very long string literal, it has lots of characters in so it might break things like the line length limit for NASM. I think the line length limit is 255 characters so I should maybe try to get that many characters at least, but that limit might be wrong actually...' '
+    print("This is a very long string literal, it has lots of characters in so it might break things like the line length limit for NASM. I think the line length limit is 255 characters so I should maybe try to get that many characters at least, but that limit might be wrong actually...")
+'
+expect 'Љ а ߷ ߬a ߦ' 'print("Љ а ߷ ߬a ߦ")'
+
+
+describe 'Escape Sequences in String Literals'
+
+expect $'\t' 'print("\t")'
+expect $'\t\t' 'print("\t\t")'
+expect '"' 'print("\"")'
+expect 'hello "world"' 'print("hello \"world\"")'
+expect "'" "print(\"'\")"
+expect_err 'SyntaxError' 'print("\0")'
+expect_err 'SyntaxError' 'print("\9")'
+expect_err 'SyntaxError' 'print("\x")'
 
 
 describe 'fn Str.str'
@@ -28,3 +56,4 @@ expect 'b' 'print("abc".at(1).str())'
 expect 'c' 'print("abc".at(2).str())'
 expect '' 'print("abc".at(4).str())'
 expect '💖' 'print("💖💖".at(0).str())'
+expect '' 'print("💖💖".at(4).str())'

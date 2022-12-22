@@ -17,14 +17,14 @@ impl Node for ExecRootNode {
         let mut res = self.statements.borrow_mut().asm(ctx.clone())?;
         let ctx_ref = ctx.borrow_mut();
 
-        let (data_decls, text_decls) = ctx_ref.get_definitions();
-        let data = data_decls
+        let (data_defs, text_defs) = ctx_ref.get_definitions();
+        let data = data_defs
             .iter()
             .map(|k| format!("{} {}", k.name, k.data.as_ref().unwrap()))
             .collect::<Vec<String>>()
             .join("\n");
 
-        let text = text_decls
+        let text = text_defs
             .iter()
             .map(|k| {
                 if k.name == "main" {
@@ -48,7 +48,7 @@ impl Node for ExecRootNode {
             ));
         }
 
-        let main_decl_option = text_decls.iter().find(|k| k.name == "main");
+        let main_decl_option = text_defs.iter().find(|k| k.name == "main");
         let has_main = main_decl_option.is_some();
 
         if has_main && res != "" {

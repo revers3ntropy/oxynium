@@ -1,6 +1,6 @@
 describe 'Project Euler #2: Even Fibonacci numbers'
 
-perf_test_comp_cpp 100 '4613732' '
+perf_test_comp_cpp 50 '4613732' '
     fn main () {
         let mut sum = 0;
         let mut a = 1;
