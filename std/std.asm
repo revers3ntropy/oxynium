@@ -1,4 +1,4 @@
-    extern malloc, _read, memset
+    extern malloc, _read, memset, memcpy
 
 _$_print_digit: ; [number: int, cb: *]  => Void
     push rbp
@@ -373,6 +373,87 @@ Str._$_op_eq: ; [lhs: char*, rhs: char*, cb: *] => bool
         mov rsp, rbp
         pop rbp
         ret
+
+Str._$_op_neq: ; [lhs: char*, rhs: char*, cb: *] => bool
+               ; returns false if the strings are equal
+    push rbp
+    mov rbp, rsp
+
+    mov r14, qword [rbp + 16] ; r14 = lhs
+    mov r13, qword [rbp + 24] ; r13 = rhs
+
+    xor rax, rax ; rax = 0 (index)
+
+    .loop:
+        mov rcx, qword [r14 + rax * 8] ; lhs[rax]
+        mov rdx, qword [r13 + rax * 8] ; rhs[rax]
+        cmp rcx, rdx ; lhs[rax] != rhs[rax]
+        jne .not_equal
+
+        test rcx, rcx ; lhs[rax] == 0
+        jz .are_equal ; lhs[rax] == rhs[rax] == 0
+
+        inc rax ; rax++
+
+        jmp .loop
+
+    .not_equal:
+        mov rax, 1
+        mov rsp, rbp
+        pop rbp
+        ret
+
+    .are_equal:
+        xor rax, rax
+        mov rsp, rbp
+        pop rbp
+        ret
+
+Str._$_op_add: ; [other: char*, self: char*, cb: *] => char*
+               ; returns a new string that is the concatenation of lhs and rhs
+    push rbp
+    mov rbp, rsp
+
+    times 3 push 0             ; space for length of self and other,
+                               ; and the new string
+    push qword [rbp + 16]      ; self
+    call Str.len
+    pop rcx
+    mov qword [rbp - 8], rax   ; [rbp - 8] = self.len()
+
+    push qword [rbp + 24]      ; other
+    call Str.len
+    pop rcx
+    mov qword [rbp - 16], rax  ; [rbp - 16] = other.len()
+
+    add rax, qword [rbp - 8]   ; rax = other.len() + self.len()
+    inc rax                    ; rax = lhs.len() + rhs.len() + 1 (for null terminator)
+    imul rax, 8                ; rax = (lhs.len() + rhs.len() + 1) * 8
+    push rax
+    call _$_allocate           ; rax = malloc((lhs.len() + rhs.len() + 1) * 8)
+    pop rcx
+    mov qword [rbp - 24], rax  ; [rbp - 24] = new string
+
+
+    mov rdx, qword [rbp - 8]   ; rcx = self.len()
+    imul rdx, 8                ; rcx = self.len() * 8
+    mov rsi, qword [rbp + 16]  ; rsi = self
+    mov rdi, qword [rbp - 24]  ; rdx = new string
+    call memcpy WRT ..plt      ; memcpy(new string, self, self.len() * 8)
+
+    mov rdx, qword [rbp - 16]  ; rcx = other.len()
+    imul rdx, 8                ; rcx = other.len() * 8
+    mov rsi, qword [rbp + 24]  ; rsi = other
+    mov rdi, qword [rbp - 24]  ; rdx = new string
+    mov rax, qword [rbp - 8]   ; rax = other.len()
+    imul rax, 8                ; rax = other.len() * 8
+    add rdi, rax               ; rdx = new string + other.len() * 8
+    call memcpy WRT ..plt      ; memcpy(new string, other, other.len() * 8)
+
+    mov rax, qword [rbp - 24]  ; rax = new string
+    mov rsp, rbp
+    pop rbp
+    ret
 
 Char.str: ; [char: char, cb: *] => char*
            ; stringifies a single character

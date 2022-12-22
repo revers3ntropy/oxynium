@@ -53,6 +53,8 @@ class Str {
     extern fn len(self): Int,
 
     extern fn == (self, other: Str): Bool,
+    extern fn != (self, other: Str): Bool,
+    extern fn + (self, other: Str): Str,
 }
 
 extern fn print(msg: Str);
