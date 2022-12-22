@@ -15,6 +15,7 @@ use crate::symbols::{
 };
 use crate::types::class::ClassType;
 use crate::types::function::{FnParamType, FnType};
+use crate::types::unknown::UnknownType;
 use crate::util::{new_mut_rc, MutRc};
 use std::any::Any;
 

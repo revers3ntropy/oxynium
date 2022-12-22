@@ -105,32 +105,6 @@ impl Node for ClassDeclarationNode {
                 methods: HashMap::new(),
                 is_primitive: self.is_primitive,
             });
-
-            ctx.borrow_mut().declare(
-                SymbolDec {
-                    name: self
-                        .identifier
-                        .clone()
-                        .literal
-                        .unwrap(),
-                    id: self
-                        .identifier
-                        .clone()
-                        .literal
-                        .unwrap(),
-                    is_constant: true,
-                    is_type: true,
-                    require_init: false,
-                    is_defined: true,
-                    is_param: false,
-                    type_: this_type.clone(),
-                    position: self.pos(),
-                },
-                (
-                    self.pos().0,
-                    self.identifier.interval().1,
-                ),
-            )?;
         }
 
         for field in self.fields.iter() {
@@ -237,6 +211,34 @@ impl Node for ClassDeclarationNode {
                     fn_.clone(),
                 );
             }
+        }
+
+        if !ctx.borrow().is_frozen() {
+            ctx.borrow_mut().declare(
+                SymbolDec {
+                    name: self
+                        .identifier
+                        .clone()
+                        .literal
+                        .unwrap(),
+                    id: self
+                        .identifier
+                        .clone()
+                        .literal
+                        .unwrap(),
+                    is_constant: true,
+                    is_type: true,
+                    require_init: false,
+                    is_defined: true,
+                    is_param: false,
+                    type_: this_type.clone(),
+                    position: self.pos(),
+                },
+                (
+                    self.pos().0,
+                    self.identifier.interval().1,
+                ),
+            )?;
         }
 
         Ok(TypeCheckRes::from(this_type, unknowns))

@@ -6,8 +6,9 @@ use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::{Interval, Position};
 use crate::types::function::{FnParamType, FnType};
+use crate::types::unknown::UnknownType;
 use crate::types::Type;
-use crate::util::MutRc;
+use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug)]
 pub struct FnCallNode {

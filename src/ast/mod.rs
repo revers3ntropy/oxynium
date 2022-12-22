@@ -42,10 +42,14 @@ pub const STD_DATA_ASM: &str =
 #[macro_export]
 macro_rules! get_type {
     ($ctx:expr, $name:expr) => {
-        $ctx.borrow_mut()
-            .get_dec_from_id($name)
-            .type_
-            .clone()
+        if $ctx.borrow().has_dec_with_id($name) {
+            $ctx.borrow_mut()
+                .get_dec_from_id($name)
+                .type_
+                .clone()
+        } else {
+            new_mut_rc(UnknownType {})
+        }
     };
 }
 

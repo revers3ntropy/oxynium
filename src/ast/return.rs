@@ -3,7 +3,8 @@ use crate::context::Context;
 use crate::error::{syntax_error, Error};
 use crate::get_type;
 use crate::position::Interval;
-use crate::util::MutRc;
+use crate::types::unknown::UnknownType;
+use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug)]
 pub struct ReturnNode {

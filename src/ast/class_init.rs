@@ -67,15 +67,6 @@ impl Node for ClassInitNode {
             asm.push_str(&format!("{}\n", field_asm[name]));
         }
 
-        if !ctx.borrow_mut().has_dec_with_id(
-            &self.identifier.clone().literal.unwrap(),
-        ) {
-            return Err(unknown_symbol(
-                self.identifier.clone().literal.unwrap(),
-            )
-            .set_interval(self.identifier.interval()));
-        }
-
         let class_type = ctx
             .borrow_mut()
             .get_dec_from_id(
@@ -149,19 +140,24 @@ impl Node for ClassInitNode {
         if !ctx.borrow_mut().has_dec_with_id(
             &self.identifier.clone().literal.unwrap(),
         ) {
-            return Err(unknown_symbol(
-                self.identifier.clone().literal.unwrap(),
-            )
-            .set_interval(self.position.clone()));
-        }
-
-        if !ctx.borrow_mut().has_dec_with_id(
-            &self.identifier.clone().literal.unwrap(),
-        ) {
-            return Err(unknown_symbol(
-                self.identifier.clone().literal.unwrap(),
-            )
-            .set_interval(self.identifier.interval()));
+            if ctx.borrow().throw_on_unknowns() {
+                return Err(unknown_symbol(
+                    self.identifier
+                        .clone()
+                        .literal
+                        .unwrap(),
+                )
+                .set_interval(self.identifier.interval()));
+            }
+            for field in self.fields.clone() {
+                let field_type_res =
+                    field
+                        .1
+                        .borrow_mut()
+                        .type_check(ctx.clone())?;
+                unknowns += field_type_res.unknowns;
+            }
+            return Ok(TypeCheckRes::unknown_and(unknowns));
         }
 
         let class_type_raw = ctx
