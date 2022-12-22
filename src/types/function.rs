@@ -14,12 +14,12 @@ pub struct FnParamType {
 impl FnParamType {
     fn str(&self) -> String {
         if self.name == "" {
-            self.type_.borrow_mut().str()
+            self.type_.borrow().str()
         } else {
             format!(
                 "{}: {}",
                 self.name,
-                self.type_.borrow_mut().str()
+                self.type_.borrow().str()
             )
         }
     }

@@ -154,6 +154,22 @@ impl Node for FnDeclarationNode {
                 )
                 .set_interval(self.identifier.interval()));
             }
+        } else {
+            // check the signature of the operator method
+            if self.class.is_none() {
+                return Err(syntax_error(format!(
+                    "Cannot declare operator method outside of class."
+                ))
+                .set_interval(self.identifier.interval()));
+            }
+
+            if self.params.len() != 2 {
+                return Err(type_error(format!(
+                    "Operator overloading methods must have exactly 2 parameters, found {}",
+                    self.params.len()
+                ))
+                .set_interval(self.identifier.interval()));
+            }
         }
 
         self.params_scope

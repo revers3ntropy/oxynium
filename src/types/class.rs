@@ -91,14 +91,10 @@ impl Type for ClassType {
     fn operator_signature(
         &self,
         op: Token,
-    ) -> Option<MutRc<dyn Type>> {
-        if let Some(method) = self.method_type(
-            &operator_method_id(self.name.clone(), op),
-        ) {
-            Some(method as MutRc<dyn Type>)
-        } else {
-            None
-        }
+    ) -> Option<MutRc<FnType>> {
+        self.methods
+            .get(&operator_method_id(self.name.clone(), op))
+            .map(|f| f.clone())
     }
 
     fn contains(&self, other: MutRc<dyn Type>) -> bool {

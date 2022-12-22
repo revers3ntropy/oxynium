@@ -1,6 +1,5 @@
-use crate::parse::token::Token;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::MutRc;
 use std::fmt;
 
 #[derive(Clone)]
@@ -22,13 +21,6 @@ impl Type for UnknownType {
 
     fn str(&self) -> String {
         "?".to_string()
-    }
-
-    fn operator_signature(
-        &self,
-        _op: Token,
-    ) -> Option<MutRc<dyn Type>> {
-        Some(new_mut_rc(UnknownType {}))
     }
 
     fn contains(&self, _: MutRc<dyn Type>) -> bool {

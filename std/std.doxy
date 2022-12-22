@@ -5,6 +5,9 @@ primitive Char {
 }
 
 primitive Bool {
+    extern fn || (self, other: Bool): Bool,
+    extern fn && (self, other: Bool): Bool,
+
     fn str(self): Str {
         if self {
             return "true"
@@ -14,7 +17,20 @@ primitive Bool {
 }
 
 primitive Int {
+    extern fn + (self, n: Int): Int,
+    extern fn - (self, n: Int): Int,
+    extern fn * (self, n: Int): Int,
+    extern fn / (self, n: Int): Int,
+    extern fn % (self, n: Int): Int,
+    extern fn == (self, n: Int): Bool,
+    extern fn != (self, n: Int): Bool,
+    extern fn < (self, n: Int): Bool,
+    extern fn <= (self, n: Int): Bool,
+    extern fn > (self, n: Int): Bool,
+    extern fn >= (self, n: Int): Bool,
+
     extern fn str(self): Str,
+
     fn max(self, other: Int): Int {
         if self > other {
             return self
@@ -27,19 +43,6 @@ primitive Int {
         }
         return other
     }
-    fn + (self, other: Int): Int {
-        return 1
-    }
-    extern fn - (self, other: Int): Int,
-    extern fn * (self, other: Int): Int,
-    extern fn / (self, other: Int): Int,
-    extern fn % (self, other: Int): Int,
-    extern fn == (self, other: Int): Bool,
-    extern fn != (self, other: Int): Bool,
-    extern fn < (self, other: Int): Bool,
-    extern fn <= (self, other: Int): Bool,
-    extern fn > (self, other: Int): Bool,
-    extern fn >= (self, other: Int): Bool
 }
 
 class Str {

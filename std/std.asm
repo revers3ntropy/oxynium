@@ -355,3 +355,161 @@ Char.str: ; [char: char, cb: *] => char*
     mov rsp, rbp
     pop rbp
     ret
+
+
+Int._$_op_add: ; [a: int, b: int, cb: *] => int
+    push rbp
+    mov rbp, rsp
+
+    mov rax, qword [rbp + 16]
+    add rax, qword [rbp + 24]
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+Int._$_op_sub: ; [a: int, b: int, cb: *] => int
+    push rbp
+    mov rbp, rsp
+
+    mov rax, qword [rbp + 16]
+    sub rax, qword [rbp + 24]
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+Int._$_op_gt: ; [a: int, b: int, cb: *] => bool
+    push rbp
+    mov rbp, rsp
+
+    xor rax, rax
+    mov rcx, qword [rbp + 16]
+    cmp rcx, qword [rbp + 24]
+    setg al
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+Int._$_op_lt: ; [a: int, b: int, cb: *] => bool
+    push rbp
+    mov rbp, rsp
+
+    xor rax, rax
+    mov rcx, qword [rbp + 16]
+    cmp rcx, qword [rbp + 24]
+    setl al
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+Int._$_op_eq: ; [a: int, b: int, cb: *] => bool
+    push rbp
+    mov rbp, rsp
+
+    xor rax, rax
+    mov rcx, qword [rbp + 16]
+    cmp rcx, qword [rbp + 24]
+    sete al
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+Int._$_op_neq: ; [a: int, b: int, cb: *] => bool
+    push rbp
+    mov rbp, rsp
+
+    xor rax, rax
+    mov rcx, qword [rbp + 16]
+    cmp rcx, qword [rbp + 24]
+    setne al
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+Int._$_op_gte: ; [a: int, b: int, cb: *] => bool
+    push rbp
+    mov rbp, rsp
+
+    xor rax, rax
+    mov rcx, qword [rbp + 16]
+    cmp rcx, qword [rbp + 24]
+    setge al
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+Int._$_op_lte: ; [a: int, b: int, cb: *] => bool
+    push rbp
+    mov rbp, rsp
+
+    mov rax, qword [rbp + 16]
+    cmp rax, qword [rbp + 24]
+    setle al
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+Int._$_op_mul: ; [a: int, b: int, cb: *] => int
+    push rbp
+    mov rbp, rsp
+
+    mov rax, qword [rbp + 16]
+    imul rax, qword [rbp + 24]
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+Int._$_op_div: ; [a: int, b: int, cb: *] => int
+    push rbp
+    mov rbp, rsp
+
+    mov rax, qword [rbp + 16]
+    cqo
+    idiv qword [rbp + 24]
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+Int._$_op_mod: ; [a: int, b: int, cb: *] => int
+    push rbp
+    mov rbp, rsp
+
+    mov rax, qword [rbp + 16]
+    cqo
+    idiv qword [rbp + 24]
+    mov rax, rdx
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+Bool._$_op_or: ; [a: bool, b: bool, cb: *] => bool
+    push rbp
+    mov rbp, rsp
+
+    mov rax, qword [rbp + 16]
+    or rax, qword [rbp + 24]
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+Bool._$_op_and: ; [a: bool, b: bool, cb: *] => bool
+    push rbp
+    mov rbp, rsp
+
+    mov rax, qword [rbp + 16]
+    and rax, qword [rbp + 24]
+
+    mov rsp, rbp
+    pop rbp
+    ret

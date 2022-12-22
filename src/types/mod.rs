@@ -17,7 +17,7 @@ pub trait Type: Debug {
     fn operator_signature(
         &self,
         _op: Token,
-    ) -> Option<MutRc<dyn Type>> {
+    ) -> Option<MutRc<FnType>> {
         None
     }
     fn contains(&self, other: MutRc<dyn Type>) -> bool;

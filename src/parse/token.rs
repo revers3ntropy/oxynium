@@ -120,7 +120,6 @@ impl Token {
             TokenType::NotEquals => Some("neq"),
             TokenType::Or => Some("or"),
             TokenType::And => Some("and"),
-            TokenType::Not => Some("not"),
             _ => None,
         };
     }

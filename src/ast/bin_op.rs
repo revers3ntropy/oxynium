@@ -1,8 +1,7 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{mismatched_types, syntax_error, Error};
-use crate::get_type;
-use crate::parse::token::{Token, TokenType};
+use crate::error::{mismatched_types, type_error, Error};
+use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::util::MutRc;
 
@@ -18,91 +17,27 @@ impl Node for BinOpNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<String, Error> {
-        match self.operator.token_type {
-            TokenType::Plus
-            | TokenType::Sub
-            | TokenType::And
-            | TokenType::Or => Ok(format!(
-                "
-                    {}
-                    {}
-                    pop rax
-                    pop rbx
-                    {} rax, rbx
-                    push rax
-                ",
-                self.rhs.borrow_mut().asm(ctx.clone())?,
-                self.lhs.borrow_mut().asm(ctx.clone())?,
-                match self.operator.token_type {
-                    TokenType::Plus => "add",
-                    TokenType::Sub => "sub",
-                    TokenType::And => "and",
-                    _ => "or",
-                }
-            )),
-            TokenType::Astrix | TokenType::FSlash => Ok(format!(
-                "
-                        {}
-                        {}
-                        pop rax
-                        pop rbx
-                        cqo ; extend rax to rdx:rax
-                        {} rbx
-                        push rax
-                    ",
-                self.rhs.borrow_mut().asm(ctx.clone())?,
-                self.lhs.borrow_mut().asm(ctx.clone())?,
-                match self.operator.token_type {
-                    TokenType::Astrix => "imul",
-                    _ => "idiv",
-                }
-            )),
-            TokenType::Percent => Ok(format!(
-                "
-                        {}
-                        {}
-                        pop rax
-                        pop rbx
-                        cqo ; extend rax to rdx:rax
-                        idiv rbx
-                        push rdx
-                    ",
-                self.rhs.borrow_mut().asm(ctx.clone())?,
-                self.lhs.borrow_mut().asm(ctx.clone())?,
-            )),
-            TokenType::GT
-            | TokenType::LT
-            | TokenType::LTE
-            | TokenType::GTE
-            | TokenType::DblEquals
-            | TokenType::NotEquals => Ok(format!(
-                "
-                        {}
-                        {}
-                        pop rcx ; lhs
-                        pop rdx ; rhs
-                        xor rax, rax     ; al is first byte of rax,
-                        cmp rcx, rdx
-                        {} al          ; so clear rax and put into al
-                        push rax
-                ",
-                self.rhs.borrow_mut().asm(ctx.clone())?,
-                self.lhs.borrow_mut().asm(ctx.clone())?,
-                match self.operator.token_type {
-                    TokenType::DblEquals => "sete",
-                    TokenType::NotEquals => "setne",
-                    TokenType::GT => "setg",
-                    TokenType::LT => "setl",
-                    TokenType::GTE => "setge",
-                    _ => "setle",
-                }
-            )),
-            _ => Err(syntax_error(format!(
-                "Invalid operator: {}",
-                self.operator.clone().literal.unwrap()
-            ))
-            .set_interval(self.pos())),
-        }
+        let lhs = self
+            .lhs
+            .borrow_mut()
+            .type_check(ctx.clone())?;
+        let fn_signature = lhs
+            .t
+            .borrow()
+            .operator_signature(self.operator.clone());
+
+        Ok(format!(
+            "
+            {}
+            {}
+            call {}
+            times 2 pop rcx
+            push rax
+        ",
+            self.rhs.borrow_mut().asm(ctx.clone())?,
+            self.lhs.borrow_mut().asm(ctx.clone())?,
+            fn_signature.unwrap().borrow().name
+        ))
     }
 
     fn type_check(
@@ -110,64 +45,55 @@ impl Node for BinOpNode {
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
         let mut unknowns = 0;
-        let operand_types = match self.operator.token_type {
-            TokenType::Percent
-            | TokenType::Plus
-            | TokenType::Sub
-            | TokenType::Astrix
-            | TokenType::FSlash
-            | TokenType::DblEquals
-            | TokenType::NotEquals
-            | TokenType::GT
-            | TokenType::LT
-            | TokenType::GTE
-            | TokenType::LTE => get_type!(ctx, "Int"),
-            _ => get_type!(ctx, "Bool"),
-        };
 
         let lhs_tr = self
             .lhs
             .borrow_mut()
             .type_check(ctx.clone())?;
-        unknowns += lhs_tr.unknowns;
-        if !operand_types
-            .borrow()
-            .contains(lhs_tr.t.clone())
-        {
-            return Err(mismatched_types(
-                operand_types.clone(),
-                lhs_tr.t.clone(),
-            )
-            .set_interval(self.lhs.borrow_mut().pos()));
-        }
         let rhs_tr = self
             .rhs
             .borrow_mut()
             .type_check(ctx.clone())?;
-        if !operand_types
+        unknowns += lhs_tr.unknowns;
+        unknowns += rhs_tr.unknowns;
+
+        if lhs_tr.t.borrow().is_unknown() {
+            return Ok(TypeCheckRes::unknown_and(unknowns));
+        }
+
+        let fn_signature = lhs_tr
+            .t
+            .borrow()
+            .operator_signature(self.operator.clone());
+
+        if fn_signature.is_none() {
+            return Err(type_error(format!(
+                "Cannot use operator `{}` on type `{}`",
+                self.operator.str(),
+                lhs_tr.t.borrow().str()
+            ))
+            .set_interval(self.pos()));
+        }
+
+        let fn_signature = fn_signature.unwrap();
+        if !fn_signature.borrow().parameters[1]
+            .type_
             .borrow()
             .contains(rhs_tr.t.clone())
         {
             return Err(mismatched_types(
-                operand_types.clone(),
-                rhs_tr.t.clone(),
+                fn_signature.borrow().parameters[1]
+                    .type_
+                    .clone(),
+                rhs_tr.t,
             )
-            .set_interval(self.rhs.borrow_mut().pos()));
+            .set_interval(self.pos()));
         }
 
-        return Ok(TypeCheckRes::from(
-            match self.operator.token_type {
-                TokenType::Percent
-                | TokenType::Plus
-                | TokenType::Sub
-                | TokenType::Astrix
-                | TokenType::FSlash => {
-                    get_type!(ctx, "Int")
-                }
-                _ => get_type!(ctx, "Bool"),
-            },
-            unknowns,
-        ));
+        let ret_type =
+            fn_signature.borrow().ret_type.clone();
+
+        Ok(TypeCheckRes::from(ret_type, unknowns))
     }
     fn pos(&self) -> Interval {
         (
