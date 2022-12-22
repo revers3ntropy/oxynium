@@ -339,6 +339,40 @@ Str.at: ; [index: int, string: char*, cb: *] => char
         pop rbp
         ret
 
+Str._$_op_eq: ; [lhs: char*, rhs: char*, cb: *] => bool
+              ; returns true if the strings are equal
+    push rbp
+    mov rbp, rsp
+
+    mov r14, qword [rbp + 16] ; r14 = lhs
+    mov r13, qword [rbp + 24] ; r13 = rhs
+
+    xor rax, rax ; rax = 0 (index)
+
+    .loop:
+        mov rcx, qword [r14 + rax * 8] ; lhs[rax]
+        mov rdx, qword [r13 + rax * 8] ; rhs[rax]
+        cmp rcx, rdx ; lhs[rax] != rhs[rax]
+        jne .not_equal
+
+        test rcx, rcx ; lhs[rax] == 0
+        jz .are_equal ; lhs[rax] == rhs[rax] == 0
+
+        inc rax ; rax++
+
+        jmp .loop
+
+    .are_equal:
+        mov rax, 1
+        mov rsp, rbp
+        pop rbp
+        ret
+
+    .not_equal:
+        xor rax, rax
+        mov rsp, rbp
+        pop rbp
+        ret
 
 Char.str: ; [char: char, cb: *] => char*
            ; stringifies a single character

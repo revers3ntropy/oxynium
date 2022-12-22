@@ -321,19 +321,11 @@ impl Parser {
 
     fn statements(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
-        let mut src = Vec::new();
         let mut statements: Vec<MutRc<dyn Node>> =
             Vec::new();
         self.clear_end_statements(&mut res);
 
-        let first_stmt_start = self.tok_idx;
         let first_stmt = res.register(self.statement());
-        src.push(
-            self.tokens[first_stmt_start..self.tok_idx]
-                .iter()
-                .map(|a| a.str())
-                .collect(),
-        );
 
         ret_on_err!(res);
         if first_stmt.is_none() {
@@ -361,7 +353,6 @@ impl Parser {
                 break;
             }
 
-            let start_of_stmt = self.tok_idx;
             let statement =
                 res.try_register(self.statement());
             ret_on_err!(res);
@@ -369,12 +360,6 @@ impl Parser {
                 self.reverse(res.reverse_count);
                 continue;
             }
-            src.push(
-                self.tokens[start_of_stmt..self.tok_idx]
-                    .iter()
-                    .map(|a| a.str())
-                    .collect(),
-            );
             statements.push(statement.unwrap());
         }
 
@@ -382,7 +367,6 @@ impl Parser {
 
         res.success(new_mut_rc(StatementsNode {
             statements,
-            src,
         }));
         res
     }

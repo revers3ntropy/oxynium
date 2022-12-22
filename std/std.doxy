@@ -5,30 +5,18 @@ primitive Char {
 }
 
 primitive Bool {
-    extern fn || (self, other: Bool): Bool,
-    extern fn && (self, other: Bool): Bool,
-
     fn str(self): Str {
         if self {
             return "true"
         }
         return "false"
     }
+
+    extern fn || (self, other: Bool): Bool,
+    extern fn && (self, other: Bool): Bool,
 }
 
 primitive Int {
-    extern fn + (self, n: Int): Int,
-    extern fn - (self, n: Int): Int,
-    extern fn * (self, n: Int): Int,
-    extern fn / (self, n: Int): Int,
-    extern fn % (self, n: Int): Int,
-    extern fn == (self, n: Int): Bool,
-    extern fn != (self, n: Int): Bool,
-    extern fn < (self, n: Int): Bool,
-    extern fn <= (self, n: Int): Bool,
-    extern fn > (self, n: Int): Bool,
-    extern fn >= (self, n: Int): Bool,
-
     extern fn str(self): Str,
 
     fn max(self, other: Int): Int {
@@ -43,6 +31,18 @@ primitive Int {
         }
         return other
     }
+
+    extern fn + (self, n: Int): Int,
+    extern fn - (self, n: Int): Int,
+    extern fn * (self, n: Int): Int,
+    extern fn / (self, n: Int): Int,
+    extern fn % (self, n: Int): Int,
+    extern fn == (self, n: Int): Bool,
+    extern fn != (self, n: Int): Bool,
+    extern fn < (self, n: Int): Bool,
+    extern fn <= (self, n: Int): Bool,
+    extern fn > (self, n: Int): Bool,
+    extern fn >= (self, n: Int): Bool,
 }
 
 class Str {
@@ -50,14 +50,16 @@ class Str {
         return self
     }
     extern fn at(self, i: Int): Char,
-    extern fn len(self): Int
+    extern fn len(self): Int,
+
+    extern fn == (self, other: Str): Bool,
 }
 
-extern fn print(msg: Str): Void;
+extern fn print(msg: Str);
 fn println(msg: Str, line_end="\n"): Void {
     print(msg);
-    print(line_end)
+    print(line_end);
 }
-extern fn print_nl(): Void;
-extern fn exit(code: Int = 0): Void;
+extern fn print_nl();
+extern fn exit(code: Int = 0);
 extern fn input(prompt: Str = "", buffer_size: Int = 1000): Str

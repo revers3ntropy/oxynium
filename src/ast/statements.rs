@@ -7,7 +7,6 @@ use crate::util::MutRc;
 #[derive(Debug)]
 pub struct StatementsNode {
     pub statements: Vec<MutRc<dyn Node>>,
-    pub src: Vec<String>,
 }
 
 impl Node for StatementsNode {
@@ -17,17 +16,13 @@ impl Node for StatementsNode {
     ) -> Result<String, Error> {
         let mut asm = String::new();
 
-        let mut i = 0;
         for statement in self.statements.iter_mut() {
             let stmt =
                 statement.borrow_mut().asm(ctx.clone())?;
             if !stmt.is_empty() {
-                asm.push_str("\n;- SRC: ");
-                asm.push_str(self.src.get(i).unwrap());
                 asm.push_str("\n");
                 asm.push_str(&stmt.clone());
             }
-            i += 1;
         }
         Ok(asm)
     }
