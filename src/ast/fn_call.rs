@@ -46,8 +46,15 @@ impl FnCallNode {
     fn get_callee_type(
         &self,
         ctx: MutRc<Context>,
-    ) -> Result<(Option<FnType>, bool, Option<MutRc<dyn Type>>, usize), Error>
-    {
+    ) -> Result<
+        (
+            Option<FnType>,
+            bool,
+            Option<MutRc<dyn Type>>,
+            usize,
+        ),
+        Error,
+    > {
         if let Some(obj) = self.object.clone() {
             let mut calling_through_instance = true;
             // getting function type on method call
@@ -59,11 +66,16 @@ impl FnCallNode {
             if base_type_any.borrow().is_unknown() {
                 return Ok((None, false, None, unknowns));
             }
-            let mut base_type = base_type_any.borrow().as_class();
+            let mut base_type =
+                base_type_any.borrow().as_class();
             if base_type.is_none() {
-                if let Some(type_type) = base_type_any.borrow().as_type_type() {
-                    let class_type =
-                        type_type.instance_type.borrow().as_class();
+                if let Some(type_type) =
+                    base_type_any.borrow().as_type_type()
+                {
+                    let class_type = type_type
+                        .instance_type
+                        .borrow()
+                        .as_class();
 
                     if class_type.is_none() {
                         return Err(type_error(format!(
@@ -92,35 +104,46 @@ impl FnCallNode {
             }
             let base_type = base_type.unwrap();
 
-            let method_type = base_type
-                .method_type(&self.identifier.clone().literal.unwrap());
+            let method_type = base_type.method_type(
+                &self.identifier.clone().literal.unwrap(),
+            );
             if method_type.is_none() {
                 return Err(type_error(format!(
                     "Class '{}' does not have method '{}'",
                     base_type.str(),
-                    self.identifier.clone().literal.unwrap(),
+                    self.identifier
+                        .clone()
+                        .literal
+                        .unwrap(),
                 ))
                 .set_interval(self.position.clone()));
             }
 
             return Ok((
-                Some(method_type.unwrap().borrow().as_fn().unwrap()),
+                Some(
+                    method_type
+                        .unwrap()
+                        .borrow()
+                        .as_fn()
+                        .unwrap(),
+                ),
                 calling_through_instance,
                 Some(base_type_any.clone()),
                 unknowns,
             ));
         }
         // getting function type on normal function call
-        if !ctx
-            .borrow_mut()
-            .has_dec_with_id(&self.identifier.clone().literal.unwrap())
-        {
+        if !ctx.borrow_mut().has_dec_with_id(
+            &self.identifier.clone().literal.unwrap(),
+        ) {
             return Ok((None, false, None, 0));
         }
 
         let fn_type_option = ctx
             .borrow_mut()
-            .get_dec_from_id(&self.identifier.clone().literal.unwrap())
+            .get_dec_from_id(
+                &self.identifier.clone().literal.unwrap(),
+            )
             .type_
             .clone()
             .borrow()
@@ -137,7 +160,10 @@ impl FnCallNode {
 }
 
 impl Node for FnCallNode {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         let mut asm = format!("");
 
         let (fn_type, calling_through_instance, _, _) =
@@ -148,30 +174,39 @@ impl Node for FnCallNode {
 
         let mut args = self.args.clone();
 
-        let num_args =
-            self.args.len() + if calling_through_instance { 1 } else { 0 };
+        let num_args = self.args.len()
+            + if calling_through_instance { 1 } else { 0 };
 
         // fill out default arguments
         for i in num_args..fn_type.parameters.len() {
             // add to end of vec
             args.insert(
                 args.len(),
-                fn_type.parameters[i].default_value.clone().unwrap(),
+                fn_type.parameters[i]
+                    .default_value
+                    .clone()
+                    .unwrap(),
             );
         }
 
         for arg in args.iter_mut().rev() {
-            asm.push_str(&arg.borrow_mut().asm(ctx.clone())?);
+            asm.push_str(
+                &arg.borrow_mut().asm(ctx.clone())?,
+            );
             asm.push_str("\n");
         }
 
         if let Some(obj) = self.object.clone() {
-            asm.push_str(&obj.borrow_mut().asm(ctx.clone())?);
+            asm.push_str(
+                &obj.borrow_mut().asm(ctx.clone())?,
+            );
             asm.push_str("\n");
         }
 
-        let use_return_value =
-            !fn_type.ret_type.borrow().contains(get_type!(ctx, "Void"));
+        let use_return_value = !fn_type
+            .ret_type
+            .borrow()
+            .contains(get_type!(ctx, "Void"));
 
         asm.push_str(&format!(
             "
@@ -182,7 +217,10 @@ impl Node for FnCallNode {
             if self.object.is_some() {
                 method_id(
                     self.class_id(ctx.clone()),
-                    self.identifier.clone().literal.unwrap(),
+                    self.identifier
+                        .clone()
+                        .literal
+                        .unwrap(),
                 )
             } else {
                 self.identifier.clone().literal.unwrap()
@@ -198,11 +236,18 @@ impl Node for FnCallNode {
         Ok(asm)
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         let mut args: Vec<FnParamType> = Vec::new();
 
-        let (fn_type, is_method_call, base_type, mut unknowns) =
-            self.get_callee_type(ctx.clone())?;
+        let (
+            fn_type,
+            is_method_call,
+            base_type,
+            mut unknowns,
+        ) = self.get_callee_type(ctx.clone())?;
         if fn_type.is_none() {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(unknown_symbol(format!(
@@ -210,12 +255,18 @@ impl Node for FnCallNode {
                     if base_type.is_some() {
                         format!(
                             "method on type `{}`",
-                            base_type.unwrap().borrow().str()
+                            base_type
+                                .unwrap()
+                                .borrow()
+                                .str()
                         )
                     } else {
                         "function".to_string()
                     },
-                    self.identifier.clone().literal.unwrap()
+                    self.identifier
+                        .clone()
+                        .literal
+                        .unwrap()
                 ))
                 .set_interval(self.identifier.interval()));
             }
@@ -279,7 +330,10 @@ impl Node for FnCallNode {
                 .borrow()
                 .contains(args[i].type_.clone())
             {
-                let expected = fn_type.parameters[i].type_.borrow().str();
+                let expected = fn_type.parameters[i]
+                    .type_
+                    .borrow()
+                    .str();
                 let found = args[i].type_.borrow().str();
                 return Err(type_error(format!(
                     "Expected argument {} to function '{}' to be of type '{expected}' but found type '{found}'",
@@ -300,7 +354,10 @@ impl Node for FnCallNode {
             }
             unknowns += 1;
         }
-        Ok(TypeCheckRes::from(fn_type.ret_type.clone(), unknowns))
+        Ok(TypeCheckRes::from(
+            fn_type.ret_type.clone(),
+            unknowns,
+        ))
     }
 
     fn pos(&self) -> Interval {

@@ -19,8 +19,12 @@ impl SymbolAccess {
 }
 
 impl Node for SymbolAccess {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
-        let decl = ctx.borrow_mut().get_dec_from_id(&self.id());
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        let decl =
+            ctx.borrow_mut().get_dec_from_id(&self.id());
         if decl.require_init && !decl.is_defined {
             return Err(type_error(format!(
                 "Cannot use uninitialized variable '{}'",
@@ -41,7 +45,10 @@ impl Node for SymbolAccess {
         ))
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.id()) {
             return Err(unknown_symbol(self.id()));
         }
@@ -55,7 +62,11 @@ impl Node for SymbolAccess {
             }
             return Ok(TypeCheckRes::unknown());
         }
-        if ctx.borrow_mut().get_dec_from_id(&self.id()).is_type {
+        if ctx
+            .borrow_mut()
+            .get_dec_from_id(&self.id())
+            .is_type
+        {
             return Ok(TypeCheckRes::from(
                 new_mut_rc(TypeType {
                     instance_type: ctx

@@ -13,14 +13,27 @@ pub struct ExecRootNode {
 }
 
 impl Node for ExecRootNode {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
-        let mut res = self.statements.borrow_mut().asm(ctx.clone())?;
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        let mut res = self
+            .statements
+            .borrow_mut()
+            .asm(ctx.clone())?;
         let ctx_ref = ctx.borrow_mut();
 
-        let (data_defs, text_defs) = ctx_ref.get_definitions();
+        let (data_defs, text_defs) =
+            ctx_ref.get_definitions();
         let data = data_defs
             .iter()
-            .map(|k| format!("{} {}", k.name, k.data.as_ref().unwrap()))
+            .map(|k| {
+                format!(
+                    "{} {}",
+                    k.name,
+                    k.data.as_ref().unwrap()
+                )
+            })
             .collect::<Vec<String>>()
             .join("\n");
 
@@ -28,9 +41,16 @@ impl Node for ExecRootNode {
             .iter()
             .map(|k| {
                 if k.name == "main" {
-                    format!("_$_oxy_main: \n{}", k.text.as_ref().unwrap())
+                    format!(
+                        "_$_oxy_main: \n{}",
+                        k.text.as_ref().unwrap()
+                    )
                 } else {
-                    format!("{}: \n{}", k.name, k.text.as_ref().unwrap())
+                    format!(
+                        "{}: \n{}",
+                        k.name,
+                        k.text.as_ref().unwrap()
+                    )
                 }
             })
             .collect::<Vec<String>>()
@@ -48,14 +68,17 @@ impl Node for ExecRootNode {
             ));
         }
 
-        let main_decl_option = text_defs.iter().find(|k| k.name == "main");
+        let main_decl_option =
+            text_defs.iter().find(|k| k.name == "main");
         let has_main = main_decl_option.is_some();
 
         if has_main && res != "" {
             return Err(syntax_error(format!(
                 "Cannot have top level statements and 'main' function"
             ))
-            .set_interval(ctx_ref.get_dec_from_id("main").position.clone()));
+            .set_interval(
+                ctx_ref.get_dec_from_id("main").position.clone(),
+            ));
         }
 
         if has_main {
@@ -65,7 +88,9 @@ impl Node for ExecRootNode {
             let main_type = main_decl.type_.clone();
             let main_signature = FnType {
                 name: "main".to_string(),
-                ret_type: ctx_ref.get_dec_from_id("Void").type_,
+                ret_type: ctx_ref
+                    .get_dec_from_id("Void")
+                    .type_,
                 parameters: vec![],
             };
 
@@ -108,12 +133,19 @@ impl Node for ExecRootNode {
         ))
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if ctx.borrow().is_frozen() {
-            println!("\n\n  ***  Context is frozen!  *** \n\n");
+            println!(
+                "\n\n  ***  Context is frozen!  *** \n\n"
+            );
         }
-        let TypeCheckRes { mut unknowns, .. } =
-            self.statements.borrow_mut().type_check(ctx.clone())?;
+        let TypeCheckRes { mut unknowns, .. } = self
+            .statements
+            .borrow_mut()
+            .type_check(ctx.clone())?;
 
         // so that things aren't redeclared
         ctx.borrow_mut().freeze();
@@ -122,7 +154,10 @@ impl Node for ExecRootNode {
         //let mut i = 0;
         while unknowns > 0 {
             //i += 1;
-            let res = self.statements.borrow_mut().type_check(ctx.clone())?;
+            let res = self
+                .statements
+                .borrow_mut()
+                .type_check(ctx.clone())?;
             // println!("(Pass {}) Unknowns: {} ", i, res.unknowns);
 
             if res.unknowns >= unknowns {

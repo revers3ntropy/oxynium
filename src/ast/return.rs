@@ -12,11 +12,15 @@ pub struct ReturnNode {
 }
 
 impl Node for ReturnNode {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         let frame = ctx.borrow_mut().stack_frame_peak();
         if frame.is_none() {
             return Err(syntax_error(
-                "'return' statement outside of function".to_string(),
+                "'return' statement outside of function"
+                    .to_string(),
             )
             .set_interval(self.pos()));
         }
@@ -41,12 +45,24 @@ impl Node for ReturnNode {
         ))
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if let Some(ref value) = self.value {
-            let ret_tr = value.borrow().type_check(ctx.clone())?;
-            Ok(TypeCheckRes::returns(true, ret_tr.t, ret_tr.unknowns))
+            let ret_tr =
+                value.borrow().type_check(ctx.clone())?;
+            Ok(TypeCheckRes::returns(
+                true,
+                ret_tr.t,
+                ret_tr.unknowns,
+            ))
         } else {
-            Ok(TypeCheckRes::returns(true, get_type!(ctx, "Void"), 0))
+            Ok(TypeCheckRes::returns(
+                true,
+                get_type!(ctx, "Void"),
+                0,
+            ))
         }
     }
 

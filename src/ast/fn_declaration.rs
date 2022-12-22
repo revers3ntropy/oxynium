@@ -1,12 +1,18 @@
-use crate::ast::class_declaration::method_id;
+use crate::ast::class_declaration::{
+    method_id, operator_method_id,
+};
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::CallStackFrame;
 use crate::context::Context;
-use crate::error::{invalid_symbol, syntax_error, type_error, Error};
+use crate::error::{
+    invalid_symbol, syntax_error, type_error, Error,
+};
 use crate::get_type;
 use crate::parse::token::{Token, TokenType};
 use crate::position::Interval;
-use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
+use crate::symbols::{
+    can_declare_with_identifier, SymbolDec, SymbolDef,
+};
 use crate::types::class::ClassType;
 use crate::types::function::{FnParamType, FnType};
 use crate::util::{new_mut_rc, MutRc};
@@ -34,26 +40,37 @@ pub struct FnDeclarationNode {
 
 impl FnDeclarationNode {
     fn id(&self) -> String {
-        if self.identifier.token_type == TokenType::Identifier {
-            let self_id = self.identifier.literal.clone().unwrap();
+        if self.identifier.token_type
+            == TokenType::Identifier
+        {
+            let self_id =
+                self.identifier.literal.clone().unwrap();
             match &self.class {
-                Some(class) => method_id(class.borrow().name.clone(), self_id),
+                Some(class) => method_id(
+                    class.borrow().name.clone(),
+                    self_id,
+                ),
                 None => self_id,
             }
         } else {
-            method_id(
-                self.class.clone().unwrap().borrow().name.clone(),
-                format!(
-                    "_$_operator_{}",
-                    self.identifier.overload_op_id().unwrap()
-                ),
+            operator_method_id(
+                self.class
+                    .clone()
+                    .unwrap()
+                    .borrow()
+                    .name
+                    .clone(),
+                self.identifier.clone(),
             )
         }
     }
 }
 
 impl Node for FnDeclarationNode {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare function '{}' inside of another function.",
@@ -69,7 +86,11 @@ impl Node for FnDeclarationNode {
         let end_label = ctx.borrow_mut().get_anon_label();
         ctx.borrow_mut().stack_frame_push(CallStackFrame {
             name: self.id(),
-            params: self.params.iter().map(|a| a.identifier.clone()).collect(),
+            params: self
+                .params
+                .iter()
+                .map(|a| a.identifier.clone())
+                .collect(),
             ret_lbl: end_label.clone(),
         });
 
@@ -81,9 +102,12 @@ impl Node for FnDeclarationNode {
             .asm(self.params_scope.clone())?;
         let params_scope = self.params_scope.clone();
         let params_scope = params_scope.borrow_mut();
-        let (data_defs, text_defs) = params_scope.get_definitions();
+        let (data_defs, text_defs) =
+            params_scope.get_definitions();
         if text_defs.len() > 0 {
-            return Err(type_error("Nested functions not allowed".to_string()));
+            return Err(type_error(
+                "Nested functions not allowed".to_string(),
+            ));
         }
 
         let self_pos = self.pos();
@@ -112,20 +136,32 @@ impl Node for FnDeclarationNode {
         Ok("".to_string())
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
-        if self.identifier.token_type == TokenType::Identifier {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
+        if self.identifier.token_type
+            == TokenType::Identifier
+        {
             if !can_declare_with_identifier(
                 &self.identifier.clone().literal.unwrap(),
             ) {
                 return Err(invalid_symbol(
-                    self.identifier.clone().literal.unwrap(),
+                    self.identifier
+                        .clone()
+                        .literal
+                        .unwrap(),
                 )
                 .set_interval(self.identifier.interval()));
             }
         }
 
-        self.params_scope.borrow_mut().set_parent(ctx.clone());
-        self.params_scope.borrow_mut().allow_local_var_decls = true;
+        self.params_scope
+            .borrow_mut()
+            .set_parent(ctx.clone());
+        self.params_scope
+            .borrow_mut()
+            .allow_local_var_decls = true;
 
         // don't use param_scope so that the function can have params
         // with the same name as the function
@@ -133,7 +169,10 @@ impl Node for FnDeclarationNode {
             t: ret_type,
             mut unknowns,
             ..
-        } = self.ret_type.borrow_mut().type_check(ctx.clone())?;
+        } = self
+            .ret_type
+            .borrow_mut()
+            .type_check(ctx.clone())?;
 
         let mut parameters: Vec<FnParamType> = Vec::new();
 
@@ -145,21 +184,27 @@ impl Node for FnDeclarationNode {
                 type_,
                 default_value,
                 position,
-            } = self.params[self.params.len() - i - 1].clone();
+            } = self.params[self.params.len() - i - 1]
+                .clone();
 
             if !can_declare_with_identifier(&identifier) {
-                return Err(syntax_error("Invalid parameter name".to_string())
-                    .set_interval(self.position.clone()));
+                return Err(syntax_error(
+                    "Invalid parameter name".to_string(),
+                )
+                .set_interval(self.position.clone()));
             }
 
             let mut param_type = None;
             if let Some(type_) = type_ {
-                let param_type_res =
-                    type_.borrow_mut().type_check(ctx.clone())?;
+                let param_type_res = type_
+                    .borrow_mut()
+                    .type_check(ctx.clone())?;
                 param_type = Some(param_type_res.t);
                 unknowns += param_type_res.unknowns;
             }
-            if let Some(default_value) = default_value.clone() {
+            if let Some(default_value) =
+                default_value.clone()
+            {
                 if seen_param_without_default {
                     return Err(type_error(format!(
                         "Parameters after '{}' must have default values",
@@ -167,12 +212,14 @@ impl Node for FnDeclarationNode {
                     ))
                     .set_interval(self.position.clone()));
                 }
-                let default_value_type =
-                    default_value.borrow_mut().type_check(ctx.clone())?;
+                let default_value_type = default_value
+                    .borrow_mut()
+                    .type_check(ctx.clone())?;
                 unknowns += default_value_type.unknowns;
 
                 if param_type.is_none() {
-                    param_type = Some(default_value_type.t.clone());
+                    param_type =
+                        Some(default_value_type.t.clone());
                 }
                 if !param_type
                     .clone()
@@ -211,18 +258,21 @@ impl Node for FnDeclarationNode {
 
             let self_pos = self.pos();
             if ctx.borrow().is_frozen() {
-                self.params_scope.borrow_mut().update_dec_type(
-                    &identifier.clone(),
-                    param_type.unwrap(),
-                    self_pos,
-                )?;
+                self.params_scope
+                    .borrow_mut()
+                    .update_dec_type(
+                        &identifier.clone(),
+                        param_type.unwrap(),
+                        self_pos,
+                    )?;
             } else {
                 self.params_scope.borrow_mut().declare(
                     SymbolDec {
                         name: identifier.clone(),
                         id: format!(
                             "qword [rbp + {}]",
-                            8 * ((num_params - (i + 1)) + 2)
+                            8 * ((num_params - (i + 1))
+                                + 2)
                         ),
                         is_constant: true,
                         is_type: false,
@@ -239,15 +289,20 @@ impl Node for FnDeclarationNode {
 
         let this_type: MutRc<FnType>;
         if ctx.borrow().is_frozen() {
-            let this_type_any = ctx.borrow().get_dec_from_id(&self.id()).type_;
+            let this_type_any = ctx
+                .borrow()
+                .get_dec_from_id(&self.id())
+                .type_;
             unsafe {
-                this_type = (&*(&this_type_any as *const dyn Any
+                this_type = (&*(&this_type_any
+                    as *const dyn Any
                     as *const MutRc<FnType>))
                     .clone();
             }
             // override with latest data
             this_type.borrow_mut().parameters = parameters;
-            this_type.borrow_mut().ret_type = ret_type.clone();
+            this_type.borrow_mut().ret_type =
+                ret_type.clone();
         } else {
             this_type = new_mut_rc(FnType {
                 name: self.id(),
@@ -278,12 +333,16 @@ impl Node for FnDeclarationNode {
                 always_returns,
                 unknowns: body_unknowns,
                 ..
-            } = body.borrow().type_check(self.params_scope.clone())?;
+            } = body
+                .borrow()
+                .type_check(self.params_scope.clone())?;
             unknowns += body_unknowns;
 
             if is_returned
                 && !always_returns
-                && !ret_type.borrow().contains(get_type!(&ctx, "Void"))
+                && !ret_type
+                    .borrow()
+                    .contains(get_type!(&ctx, "Void"))
             {
                 return Err(type_error(format!(
                     "Function '{}' doesn't always return a value",
@@ -297,7 +356,10 @@ impl Node for FnDeclarationNode {
             } else {
                 get_type!(ctx, "Void")
             };
-            if !ret_type.borrow().contains(body_ret_type.clone()) {
+            if !ret_type
+                .borrow()
+                .contains(body_ret_type.clone())
+            {
                 return Err(type_error(format!(
                     "Function `{}` has return type `{}` but found `{}`",
                     self.identifier.str(),

@@ -82,14 +82,22 @@ impl Context {
         self.err_on_unknowns = true;
     }
 
-    pub fn set_parent(&mut self, parent: Rc<RefCell<Context>>) {
+    pub fn set_parent(
+        &mut self,
+        parent: Rc<RefCell<Context>>,
+    ) {
         self.exec_mode = parent.borrow_mut().exec_mode;
-        self.std_asm_path = parent.borrow_mut().std_asm_path.clone();
-        self.allow_overrides = parent.borrow_mut().allow_overrides;
+        self.std_asm_path =
+            parent.borrow_mut().std_asm_path.clone();
+        self.allow_overrides =
+            parent.borrow_mut().allow_overrides;
         self.parent = Some(parent);
     }
 
-    pub fn with_root<T>(&self, cb: &mut impl Fn(&Context) -> T) -> T {
+    pub fn with_root<T>(
+        &self,
+        cb: &mut impl Fn(&Context) -> T,
+    ) -> T {
         if let Some(ref parent) = self.parent {
             parent.borrow_mut().with_root(cb)
         } else {
@@ -112,9 +120,14 @@ impl Context {
 
     pub fn get_anon_label(&mut self) -> String {
         if self.parent.is_some() {
-            return self.with_root_mut(&mut |ctx| ctx.get_anon_label());
+            return self.with_root_mut(&mut |ctx| {
+                ctx.get_anon_label()
+            });
         }
-        let symbol = format!("{}L{}", ANON_PREFIX, self.anon_symbol_count);
+        let symbol = format!(
+            "{}L{}",
+            ANON_PREFIX, self.anon_symbol_count
+        );
         self.anon_symbol_count += 1;
         symbol
     }
@@ -128,11 +141,15 @@ impl Context {
     ) -> Result<SymbolDec, Error> {
         if self.is_frozen() {
             if self.has_dec_with_id(&symbol.name) {
-                return Ok(self.get_dec_from_id(&symbol.name));
+                return Ok(
+                    self.get_dec_from_id(&symbol.name)
+                );
             }
             panic!("(!?) Context is frozen and symbol doesn't exist yet!");
         }
-        if self.parent.is_some() && !self.allow_local_var_decls {
+        if self.parent.is_some()
+            && !self.allow_local_var_decls
+        {
             return self
                 .parent
                 .as_ref()
@@ -140,10 +157,13 @@ impl Context {
                 .borrow_mut()
                 .declare(symbol, trace_interval);
         }
-        if let Some(duplicate) =
-            self.declarations.get(symbol.name.clone().as_str())
+        if let Some(duplicate) = self
+            .declarations
+            .get(symbol.name.clone().as_str())
         {
-            if !self.allow_overrides || !duplicate.contains(&symbol) {
+            if !self.allow_overrides
+                || !duplicate.contains(&symbol)
+            {
                 return Err(type_error(format!(
                     "Symbol {} is already declared",
                     symbol.name
@@ -159,7 +179,11 @@ impl Context {
         if self.declarations.get(id).is_some() {
             true
         } else if self.parent.is_some() {
-            self.parent.as_ref().unwrap().borrow().has_dec_with_id(id)
+            self.parent
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .has_dec_with_id(id)
         } else {
             false
         }
@@ -168,7 +192,11 @@ impl Context {
         if self.declarations.get(id).is_some() {
             self.declarations.get(id).unwrap().clone()
         } else if self.parent.is_some() {
-            self.parent.as_ref().unwrap().borrow().get_dec_from_id(id)
+            self.parent
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .get_dec_from_id(id)
         } else {
             panic!("Symbol {} not found", id);
         }
@@ -179,7 +207,8 @@ impl Context {
         trace_interval: Interval,
     ) -> Result<(), Error> {
         if self.declarations.get(id).is_some() {
-            let mut dec = self.declarations.get(id).unwrap().clone();
+            let mut dec =
+                self.declarations.get(id).unwrap().clone();
             dec.is_defined = true;
             self.declarations.insert(id.to_string(), dec);
             Ok(())
@@ -190,8 +219,10 @@ impl Context {
                 .borrow_mut()
                 .set_dec_as_defined(id, trace_interval)
         } else {
-            Err(type_error(format!("Symbol {id} is not declared"))
-                .set_interval(trace_interval))
+            Err(type_error(format!(
+                "Symbol {id} is not declared"
+            ))
+            .set_interval(trace_interval))
         }
     }
     pub fn update_dec_type(
@@ -201,26 +232,38 @@ impl Context {
         trace_interval: Interval,
     ) -> Result<(), Error> {
         if self.declarations.get(id).is_some() {
-            let mut dec = self.declarations.get(id).unwrap().clone();
+            let mut dec =
+                self.declarations.get(id).unwrap().clone();
             dec.type_ = new_type;
             self.declarations.insert(id.to_string(), dec);
             Ok(())
         } else if self.parent.is_some() {
-            self.parent.as_ref().unwrap().borrow_mut().update_dec_type(
-                id,
-                new_type,
-                trace_interval,
-            )
+            self.parent
+                .as_ref()
+                .unwrap()
+                .borrow_mut()
+                .update_dec_type(
+                    id,
+                    new_type,
+                    trace_interval,
+                )
         } else {
-            Err(type_error(format!("Symbol {id} is not declared"))
-                .set_interval(trace_interval))
+            Err(type_error(format!(
+                "Symbol {id} is not declared"
+            ))
+            .set_interval(trace_interval))
         }
     }
 
     pub fn get_new_local_var_offset(&self) -> usize {
-        if self.allow_local_var_decls || self.parent.is_none() {
-            let idx =
-                self.declarations.iter().filter(|d| !d.1.is_param).count();
+        if self.allow_local_var_decls
+            || self.parent.is_none()
+        {
+            let idx = self
+                .declarations
+                .iter()
+                .filter(|d| !d.1.is_param)
+                .count();
             (1 + idx) * 8
         } else {
             self.parent
@@ -238,7 +281,9 @@ impl Context {
         symbol: SymbolDef,
         trace_interval: Interval,
     ) -> Result<(), Error> {
-        if self.parent.is_some() && !self.allow_local_var_decls {
+        if self.parent.is_some()
+            && !self.allow_local_var_decls
+        {
             return self
                 .parent
                 .as_ref()
@@ -279,7 +324,11 @@ impl Context {
                 .define_anon(symbol, trace_interval);
         }
         symbol.name = self.get_anon_label();
-        if self.definitions.get(symbol.name.clone().as_str()).is_some() {
+        if self
+            .definitions
+            .get(symbol.name.clone().as_str())
+            .is_some()
+        {
             return Err(type_error(format!(
                 "Symbol {} is already defined",
                 symbol.name
@@ -290,16 +339,28 @@ impl Context {
         self.definitions.insert(name.clone(), symbol);
         Ok(name.clone())
     }
-    pub fn get_def_from_id(&self, id: &str) -> Result<SymbolDef, Error> {
+    pub fn get_def_from_id(
+        &self,
+        id: &str,
+    ) -> Result<SymbolDef, Error> {
         if self.definitions.get(id).is_some() {
             Ok(self.definitions.get(id).unwrap().clone())
         } else if self.parent.is_some() {
-            self.parent.as_ref().unwrap().borrow().get_def_from_id(id)
+            self.parent
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .get_def_from_id(id)
         } else {
-            Err(type_error(format!("Symbol {} is not defined", id)))
+            Err(type_error(format!(
+                "Symbol {} is not defined",
+                id
+            )))
         }
     }
-    pub fn get_definitions(&self) -> (Vec<&SymbolDef>, Vec<&SymbolDef>) {
+    pub fn get_definitions(
+        &self,
+    ) -> (Vec<&SymbolDef>, Vec<&SymbolDef>) {
         let mut data = Vec::new();
         let mut text = Vec::new();
         for (_id, def) in self.definitions.iter() {
@@ -314,48 +375,75 @@ impl Context {
 
     // Loop labels
 
-    pub fn loop_labels_push(&mut self, start: String, end: String) {
+    pub fn loop_labels_push(
+        &mut self,
+        start: String,
+        end: String,
+    ) {
         if self.parent.is_some() {
             return self.with_root_mut(&mut |ctx| {
-                ctx.loop_labels_push(start.clone(), end.clone())
+                ctx.loop_labels_push(
+                    start.clone(),
+                    end.clone(),
+                )
             });
         }
         self.loop_label_stack.push((start, end));
     }
 
-    pub fn loop_labels_pop(&mut self) -> Option<(String, String)> {
+    pub fn loop_labels_pop(
+        &mut self,
+    ) -> Option<(String, String)> {
         if self.parent.is_some() {
-            return self.with_root_mut(&mut |ctx| ctx.loop_labels_pop());
+            return self.with_root_mut(&mut |ctx| {
+                ctx.loop_labels_pop()
+            });
         }
         self.loop_label_stack.pop()
     }
 
-    pub fn loop_label_peak(&self) -> Option<(String, String)> {
+    pub fn loop_label_peak(
+        &self,
+    ) -> Option<(String, String)> {
         if self.parent.is_some() {
-            return self.with_root(&mut |ctx| ctx.loop_label_peak());
+            return self.with_root(&mut |ctx| {
+                ctx.loop_label_peak()
+            });
         }
         self.loop_label_stack.last().cloned()
     }
 
     // Stack Frames
 
-    pub fn stack_frame_push(&mut self, frame: CallStackFrame) {
+    pub fn stack_frame_push(
+        &mut self,
+        frame: CallStackFrame,
+    ) {
         if self.parent.is_some() {
-            return self
-                .with_root_mut(&mut |ctx| ctx.stack_frame_push(frame.clone()));
+            return self.with_root_mut(&mut |ctx| {
+                ctx.stack_frame_push(frame.clone())
+            });
         }
         self.call_stack.push(frame);
     }
 
-    pub fn stack_frame_pop(&mut self) -> Option<CallStackFrame> {
+    pub fn stack_frame_pop(
+        &mut self,
+    ) -> Option<CallStackFrame> {
         if self.parent.is_some() {
-            return self.with_root_mut(&mut |ctx| ctx.stack_frame_pop());
+            return self.with_root_mut(&mut |ctx| {
+                ctx.stack_frame_pop()
+            });
         }
         self.call_stack.pop()
     }
-    pub fn stack_frame_peak(&self) -> Option<CallStackFrame> {
+    pub fn stack_frame_peak(
+        &self,
+    ) -> Option<CallStackFrame> {
         if self.parent.is_some() {
-            return self.with_root(&mut |ctx| ctx.stack_frame_peak());
+            return self.with_root(&mut |ctx| {
+                ctx.stack_frame_peak()
+            });
         }
         self.call_stack.last().cloned()
     }
@@ -375,7 +463,14 @@ impl Context {
         if self.parent.is_some() {
             s = format!(
                 "{}",
-                indent(self.parent.clone().unwrap().borrow().str(), 4)
+                indent(
+                    self.parent
+                        .clone()
+                        .unwrap()
+                        .borrow()
+                        .str(),
+                    4
+                )
             );
         }
         for (_, dec) in self.declarations.iter() {

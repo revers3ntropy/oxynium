@@ -36,12 +36,16 @@ pub mod r#while;
 
 pub const ANON_PREFIX: &str = "_$_";
 pub const STD_ASM: &str = include_str!("../../std/std.asm");
-pub const STD_DATA_ASM: &str = include_str!("../../std/std-data.asm");
+pub const STD_DATA_ASM: &str =
+    include_str!("../../std/std-data.asm");
 
 #[macro_export]
 macro_rules! get_type {
     ($ctx:expr, $name:expr) => {
-        $ctx.borrow_mut().get_dec_from_id($name).type_.clone()
+        $ctx.borrow_mut()
+            .get_dec_from_id($name)
+            .type_
+            .clone()
     };
 }
 
@@ -63,7 +67,11 @@ impl TypeCheckRes {
         }
     }
 
-    fn returns(always: bool, t: MutRc<dyn Type>, unknowns: usize) -> Self {
+    fn returns(
+        always: bool,
+        t: MutRc<dyn Type>,
+        unknowns: usize,
+    ) -> Self {
         Self {
             t,
             is_returned: true,
@@ -72,7 +80,11 @@ impl TypeCheckRes {
         }
     }
 
-    fn from_ctx(ctx: &MutRc<Context>, name: &str, mut unknowns: usize) -> Self {
+    fn from_ctx(
+        ctx: &MutRc<Context>,
+        name: &str,
+        mut unknowns: usize,
+    ) -> Self {
         let t: MutRc<dyn Type>;
         if !ctx.borrow().has_dec_with_id(name) {
             unknowns += 1;
@@ -111,10 +123,16 @@ impl TypeCheckRes {
 }
 
 pub trait Node: Debug {
-    fn asm(&mut self, _ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        _ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         Ok("".to_string())
     }
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         Ok(TypeCheckRes::from_ctx(&ctx, "Void", 0))
     }
     fn pos(&self) -> Interval;

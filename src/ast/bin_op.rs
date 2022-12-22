@@ -14,7 +14,10 @@ pub struct BinOpNode {
 }
 
 impl Node for BinOpNode {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         match self.operator.token_type {
             TokenType::Plus
             | TokenType::Sub
@@ -102,7 +105,10 @@ impl Node for BinOpNode {
         }
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         let mut unknowns = 0;
         let operand_types = match self.operator.token_type {
             TokenType::Percent
@@ -119,17 +125,29 @@ impl Node for BinOpNode {
             _ => get_type!(ctx, "Bool"),
         };
 
-        let lhs_tr = self.lhs.borrow_mut().type_check(ctx.clone())?;
+        let lhs_tr = self
+            .lhs
+            .borrow_mut()
+            .type_check(ctx.clone())?;
         unknowns += lhs_tr.unknowns;
-        if !operand_types.borrow().contains(lhs_tr.t.clone()) {
+        if !operand_types
+            .borrow()
+            .contains(lhs_tr.t.clone())
+        {
             return Err(mismatched_types(
                 operand_types.clone(),
                 lhs_tr.t.clone(),
             )
             .set_interval(self.lhs.borrow_mut().pos()));
         }
-        let rhs_tr = self.rhs.borrow_mut().type_check(ctx.clone())?;
-        if !operand_types.borrow().contains(rhs_tr.t.clone()) {
+        let rhs_tr = self
+            .rhs
+            .borrow_mut()
+            .type_check(ctx.clone())?;
+        if !operand_types
+            .borrow()
+            .contains(rhs_tr.t.clone())
+        {
             return Err(mismatched_types(
                 operand_types.clone(),
                 rhs_tr.t.clone(),
@@ -143,13 +161,18 @@ impl Node for BinOpNode {
                 | TokenType::Plus
                 | TokenType::Sub
                 | TokenType::Astrix
-                | TokenType::FSlash => get_type!(ctx, "Int"),
+                | TokenType::FSlash => {
+                    get_type!(ctx, "Int")
+                }
                 _ => get_type!(ctx, "Bool"),
             },
             unknowns,
         ));
     }
     fn pos(&self) -> Interval {
-        (self.lhs.borrow_mut().pos().0, self.rhs.borrow_mut().pos().1)
+        (
+            self.lhs.borrow_mut().pos().0,
+            self.rhs.borrow_mut().pos().1,
+        )
     }
 }

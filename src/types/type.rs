@@ -35,7 +35,10 @@ impl Type for TypeType {
 }
 
 impl fmt::Debug for TypeType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         write!(f, "Type<{:?}>", self.instance_type)
     }
 }

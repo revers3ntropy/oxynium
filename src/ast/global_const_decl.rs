@@ -4,7 +4,9 @@ use crate::error::{syntax_error, Error};
 use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::Interval;
-use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
+use crate::symbols::{
+    can_declare_with_identifier, SymbolDec, SymbolDef,
+};
 use crate::util::MutRc;
 
 #[derive(Debug)]
@@ -15,7 +17,10 @@ pub struct GlobalConstNode<T> {
 }
 
 impl Node for GlobalConstNode<i64> {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
@@ -24,7 +29,11 @@ impl Node for GlobalConstNode<i64> {
         }
         ctx.borrow_mut().define(
             SymbolDef {
-                name: self.identifier.clone().literal.unwrap(),
+                name: self
+                    .identifier
+                    .clone()
+                    .literal
+                    .unwrap(),
                 data: Some(format!("dq {}", self.value)),
                 text: None,
             },
@@ -33,7 +42,10 @@ impl Node for GlobalConstNode<i64> {
         Ok("".to_owned())
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !can_declare_with_identifier(
             &self.identifier.clone().literal.unwrap(),
         ) {
@@ -46,10 +58,17 @@ impl Node for GlobalConstNode<i64> {
         let int = get_type!(ctx, "Int");
         ctx.borrow_mut().declare(
             SymbolDec {
-                name: self.identifier.clone().literal.unwrap(),
+                name: self
+                    .identifier
+                    .clone()
+                    .literal
+                    .unwrap(),
                 id: format!(
                     "qword [{}]",
-                    self.identifier.clone().literal.unwrap()
+                    self.identifier
+                        .clone()
+                        .literal
+                        .unwrap()
                 ),
                 is_constant: true,
                 is_type: false,
@@ -70,7 +89,10 @@ impl Node for GlobalConstNode<i64> {
 }
 
 impl Node for GlobalConstNode<String> {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
@@ -79,18 +101,32 @@ impl Node for GlobalConstNode<String> {
         }
         ctx.borrow_mut().define(
             SymbolDef {
-                name: self.identifier.clone().literal.unwrap(),
+                name: self
+                    .identifier
+                    .clone()
+                    .literal
+                    .unwrap(),
                 // ,0 is the null terminator
-                data: Some(format!("dq \"{}\", 0", self.value)),
+                data: Some(format!(
+                    "dq \"{}\", 0",
+                    self.value
+                )),
                 text: None,
             },
             self.identifier.interval(),
         )?;
         ctx.borrow_mut().define_anon(
             SymbolDef {
-                name: self.identifier.clone().literal.unwrap(),
+                name: self
+                    .identifier
+                    .clone()
+                    .literal
+                    .unwrap(),
                 // ,0 is the null terminator
-                data: Some(format!("dq \"{}\", 0", self.value)),
+                data: Some(format!(
+                    "dq \"{}\", 0",
+                    self.value
+                )),
                 text: None,
             },
             self.pos(),
@@ -98,7 +134,10 @@ impl Node for GlobalConstNode<String> {
         Ok("".to_owned())
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !can_declare_with_identifier(
             &self.identifier.clone().literal.unwrap(),
         ) {
@@ -110,8 +149,16 @@ impl Node for GlobalConstNode<String> {
         let str = get_type!(ctx, "Str");
         ctx.borrow_mut().declare(
             SymbolDec {
-                name: self.identifier.clone().literal.unwrap(),
-                id: self.identifier.clone().literal.unwrap(),
+                name: self
+                    .identifier
+                    .clone()
+                    .literal
+                    .unwrap(),
+                id: self
+                    .identifier
+                    .clone()
+                    .literal
+                    .unwrap(),
                 is_constant: true,
                 is_type: false,
                 require_init: true,

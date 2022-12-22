@@ -11,7 +11,10 @@ pub struct IntNode {
 }
 
 impl Node for IntNode {
-    fn asm(&mut self, _ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        _ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         Ok(format!(
             "
             mov rax, {}
@@ -21,7 +24,10 @@ impl Node for IntNode {
         ))
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         Ok(TypeCheckRes::from_ctx(&ctx, "Int", 0))
     }
 

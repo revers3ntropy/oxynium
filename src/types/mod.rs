@@ -1,18 +1,25 @@
-pub mod r#class;
-pub mod function;
-pub mod r#type;
-pub mod unknown;
-
+use crate::parse::token::Token;
 use crate::types::function::FnType;
 use crate::types::r#class::ClassType;
 use crate::types::r#type::TypeType;
 use crate::util::MutRc;
 use std::fmt::Debug;
 
+pub mod r#class;
+pub mod function;
+pub mod r#type;
+pub mod unknown;
+
 pub trait Type: Debug {
     fn is_ptr(&self) -> bool;
     fn str(&self) -> String;
 
+    fn operator_signature(
+        &self,
+        _op: Token,
+    ) -> Option<MutRc<dyn Type>> {
+        None
+    }
     fn contains(&self, other: MutRc<dyn Type>) -> bool;
 
     fn as_fn(&self) -> Option<FnType> {

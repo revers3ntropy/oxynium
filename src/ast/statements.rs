@@ -11,12 +11,16 @@ pub struct StatementsNode {
 }
 
 impl Node for StatementsNode {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         let mut asm = String::new();
 
         let mut i = 0;
         for statement in self.statements.iter_mut() {
-            let stmt = statement.borrow_mut().asm(ctx.clone())?;
+            let stmt =
+                statement.borrow_mut().asm(ctx.clone())?;
             if !stmt.is_empty() {
                 asm.push_str("\n;- SRC: ");
                 asm.push_str(self.src.get(i).unwrap());
@@ -28,7 +32,10 @@ impl Node for StatementsNode {
         Ok(asm)
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         let mut ret_type = None;
         let mut always_returns = false;
         let mut unknowns = 0;
@@ -37,7 +44,9 @@ impl Node for StatementsNode {
             if always_returns {
                 // TODO: warn about unreachable code
             }
-            let t = statement.borrow().type_check(ctx.clone())?;
+            let t = statement
+                .borrow()
+                .type_check(ctx.clone())?;
             unknowns += t.unknowns;
 
             if !t.is_returned {
@@ -49,7 +58,12 @@ impl Node for StatementsNode {
             if ret_type.is_none() {
                 ret_type = Some(t.t.clone());
             }
-            if !ret_type.clone().unwrap().borrow().contains(t.t.clone()) {
+            if !ret_type
+                .clone()
+                .unwrap()
+                .borrow()
+                .contains(t.t.clone())
+            {
                 return Err(type_error(format!(
                     "Cannot return different types, expected `{}` found `{}`",
                     ret_type.unwrap().borrow().str(),

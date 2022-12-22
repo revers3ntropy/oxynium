@@ -11,11 +11,20 @@ pub struct BoolNode {
 }
 
 impl Node for BoolNode {
-    fn asm(&mut self, _ctx: MutRc<Context>) -> Result<String, Error> {
-        Ok(format!("\n push {} \n", if self.value { 1 } else { 0 }))
+    fn asm(
+        &mut self,
+        _ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        Ok(format!(
+            "\n push {} \n",
+            if self.value { 1 } else { 0 }
+        ))
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         Ok(TypeCheckRes::from_ctx(&ctx, "Bool", 0))
     }
 

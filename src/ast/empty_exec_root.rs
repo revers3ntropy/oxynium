@@ -10,7 +10,10 @@ pub struct EmptyExecRootNode {
 }
 
 impl Node for EmptyExecRootNode {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         if ctx.borrow_mut().exec_mode == 1 {
             Ok(format!(
                 "

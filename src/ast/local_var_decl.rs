@@ -3,7 +3,9 @@ use crate::context::Context;
 use crate::error::{syntax_error, type_error, Error};
 use crate::parse::token::Token;
 use crate::position::{Interval, Position};
-use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
+use crate::symbols::{
+    can_declare_with_identifier, SymbolDec, SymbolDef,
+};
 use crate::util::MutRc;
 
 #[derive(Debug)]
@@ -22,7 +24,10 @@ impl LocalVarNode {
 }
 
 impl Node for LocalVarNode {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_none() {
             return Err(syntax_error(format!(
                 "Cannot declare local variable '{}' outside of function. Try using 'const' instead.",
@@ -40,9 +45,11 @@ impl Node for LocalVarNode {
             self.pos(),
         )?;
 
-        let id = ctx.borrow_mut().get_dec_from_id(&self.id()).id;
+        let id =
+            ctx.borrow_mut().get_dec_from_id(&self.id()).id;
 
-        let value_asm = self.value.borrow_mut().asm(ctx.clone())?;
+        let value_asm =
+            self.value.borrow_mut().asm(ctx.clone())?;
         ctx.borrow_mut()
             .set_dec_as_defined(&self.id(), self.pos())?;
 
@@ -55,7 +62,10 @@ impl Node for LocalVarNode {
         ))
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !can_declare_with_identifier(&self.id()) {
             return Err(syntax_error(format!(
                 "Invalid local variable '{}'",
@@ -70,15 +80,21 @@ impl Node for LocalVarNode {
         } = self.value.borrow().type_check(ctx.clone())?;
 
         if self.type_annotation.is_some() {
-            let type_annotation = self.type_annotation.as_ref().unwrap();
+            let type_annotation =
+                self.type_annotation.as_ref().unwrap();
             let TypeCheckRes {
                 t: type_annotation_type,
                 unknowns: type_annotation_unknowns,
                 ..
-            } = type_annotation.borrow().type_check(ctx.clone())?;
+            } = type_annotation
+                .borrow()
+                .type_check(ctx.clone())?;
             unknowns += type_annotation_unknowns;
 
-            if !type_annotation_type.borrow().contains(value_type.clone()) {
+            if !type_annotation_type
+                .borrow()
+                .contains(value_type.clone())
+            {
                 return Err(type_error(format!(
                     "Cannot assign value of type '{}' to variable '{}' of type '{}'",
                     value_type.borrow().str(),
@@ -90,7 +106,8 @@ impl Node for LocalVarNode {
             value_type = type_annotation_type;
         }
 
-        let offset = ctx.borrow_mut().get_new_local_var_offset();
+        let offset =
+            ctx.borrow_mut().get_new_local_var_offset();
         ctx.borrow_mut().declare(
             SymbolDec {
                 name: self.id(),
@@ -109,6 +126,9 @@ impl Node for LocalVarNode {
     }
 
     fn pos(&self) -> Interval {
-        (self.start.clone(), self.value.borrow_mut().pos().1)
+        (
+            self.start.clone(),
+            self.value.borrow_mut().pos().1,
+        )
     }
 }

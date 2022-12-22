@@ -16,7 +16,11 @@ impl FnParamType {
         if self.name == "" {
             self.type_.borrow_mut().str()
         } else {
-            format!("{}: {}", self.name, self.type_.borrow_mut().str())
+            format!(
+                "{}: {}",
+                self.name,
+                self.type_.borrow_mut().str()
+            )
         }
     }
 }
@@ -50,11 +54,15 @@ impl Type for FnType {
             return true;
         }
         if let Some(fn_type) = t.borrow().as_fn() {
-            let required_args =
-                self.parameters.iter().filter(|a| a.default_value.is_none());
+            let required_args = self
+                .parameters
+                .iter()
+                .filter(|a| a.default_value.is_none());
 
-            if fn_type.parameters.len() < required_args.count()
-                || fn_type.parameters.len() > self.parameters.len()
+            if fn_type.parameters.len()
+                < required_args.count()
+                || fn_type.parameters.len()
+                    > self.parameters.len()
             {
                 return false;
             }
@@ -62,7 +70,9 @@ impl Type for FnType {
                 if !self.parameters[i]
                     .type_
                     .borrow()
-                    .contains(fn_type.parameters[i].type_.clone())
+                    .contains(
+                        fn_type.parameters[i].type_.clone(),
+                    )
                 {
                     return false;
                 }
@@ -78,7 +88,10 @@ impl Type for FnType {
 }
 
 impl fmt::Debug for FnType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         write!(f, "{}", self.str())
     }
 }

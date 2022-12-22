@@ -18,14 +18,20 @@ impl ClassInitNode {
     fn field_types_hashmap(
         &self,
         ctx: MutRc<Context>,
-    ) -> Result<(HashMap<String, MutRc<dyn Type>>, usize), Error> {
+    ) -> Result<
+        (HashMap<String, MutRc<dyn Type>>, usize),
+        Error,
+    > {
         let mut unknowns = 0;
         let mut instance_fields_hashmap = HashMap::new();
         for field in self.fields.clone() {
-            let field_type_res =
-                field.1.borrow_mut().type_check(ctx.clone())?;
+            let field_type_res = field
+                .1
+                .borrow_mut()
+                .type_check(ctx.clone())?;
             unknowns += field_type_res.unknowns;
-            instance_fields_hashmap.insert(field.0, field_type_res.t);
+            instance_fields_hashmap
+                .insert(field.0, field_type_res.t);
         }
         Ok((instance_fields_hashmap, unknowns))
     }
@@ -35,30 +41,35 @@ impl ClassInitNode {
     ) -> Result<HashMap<String, String>, Error> {
         let mut instance_fields_hashmap = HashMap::new();
         for field in self.fields.clone() {
-            instance_fields_hashmap
-                .insert(field.0, field.1.borrow_mut().asm(ctx.clone())?);
+            instance_fields_hashmap.insert(
+                field.0,
+                field.1.borrow_mut().asm(ctx.clone())?,
+            );
         }
         Ok(instance_fields_hashmap)
     }
 }
 
 impl Node for ClassInitNode {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         let mut asm = String::new();
 
         let mut fields = self.fields.clone();
         fields.sort_by(|a, b| a.0.cmp(&b.0));
 
-        let field_asm = self.field_asm_hashmap(ctx.clone())?;
+        let field_asm =
+            self.field_asm_hashmap(ctx.clone())?;
 
         for (name, _) in fields.iter() {
             asm.push_str(&format!("{}\n", field_asm[name]));
         }
 
-        if !ctx
-            .borrow_mut()
-            .has_dec_with_id(&self.identifier.clone().literal.unwrap())
-        {
+        if !ctx.borrow_mut().has_dec_with_id(
+            &self.identifier.clone().literal.unwrap(),
+        ) {
             return Err(unknown_symbol(
                 self.identifier.clone().literal.unwrap(),
             )
@@ -67,7 +78,9 @@ impl Node for ClassInitNode {
 
         let class_type = ctx
             .borrow_mut()
-            .get_dec_from_id(&self.identifier.clone().literal.unwrap())
+            .get_dec_from_id(
+                &self.identifier.clone().literal.unwrap(),
+            )
             .type_
             .clone()
             .borrow()
@@ -127,23 +140,24 @@ impl Node for ClassInitNode {
         Ok(asm)
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         let mut unknowns = 0;
 
-        if !ctx
-            .borrow_mut()
-            .has_dec_with_id(&self.identifier.clone().literal.unwrap())
-        {
+        if !ctx.borrow_mut().has_dec_with_id(
+            &self.identifier.clone().literal.unwrap(),
+        ) {
             return Err(unknown_symbol(
                 self.identifier.clone().literal.unwrap(),
             )
             .set_interval(self.position.clone()));
         }
 
-        if !ctx
-            .borrow_mut()
-            .has_dec_with_id(&self.identifier.clone().literal.unwrap())
-        {
+        if !ctx.borrow_mut().has_dec_with_id(
+            &self.identifier.clone().literal.unwrap(),
+        ) {
             return Err(unknown_symbol(
                 self.identifier.clone().literal.unwrap(),
             )
@@ -152,7 +166,9 @@ impl Node for ClassInitNode {
 
         let class_type_raw = ctx
             .borrow_mut()
-            .get_dec_from_id(&self.identifier.clone().literal.unwrap())
+            .get_dec_from_id(
+                &self.identifier.clone().literal.unwrap(),
+            )
             .type_
             .clone();
         let class_type = class_type_raw.borrow().as_class();
@@ -170,11 +186,14 @@ impl Node for ClassInitNode {
 
         let mut type_fields_hashmap = HashMap::new();
         for (name, field) in class_type.fields.clone() {
-            type_fields_hashmap.insert(name, field.type_.clone());
+            type_fields_hashmap
+                .insert(name, field.type_.clone());
         }
 
-        let (extra, fields, missing) =
-            intersection(&instance_fields_hashmap, &type_fields_hashmap);
+        let (extra, fields, missing) = intersection(
+            &instance_fields_hashmap,
+            &type_fields_hashmap,
+        );
 
         if extra.len() > 0 {
             return Err(type_error(format!(
@@ -205,7 +224,12 @@ impl Node for ClassInitNode {
                 .get(&field)
                 .unwrap()
                 .borrow()
-                .contains(instance_fields_hashmap.get(&field).unwrap().clone())
+                .contains(
+                    instance_fields_hashmap
+                        .get(&field)
+                        .unwrap()
+                        .clone(),
+                )
             {
                 return Err(type_error(format!(
                     "Type mismatch in class initialization field '{field}': Expected {} but found {}",

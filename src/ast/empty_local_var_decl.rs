@@ -13,7 +13,10 @@ pub struct EmptyLocalVarNode {
 }
 
 impl Node for EmptyLocalVarNode {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_none() {
             return Err(syntax_error(format!(
                 "Cannot declare local variable '{}' outside of function. Try using 'var' or 'const' instead.",
@@ -23,7 +26,10 @@ impl Node for EmptyLocalVarNode {
         Ok(format!(""))
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(syntax_error(format!(
                 "Invalid local variable '{}'",
@@ -34,9 +40,13 @@ impl Node for EmptyLocalVarNode {
 
         let TypeCheckRes {
             t: type_, unknowns, ..
-        } = self.type_.borrow_mut().type_check(ctx.clone())?;
+        } = self
+            .type_
+            .borrow_mut()
+            .type_check(ctx.clone())?;
 
-        let stack_offset = ctx.borrow_mut().get_new_local_var_offset();
+        let stack_offset =
+            ctx.borrow_mut().get_new_local_var_offset();
         ctx.borrow_mut().declare(
             SymbolDec {
                 name: self.identifier.clone(),

@@ -13,7 +13,10 @@ pub struct UnaryOpNode {
 }
 
 impl Node for UnaryOpNode {
-    fn asm(&mut self, ctx: MutRc<Context>) -> Result<String, Error> {
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         Ok(match self.operator.token_type {
             TokenType::Sub => {
                 format!(
@@ -21,7 +24,9 @@ impl Node for UnaryOpNode {
                     {}
                     neg qword [rsp]
                 ",
-                    self.rhs.borrow_mut().asm(ctx.clone())?
+                    self.rhs
+                        .borrow_mut()
+                        .asm(ctx.clone())?
                 )
             }
             TokenType::Not => {
@@ -34,16 +39,24 @@ impl Node for UnaryOpNode {
                     setle al
                     push rax
                 ",
-                    self.rhs.borrow_mut().asm(ctx.clone())?
+                    self.rhs
+                        .borrow_mut()
+                        .asm(ctx.clone())?
                 )
             }
             _ => {
-                panic!("Invalid arithmetic unary operator: {:?}", self.operator)
+                panic!(
+                    "Invalid arithmetic unary operator: {:?}",
+                    self.operator
+                )
             }
         })
     }
 
-    fn type_check(&self, ctx: MutRc<Context>) -> Result<TypeCheckRes, Error> {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         let t = match self.operator.token_type {
             TokenType::Sub => get_type!(ctx, "Int"),
             _ => get_type!(ctx, "Bool"),
@@ -53,16 +66,25 @@ impl Node for UnaryOpNode {
             t: value_type,
             unknowns,
             ..
-        } = self.rhs.borrow_mut().type_check(ctx.clone())?;
+        } = self
+            .rhs
+            .borrow_mut()
+            .type_check(ctx.clone())?;
         if !t.borrow().contains(value_type.clone()) {
-            return Err(mismatched_types(t.clone(), value_type.clone())
-                .set_interval(self.rhs.borrow_mut().pos()));
+            return Err(mismatched_types(
+                t.clone(),
+                value_type.clone(),
+            )
+            .set_interval(self.rhs.borrow_mut().pos()));
         }
 
         Ok(TypeCheckRes::from(t, unknowns))
     }
 
     fn pos(&self) -> Interval {
-        (self.operator.start.clone(), self.rhs.borrow_mut().pos().1)
+        (
+            self.operator.start.clone(),
+            self.rhs.borrow_mut().pos().1,
+        )
     }
 }

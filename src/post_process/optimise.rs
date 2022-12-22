@@ -7,8 +7,8 @@ use regex::Regex;
 // ];
 
 const REGISTERS_NO_STACK: [&str; 14] = [
-    "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12",
-    "r13", "r14", "r15",
+    "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "r8", "r9",
+    "r10", "r11", "r12", "r13", "r14", "r15",
 ];
 
 fn o1(
@@ -28,10 +28,18 @@ fn o1(
     }
 }
 
-pub fn optimise(asm: Vec<String>, args: &Args) -> Vec<String> {
+pub fn optimise(
+    asm: Vec<String>,
+    args: &Args,
+) -> Vec<String> {
     let mut asm = asm;
 
-    asm = o1("asm-redundant-push", asm, args, push_pull_duplication);
+    asm = o1(
+        "asm-redundant-push",
+        asm,
+        args,
+        push_pull_duplication,
+    );
     asm = o1("asm-redundant-mov", asm, args, mov_same);
 
     asm
@@ -41,18 +49,22 @@ fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
     let mut res = Vec::new();
 
     fn valid_push_str(line: &String) -> (bool, String) {
-        let (push, register) = line.split_once(" ").unwrap_or(("", ""));
+        let (push, register) =
+            line.split_once(" ").unwrap_or(("", ""));
         (
             push == "push"
                 && (REGISTERS_NO_STACK.contains(&register)
                     || register.starts_with("qword [")
-                    || !register.chars().any(|c| !c.is_digit(10))),
+                    || !register
+                        .chars()
+                        .any(|c| !c.is_digit(10))),
             register.to_string(),
         )
     }
 
     fn valid_pop_str(line: &String) -> (bool, String) {
-        let (push, register) = line.split_once(" ").unwrap_or(("", ""));
+        let (push, register) =
+            line.split_once(" ").unwrap_or(("", ""));
         (
             push == "pop"
                 && (REGISTERS_NO_STACK.contains(&register)
@@ -84,7 +96,8 @@ fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
             }
             let line = ast[i].clone();
 
-            let (valid_push_line, push_register) = valid_push_str(&line);
+            let (valid_push_line, push_register) =
+                valid_push_str(&line);
             if valid_push_line {
                 pushes.push(push_register);
             } else {
@@ -100,7 +113,8 @@ fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
             }
             let line = ast[i].clone();
 
-            let (valid_pop_line, pop_register) = valid_pop_str(&line);
+            let (valid_pop_line, pop_register) =
+                valid_pop_str(&line);
             if valid_pop_line {
                 pops.push(pop_register);
             } else {
@@ -130,7 +144,10 @@ fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
 
                 // add in remaining pushes
                 for push in pushes.clone() {
-                    res.insert(past_last_push_idx, format!("push {push}"));
+                    res.insert(
+                        past_last_push_idx,
+                        format!("push {push}"),
+                    );
                     past_last_push_idx += 1;
                 }
                 for pop in pops.clone() {
@@ -141,11 +158,17 @@ fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
             }
             used_registers.push(pop_reg.clone());
             if used_registers.contains(&push_reg) {
-                let index =
-                    used_registers.iter().position(|x| *x == push_reg).unwrap();
+                let index = used_registers
+                    .iter()
+                    .position(|x| *x == push_reg)
+                    .unwrap();
                 used_registers.remove(index);
             }
-            res.push(format!("mov {}, {}", pop_reg.clone(), push_reg.clone()));
+            res.push(format!(
+                "mov {}, {}",
+                pop_reg.clone(),
+                push_reg.clone()
+            ));
             pushes.pop();
             pops.remove(0);
         }
@@ -200,13 +223,16 @@ mod tests {
     #[test]
     fn push_pull_duplication() {
         assert_eq!(
-            super::push_pull_duplication(strings_vec!["push r11", "pop r12",]),
+            super::push_pull_duplication(strings_vec![
+                "push r11", "pop r12",
+            ]),
             strings_vec!["mov r12, r11",]
         );
 
         assert_eq!(
             super::push_pull_duplication(strings_vec![
-                "push r10", "push r11", "pop r12", "pop r13",
+                "push r10", "push r11", "pop r12",
+                "pop r13",
             ]),
             strings_vec!["mov r12, r11", "mov r13, r10",]
         );
@@ -239,22 +265,28 @@ mod tests {
 
         assert_eq!(
             super::push_pull_duplication(strings_vec![
-                "push rax", "push rbx", "pop rbx", "pop rax",
+                "push rax", "push rbx", "pop rbx",
+                "pop rax",
             ]),
             strings_vec!["mov rbx, rbx", "mov rax, rax",]
         );
 
         assert_eq!(
             super::push_pull_duplication(strings_vec![
-                "push rbx", "push rax", "pop rbx", "pop rax",
+                "push rbx", "push rax", "pop rbx",
+                "pop rax",
             ]),
-            strings_vec!["push rbx", "mov rbx, rax", "pop rax",]
+            strings_vec![
+                "push rbx",
+                "mov rbx, rax",
+                "pop rax",
+            ]
         );
 
         assert_eq!(
             super::push_pull_duplication(strings_vec![
-                "push r12", "push rbx", "push rax", "pop rbx", "pop rax",
-                "pop r12",
+                "push r12", "push rbx", "push rax",
+                "pop rbx", "pop rax", "pop r12",
             ]),
             strings_vec![
                 "push r12",
@@ -267,21 +299,31 @@ mod tests {
 
         assert_eq!(
             super::push_pull_duplication(strings_vec![
-                "push rbx", "push rax", "pop rbx", "pop rcx",
+                "push rbx", "push rax", "pop rbx",
+                "pop rcx",
             ]),
-            strings_vec!["push rbx", "mov rbx, rax", "pop rcx",]
+            strings_vec![
+                "push rbx",
+                "mov rbx, rax",
+                "pop rcx",
+            ]
         );
     }
 
     #[test]
     fn mov_same() {
-        let mut res = super::mov_same(strings_vec!["mov r11, r11",]);
+        let mut res =
+            super::mov_same(strings_vec!["mov r11, r11",]);
         assert_eq!(res, Vec::<String>::new());
 
-        res = super::mov_same(strings_vec!["mov r11, r12",]);
+        res =
+            super::mov_same(strings_vec!["mov r11, r12",]);
         assert_eq!(res, strings_vec!["mov r11, r12",]);
 
-        res = super::mov_same(strings_vec!["mov r11, r12", "mov r11, r11",]);
+        res = super::mov_same(strings_vec![
+            "mov r11, r12",
+            "mov r11, r11",
+        ]);
         assert_eq!(res, strings_vec!["mov r11, r12",]);
     }
 }

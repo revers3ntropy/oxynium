@@ -1,4 +1,7 @@
-use crate::ast::class_declaration::method_id;
+use crate::ast::class_declaration::{
+    method_id, operator_method_id,
+};
+use crate::parse::token::Token;
 use crate::types::function::FnType;
 use crate::types::Type;
 use crate::util::MutRc;
@@ -16,7 +19,11 @@ impl ClassFieldType {
         if self.name == "" {
             self.type_.borrow_mut().str()
         } else {
-            format!("{}: {}", self.name, self.type_.borrow_mut().str())
+            format!(
+                "{}: {}",
+                self.name,
+                self.type_.borrow_mut().str()
+            )
         }
     }
 }
@@ -30,13 +37,22 @@ pub struct ClassType {
 }
 
 impl ClassType {
-    pub fn field_type(&self, field: &str) -> Option<MutRc<dyn Type>> {
+    pub fn field_type(
+        &self,
+        field: &str,
+    ) -> Option<MutRc<dyn Type>> {
         self.fields.get(field).map(|f| f.type_.clone())
     }
 
-    pub fn method_type(&self, method: &str) -> Option<MutRc<FnType>> {
+    pub fn method_type(
+        &self,
+        method: &str,
+    ) -> Option<MutRc<FnType>> {
         self.methods
-            .get(&method_id(self.name.clone(), method.to_string()))
+            .get(&method_id(
+                self.name.clone(),
+                method.to_string(),
+            ))
             .map(|f| f.clone())
     }
 
@@ -46,7 +62,10 @@ impl ClassType {
 }
 
 impl fmt::Debug for ClassType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         write!(
             f,
             "{} {{ {} }}",
@@ -69,13 +88,27 @@ impl Type for ClassType {
         self.name.clone()
     }
 
+    fn operator_signature(
+        &self,
+        op: Token,
+    ) -> Option<MutRc<dyn Type>> {
+        if let Some(method) = self.method_type(
+            &operator_method_id(self.name.clone(), op),
+        ) {
+            Some(method as MutRc<dyn Type>)
+        } else {
+            None
+        }
+    }
+
     fn contains(&self, other: MutRc<dyn Type>) -> bool {
         if other.borrow().is_unknown() {
             return true;
         }
         // compare values of pointers...
-        // TODO to this properly
-        format!("{:p}", self) == format!("{:p}", other.as_ptr())
+        // TODO to this properly, with IDs or something
+        format!("{:p}", self)
+            == format!("{:p}", other.as_ptr())
     }
 
     fn as_class(&self) -> Option<ClassType> {

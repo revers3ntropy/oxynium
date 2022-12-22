@@ -25,8 +25,13 @@ mod util;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
-fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
-    let mut lexer = Lexer::new(STD_DOXY.to_owned(), "std.doxy".to_owned());
+fn setup_ctx_with_doxy(
+    ctx: MutRc<Context>,
+) -> Result<MutRc<Context>, Error> {
+    let mut lexer = Lexer::new(
+        STD_DOXY.to_owned(),
+        "std.doxy".to_owned(),
+    );
     let tokens = lexer.lex();
     if tokens.is_err() {
         return Err(tokens.err().unwrap());
@@ -40,7 +45,8 @@ fn setup_ctx_with_doxy(ctx: MutRc<Context>) -> Result<MutRc<Context>, Error> {
     }
 
     let node = ast.node.unwrap();
-    let type_check_res = node.borrow_mut().type_check(ctx.clone());
+    let type_check_res =
+        node.borrow_mut().type_check(ctx.clone());
     if type_check_res.is_err() {
         return Err(type_check_res.err().unwrap());
     }
@@ -72,7 +78,8 @@ fn compile(
 
     let root_node = ast.node.unwrap();
     root_node.borrow_mut().type_check(ctx.clone())?;
-    let compile_res = root_node.borrow_mut().asm(ctx.clone())?;
+    let compile_res =
+        root_node.borrow_mut().asm(ctx.clone())?;
 
     let asm = post_process(compile_res, args);
     Ok((asm, ctx.clone()))
@@ -89,7 +96,8 @@ fn compile_and_assemble(
         line: 0,
         col: 0,
     };
-    let compile_res = compile(input, file_name.clone(), args)?;
+    let compile_res =
+        compile(input, file_name.clone(), args)?;
 
     let asm_out_file = format!("{}.asm", args.out);
     let o_out_file = format!("{}.o", args.out);
@@ -113,8 +121,10 @@ fn compile_and_assemble(
         .output()
         .expect("Could not assemble");
     if !nasm_out.status.success() {
-        return Err(io_error(String::from_utf8(nasm_out.stderr).unwrap())
-            .set_pos(start_pos.clone(), Position::unknown()));
+        return Err(io_error(
+            String::from_utf8(nasm_out.stderr).unwrap(),
+        )
+        .set_pos(start_pos.clone(), Position::unknown()));
     }
 
     if args.exec_mode == 0 {
@@ -129,14 +139,21 @@ fn compile_and_assemble(
             .output()
             .expect("Could not assemble");
         if !ls_out.status.success() {
-            return Err(io_error(String::from_utf8(ls_out.stderr).unwrap())
-                .set_pos(start_pos.clone(), Position::unknown()));
+            return Err(io_error(
+                String::from_utf8(ls_out.stderr).unwrap(),
+            )
+            .set_pos(
+                start_pos.clone(),
+                Position::unknown(),
+            ));
         }
     }
 
     if !args.keep {
-        fs::remove_file(asm_out_file).expect("Could not remove assembly file");
-        fs::remove_file(o_out_file).expect("Could not remove object file");
+        fs::remove_file(asm_out_file)
+            .expect("Could not remove assembly file");
+        fs::remove_file(o_out_file)
+            .expect("Could not remove object file");
     }
 
     Ok(())
@@ -154,7 +171,9 @@ fn main() -> std::io::Result<()> {
             .print_stderr();
         return Ok(());
     }
-    if args.exec_mode != 1 && !Path::new(&args.std_path).exists() {
+    if args.exec_mode != 1
+        && !Path::new(&args.std_path).exists()
+    {
         io_error(format!(
             "STD file '{}' does not exist or is not accessible\n",
             args.std_path
@@ -165,33 +184,45 @@ fn main() -> std::io::Result<()> {
 
     if !args.eval.is_empty() {
         let args_ = args.clone();
-        let res =
-            compile_and_assemble(args.eval.clone(), "CLI".to_owned(), &args_);
+        let res = compile_and_assemble(
+            args.eval.clone(),
+            "CLI".to_owned(),
+            &args_,
+        );
         if res.is_err() {
-            res.err()
-                .unwrap()
-                .pretty_print_stderr(args.eval, "CLI".to_string())
+            res.err().unwrap().pretty_print_stderr(
+                args.eval,
+                "CLI".to_string(),
+            )
         }
         return Ok(());
     }
 
     if !args.input.is_empty() {
         if !Path::new(args.input.as_str()).exists() {
-            io_error(format!("Path '{}' doesn't exist\n", args.input))
-                .print_stderr();
+            io_error(format!(
+                "Path '{}' doesn't exist\n",
+                args.input
+            ))
+            .print_stderr();
             return Ok(());
         }
 
-        let mut input_file = File::open(args.input.clone())?;
+        let mut input_file =
+            File::open(args.input.clone())?;
         let mut input = String::new();
         input_file.read_to_string(&mut input)?;
 
-        let res =
-            compile_and_assemble(input.clone(), args.input.clone(), &args);
+        let res = compile_and_assemble(
+            input.clone(),
+            args.input.clone(),
+            &args,
+        );
         if res.is_err() {
-            res.err()
-                .unwrap()
-                .pretty_print_stderr(input, args.input.clone())
+            res.err().unwrap().pretty_print_stderr(
+                input,
+                args.input.clone(),
+            )
         }
         return Ok(());
     }
