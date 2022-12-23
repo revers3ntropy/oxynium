@@ -1,9 +1,12 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{mismatched_types, type_error, Error};
-use crate::parse::token::Token;
+use crate::get_type;
+use crate::parse::token::{Token, TokenType};
 use crate::position::Interval;
-use crate::util::MutRc;
+use crate::types::unknown::UnknownType;
+use crate::types::Type;
+use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug)]
 pub struct BinOpNode {
@@ -25,6 +28,28 @@ impl Node for BinOpNode {
             .t
             .borrow()
             .operator_signature(self.operator.clone());
+
+        let rhs = self
+            .rhs
+            .borrow_mut()
+            .type_check(ctx.clone())?;
+        if can_do_inline_bin_op(
+            ctx.clone(),
+            lhs.t.clone(),
+            rhs.t.clone(),
+            self.operator.clone(),
+        ) {
+            let lhs_asm =
+                self.lhs.borrow_mut().asm(ctx.clone())?;
+            let rhs_asm =
+                self.rhs.borrow_mut().asm(ctx.clone())?;
+            let res = do_inline_bin_op(
+                lhs_asm,
+                self.operator.clone(),
+                rhs_asm,
+            )?;
+            return Ok(res);
+        }
 
         Ok(format!(
             "
@@ -100,5 +125,122 @@ impl Node for BinOpNode {
             self.lhs.borrow_mut().pos().0,
             self.rhs.borrow_mut().pos().1,
         )
+    }
+}
+
+fn can_do_inline_bin_op(
+    ctx: MutRc<Context>,
+    lhs_type: MutRc<dyn Type>,
+    rhs_type: MutRc<dyn Type>,
+    op: Token,
+) -> bool {
+    let operand_types = match op.token_type {
+        TokenType::Percent
+        | TokenType::Plus
+        | TokenType::Sub
+        | TokenType::Astrix
+        | TokenType::FSlash
+        | TokenType::DblEquals
+        | TokenType::NotEquals
+        | TokenType::GT
+        | TokenType::LT
+        | TokenType::GTE
+        | TokenType::LTE => get_type!(ctx, "Int"),
+        _ => get_type!(ctx, "Bool"),
+    };
+    if !operand_types.borrow().contains(lhs_type) {
+        return false;
+    }
+    if !operand_types.borrow().contains(rhs_type) {
+        return false;
+    }
+    true
+}
+
+fn do_inline_bin_op(
+    lhs: String,
+    op: Token,
+    rhs: String,
+) -> Result<String, Error> {
+    match op.token_type {
+        TokenType::Plus
+        | TokenType::Sub
+        | TokenType::And
+        | TokenType::Or => Ok(format!(
+            "
+                    {}
+                    {}
+                    pop rax
+                    pop rbx
+                    {} rax, rbx
+                    push rax
+                ",
+            rhs,
+            lhs,
+            match op.token_type {
+                TokenType::Plus => "add",
+                TokenType::Sub => "sub",
+                TokenType::And => "and",
+                _ => "or",
+            }
+        )),
+        TokenType::Astrix | TokenType::FSlash => Ok(format!(
+            "
+            {}
+            {}
+            pop rax
+            pop rbx
+            cqo ; extend rax to rdx:rax
+            {} rbx
+            push rax
+        ",
+            rhs,
+            lhs,
+            match op.token_type {
+                TokenType::Astrix => "imul",
+                _ => "idiv",
+            }
+        )),
+        TokenType::Percent => Ok(format!(
+            "
+                        {}
+                        {}
+                        pop rax
+                        pop rbx
+                        cqo ; extend rax to rdx:rax
+                        idiv rbx
+                        push rdx
+                    ",
+            rhs,
+            lhs,
+        )),
+        TokenType::GT
+        | TokenType::LT
+        | TokenType::LTE
+        | TokenType::GTE
+        | TokenType::DblEquals
+        | TokenType::NotEquals => Ok(format!(
+            "
+                        {}
+                        {}
+                        pop rcx ; lhs
+                        pop rdx ; rhs
+                        xor rax, rax     ; al is first byte of rax,
+                        cmp rcx, rdx
+                        {} al          ; so clear rax and put into al
+                        push rax
+                ",
+            rhs,
+            lhs,
+            match op.token_type {
+                TokenType::DblEquals => "sete",
+                TokenType::NotEquals => "setne",
+                TokenType::GT => "setg",
+                TokenType::LT => "setl",
+                TokenType::GTE => "setge",
+                _ => "setle",
+            }
+        )),
+        _ => unreachable!()
     }
 }

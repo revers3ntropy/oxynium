@@ -1510,6 +1510,12 @@ impl Parser {
                 ),
             });
 
+        // needs updating when the possible values after a return type
+        // change. For now:
+        // - EOF for, well, EOF
+        // - Comma for undefined method
+        // - EndStatement for undefined function
+        // - OpenBrace for the function definition
         if !self.current_matches(TokenType::OpenBrace, None)
             && !self.current_matches(TokenType::Comma, None)
             && !self.current_matches(
