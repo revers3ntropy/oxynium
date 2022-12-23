@@ -64,12 +64,29 @@ expect_expr_int '7'  '1+(2*3)'
 expect_expr_int '11' '1+(2*3)+4'
 expect_expr_int '27' '1+((2*3)+4*5)'
 
+# as these get optimized, make sure they are working
+expect '13-132119-2' '
+    print((2 - 1).str());
+    print((2 + 1).str());
+    print((1 - 2).str());
+    print((1 + 2).str());
+    print((2 + 0).str());
+    const a = 9;
+    print((0 + a + 2).str());
+    print((a - 0).str());
+    print((0 - 2).str());
+'
+
+
 
 describe 'Extreme Int Values'
 
 expect_expr_int '9223372036854775806' '9223372036854775806' # 2^(64-1)-2, max int size
 expect_expr_int '9223372036854775807' '9223372036854775807' # 2^(64-1)-1, max int size
 expect_err 'NumericOverflow' '9223372036854775808' # 2^63, too big for int
+expect_err 'NumericOverflow' '34567856785678995678'
+expect_err 'NumericOverflow' '999999999999999999999999999999999999999999999999999999999'
+expect_err 'NumericOverflow' 'const n = 999999999999999999999999999999999999999999999999999999999'
 expect_expr_int '0' '9223372036854775807+1' # overflow to -0
 expect_expr_int '-9223372036854775807' '9223372036854775807+2' # overflow to negative max
 expect_expr_int '-9223372036854775806' '9223372036854775807+3' # overflow to negative max

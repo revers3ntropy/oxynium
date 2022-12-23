@@ -7,6 +7,7 @@ use crate::position::Interval;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
+use regex::Regex;
 
 #[derive(Debug)]
 pub struct BinOpNode {
@@ -162,12 +163,68 @@ fn do_inline_bin_op(
     op: Token,
     rhs: String,
 ) -> Result<String, Error> {
+    if vec![TokenType::Plus, TokenType::Sub]
+        .contains(&op.token_type)
+    {
+        let add_0_re =
+            Regex::new(r"^mov rax, 0\n +push rax$")
+                .unwrap();
+        if add_0_re.is_match(lhs.trim()) {
+            if op.token_type == TokenType::Plus {
+                return Ok(rhs);
+            }
+            return Ok(format!(
+                "
+                    {rhs}
+                    neg qword [rsp]
+                "
+            ));
+        }
+        if add_0_re.is_match(rhs.trim()) {
+            return Ok(lhs);
+        }
+        let add_1_re =
+            Regex::new(r"^mov rax, 1\n +push rax$")
+                .unwrap();
+        let inc_operator = match op.token_type {
+            TokenType::Plus => "inc",
+            TokenType::Sub => "dec",
+            _ => unreachable!(),
+        };
+        if add_1_re.is_match(lhs.trim()) {
+            if op.token_type == TokenType::Plus {
+                return Ok(format!(
+                    "
+                        {rhs}
+                        {inc_operator} qword [rsp]
+                    "
+                ));
+            }
+            return Ok(format!(
+                "
+                    {rhs}
+                    neg qword [rsp]
+                    inc qword [rsp]
+                "
+            ));
+        }
+        if add_1_re.is_match(rhs.trim()) {
+            return Ok(format!(
+                "
+                    {lhs}
+                    {inc_operator} qword [rsp]
+                "
+            ));
+        }
+    }
+
     match op.token_type {
         TokenType::Plus
         | TokenType::Sub
         | TokenType::And
-        | TokenType::Or => Ok(format!(
-            "
+        | TokenType::Or => {
+            Ok(format!(
+                "
                     {}
                     {}
                     pop rax
@@ -175,17 +232,19 @@ fn do_inline_bin_op(
                     {} rax, rbx
                     push rax
                 ",
-            rhs,
-            lhs,
-            match op.token_type {
-                TokenType::Plus => "add",
-                TokenType::Sub => "sub",
-                TokenType::And => "and",
-                _ => "or",
-            }
-        )),
-        TokenType::Astrix | TokenType::FSlash => Ok(format!(
-            "
+                rhs,
+                lhs,
+                match op.token_type {
+                    TokenType::Plus => "add",
+                    TokenType::Sub => "sub",
+                    TokenType::And => "and",
+                    _ => "or",
+                }
+            ))
+        },
+        TokenType::Astrix | TokenType::FSlash => {
+            Ok(format!(
+                "
             {}
             {}
             pop rax
@@ -194,15 +253,17 @@ fn do_inline_bin_op(
             {} rbx
             push rax
         ",
-            rhs,
-            lhs,
-            match op.token_type {
-                TokenType::Astrix => "imul",
-                _ => "idiv",
-            }
-        )),
-        TokenType::Percent => Ok(format!(
-            "
+                rhs,
+                lhs,
+                match op.token_type {
+                    TokenType::Astrix => "imul",
+                    _ => "idiv",
+                }
+            ))
+        },
+        TokenType::Percent => {
+            Ok(format!(
+                "
                         {}
                         {}
                         pop rax
@@ -211,16 +272,18 @@ fn do_inline_bin_op(
                         idiv rbx
                         push rdx
                     ",
-            rhs,
-            lhs,
-        )),
+                rhs,
+                lhs,
+            ))
+        },
         TokenType::GT
         | TokenType::LT
         | TokenType::LTE
         | TokenType::GTE
         | TokenType::DblEquals
-        | TokenType::NotEquals => Ok(format!(
-            "
+        | TokenType::NotEquals => {
+            Ok(format!(
+                "
                         {}
                         {}
                         pop rcx ; lhs
@@ -230,17 +293,18 @@ fn do_inline_bin_op(
                         {} al          ; so clear rax and put into al
                         push rax
                 ",
-            rhs,
-            lhs,
-            match op.token_type {
-                TokenType::DblEquals => "sete",
-                TokenType::NotEquals => "setne",
-                TokenType::GT => "setg",
-                TokenType::LT => "setl",
-                TokenType::GTE => "setge",
-                _ => "setle",
-            }
-        )),
+                rhs,
+                lhs,
+                match op.token_type {
+                    TokenType::DblEquals => "sete",
+                    TokenType::NotEquals => "setne",
+                    TokenType::GT => "setg",
+                    TokenType::LT => "setl",
+                    TokenType::GTE => "setge",
+                    _ => "setle",
+                }
+            ))
+        },
         _ => unreachable!()
     }
 }

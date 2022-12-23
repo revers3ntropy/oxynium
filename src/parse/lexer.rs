@@ -84,7 +84,7 @@ impl Lexer {
                     TokenType::Int,
                     Some(number),
                     start,
-                    self.position.clone(),
+                    self.position.clone().reverse(None),
                 ));
             } else if IDENTIFIER_CHARS.contains(c) {
                 tokens.push(self.make_identifier());

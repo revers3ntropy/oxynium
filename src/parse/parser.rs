@@ -1,3 +1,4 @@
+use crate::args::Args;
 use crate::ast::bin_op::BinOpNode;
 use crate::ast::bool::BoolNode;
 use crate::ast::class_declaration::{
@@ -106,11 +107,19 @@ macro_rules! result_consume {
 pub struct Parser {
     tokens: Vec<Token>,
     tok_idx: usize,
+    cli_args: Args,
 }
 
 impl Parser {
-    pub fn new(tokens: Vec<Token>) -> Parser {
-        Parser { tokens, tok_idx: 0 }
+    pub fn new(
+        cli_args: Args,
+        tokens: Vec<Token>,
+    ) -> Parser {
+        Parser {
+            tokens,
+            tok_idx: 0,
+            cli_args,
+        }
     }
 
     pub fn parse(&mut self) -> ParseResults {
@@ -412,7 +421,7 @@ impl Parser {
 
         if make_scope_node {
             res.success(new_mut_rc(ScopeNode {
-                ctx: Context::new(),
+                ctx: Context::new(self.cli_args.clone()),
                 body: statements.unwrap(),
                 position: (start, end),
             }));
@@ -697,11 +706,19 @@ impl Parser {
 
         if tok.token_type == TokenType::Int {
             self.advance(&mut res);
-            let value = tok
-                .literal
-                .unwrap()
-                .parse::<i64>()
-                .unwrap();
+            let value = tok.literal.unwrap().parse::<i64>();
+            if value.is_err() {
+                res.failure(
+                    numeric_overflow(
+                        "Invalid integer literal"
+                            .to_string(),
+                    ),
+                    Some(tok.start.clone()),
+                    Some(tok.end.clone()),
+                );
+                return res;
+            }
+            let value = value.unwrap();
             res.success(new_mut_rc(GlobalConstNode {
                 identifier: name,
                 value,
@@ -1534,7 +1551,9 @@ impl Parser {
         {
             res.success(new_mut_rc(FnDeclarationNode {
                 identifier,
-                params_scope: Context::new(),
+                params_scope: Context::new(
+                    self.cli_args.clone(),
+                ),
                 ret_type,
                 is_external,
                 params,
@@ -1572,7 +1591,9 @@ impl Parser {
 
         res.success(new_mut_rc(FnDeclarationNode {
             identifier,
-            params_scope: Context::new(),
+            params_scope: Context::new(
+                self.cli_args.clone(),
+            ),
             ret_type,
             params,
             body: Some(body.unwrap()),

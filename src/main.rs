@@ -37,7 +37,10 @@ fn setup_ctx_with_doxy(
         return Err(tokens.err().unwrap());
     }
 
-    let mut parser = Parser::new(tokens.unwrap());
+    let mut parser = Parser::new(
+        ctx.borrow().cli_args.clone(),
+        tokens.unwrap(),
+    );
     let ast = parser.parse();
 
     if ast.error.is_some() {
@@ -63,14 +66,15 @@ fn compile(
     file_name: String,
     args: &Args,
 ) -> Result<(String, MutRc<Context>), Error> {
-    let ctx = setup_ctx_with_doxy(Context::new())?;
+    let ctx = Context::new(args.clone());
+    let ctx = setup_ctx_with_doxy(ctx)?;
     ctx.borrow_mut().std_asm_path = args.std_path.clone();
     ctx.borrow_mut().exec_mode = args.exec_mode;
 
     let mut lexer = Lexer::new(input.clone(), file_name);
     let tokens = lexer.lex()?;
 
-    let mut parser = Parser::new(tokens);
+    let mut parser = Parser::new(args.clone(), tokens);
     let ast = parser.parse();
     if ast.error.is_some() {
         return Err(ast.error.unwrap());

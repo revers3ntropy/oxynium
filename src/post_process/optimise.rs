@@ -11,21 +11,29 @@ const REGISTERS_NO_STACK: [&str; 14] = [
     "r10", "r11", "r12", "r13", "r14", "r15",
 ];
 
-fn o1(
+fn o1<T>(
+    name: &str,
+    args: &Args,
+    cb: &impl Fn() -> T,
+) -> Option<T> {
+    if args.enable.contains(&name.to_string()) {
+        Some(cb())
+    } else if args.disable.contains(&name.to_string()) {
+        None
+    } else if args.optimise >= 1 {
+        Some(cb())
+    } else {
+        None
+    }
+}
+
+fn o1_asm(
     name: &str,
     asm: Vec<String>,
     args: &Args,
     cb: fn(Vec<String>) -> Vec<String>,
 ) -> Vec<String> {
-    if args.enable.contains(&name.to_string()) {
-        cb(asm)
-    } else if args.disable.contains(&name.to_string()) {
-        asm
-    } else if args.optimise >= 1 {
-        cb(asm)
-    } else {
-        asm
-    }
+    o1(name, args, &|| cb(asm.clone())).unwrap_or(asm)
 }
 
 pub fn optimise(
@@ -34,9 +42,10 @@ pub fn optimise(
 ) -> Vec<String> {
     let mut asm = asm;
 
-    asm = o1("redundant-push", asm, args, redundant_push);
-    asm = o1("redundant-mov", asm, args, redundant_mov);
-    asm = o1("redundant-jmp", asm, args, redundant_jmp);
+    asm =
+        o1_asm("redundant-push", asm, args, redundant_push);
+    asm = o1_asm("redundant-mov", asm, args, redundant_mov);
+    asm = o1_asm("redundant-jmp", asm, args, redundant_jmp);
 
     asm
 }

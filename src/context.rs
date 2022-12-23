@@ -1,3 +1,4 @@
+use crate::args::Args;
 use crate::ast::ANON_PREFIX;
 use crate::error::{type_error, Error};
 use crate::position::Interval;
@@ -35,10 +36,11 @@ pub struct Context {
     frozen: bool,
     // throw error on unknown types
     err_on_unknowns: bool,
+    pub cli_args: Args,
 }
 
 impl Context {
-    pub fn new() -> MutRc<Context> {
+    pub fn new(cli_args: Args) -> MutRc<Context> {
         new_mut_rc(Context {
             parent: None,
             declarations: HashMap::new(),
@@ -52,6 +54,7 @@ impl Context {
             allow_local_var_decls: false,
             frozen: false,
             err_on_unknowns: false,
+            cli_args,
         })
     }
 
