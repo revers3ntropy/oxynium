@@ -3,7 +3,7 @@ describe 'Operator Overloads'
 expect '341' '
     class Foo {
         x: Int,
-        fn + (self, other: Foo): Foo {
+        fn + (self, other: Foo) Foo {
             return new Foo {
                 x: self.x + other.x
             }
@@ -11,12 +11,12 @@ expect '341' '
     }
     class Bar {
         x: Int,
-        fn + (self, other: Int): Bar {
+        fn + (self, other: Int) Bar {
             return new Bar {
                 x: self.x + other
             }
         }
-        fn - (self, other: Foo): Bar {
+        fn - (self, other: Foo) Bar {
             return new Bar {
                 x: self.x - other.x
             }
@@ -32,21 +32,21 @@ expect '341' '
 '
 expect_err 'TypeError' '
     class C {
-        fn + (self): C {
+        fn + (self) C {
             return new C
         }
     }
 '
 expect_err 'TypeError' '
     class C {
-        fn + (self, a1: C, a2: C): C {
+        fn + (self, a1: C, a2: C) C {
             return new C
         }
     }
 '
 expect '' '
     class C {
-        fn + (self, a1: C): C {
+        fn + (self, a1: C) C {
             return new C
         }
     }
@@ -56,7 +56,7 @@ expect '' '
 describe 'Do Not Allow Top Level Operator Overloads'
 
 expect_err 'SyntaxError' '
-    fn + (s: Str, other: Str): Str {
+    fn + (s: Str, other: Str) Str {
         return ""
     }
 '
@@ -67,7 +67,7 @@ expect_err 'SyntaxError' '
     extern fn + ()
 '
 expect_err 'SyntaxError' '
-    fn + (): Str {
+    fn + () Str {
         return ""
     }
 '
@@ -77,42 +77,42 @@ describe 'Invalid Operator Overloads'
 
 expect_err 'SyntaxError' '
     class C {
-        fn ! (self): Str {
+        fn ! (self) Str {
             return ""
         }
     }
 '
 expect_err 'SyntaxError' '
     class C {
-        fn === (self): Str {
+        fn === (self) Str {
             return ""
         }
     }
 '
 expect_err 'SyntaxError' '
     class C {
-        fn += (self): Str {
+        fn += (self) Str {
             return ""
         }
     }
 '
 expect_err 'SyntaxError' '
     class C {
-        fn ^ (self): Str {
+        fn ^ (self) Str {
             return ""
         }
     }
 '
 expect_err 'SyntaxError' '
     class C {
-        fn 1 (self): Str {
+        fn 1 (self) Str {
             return ""
         }
     }
 '
 expect_err 'SyntaxError' '
     class C {
-        fn "" (self): Str {
+        fn "" (self) Str {
             return ""
         }
     }

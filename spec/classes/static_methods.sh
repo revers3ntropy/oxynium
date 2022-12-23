@@ -3,7 +3,7 @@ describe 'Calling Methods Statically'
 expect 'hi' '
     class S {
         msg: Str,
-        fn f(self): Str {
+        fn f(self) Str {
             return self.msg;
         }
     }
@@ -14,7 +14,7 @@ expect 'hi' '
 '
 expect 'abc' '
     class S {
-        fn f(self, msg: Str): Str {
+        fn f(self, msg: Str) Str {
             return msg;
         }
     }
@@ -24,7 +24,7 @@ expect 'abc' '
 '
 expect 'hello' '
     class S {
-        fn f(self, a: Int, msg: Str = "hello"): Str {
+        fn f(self, a: Int, msg: Str = "hello") Str {
             return msg;
         }
     }

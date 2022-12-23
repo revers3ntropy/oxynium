@@ -8,7 +8,7 @@ expect_err 'TypeError' '
 '
 expect '' '
     extern fn f();
-    extern fn g(p: Int, a: Str = "hi"): Str;
+    extern fn g(p: Int, a: Str = "hi") Str;
 '
 expect_err 'IoError' '
     extern fn f();

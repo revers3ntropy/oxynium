@@ -19,7 +19,7 @@ expect_err 'TypeError' '
     };
 '
 expect_err 'TypeError' '
-    fn main(): Str {};
+    fn main() Str {};
 '
 expect_err 'SyntaxError' '
     fn main();

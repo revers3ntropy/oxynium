@@ -1,58 +1,58 @@
 class Void;
 
 primitive Char {
-    extern fn str(self): Str,
+    extern fn str (self) Str,
 }
 
 primitive Bool {
-    fn str(self): Str {
+    fn str (self) Str {
         if self {
             return "true"
         }
         return "false"
     }
 
-    extern fn || (self, other: Bool): Bool,
-    extern fn && (self, other: Bool): Bool,
+    extern fn || (self, other: Bool) Bool,
+    extern fn && (self, other: Bool) Bool,
 }
 
 primitive Int {
-    fn max(self, other: Int): Int {
+    fn max (self, other: Int) Int {
         if self > other {
             return self
         }
         return other
     }
-    fn min(self, other: Int): Int {
+    fn min (self, other: Int) Int {
         if self < other {
             return self
         }
         return other
     }
 
-    extern fn str(self): Str,
+    extern fn str (self) Str,
 
-    extern fn +  (self, n: Int): Int,
-    extern fn -  (self, n: Int): Int,
-    extern fn *  (self, n: Int): Int,
-    extern fn /  (self, n: Int): Int,
-    extern fn %  (self, n: Int): Int,
-    extern fn == (self, n: Int): Bool,
-    extern fn != (self, n: Int): Bool,
-    extern fn <  (self, n: Int): Bool,
-    extern fn <= (self, n: Int): Bool,
-    extern fn >  (self, n: Int): Bool,
-    extern fn >= (self, n: Int): Bool,
+    extern fn +  (self, n: Int) Int,
+    extern fn -  (self, n: Int) Int,
+    extern fn *  (self, n: Int) Int,
+    extern fn /  (self, n: Int) Int,
+    extern fn %  (self, n: Int) Int,
+    extern fn == (self, n: Int) Bool,
+    extern fn != (self, n: Int) Bool,
+    extern fn <  (self, n: Int) Bool,
+    extern fn <= (self, n: Int) Bool,
+    extern fn >  (self, n: Int) Bool,
+    extern fn >= (self, n: Int) Bool,
 }
 
 class Str {
-    fn str(self): Str {
+    fn str (self) Str {
         return self
     }
-    fn concat(self, other: Str): Str {
+    fn concat (self, other: Str) Str {
         return self + other
     }
-    fn repeat(self, n: Int): Str {
+    fn repeat (self, n: Int) Str {
         if n < 1 {
             return ""
         }
@@ -61,19 +61,19 @@ class Str {
         return self + self.repeat(n - 1)
     }
 
-    extern fn at(self, i: Int): Char,
-    extern fn len(self): Int,
+    extern fn at (self, i: Int) Char,
+    extern fn len (self) Int,
 
-    extern fn == (self, other: Str): Bool,
-    extern fn != (self, other: Str): Bool,
-    extern fn +  (self, other: Str): Str,
+    extern fn == (self, other: Str) Bool,
+    extern fn != (self, other: Str) Bool,
+    extern fn +  (self, other: Str) Str,
 }
 
-extern fn print(msg: Str);
-fn println(msg: Str): Void {
+extern fn print (msg: Str);
+fn println (msg: Str, line_end="\n") {
     print(msg);
-    print("\n");
+    print(line_end);
 }
-extern fn print_nl();
-extern fn exit(code: Int = 0);
-extern fn input(prompt: Str = "", buffer_size: Int = 1000): Str;
+extern fn print_nl ();
+extern fn exit (code: Int = 0);
+extern fn input (prompt: Str = "", buffer_size: Int = 1000) Str;

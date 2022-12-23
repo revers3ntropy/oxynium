@@ -25,7 +25,7 @@ expect '44' '
     f(4);
 '
 expect 'true2hi3' '
-    fn f(a: Bool, b = 2, c: Str = "hi"): Int {
+    fn f(a: Bool, b = 2, c: Str = "hi") Int {
         print(a.str());
         print(b.str());
         print(c);

@@ -1,7 +1,7 @@
 describe 'Recursion'
 
 expect '55' '
-    fn fib(n: Int): Int {
+    fn fib(n: Int) Int {
         if n <= 1 {
             return n;
         };

@@ -3,7 +3,7 @@ describe 'Methods on Classes'
 expect 'x = 1, x = 2, ' '
     class S {
         x: Int,
-        fn log(self): Void {
+        fn log(self) Void {
            print("x = ");
            print(self.x.str());
            print(", ");
@@ -22,7 +22,7 @@ expect_err 'TypeError' '
 expect '' '
     class S {
         x: Int,
-        extern fn f1(self): S,
+        extern fn f1(self) S,
         fn f2(self) {}
         extern fn f3(self),
         y: Int,

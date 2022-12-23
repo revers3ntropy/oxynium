@@ -29,19 +29,19 @@ expect '12' '
     f();
 '
 expect '1' '
-    fn f(): Int {
+    fn f() Int {
         return 1;
     };
     print(f().str());
 '
 
 expect_err 'TypeError' '
-    fn f(): Int {
+    fn f() Int {
       return "";
     };
 '
 expect_err 'TypeError' '
-    fn f(): Int {
+    fn f() Int {
         return "";
     };
 '
@@ -51,106 +51,106 @@ expect_err 'TypeError' '
     };
 '
 expect_err 'TypeError' '
-    fn f(): Int {
+    fn f() Int {
         print("hi");
         return;
     };
 '
 expect_err 'TypeError' '
-    fn f(): Str {
+    fn f() Str {
         print(1.str());
     };
 '
 expect_err 'TypeError' '
-    fn f(): Void {
+    fn f() Void {
         return 1;
     };
 '
 expect '' '
-    fn f(): Void {
+    fn f() Void {
         return;
     };
     f();
 '
 expect '' '
-    fn f(): Void {
+    fn f() Void {
         1;
     };
     f();
 '
 expect 'hi' '
-    fn f(): Void {
+    fn f() Void {
         print("hi");
     };
     f();
 '
 expect '1' '
-    fn f(): Int {
+    fn f() Int {
         return 1;
         print("hi");
     };
     print(f().str());
 '
 expect_err 'TypeError' '
-    fn f(): Int {
+    fn f() Int {
         return 1;
         return true;
     };
 '
 expect 'hi' '
-    fn f(): Str {
+    fn f() Str {
       return "hi";
     };
     print(f());
 '
 expect 'false' '
-    fn f(): Bool {
+    fn f() Bool {
       return 1 == 2;
     };
     print(f().str());
 '
 expect 'true' '
-    fn f(): Bool {
+    fn f() Bool {
       return true;
     };
     print(f().str());
 '
 expect '' '
-    fn f(): Str {
+    fn f() Str {
         return "";
     };
     print(f().str());
 '
 expect_err 'TypeError' '
-    fn f(): Str {
+    fn f() Str {
         return "";
     };
     print((f() + 2).str());
 '
 expect_err 'TypeError' '
-    fn f(): Void {};
+    fn f() Void {};
     print(f().str());
 '
 expect '16' '
-    fn square(n: Int): Int {
+    fn square(n: Int) Int {
         return n * n;
     };
     print(square(4).str());
 '
 expect '17' '
-    fn square(n: Int): Int {
+    fn square(n: Int) Int {
         return n * n;
     };
     print((square(4) + square(-1)).str());
 '
 expect '90' '
-    fn sum(a: Int, b: Int, c: Int): Int {
+    fn sum(a: Int, b: Int, c: Int) Int {
         return a + b + c;
     };
     print((sum(1, 2, 3) * sum(4, 5, 6)).str());
 '
 expect '49' '
-    fn f(n: Int): Int {
+    fn f(n: Int) Int {
         return n;
     };
     print(f(4).str());
@@ -162,14 +162,14 @@ expect '49' '
         return;
         print(true.str());
     };
-    fn f(n: Int): Void {
+    fn f(n: Int) Void {
         return g();
     };
     f(4);
 '
 expect '' '
     fn g(a: Str) {};
-    fn f(n: Int, m: Int): Void {
+    fn f(n: Int, m: Int) Void {
       return g("");
     };
     f(4, 6);
@@ -208,7 +208,7 @@ expect_err 'SyntaxError' '
 describe 'All Execution Paths Must Return'
 
 expect_err 'TypeError' '
-    fn f(): Int {
+    fn f() Int {
         if true {
             return 1
         } else {
@@ -217,7 +217,7 @@ expect_err 'TypeError' '
     }
 '
 expect '' '
-    fn f(): Int {
+    fn f() Int {
         if true {
             return 1
         } else {
@@ -226,22 +226,22 @@ expect '' '
     }
 '
 expect_err 'TypeError' '
-    fn f(): Int {}
+    fn f() Int {}
 '
 expect '' '
-    fn f(): Int {
+    fn f() Int {
         return 1
     }
 '
 expect_err 'TypeError' '
-    fn f(): Int {
+    fn f() Int {
         if true {
             return 1
         }
     }
 '
 expect_err 'TypeError' '
-    fn f(): Int {
+    fn f() Int {
         if true {
             if false {
                 return 1
@@ -252,7 +252,7 @@ expect_err 'TypeError' '
     }
 '
 expect '' '
-    fn f(): Int {
+    fn f() Int {
         if true {
             if false {
                 return 1
@@ -262,14 +262,14 @@ expect '' '
     }
 '
 expect '' '
-    fn f(): Int {
+    fn f() Int {
         while {
             return 1
         }
     }
 '
 expect '' '
-    fn f(a: Bool): Int {
+    fn f(a: Bool) Int {
         while a {
             return 1
         }
@@ -277,7 +277,7 @@ expect '' '
     }
 '
 expect_err 'TypeError' '
-    fn f(a: Bool): Int {
+    fn f(a: Bool) Int {
         while a {
             return 1
         }

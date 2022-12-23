@@ -1510,8 +1510,14 @@ impl Parser {
                 ),
             });
 
-        if self.current_matches(TokenType::Colon, None) {
-            self.advance(&mut res);
+        if !self.current_matches(TokenType::OpenBrace, None)
+            && !self.current_matches(TokenType::Comma, None)
+            && !self.current_matches(
+                TokenType::EndStatement,
+                None,
+            )
+            && self.current_tok().is_some()
+        {
             let ret_type_option =
                 res.register(self.type_expr());
             ret_on_err!(res);

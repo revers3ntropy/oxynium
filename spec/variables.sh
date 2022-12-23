@@ -1,7 +1,7 @@
 describe 'Local Variables'
 
 expect_err 'SyntaxError' '
-    fn f(): Int {
+    fn f() Int {
         let a: Int;
     };
 '
@@ -102,7 +102,7 @@ expect_err 'TypeError' '
     };
 '
 expect '4' '
-    fn f(n: Int): Int {
+    fn f(n: Int) Int {
         let mut a = n*n + 3 * n;
         a = a - 1;
         return a / 2;
@@ -110,7 +110,7 @@ expect '4' '
     print(f(2).str());
 '
 expect '4' '
-    fn f(n: Int): Int {
+    fn f(n: Int) Int {
         let mut a: Int;
         if n == 3 {
             a = 2;
@@ -122,7 +122,7 @@ expect '4' '
     print(f(3).str());
 '
 expect '5' '
-    fn f(n: Int): Int {
+    fn f(n: Int) Int {
         if true {
             let a = n + 3;
             return a;
@@ -158,13 +158,13 @@ expect_err 'TypeError' '
 describe 'Empty Local Var Declarations'
 
 expect_err 'TypeError' '
-    fn f(): Int {
+    fn f() Int {
         let mut a: Int;
         return a;
     };
 '
 expect '1' '
-    fn f(): Int {
+    fn f() Int {
         let mut a: Int;
         a = 1;
         return a;

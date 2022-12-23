@@ -11,7 +11,7 @@ expect '' '
 '
 expect '' '
     primitive P {
-        extern fn f(self): Int,
+        extern fn f(self) Int,
         fn g(self) {}
     }
 '

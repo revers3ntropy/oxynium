@@ -27,7 +27,7 @@ expect '12' '
     }
     class S {
         x: Int,
-        fn make_s2(self): S2 {
+        fn make_s2(self) S2 {
             return new S2 {
                 x: self.x
             }

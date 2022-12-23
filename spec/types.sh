@@ -1,7 +1,7 @@
 describe 'Invalid Declarations'
 
 expect_err 'TypeError' '
-    fn f(): Int {
+    fn f() Int {
         return a;
         let a = 5;
     };
@@ -41,18 +41,18 @@ expect_err 'TypeError' '
 describe 'Out of Order Types'
 
 expect '' '
-    fn f(a: A): A {
+    fn f(a: A) A {
         return a
     }
     class A;
 '
 expect_err 'UnknownSymbol' '
-    fn f(a: A): A {
+    fn f(a: A) A {
         return a
     }
 '
 expect '' '
-    fn f(a: A): B {
+    fn f(a: A) B {
         return a.b
     }
     class A {
@@ -61,7 +61,7 @@ expect '' '
     class B
 '
 expect '' '
-    fn f(a: A): C {
+    fn f(a: A) C {
         return a.b.c
     }
     class A {
@@ -73,7 +73,7 @@ expect '' '
     class C
 '
 expect '' '
-    fn f(a: A): D {
+    fn f(a: A) D {
         return a.b.c.d
     }
     class A {
@@ -89,20 +89,20 @@ expect '' '
 '
 expect '' '
     f(new A { b: new B { c: new C }});
-    fn f(a: A): C {
+    fn f(a: A) C {
         return a.b.c.get_a(a).b.c
     }
     class A {
         b: B,
     }
     class C {
-        fn get_a(self, a: A): A {
+        fn get_a(self, a: A) A {
             return a
         }
     }
     class B {
         c: C,
-        extern fn get_a(self, a: A): A,
+        extern fn get_a(self, a: A) A,
     }
 '
 
