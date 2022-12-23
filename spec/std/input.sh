@@ -21,6 +21,10 @@ expect     'true'  '
         print((i == "a").str())
     }
 ' 'a'
+
+
+describe 'fn input Giving Correctly Encoded Str'
+
 expect     'true'  'print((input() == "abcdef").str())' 'abcdef'
 expect     'false' 'print((input() == "a").str())'      'b'
 expect     'false' 'print((input() == "abc").str())'    'bca'
@@ -32,3 +36,8 @@ expect     'a'     'print(input().at(0).str())'         'aabc'
 expect     '􏿽'     'print(input().at(2).str())'         '12􏿽45'
 expect     '4'     'print(input().at(3).str())'         '12􏿽45'
 expect     '2'     'print(input().at(1).str())'         '12􏿽45'
+expect     '🏳'    'print(input().at(0).str())'         '🏳️‍🌈'
+# (0-width character, is something there...)
+expect     '️'      'print(input().at(1).str())'         '🏳️‍🌈'
+expect     '🇦'    'print(input().at(1).str())'         '🇨🇦'
+expect     '🇨'    'print(input().at(0).str())'         '🇨🇦'
