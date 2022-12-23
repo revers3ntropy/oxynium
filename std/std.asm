@@ -139,7 +139,7 @@ input: ; [buffer_size: int, prompt: char*, cb: *] => String
     pop rax
 
     mov rdi, qword [rbp + 24] ; buffer_size
-    inc rdi ; extra char for null terminator
+    add rdi, 8 ; extra char for null terminator
     call malloc WRT ..plt
     mov r15, rax ; r15 = string pointer
 
@@ -288,6 +288,19 @@ Int.str: ; [number: int, cb: *] => char*
         ret
 
 
+str_from_utf8: ; [utf8: char*, cb: *] => char*
+               ; converts utf8 to utf64, the encoding used by Str
+
+    push rbp
+    mov rbp, rsp
+
+    ; TODO
+
+    mov rsp, rbp
+    pop rbp
+    ret
+
+
 Str.len: ; [string: char*, cb: *] => int
          ; returns length of string in rax
     push rbp
@@ -312,32 +325,70 @@ Str.len: ; [string: char*, cb: *] => int
         ret
 
 Str.at: ; [index: int, string: char*, cb: *] => char
-              ; returns the character at the given index
+        ; returns the character at the given index
     push rbp
     mov rbp, rsp
 
-    mov r14, qword [rbp + 16] ; r14 = string
-    mov r13, qword [rbp + 24] ; r13 = index
+    mov rdx, qword [rbp + 16] ; pop string
+    mov r15, qword [rbp + 24] ; pop index
 
-    push r14 ; string
-    call Str.len
-    mov r15, rax ; string.len()
-    pop rcx
+    cmp r15, 0
+    jl .backwards
 
-    xor rax, rax ; either finish as 0 or overridden with char
+    xor rax, rax ; character
+    xor rcx, rcx ; index
 
-    cmp r13, r15  ; index >= string.len()
-    jge _$_Str.char_at_end
+    .loop:
+        mov rax, qword [rdx]
+        test rax, rax
+        je .end
+        add rdx, 8
 
-    cmp rax, r14 ; 0 > index
-    jg _$_Str.char_at_end
+        cmp rcx, r15
+        jge .end
 
-    mov rax, qword [r14 + r13 * 8] ; get char at index
+        inc rcx
+        jmp .loop
 
-    _$_Str.char_at_end:
+    .backwards:
+        neg r15
+        mov r14, rdx
+
+        push rdx
+        call Str.len
+        pop rdx
+        imul rax, 8
+        add rdx, rax ; rdx = end of string + 1
+
+        imul r15, 8
+        sub rdx, r15 ; rdx = end of string - index
+        cmp rdx, r14 ; if rdx < r14, index is out of bounds
+        jl .end_and_clear
+
+        mov rax, qword [rdx]
+        jmp .end
+
+    .end_and_clear:
+        xor rax, rax
+    .end:
         mov rsp, rbp
         pop rbp
         ret
+
+Str.at_raw: ; [index: int, string: char*, cb: *] => char
+            ; returns the character at the given index
+            ; does not check if index is out of bounds
+    push rbp
+    mov rbp, rsp
+
+    mov rdx, qword [rbp + 16] ; pop string
+    mov r15, qword [rbp + 24] ; pop index
+
+    mov rax, qword [rdx + r15 * 8]
+
+    mov rsp, rbp
+    pop rbp
+    ret
 
 Str._$_op_eq: ; [lhs: char*, rhs: char*, cb: *] => bool
               ; returns true if the strings are equal

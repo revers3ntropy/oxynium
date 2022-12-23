@@ -51,7 +51,10 @@ expect_err 'TypeError' 'print("abcd".len())'
 
 describe 'fn Str.at'
 
-expect '' 'print("abc".at(-1).str())'
+expect 'c' 'print("abc".at(-1).str())'
+expect 'b' 'print("abc".at(-2).str())'
+expect 'a' 'print("abc".at(-3).str())'
+expect '' 'print("abc".at(-4).str())'
 expect 'a' 'print("abc".at(0).str())'
 expect 'b' 'print("abc".at(1).str())'
 expect 'c' 'print("abc".at(2).str())'

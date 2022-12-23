@@ -15,6 +15,8 @@ current_spec_has_failed=0
 current_spec_file=""
 tests_started=0
 
+filter="$1"
+
 function run_cargo_tests {
     cargo test
     # exit if tests failed
@@ -32,7 +34,9 @@ function setup () {
 function describe () {
     if [ $tests_started -eq 1 ]; then
         if [ "$current_spec_has_failed" -eq 0 ]; then
-            printf "${GREEN}✔ %s${NC}\n" "$current_spec_name"
+            if [ "$filter" == "" ] || [[ "$current_spec_name" == *"$filter"* ]]; then
+                printf "${GREEN}✔ %s${NC}\n" "$current_spec_name"
+            fi
         fi
     fi
     current_spec_name="$1"
@@ -124,6 +128,9 @@ function emit_warning() {
 }
 
 function expect() {
+    if [ "$filter" != "" ] && [[ "$current_spec_name" != *"$filter"* ]]; then
+        return
+    fi
     expected="$1"
     code="$2"
     stdin="$3"
@@ -142,6 +149,13 @@ function expect() {
 }
 
 function expect_err() {
+    if [ "$#" -lt 2 ]; then
+        echo "expect_err expects 2 arguments, got $#"
+        exit 1
+    fi
+    if [ "$filter" != "" ] && [[ "$current_spec_name" != *"$filter"* ]]; then
+        return
+    fi
     expected="$1"
     code="$2"
     stdin="$3"
@@ -175,6 +189,9 @@ cpp_comp=()
 cpp_exec=()
 num_perf_tests=0
 function perf_test_comp_cpp() {
+    if [ "$filter" != "" ] && [[ "$current_spec_name" != *"$filter"* ]]; then
+        return
+    fi
     n="$1"
     expected="$2"
     oxy="$3"
@@ -225,7 +242,10 @@ function perf_test_comp_cpp() {
     fi
 }
 
-function results() {
+function perf_results() {
+    if [ "$num_perf_tests" -eq 0 ]; then
+        return
+    fi
 
     printf "Oxy Comp: ${oxy_comp[*]}\n"
     printf "C++ Comp: ${cpp_comp[*]}\n"
@@ -247,6 +267,16 @@ function results() {
 
     printf "Mean comp time ratio oxy:cpp=1:%.*f\n" 3 "$comp_ratio_average"
     printf "Mean exec time ratio oxy:cpp=1:%.*f\n" 3 "$exec_ratio_average"
+
+}
+
+function results() {
+    if [ "$tests" -eq 0 ]; then
+        echo "No tests run"
+        exit 1
+    fi
+
+    perf_results
 
     end=$(date +"%s.%3N")
     runtime=$(echo "$end - $start" | bc -l)
