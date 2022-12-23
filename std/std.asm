@@ -34,27 +34,6 @@ _$_print_char: ; [ascii_code: int, cb: *] => Void
     pop rbp
     ret
 
-_$_clear_memory: ; [start: *, size: int, cb: *] => Void
-    push rbp
-    mov rbp, rsp
-
-    mov r15, qword [rbp + 24] ; r15 = start
-    mov r14, qword [rbp + 16]
-    add r14, r15 ; r14 = end
-
-    _$_clear_memory_loop:
-        cmp r15, r14
-        jge _$_clear_memory_end
-
-        ;mov byte [r15], 0
-        add r15, 1
-        jmp _$_clear_memory_loop
-
-    _$_clear_memory_end:
-        mov rsp, rbp
-        pop rbp
-        ret
-
 _$_allocate: ; [size: int, cb: *] => *int
     push rbp
     mov rbp, rsp
@@ -139,17 +118,41 @@ input: ; [buffer_size: int, prompt: char*, cb: *] => String
     pop rax
 
     mov rdi, qword [rbp + 24] ; buffer_size
-    add rdi, 8 ; extra char for null terminator
+    add rdi, 1                ; add space for null byte
     call malloc WRT ..plt
-    mov r15, rax ; r15 = string pointer
+    mov r15, rax              ; r15 = string pointer
 
-    xor rax, rax
-    xor rdi, rdi
+    mov rax, 0
+    mov rdi, 0
     mov rsi, r15
     mov rdx, qword [rbp + 24]
     syscall
 
+    ; remove trailing new line, and null terminate
     mov rax, r15
+    add rax, qword [rbp + 24]
+    inc rax
+    .last_char_loop:
+        dec rax
+        cmp byte [rax], 0
+        je .last_char_loop
+        cmp byte [rax], 10
+        je .del_last_char
+        cmp byte [rax], 13
+        je .del_last_char
+        jmp .last_char_after_loop
+
+    .del_last_char:
+        mov byte [rax], 0
+    .last_char_after_loop:
+
+    push r15
+    call str_from_utf8 ; convert to string
+                       ; this is necessary because the string
+                       ; comes in as utf8, but the internal
+                       ; string representation is 'utf64'
+                       ; (utf8 with padding on each char up to 64 bits)
+    pop r15
 
     mov rsp, rbp
     pop rbp
@@ -290,15 +293,106 @@ Int.str: ; [number: int, cb: *] => char*
 
 str_from_utf8: ; [utf8: char*, cb: *] => char*
                ; converts utf8 to utf64, the encoding used by Str
+               ; https://stackoverflow.com/questions/1543613/how-does-utf-8-variable-width-encoding-work
 
     push rbp
     mov rbp, rsp
 
-    ; TODO
+    mov r15, qword [rbp + 16] ; utf8
+    xor r13, r13              ; number of chars in utf8
 
-    mov rsp, rbp
-    pop rbp
-    ret
+    ; count number of chars in utf8
+    ._$_find_chars_loop:
+        xor rax, rax
+        mov al, byte [r15]
+
+        cmp al, 0
+        je ._$_find_chars_end
+
+        mov cl, al
+        shr cl, 7          ; if the first bit of the char is 0,
+        cmp cl, 0          ; then it is a single byte char
+        je ._$_1_byte_char ; otherwise, it is a multi-byte char
+
+        mov cl, al         ; 2-byte char starts with 110x xxxx
+        shr cl, 5
+        cmp cl, 6
+        je ._$_2_byte_char
+
+        mov cl, al         ; 3-byte char starts with 1110 xxxx
+        shr cl, 4
+        cmp cl, 14
+        je ._$_3_byte_char
+        ; jmp ._$_4_byte_char ; 4-byte char starts with 1111 0xxx
+        ; _$_4_byte_char:
+            xor rcx, rcx
+            mov cl, byte [r15+3]
+            shl rcx, 8
+            mov cl, byte [r15+2]
+            shl rcx, 8
+            mov cl, byte [r15+1]
+            shl rcx, 8
+            mov cl, byte [r15]
+            inc r13
+            push rcx
+            add r15, 4
+            jmp ._$_find_chars_loop
+
+        ._$_3_byte_char:
+            xor rcx, rcx
+            mov cl, byte [r15+2]
+            shl rcx, 8
+            mov cl, byte [r15+1]
+            shl rcx, 8
+            mov cl, byte [r15]
+            inc r13
+            push rcx
+            add r15, 3
+            jmp ._$_find_chars_loop
+
+        ._$_2_byte_char:
+            xor rcx, rcx
+            mov cl, byte [r15+1]
+            shl rcx, 8
+            mov cl, byte [r15]
+            inc r13
+            push rcx
+            add r15, 2
+            jmp ._$_find_chars_loop
+
+        ._$_1_byte_char:
+            push rax
+            inc r13
+            inc r15
+            jmp ._$_find_chars_loop
+
+    ._$_find_chars_end:
+
+        ; put the string (currently on stack) into a heap allocated array
+        push r13 ; save r13
+
+        mov rdi, r13
+        inc rdi ; add space for null terminator
+        imul rdi, 8
+        push rdi
+        call _$_allocate
+        pop rdi
+        ; rax = return value (pointer to heap allocated char*)
+
+        pop r13 ; restore r13
+
+    ._$_move_loop:
+        cmp r13, 0
+        jle ._$_move_return
+        dec r13
+        pop rdx
+        mov qword [rax + r13 * 8], rdx
+        jmp ._$_move_loop
+
+    ._$_move_return:
+        mov rsp, rbp
+        pop rbp
+        ret
 
 
 Str.len: ; [string: char*, cb: *] => int

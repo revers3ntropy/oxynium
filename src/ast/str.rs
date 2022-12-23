@@ -40,11 +40,17 @@ impl Node for StrNode {
         }
         asm.pop();
 
+        let asm_str = if symbols.into_iter().count() < 1 {
+            format!("dq 0x0")
+        } else {
+            format!("db {} \ndq 0x0", asm)
+        };
+
         let anon_id = ctx.borrow_mut().define_anon(
             SymbolDef {
                 name: "".to_string(),
                 // ,0 is the null terminator
-                data: Some(format!("db {} \ndq 0x0", asm)),
+                data: Some(asm_str),
                 text: None,
             },
             self.value.interval(),

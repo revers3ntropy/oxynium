@@ -32,16 +32,16 @@ primitive Int {
 
     extern fn str(self): Str,
 
-    extern fn + (self, n: Int): Int,
-    extern fn - (self, n: Int): Int,
-    extern fn * (self, n: Int): Int,
-    extern fn / (self, n: Int): Int,
-    extern fn % (self, n: Int): Int,
+    extern fn +  (self, n: Int): Int,
+    extern fn -  (self, n: Int): Int,
+    extern fn *  (self, n: Int): Int,
+    extern fn /  (self, n: Int): Int,
+    extern fn %  (self, n: Int): Int,
     extern fn == (self, n: Int): Bool,
     extern fn != (self, n: Int): Bool,
-    extern fn < (self, n: Int): Bool,
+    extern fn <  (self, n: Int): Bool,
     extern fn <= (self, n: Int): Bool,
-    extern fn > (self, n: Int): Bool,
+    extern fn >  (self, n: Int): Bool,
     extern fn >= (self, n: Int): Bool,
 }
 
@@ -66,13 +66,13 @@ class Str {
 
     extern fn == (self, other: Str): Bool,
     extern fn != (self, other: Str): Bool,
-    extern fn + (self, other: Str): Str,
+    extern fn +  (self, other: Str): Str,
 }
 
 extern fn print(msg: Str);
-fn println(msg: Str, line_end="\n"): Void {
+fn println(msg: Str): Void {
     print(msg);
-    print(line_end);
+    print("\n");
 }
 extern fn print_nl();
 extern fn exit(code: Int = 0);

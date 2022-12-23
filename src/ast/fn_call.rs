@@ -177,6 +177,7 @@ impl Node for FnCallNode {
 
         let num_args = self.args.len()
             + if calling_through_instance { 1 } else { 0 };
+        let num_params = fn_type.parameters.len();
 
         // fill out default arguments
         for i in num_args..fn_type.parameters.len() {
@@ -204,15 +205,14 @@ impl Node for FnCallNode {
             asm.push_str("\n");
         }
 
-        let use_return_value = !fn_type
-            .ret_type
+        let use_return_value = !get_type!(ctx, "Void")
             .borrow()
-            .contains(get_type!(ctx, "Void"));
+            .contains(fn_type.ret_type);
 
         asm.push_str(&format!(
             "
             call {}
-            {}
+            times {} pop rcx
             {}
         ",
             if self.object.is_some() {
@@ -226,11 +226,7 @@ impl Node for FnCallNode {
             } else {
                 self.identifier.clone().literal.unwrap()
             },
-            if num_args > 0 {
-                format!("times {} pop rcx", num_args)
-            } else {
-                "".to_string()
-            },
+            num_params,
             if use_return_value { "push rax" } else { "" }
         ));
 
@@ -250,28 +246,24 @@ impl Node for FnCallNode {
             mut unknowns,
         ) = self.get_callee_type(ctx.clone())?;
         if fn_type.is_none() {
-            if ctx.borrow().throw_on_unknowns() {
-                return Err(unknown_symbol(format!(
-                    "Can't find {} `{}`",
-                    if base_type.is_some() {
-                        format!(
-                            "method on type `{}`",
-                            base_type
-                                .unwrap()
-                                .borrow()
-                                .str()
-                        )
-                    } else {
-                        "function".to_string()
-                    },
-                    self.identifier
-                        .clone()
-                        .literal
-                        .unwrap()
-                ))
-                .set_interval(self.identifier.interval()));
+            if !ctx.borrow().throw_on_unknowns() {
+                return Ok(TypeCheckRes::unknown_and(
+                    unknowns,
+                ));
             }
-            return Ok(TypeCheckRes::unknown_and(unknowns));
+            return Err(unknown_symbol(format!(
+                "Can't find {} `{}`",
+                if base_type.is_some() {
+                    format!(
+                        "method on type `{}`",
+                        base_type.unwrap().borrow().str()
+                    )
+                } else {
+                    "function".to_string()
+                },
+                self.identifier.clone().literal.unwrap()
+            ))
+            .set_interval(self.identifier.interval()));
         }
         let fn_type = fn_type.unwrap();
 
