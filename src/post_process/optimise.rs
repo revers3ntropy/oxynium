@@ -34,18 +34,14 @@ pub fn optimise(
 ) -> Vec<String> {
     let mut asm = asm;
 
-    asm = o1(
-        "asm-redundant-push",
-        asm,
-        args,
-        push_pull_duplication,
-    );
-    asm = o1("asm-redundant-mov", asm, args, mov_same);
+    asm = o1("redundant-push", asm, args, redundant_push);
+    asm = o1("redundant-mov", asm, args, redundant_mov);
+    asm = o1("redundant-jmp", asm, args, redundant_jmp);
 
     asm
 }
 
-fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
+fn redundant_push(ast: Vec<String>) -> Vec<String> {
     let mut res = Vec::new();
 
     fn valid_push_str(line: &String) -> (bool, String) {
@@ -182,7 +178,7 @@ fn push_pull_duplication(ast: Vec<String>) -> Vec<String> {
     res
 }
 
-fn mov_same(ast: Vec<String>) -> Vec<String> {
+fn redundant_mov(ast: Vec<String>) -> Vec<String> {
     let mut res = Vec::new();
 
     let re = Regex::new(r"mov (.+), ?(.+)").unwrap();
@@ -216,21 +212,52 @@ fn mov_same(ast: Vec<String>) -> Vec<String> {
     res
 }
 
+fn redundant_jmp(ast: Vec<String>) -> Vec<String> {
+    let mut res = Vec::new();
+
+    let mut i: i64 = -1;
+    loop {
+        i += 1;
+        if i >= ast.len() as i64 {
+            break;
+        }
+        let line = ast[i as usize].clone();
+
+        if !line.starts_with("jmp") {
+            res.push(line);
+            continue;
+        }
+        if i + 1 >= ast.len() as i64 {
+            res.push(line);
+            break;
+        }
+        let next = ast[i as usize + 1].clone();
+
+        if !next.ends_with(":")
+            || !line.ends_with(&next[..next.len() - 1])
+        {
+            res.push(line);
+        }
+    }
+
+    res
+}
+
 #[cfg(test)]
 mod tests {
     use crate::strings_vec;
 
     #[test]
-    fn push_pull_duplication() {
+    fn redundant_push() {
         assert_eq!(
-            super::push_pull_duplication(strings_vec![
+            super::redundant_push(strings_vec![
                 "push r11", "pop r12",
             ]),
             strings_vec!["mov r12, r11",]
         );
 
         assert_eq!(
-            super::push_pull_duplication(strings_vec![
+            super::redundant_push(strings_vec![
                 "push r10", "push r11", "pop r12",
                 "pop r13",
             ]),
@@ -238,14 +265,14 @@ mod tests {
         );
 
         assert_eq!(
-            super::push_pull_duplication(strings_vec![
+            super::redundant_push(strings_vec![
                 "push r10", "push r11", "pop r12",
             ]),
             strings_vec!["push r10", "mov r12, r11",]
         );
 
         assert_eq!(
-            super::push_pull_duplication(strings_vec![
+            super::redundant_push(strings_vec![
                 "push r10",
                 "push r11",
                 "push r17",
@@ -264,7 +291,7 @@ mod tests {
         );
 
         assert_eq!(
-            super::push_pull_duplication(strings_vec![
+            super::redundant_push(strings_vec![
                 "push rax", "push rbx", "pop rbx",
                 "pop rax",
             ]),
@@ -272,7 +299,7 @@ mod tests {
         );
 
         assert_eq!(
-            super::push_pull_duplication(strings_vec![
+            super::redundant_push(strings_vec![
                 "push rbx", "push rax", "pop rbx",
                 "pop rax",
             ]),
@@ -284,7 +311,7 @@ mod tests {
         );
 
         assert_eq!(
-            super::push_pull_duplication(strings_vec![
+            super::redundant_push(strings_vec![
                 "push r12", "push rbx", "push rax",
                 "pop rbx", "pop rax", "pop r12",
             ]),
@@ -298,7 +325,7 @@ mod tests {
         );
 
         assert_eq!(
-            super::push_pull_duplication(strings_vec![
+            super::redundant_push(strings_vec![
                 "push rbx", "push rax", "pop rbx",
                 "pop rcx",
             ]),
@@ -311,19 +338,49 @@ mod tests {
     }
 
     #[test]
-    fn mov_same() {
-        let mut res =
-            super::mov_same(strings_vec!["mov r11, r11",]);
+    fn redundant_mov() {
+        let mut res = super::redundant_mov(strings_vec![
+            "mov r11, r11",
+        ]);
         assert_eq!(res, Vec::<String>::new());
 
-        res =
-            super::mov_same(strings_vec!["mov r11, r12",]);
+        res = super::redundant_mov(strings_vec![
+            "mov r11, r12",
+        ]);
         assert_eq!(res, strings_vec!["mov r11, r12",]);
 
-        res = super::mov_same(strings_vec![
+        res = super::redundant_mov(strings_vec![
             "mov r11, r12",
             "mov r11, r11",
         ]);
         assert_eq!(res, strings_vec!["mov r11, r12",]);
+    }
+
+    #[test]
+    fn redundant_jmp() {
+        assert_eq!(
+            super::redundant_jmp(strings_vec![
+                "jmp L1", "L1:",
+            ]),
+            strings_vec!["L1:",]
+        );
+
+        assert_eq!(
+            super::redundant_jmp(strings_vec!["jmp L1",]),
+            strings_vec!["jmp L1",]
+        );
+
+        assert_eq!(
+            super::redundant_jmp(strings_vec![
+                "jmp L1", "jmp L2", "L1:", "L2:",
+            ]),
+            strings_vec!["jmp L1", "jmp L2", "L1:", "L2:"]
+        );
+        assert_eq!(
+            super::redundant_jmp(strings_vec![
+                "jmp L2", "jmp L1", "L1:", "L2:",
+            ]),
+            strings_vec!["jmp L2", "L1:", "L2:"]
+        );
     }
 }
