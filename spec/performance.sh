@@ -47,3 +47,19 @@ perf_test_comp_cpp 1 '149995000' '
         std::cout << sum;
     }
 '
+
+perf_test_comp_cpp 1 '2001000' "
+    fn main () {
+        let mut i = 0;
+        $(printf 'i = i + %d;\n' {1..2000})
+        print(i.str());
+    }
+" "
+    #include <iostream>
+
+    int main () {
+        int i = 0;
+        $(printf 'i = i + %d;\n' {1..2000})
+        std::cout << i;
+    }
+"

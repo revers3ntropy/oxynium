@@ -64,6 +64,8 @@ _$_allocate: ; [size: int, cb: *] => *int
         push _$_alloc_err_msg
         call print
         pop rax
+        push 1
+        call exit
         jmp _$_allocate_end
 
 
@@ -538,6 +540,19 @@ Char.str: ; [char: char, cb: *] => char*
     pop rbp
     ret
 
+
+Char._$_op_eq: ; [lhs: char, rhs: char, cb: *] => bool
+               ; returns true if the characters are equal
+    push rbp
+    mov rbp, rsp
+
+    mov rax, qword [rbp + 16]
+    cmp rax, qword [rbp + 24]
+    sete al
+
+    mov rsp, rbp
+    pop rbp
+    ret
 
 Int._$_op_add: ; [a: int, b: int, cb: *] => int
     push rbp

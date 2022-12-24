@@ -171,6 +171,16 @@ impl Node for FnDeclarationNode {
                 ))
                 .set_interval(self.identifier.interval()));
             }
+
+            // check for no default values
+            for param in &self.params {
+                if param.default_value.is_some() {
+                    return Err(type_error(format!(
+                        "Operator Overload methods cannot have default values"
+                    ))
+                    .set_interval(param.position.clone()));
+                }
+            }
         }
 
         self.params_scope

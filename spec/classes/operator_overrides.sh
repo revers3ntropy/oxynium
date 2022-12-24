@@ -30,27 +30,6 @@ expect '341' '
         print((new Bar { x: 2 } - a).x.str());
     }
 '
-expect_err 'TypeError' '
-    class C {
-        fn + (self) C {
-            return new C
-        }
-    }
-'
-expect_err 'TypeError' '
-    class C {
-        fn + (self, a1: C, a2: C) C {
-            return new C
-        }
-    }
-'
-expect '' '
-    class C {
-        fn + (self, a1: C) C {
-            return new C
-        }
-    }
-'
 
 
 describe 'Do Not Allow Top Level Operator Overloads'
@@ -114,6 +93,34 @@ expect_err 'SyntaxError' '
     class C {
         fn "" (self) Str {
             return ""
+        }
+    }
+'
+expect_err 'TypeError' '
+    class C {
+        fn + (self) C {
+            return new C
+        }
+    }
+'
+expect_err 'TypeError' '
+    class C {
+        fn + (self, a1: C, a2: C) C {
+            return new C
+        }
+    }
+'
+expect_err 'TypeError' '
+    class C {
+        fn + (self, a1: C = new C) C {
+            return new C
+        }
+    }
+'
+expect '' '
+    class C {
+        fn + (self, a1: C) C {
+            return new C
         }
     }
 '

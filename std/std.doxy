@@ -2,6 +2,11 @@ class Void;
 
 primitive Char {
     extern fn str (self) Str,
+
+    extern fn == (self, other: Char) Bool,
+    fn != (self, other: Char) Bool {
+        return !(self == other)
+    }
 }
 
 primitive Bool {
@@ -62,7 +67,45 @@ class Str {
     }
 
     extern fn at (self, i: Int) Char,
+    extern fn at_raw (self, i: Int) Char,
     extern fn len (self) Int,
+
+    fn contains (self, other: Str) Bool {
+        return self.find(other) >= 0
+    }
+    fn find (self, other: Str) Int {
+        if other.len() == 0 {
+            return 0
+        }
+        let mut i = 0;
+        while i < self.len() {
+            if self.at(i) == other.at(0) {
+                let mut j = 1;
+                while j < other.len() && self.at(i + j) == other.at(j) {
+                    j = j + 1
+                }
+                if j == other.len() {
+                    return i
+                }
+            }
+            i = i + 1
+        }
+        return -1
+    }
+
+//    fn substr (self, start: Int, end: Int) Str {
+//        if start < 0 || end < 0 || start > end {
+//            return ""
+//        }
+//        let actual_end = self.len().min(end);
+//        let mut i = start;
+//        let mut s = "";
+//        while i < actual_end {
+//            s = s + self.at_raw(i).str();
+//            i = i + 1
+//        }
+//        return s
+//    }
 
     extern fn == (self, other: Str) Bool,
     extern fn != (self, other: Str) Bool,
