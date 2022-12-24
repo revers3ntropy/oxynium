@@ -4,6 +4,7 @@ use crate::error::{mismatched_types, type_error, Error};
 use crate::get_type;
 use crate::parse::token::{Token, TokenType};
 use crate::position::Interval;
+use crate::post_process::optimise::o1;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
@@ -48,8 +49,15 @@ impl Node for BinOpNode {
                 lhs_asm,
                 self.operator.clone(),
                 rhs_asm,
-            )?;
-            return Ok(res);
+                ctx.clone(),
+            );
+            if res.is_err() {
+                return Err(res
+                    .err()
+                    .unwrap()
+                    .set_interval(self.pos()));
+            }
+            return res;
         }
 
         Ok(format!(
@@ -162,60 +170,104 @@ fn do_inline_bin_op(
     lhs: String,
     op: Token,
     rhs: String,
+    ctx: MutRc<Context>,
 ) -> Result<String, Error> {
-    if vec![TokenType::Plus, TokenType::Sub]
-        .contains(&op.token_type)
-    {
-        let add_0_re =
-            Regex::new(r"^mov rax, 0\n +push rax$")
-                .unwrap();
-        if add_0_re.is_match(lhs.trim()) {
-            if op.token_type == TokenType::Plus {
-                return Ok(rhs);
-            }
-            return Ok(format!(
-                "
+    let push_0_regex =
+        Regex::new(r"^mov rax, 0\n +push rax$").unwrap();
+    let push_1_regex =
+        Regex::new(r"^mov rax, 1\n +push rax$").unwrap();
+    let o1_res = o1(
+        "constant-folding",
+        &ctx.borrow().cli_args.clone(),
+        &|| {
+            if vec![TokenType::Plus, TokenType::Sub]
+                .contains(&op.token_type)
+            {
+                if push_0_regex.is_match(lhs.trim()) {
+                    if op.token_type == TokenType::Plus {
+                        return Some(rhs.clone());
+                    }
+                    return Some(format!(
+                        "
                     {rhs}
                     neg qword [rsp]
                 "
-            ));
-        }
-        if add_0_re.is_match(rhs.trim()) {
-            return Ok(lhs);
-        }
-        let add_1_re =
-            Regex::new(r"^mov rax, 1\n +push rax$")
-                .unwrap();
-        let inc_operator = match op.token_type {
-            TokenType::Plus => "inc",
-            TokenType::Sub => "dec",
-            _ => unreachable!(),
-        };
-        if add_1_re.is_match(lhs.trim()) {
-            if op.token_type == TokenType::Plus {
-                return Ok(format!(
-                    "
+                    ));
+                }
+                if push_0_regex.is_match(rhs.trim()) {
+                    return Some(lhs.clone());
+                }
+
+                let inc_operator = match op.token_type {
+                    TokenType::Plus => "inc",
+                    TokenType::Sub => "dec",
+                    _ => unreachable!(),
+                };
+                if push_1_regex.is_match(lhs.trim()) {
+                    if op.token_type == TokenType::Plus {
+                        return Some(format!(
+                            "
                         {rhs}
                         {inc_operator} qword [rsp]
                     "
-                ));
-            }
-            return Ok(format!(
-                "
+                        ));
+                    }
+                    return Some(format!(
+                        "
                     {rhs}
                     neg qword [rsp]
                     inc qword [rsp]
                 "
-            ));
-        }
-        if add_1_re.is_match(rhs.trim()) {
-            return Ok(format!(
-                "
+                    ));
+                }
+                if push_1_regex.is_match(rhs.trim()) {
+                    return Some(format!(
+                        "
                     {lhs}
                     {inc_operator} qword [rsp]
                 "
-            ));
+                    ));
+                }
+            }
+
+            if op.token_type == TokenType::Astrix {
+                if push_1_regex.is_match(lhs.trim()) {
+                    return Some(rhs.clone());
+                }
+                if push_1_regex.is_match(rhs.trim()) {
+                    return Some(lhs.clone());
+                }
+                if push_0_regex.is_match(lhs.trim()) {
+                    return Some(lhs.clone());
+                }
+                if push_0_regex.is_match(rhs.trim()) {
+                    return Some(rhs.clone());
+                }
+            }
+            if op.token_type == TokenType::FSlash {
+                if push_1_regex.is_match(rhs.trim()) {
+                    return Some(lhs.clone());
+                }
+                if push_0_regex.is_match(lhs.trim())
+                    && !push_0_regex.is_match(rhs.trim())
+                {
+                    return Some(lhs.clone());
+                }
+            }
+            return None;
+        },
+    );
+
+    if let Some(o1_res) = o1_res {
+        if let Some(o1_res) = o1_res {
+            return Ok(o1_res);
         }
+    }
+
+    if op.token_type == TokenType::FSlash
+        && push_0_regex.is_match(rhs.trim())
+    {
+        return Err(type_error("Nice try".to_string()));
     }
 
     match op.token_type {

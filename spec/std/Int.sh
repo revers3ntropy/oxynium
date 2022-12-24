@@ -50,17 +50,12 @@ expect_expr_int '-1' '(-1)'
 expect_expr_int '-3' '(-3)'
 expect_expr_int '-5' '(-1-1-1-1-1)'
 
-expect_expr_int '7' '1+2*3'
-expect_expr_int '5' '1*2+3'
-expect_expr_int '11' '1+2*3+4'
-expect_expr_int '14' '1*2+3*4'
 expect_expr_int '27' '1+2*3+4*5'
 expect_expr_int '-3' '1+2*3-4*5/2'
 expect_expr_int '-96' '0+-1*2+3*-8/-4-100'
 
 expect_expr_int '3'  '(1+2)'
 expect_expr_int '9'  '(1+2)*3'
-expect_expr_int '7'  '1+(2*3)'
 expect_expr_int '11' '1+(2*3)+4'
 expect_expr_int '27' '1+((2*3)+4*5)'
 
@@ -76,7 +71,25 @@ expect '13-132119-2' '
     print((a - 0).str());
     print((0 - 2).str());
 '
-
+expect '10003200' '
+    print((1 * 1).str());
+    print((1 * 0).str());
+    print((0 * 1).str());
+    print((0 * 0).str());
+    print((1 * 3).str());
+    print((2 * 1).str());
+    print((2 * 0).str());
+    print((0 * 2).str());
+'
+expect '10020' '
+    print((1 / 1).str());
+    print((0 / 1).str());
+    print((1 / 3).str());
+    print((2 / 1).str());
+    print((0 / 2).str());
+'
+expect_err 'TypeError' '1 / 0'
+expect_err 'TypeError' '0 / 0'
 
 
 describe 'Extreme Int Values'

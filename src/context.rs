@@ -342,6 +342,8 @@ impl Context {
         self.definitions.insert(name.clone(), symbol);
         Ok(name.clone())
     }
+
+    #[allow(dead_code)]
     pub fn get_def_from_id(
         &self,
         id: &str,
@@ -453,6 +455,7 @@ impl Context {
 
     // Utils
 
+    #[allow(dead_code)]
     pub fn str(&self) -> String {
         let mut s = format!(
             "--- Context {}{}---",

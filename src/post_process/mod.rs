@@ -1,2 +1,2 @@
 pub mod format_asm;
-mod optimise;
+pub mod optimise;

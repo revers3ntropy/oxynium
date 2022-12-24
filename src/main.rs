@@ -20,7 +20,7 @@ mod parse;
 mod position;
 mod post_process;
 mod symbols;
-pub mod types;
+mod types;
 mod util;
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
