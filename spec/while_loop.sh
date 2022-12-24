@@ -20,6 +20,16 @@ expect '' '
         }
     }
 '
+expect '' '
+    fn main () {
+        let mut i = 0;
+        while {
+            i = i + 1;
+            i.max(1);
+            break;
+        }
+    }
+'
 expect '1' '
     fn main () {
         let mut i = 0;
