@@ -10,6 +10,35 @@ expect '1' '
         }
     }
 '
+expect '' '
+    fn main () {
+        let mut i = 0;
+        while {
+            i = i + 1;
+            i.str();
+            break;
+        }
+    }
+'
+expect '1' '
+    fn main () {
+        let mut i = 0;
+        while {
+            i = i + 1;
+            print("1");
+            break;
+        }
+    }
+'
+expect '' '
+    fn main () {
+        let mut i = 0;
+        while {
+            i = i + 1;
+            break;
+        }
+    }
+'
 expect 'hello there' '
     while {
         print("hello");
