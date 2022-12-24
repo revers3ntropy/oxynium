@@ -35,7 +35,7 @@ function describe () {
     if [ $tests_started -eq 1 ]; then
         if [ "$current_spec_has_failed" -eq 0 ]; then
             if [ "$filter" == "" ] || [[ "$current_spec_name" == *"$filter"* ]]; then
-                printf "${GREEN}✔ %s${NC}\n" "$current_spec_name"
+                printf "${GREEN}✔${NC} %s\n" "$current_spec_name"
             fi
         fi
     fi
@@ -280,7 +280,8 @@ function results() {
 
     end=$(date +"%s.%3N")
     runtime=$(echo "$end - $start" | bc -l)
-    time_per_test=$(echo "$runtime * 1000 / $tests" | bc -l)
+    tests_runtime=$(echo "$end - $tests_start" | bc -l)
+    time_per_test=$(echo "$tests_runtime * 1000 / $tests" | bc -l)
     printf "Tests ran in ${ORANGE}%ss${NC} (%.*fms per test)\n" "$runtime" 1 "$time_per_test"
 
     if [ "$warnings" -gt 0 ]; then
@@ -311,6 +312,8 @@ start=$(date +"%s.%3N")
 run_cargo_tests
 
 setup
+
+tests_start=$(date +"%s.%3N")
 
 for f in $(find ./spec -name '*.sh' | sort); do
   current_spec_file="$f"

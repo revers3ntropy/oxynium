@@ -27,6 +27,7 @@ pub fn o1<T>(
     }
 }
 
+#[allow(dead_code)]
 pub fn o2<T>(
     name: &str,
     args: &Args,
@@ -279,6 +280,13 @@ mod tests {
                 "push r11", "pop r12",
             ]),
             strings_vec!["mov r12, r11",]
+        );
+        assert_eq!(
+            super::redundant_push(strings_vec![
+                "push qword [rax]",
+                "pop r12",
+            ]),
+            strings_vec!["mov r12, qword [rax]",]
         );
 
         assert_eq!(
