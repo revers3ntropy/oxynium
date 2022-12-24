@@ -190,7 +190,9 @@ fn do_inline_bin_op(
                     return Some(format!(
                         "
                     {rhs}
-                    neg qword [rsp]
+                    pop rax
+                    neg rax
+                    push rax
                 "
                     ));
                 }
@@ -215,8 +217,10 @@ fn do_inline_bin_op(
                     return Some(format!(
                         "
                     {rhs}
-                    neg qword [rsp]
-                    inc qword [rsp]
+                    pop rax
+                    neg rax
+                    inc rax
+                    push rax
                 "
                     ));
                 }
@@ -224,7 +228,9 @@ fn do_inline_bin_op(
                     return Some(format!(
                         "
                     {lhs}
-                    {inc_operator} qword [rsp]
+                    pop rax
+                    {inc_operator} rax
+                    push rax
                 "
                     ));
                 }
