@@ -39,6 +39,7 @@ expect '' '
         }
     }
 '
+
 expect 'hello there' '
     while {
         print("hello");
