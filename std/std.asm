@@ -396,16 +396,12 @@ Str.at: ; [index: int, string: char*, cb: *] => char
 Str.at_raw: ; [index: int, string: char*, cb: *] => char
             ; returns the character at the given index
             ; does not check if index is out of bounds
-    push rbp
-    mov rbp, rsp
 
-    mov rdx, qword [rbp + 16] ; pop string
-    mov r15, qword [rbp + 24] ; pop index
+    mov rdx, qword [rsp + 8] ; pop string
+    mov r15, qword [rsp + 16] ; pop index
 
     mov rax, qword [rdx + r15 * 8]
 
-    mov rsp, rbp
-    pop rbp
     ret
 
 Str._$_op_eq: ; [lhs: char*, rhs: char*, cb: *] => bool

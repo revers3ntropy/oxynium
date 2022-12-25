@@ -199,7 +199,7 @@ function perf_test_comp_cpp() {
 
     expect "$expected" "$oxy"
 
-    perf_timer_start=$(date +"%s.%3N")
+    perf_timer_start=$(date +"%s.%4N")
 
     errors=$({
         # in.oxy already has code in
@@ -210,30 +210,30 @@ function perf_test_comp_cpp() {
         test_failed "$oxy" 'no errors' "$errors"
     fi
 
-    oxy_comp+=("$(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)")
-    perf_timer_start=$(date +"%s.%3N")
+    oxy_comp+=("$(echo "$(date +"%s.%4N") - $perf_timer_start" | bc -l)")
+    perf_timer_start=$(date +"%s.%4N")
 
     for ((i=0;i<"$n";i++)); do
         ./test-out > /dev/null
     done
 
-    oxy_exec+=("$(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)")
-    perf_timer_start=$(date +"%s.%3N")
+    oxy_exec+=("$(echo "$(date +"%s.%4N") - $perf_timer_start" | bc -l)")
+    perf_timer_start=$(date +"%s.%4N")
 
     echo "$cpp" > out.cpp
 
     gcc out.cpp -O0 -lstdc++
 
-    cpp_comp+=("$(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)")
-    perf_timer_start=$(date +"%s.%3N")
+    cpp_comp+=("$(echo "$(date +"%s.%4N") - $perf_timer_start" | bc -l)")
+    perf_timer_start=$(date +"%s.%4N")
 
     cpp_out=$(./a.out)
     for ((i=1;i<"$n";i++)); do
         ./a.out > /dev/null
     done
 
-    cpp_exec+=("$(echo "$(date +"%s.%3N") - $perf_timer_start" | bc -l)")
-    perf_timer_start=$(date +"%s.%3N")
+    cpp_exec+=("$(echo "$(date +"%s.%4N") - $perf_timer_start" | bc -l)")
+    perf_timer_start=$(date +"%s.%4N")
 
     num_perf_tests=$((num_perf_tests+1))
 
@@ -278,7 +278,7 @@ function results() {
 
     perf_results
 
-    end=$(date +"%s.%3N")
+    end=$(date +"%s.%4N")
     runtime=$(echo "$end - $start" | bc -l)
     tests_runtime=$(echo "$end - $tests_start" | bc -l)
     time_per_test=$(echo "$tests_runtime * 1000 / $tests" | bc -l)
@@ -307,15 +307,15 @@ function clean_up() {
     rm ./test-out
 }
 
-start=$(date +"%s.%3N")
+start=$(date +"%s.%4N")
 
 run_cargo_tests
 
 setup
 
-tests_start=$(date +"%s.%3N")
+tests_start=$(date +"%s.%4N")
 
-for f in $(find ./spec -name '*.sh' | sort); do
+for f in $(find ./test/spec -name '*.sh' | sort); do
   current_spec_file="$f"
   # shellcheck disable=SC1090
   source "$f";

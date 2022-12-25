@@ -1,0 +1,39 @@
+#!/bin/bash
+
+YELLOW='\033[0;33m'
+NC='\033[0m'
+
+start=$(date +%s.%N)
+
+(
+    mv ./test/ubuntu.Dockerfile ./Dockerfile
+    printf "${YELLOW}  Building 'Ubuntu'... ${NC}\n"
+    sudo docker build -t oxy-spec-ubuntu .
+    printf "${YELLOW}  Running 'Ubuntu'... ${NC}\n"
+    sudo docker run oxy-spec-ubuntu
+    mv ./Dockerfile ./test/ubuntu.Dockerfile
+)
+
+(
+    mv ./test/alpine.Dockerfile ./Dockerfile
+    printf "${YELLOW}  Building 'Alpine'... ${NC}\n"
+    sudo docker build -t oxy-spec-alpine .
+    printf "${YELLOW}  Running 'Alpine'... ${NC}\n"
+    sudo docker run oxy-spec-alpine
+    mv ./Dockerfile ./test/alpine.Dockerfile
+)
+
+(
+    mv test/debian.Dockerfile Dockerfile
+    printf "${YELLOW}  Building 'Debian'... ${NC}\n"
+    sudo docker build -t oxy-spec-debian .
+    printf "${YELLOW}  Running 'Debian'... ${NC}\n"
+    sudo docker run oxy-spec-debian
+    mv Dockerfile test/debian.Dockerfile
+)
+
+end=$(date +%s.%N)
+runtime=$(echo "$end - $start" | bc -l)
+printf "${YELLOW}  Runtime: %s seconds ${NC}\n" "$runtime"
+
+
