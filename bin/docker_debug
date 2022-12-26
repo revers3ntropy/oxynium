@@ -1,0 +1,10 @@
+#!/bin/bash
+
+sudo docker build -t oxy-testing .
+
+sudo docker run \
+              -it \
+              --mount type=bind,source=/tmp/,target=/tmp/ \
+              --mount type=bind,source=~/dev/oxynium,target=/app \
+              oxy-testing:latest \
+              bash

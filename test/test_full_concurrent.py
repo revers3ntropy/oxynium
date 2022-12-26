@@ -20,8 +20,8 @@ def main():
     with Pool() as pool:
         result = pool.map(run_test, [
             ("ubuntu",),
-            #("arch",),
-            #("alpine",),
+            ("arch",),
+            ("alpine",),
             ("debian",),
         ])
         for success, output, name in result:
