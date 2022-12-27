@@ -1,10 +1,45 @@
 #!/bin/bash
 
+dockerfile="
+FROM ubuntu:latest
+
+WORKDIR /app
+
+COPY . .
+
+SHELL [\"/bin/bash\", \"-c\"]
+
+RUN apt-get update && apt-get install -y nasm curl build-essential bc gdb valgrind
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH=\"/root/.cargo/bin:\${PATH}\"
+
+RUN bin/compile_std
+RUN cargo run -- -ko=res-out --std std.asm test.oxy
+
+CMD [\"./res-out\"]
+
+"
+
 sudo docker build -t oxy-testing .
 
 sudo docker run \
               -it \
               --mount type=bind,source=/tmp/,target=/tmp/ \
-              --mount type=bind,source=~/dev/oxynium,target=/app \
+              --mount type=bind,source=/home/joseph/dev/oxynium,target=/app \
               oxy-testing:latest \
               bash
+
+# NEXT:
+# On host:
+
+# echo '/tmp/core.%e.%p' | sudo tee /proc/sys/kernel/core_pattern
+
+
+# In container:
+
+# ulimit -c unlimited
+# bin/run test.oxy
+# ls /tmp/core.*
+# gdb res-out /tmp/core.res-out.<n>
+# bt

@@ -181,3 +181,16 @@ expect_expr_bool 'false' '"".contains("ab")'
 expect_expr_bool 'true'  '"a💖b💖c💖".contains("💖")'
 expect_expr_bool 'true'  '"a💖b💖c💖".contains("💖c")'
 expect_expr_bool 'true'  '"a💖b💖c💖".contains("💖c💖")'
+
+
+describe 'fn Str.utf8_size'
+
+expect_expr_int '0' '"".utf8_size()'
+expect_expr_int '1' '"a".utf8_size()'
+expect_expr_int '3' '"abc".utf8_size()'
+expect_expr_int '4' '"💖".utf8_size()'
+expect_expr_int '3' '"﷽".utf8_size()'
+expect_expr_int '7' '"💖﷽".utf8_size()'
+expect_expr_int '8' '"🇨🇦".utf8_size()'
+expect_expr_int '19' '"1🇨🇦2💖3﷽4".utf8_size()'
+

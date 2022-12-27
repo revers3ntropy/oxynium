@@ -6,8 +6,9 @@
 /res
 
 # testing
-/Dockerfile
+/*Dockerfile
 /test/*.log
+*.log*
 out
 *-out*
 /*.asm

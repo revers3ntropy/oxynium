@@ -7,7 +7,12 @@ def run_test(data: tuple[str]) -> tuple[bool, str, str]:
     print(f"Running '{name}'...")
     try:
         return True, subprocess.run(
-            ["sudo", "docker", "run", f"oxy-spec-{name}"],
+            [
+                "sudo", "docker", "run",
+                 '--memory="1g"',
+                 "--mount type=bind,source=/tmp/,target=/tmp/",
+                 f"oxy-spec-{name}"
+            ],
             check=True,
             capture_output=True
         ).stdout.decode(), name
@@ -20,9 +25,9 @@ def main():
     with Pool() as pool:
         result = pool.map(run_test, [
             ("ubuntu",),
-            ("arch",),
-            ("alpine",),
-            ("debian",),
+            #("arch",),
+            #("alpine",),
+            #("debian",),
         ])
         for success, output, name in result:
             out = (u'' + output)\

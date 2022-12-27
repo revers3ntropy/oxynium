@@ -1,5 +1,7 @@
 describe 'Composition with Classes'
 
+expect '' '1.str()'
+
 expect '13' '
     class S {
         x: Int,

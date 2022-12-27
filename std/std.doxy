@@ -93,6 +93,8 @@ class Str {
         return -1
     }
 
+    extern fn utf8_size (self) Int,
+
 //    fn substr (self, start: Int, end: Int) Str {
 //        if start < 0 || end < 0 || start > end {
 //            return ""
@@ -120,3 +122,4 @@ fn println (msg: Str, line_end="\n") {
 extern fn print_nl ();
 extern fn exit (code: Int = 0);
 extern fn input (prompt: Str = "", buffer_size: Int = 1000) Str;
+extern fn str_from_utf8 (utf8: Str) Str;

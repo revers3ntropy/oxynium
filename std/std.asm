@@ -1,4 +1,4 @@
-    extern malloc, _read, memset, memcpy, sprintf, snprintf
+    extern malloc, memset, memcpy, sprintf, free
 
 _$_print_digit: ; [number: int, cb: *]  => Void
     push rbp
@@ -45,8 +45,8 @@ _$_allocate: ; [size: int, cb: *] => *int
     jle _$_allocate_end
     call malloc WRT ..plt
 
-    test rax, rax ; if rax is NULL, fail
-    jz _$_allocate_error
+    cmp rax, 0 ; if rax is NULL, fail
+    je _$_allocate_error
 
     push rax
     mov rdi, rax
@@ -179,37 +179,28 @@ Int.str: ; [self: Int, cb: *] => String
     push rbp
     mov rbp, rsp
 
-    ; find length required using `snprintf(NULL, 0, "%d", n)`
-    xor rax, rax
-    mov rdi, 0
-    mov rsi, 0
-    mov rdx, _$_sprintf_Int_str
-    mov r10, qword [rbp + 16]
-    push r10
-    call snprintf WRT ..plt
-    pop rcx
-
     ; allocate string
-    add rax, 64
-    push rax
-    call _$_allocate
-    pop r15
+    mov rdi, 64    ; much larger than needed
+    call malloc WRT ..plt
 
-    push rax ; save char*
-    ; write string to allocated memory using `sprintf(buf, "%d", n)`
+    mov r15, rax ; save char*
+    ; write string to allocated memory using `sprintf(buf, "%lld", n)`
     mov rdi, rax
-    xor rax, rax
     mov rsi, _$_sprintf_Int_str
-    xor r10, r10
     mov rdx, qword [rbp + 16]
-    push rdx
+    mov rax, 0
+    mov rcx, rsi
+    mov r8, 0
+    mov r9, 0
     call sprintf WRT ..plt
-    pop rcx
-    pop rax
+
+    mov rax, r15
 
     push rax
     call str_from_utf8
-    pop rcx
+    pop rdi
+    ; clean up old string
+    ;call free WRT ..plt
 
     mov rsp, rbp
     pop rbp
@@ -293,14 +284,12 @@ str_from_utf8: ; [utf8: char*, cb: *] => char*
     ._$_find_chars_end:
 
         ; put the string (currently on stack) into a heap allocated array
-        push r13 ; save r13
+        push r13 ; save r13 = num characters
 
         mov rdi, r13
-        inc rdi ; add space for null terminator
+        add rdi, 64 ; add space for null terminator
         imul rdi, 8
-        push rdi
-        call _$_allocate
-        pop rdi
+        call malloc WRT ..plt
         ; rax = return value (pointer to heap allocated char*)
 
         pop r13 ; restore r13
@@ -314,6 +303,36 @@ str_from_utf8: ; [utf8: char*, cb: *] => char*
         jmp ._$_move_loop
 
     ._$_move_return:
+        mov rsp, rbp
+        pop rbp
+        ret
+
+Str.utf8_size: ; [self: Str, cb: *] => Int
+    push rbp
+    mov rbp, rsp
+
+    mov r15, qword [rbp + 16]
+
+    push r15
+    call Str.len
+    pop r15
+
+    mov rdx, rax ; rdx = number of characters
+    imul rdx, 8  ; rdx = index of last byte
+    add rdx, r15 ; rdx = pointer to last byte
+
+    xor rax, rax
+    dec r15
+    .loop:
+        inc r15
+        cmp r15, rdx
+        jg .end
+        cmp byte [r15], 0
+        je .loop
+        inc rax
+        jmp .loop
+
+    .end:
         mov rsp, rbp
         pop rbp
         ret

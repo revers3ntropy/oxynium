@@ -17,6 +17,8 @@ tests_started=0
 
 filter="$1"
 
+ulimit -c unlimited
+
 function run_cargo_tests {
     cargo test
     # exit if tests failed

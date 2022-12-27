@@ -5,21 +5,21 @@ NC='\033[0m'
 
 start=$(date +%s.%N)
 
-cp ./test/arch.Dockerfile ./Dockerfile
-printf "${YELLOW}  Building 'Arch'... ${NC}\n"
-sudo docker build -t oxy-spec-arch .
-
 cp ./test/ubuntu.Dockerfile ./Dockerfile
 printf "${YELLOW}  Building 'Ubuntu'... ${NC}\n"
 sudo docker build -t oxy-spec-ubuntu .
 
-cp ./test/alpine.Dockerfile ./Dockerfile
-printf "${YELLOW}  Building 'Alpine'... ${NC}\n"
-sudo docker build -t oxy-spec-alpine .
+#cp ./test/arch.Dockerfile ./Dockerfile
+#printf "${YELLOW}  Building 'Arch'... ${NC}\n"
+#sudo docker build -t oxy-spec-arch .
 
-cp test/debian.Dockerfile Dockerfile
-printf "${YELLOW}  Building 'Debian'... ${NC}\n"
-sudo docker build -t oxy-spec-debian .
+#cp ./test/alpine.Dockerfile ./Dockerfile
+#printf "${YELLOW}  Building 'Alpine'... ${NC}\n"
+#sudo docker build -t oxy-spec-alpine .
+
+#cp test/debian.Dockerfile Dockerfile
+#printf "${YELLOW}  Building 'Debian'... ${NC}\n"
+#sudo docker build -t oxy-spec-debian .
 
 rm Dockerfile
 
@@ -28,5 +28,3 @@ sudo python3 ./test/test_full_concurrent.py
 end=$(date +%s.%N)
 runtime=$(echo "$end - $start" | bc -l)
 printf "${YELLOW}  Runtime: %s seconds ${NC}\n" "$runtime"
-
-
