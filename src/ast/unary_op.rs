@@ -1,3 +1,4 @@
+use crate::ast::str::StrNode;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{mismatched_types, Error};
@@ -45,6 +46,34 @@ impl Node for UnaryOpNode {
                         .asm(ctx.clone())?
                 )
             }
+            TokenType::Identifier => {
+                match self.operator.clone().literal.unwrap().as_str() {
+                    "typeof" => {
+                        let rhs_type = self.rhs
+                            .borrow()
+                            .type_check(ctx.clone())?;
+                        let rhs_type = rhs_type.t;
+                        let rhs_type =
+                            if rhs_type.borrow().as_type_type().is_some() {
+                                "Type".to_string()
+                            } else {
+                                rhs_type.borrow().str()
+                            };
+                        StrNode {
+                            value: Token {
+                                token_type: TokenType::String,
+                                literal: Some(rhs_type),
+                                start: self.rhs.borrow().pos().0,
+                                end: self.rhs.borrow().pos().1,
+                            },
+                        }.asm(ctx.clone())?
+                    }
+                    _ => panic!(
+                        "Invalid arithmetic unary operator: {:?}",
+                        self.operator
+                    )
+                }
+            }
             _ => {
                 panic!(
                     "Invalid arithmetic unary operator: {:?}",
@@ -58,11 +87,6 @@ impl Node for UnaryOpNode {
         &self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        let t = match self.operator.token_type {
-            TokenType::Sub => get_type!(ctx, "Int"),
-            _ => get_type!(ctx, "Bool"),
-        };
-
         let TypeCheckRes {
             t: value_type,
             unknowns,
@@ -71,6 +95,19 @@ impl Node for UnaryOpNode {
             .rhs
             .borrow_mut()
             .type_check(ctx.clone())?;
+
+        let t = match self.operator.token_type {
+            TokenType::Sub => get_type!(ctx, "Int"),
+            TokenType::Identifier => match self.operator.clone().literal.unwrap().as_str() {
+                "typeof" => return Ok(TypeCheckRes::from_ctx(&ctx, "Str", unknowns)),
+                _ => panic!(
+                    "Invalid arithmetic unary operator: {:?}",
+                    self.operator
+                )
+            }
+            _ => get_type!(ctx, "Bool"),
+        };
+
         if !t.borrow().contains(value_type.clone()) {
             return Err(mismatched_types(
                 t.clone(),

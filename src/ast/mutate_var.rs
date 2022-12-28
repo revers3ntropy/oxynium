@@ -52,7 +52,8 @@ impl Node for MutateVar {
         if !is_valid_identifier(&self.id())
             || !ctx.borrow_mut().has_dec_with_id(&self.id())
         {
-            return Err(unknown_symbol(self.id().clone()));
+            return Err(unknown_symbol(self.id().clone())
+                .set_interval(self.identifier.interval()));
         }
 
         let TypeCheckRes {

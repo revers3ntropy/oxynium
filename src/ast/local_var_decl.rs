@@ -106,22 +106,32 @@ impl Node for LocalVarNode {
             value_type = type_annotation_type;
         }
 
-        let offset =
-            ctx.borrow_mut().get_new_local_var_offset();
-        ctx.borrow_mut().declare(
-            SymbolDec {
-                name: self.id(),
-                id: format!("qword [rbp - {offset}]"),
-                is_constant: !self.mutable,
-                is_type: false,
-                require_init: true,
-                is_defined: false,
-                is_param: false,
-                type_: value_type.clone(),
-                position: self.pos(),
-            },
-            self.identifier.interval(),
-        )?;
+        if ctx.borrow().is_frozen() {
+            // update with latest type
+            ctx.borrow_mut().update_dec_type(
+                &self.id(),
+                value_type.clone(),
+                self.pos(),
+            )?;
+        } else {
+            let offset =
+                ctx.borrow_mut().get_new_local_var_offset();
+            ctx.borrow_mut().declare(
+                SymbolDec {
+                    name: self.id(),
+                    id: format!("qword [rbp - {offset}]"),
+                    is_constant: !self.mutable,
+                    is_type: false,
+                    require_init: true,
+                    is_defined: false,
+                    is_param: false,
+                    type_: value_type.clone(),
+                    position: self.pos(),
+                },
+                self.identifier.interval(),
+            )?;
+        }
+
         Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))
     }
 

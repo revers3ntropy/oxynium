@@ -1,42 +1,27 @@
 class Void;
 
 primitive Char {
-    extern fn str (self) Str,
-
     extern fn == (self, other: Char) Bool,
     fn != (self, other: Char) Bool {
         return !(self == other)
     }
+
+    extern fn str (self) Str,
 }
 
 primitive Bool {
+    extern fn || (self, other: Bool) Bool,
+    extern fn && (self, other: Bool) Bool,
+
     fn str (self) Str {
         if self {
             return "true"
         }
         return "false"
     }
-
-    extern fn || (self, other: Bool) Bool,
-    extern fn && (self, other: Bool) Bool,
 }
 
 primitive Int {
-    fn max (self, other: Int) Int {
-        if self > other {
-            return self
-        }
-        return other
-    }
-    fn min (self, other: Int) Int {
-        if self < other {
-            return self
-        }
-        return other
-    }
-
-    extern fn str (self) Str,
-
     extern fn +  (self, n: Int) Int,
     extern fn -  (self, n: Int) Int,
     extern fn *  (self, n: Int) Int,
@@ -48,31 +33,40 @@ primitive Int {
     extern fn <= (self, n: Int) Bool,
     extern fn >  (self, n: Int) Bool,
     extern fn >= (self, n: Int) Bool,
+
+    fn max (self, other = 9223372036854775807) Int {
+        if self > other {
+            return self
+        }
+        return other
+    }
+
+    fn min (self, other = -9223372036854775807 - 1) Int {
+        if self < other {
+            return self
+        }
+        return other
+    }
+
+    extern fn str (self) Str,
 }
 
 class Str {
-    fn str (self) Str {
-        return self
-    }
-    fn concat (self, other: Str) Str {
-        return self + other
-    }
-    fn repeat (self, n: Int) Str {
-        if n < 1 {
-            return ""
-        }
-        // TODO: helper function in assembly to do this without allocating
-        //       a new string each time through the loop
-        return self + self.repeat(n - 1)
-    }
+    extern fn == (self, other: Str) Bool,
+    extern fn != (self, other: Str) Bool,
+    extern fn +  (self, other: Str) Str,
 
     extern fn at (self, i: Int) Char,
     extern fn at_raw (self, i: Int) Char,
-    extern fn len (self) Int,
+
+    fn concat (self, other: Str) Str {
+        return self + other
+    }
 
     fn contains (self, other: Str) Bool {
         return self.find(other) >= 0
     }
+
     fn find (self, other: Str) Int {
         if other.len() == 0 {
             return 0
@@ -82,7 +76,7 @@ class Str {
             if self.at(i) == other.at(0) {
                 let mut j = 1;
                 while j < other.len() && self.at(i + j) == other.at(j) {
-                    j = j + 1
+                    j = j + 1;
                 }
                 if j == other.len() {
                     return i
@@ -93,33 +87,151 @@ class Str {
         return -1
     }
 
+    extern fn len (self) Int,
+
+    fn repeat (self, n: Int) Str {
+        if n < 1 {
+            return ""
+        }
+        // TODO: helper function in assembly to do this without allocating
+        //       a new string each time through the loop
+        return self + self.repeat(n - 1)
+    }
+
+    fn str (self) Str {
+        return self
+    }
+
+    fn substr (self, start = 0, end = 0) Str {
+        println("substr: "+self+" "+start.str()+"-"+end.str());
+        if self == "" {
+            return ""
+        }
+        if end < 1 {
+            return self.substr(start, Int.max(self.len() + end, 0))
+        }
+        if start < 0 {
+            return self.substr(Int.max(self.len() + start, 0), end)
+        }
+        if start >= end {
+            return ""
+        }
+        let actual_end = Int.min(self.len(), end);
+        println(actual_end.str());
+        let mut i = Int.max(start, 0);
+        let mut s = "";
+        while i < actual_end {
+            // use Str.at_raw here as bounds checking has already been done
+            // and we don't want to do it again every iteration
+            s = s + self.at_raw(i).str();
+            i = i + 1
+        }
+        return s
+    }
+
+    fn starts_with (self, other: Str) Bool {
+        if other.len() > self.len() {
+            return false
+        }
+        let mut i = 0;
+        while i < other.len() {
+            if self.at(i) != other.at(i) {
+                return false
+            }
+            i = i + 1
+        }
+        return true
+    }
+
+    fn ends_with (self, other: Str) Bool {
+        if other.len() > self.len() {
+            return false
+        }
+        let mut i = 0;
+        while i < other.len() {
+            if self.at(self.len() - i - 1) != other.at(other.len() - i - 1) {
+                return false
+            }
+            i = i + 1
+        }
+        return true
+    }
+
+    fn reversed (self) Str {
+        let mut i = 0;
+        let mut s = "";
+        while i < self.len() {
+            s = self.at(i).str() + s;
+            i = i + 1
+        }
+        return s
+    }
+
+    fn replace (self, search: Str, replace_with = "", max = -1) Str {
+        if search.len() == 0 {
+            return self
+        }
+        if max == 0 {
+            return self
+        }
+        let mut i = 0;
+        let mut s = "";
+        let mut replacements = 0;
+        while i < self.len() {
+            if self.at(i) == search.at(0) {
+                let mut j = 1;
+                while j < search.len() && self.at(i + j) == search.at(j) {
+                    j = j + 1;
+                }
+                if j == search.len() {
+                    s = s + replace_with;
+                    i = i + j;
+                    replacements = replacements + 1;
+                    if max >= 0 && replacements >= max {
+                        s = s + self.substr(i);
+                        break
+                    }
+                    continue
+                }
+            }
+            s = s + self.at(i).str();
+            i = i + 1
+        }
+        return s
+    }
+
+    fn insert (self, index: Int, other: Str) Str {
+        if index < 0 {
+            return self.insert(self.len() + index + 1, other)
+        }
+        if index >= self.len() {
+            return self + other
+        }
+        return self.substr(0, index) + other + self.substr(index)
+    }
+
+    fn remove (self, index: Int, count = 1) Str {
+        if index < 0 {
+            return self.remove(self.len() + index, count)
+        }
+        if index >= self.len() {
+            return self
+        }
+        if count < 1 {
+            return self
+        }
+        return self.substr(0, index) + self.substr(index + count)
+    }
+
     extern fn utf8_size (self) Int,
-
-//    fn substr (self, start: Int, end: Int) Str {
-//        if start < 0 || end < 0 || start > end {
-//            return ""
-//        }
-//        let actual_end = self.len().min(end);
-//        let mut i = start;
-//        let mut s = "";
-//        while i < actual_end {
-//            s = s + self.at_raw(i).str();
-//            i = i + 1
-//        }
-//        return s
-//    }
-
-    extern fn == (self, other: Str) Bool,
-    extern fn != (self, other: Str) Bool,
-    extern fn +  (self, other: Str) Str,
 }
 
+extern fn exit (code: Int = 0);
+extern fn input (prompt: Str = "", buffer_size: Int = 1000) Str;
 extern fn print (msg: Str);
 fn println (msg: Str, line_end="\n") {
     print(msg);
     print(line_end);
 }
 extern fn print_nl ();
-extern fn exit (code: Int = 0);
-extern fn input (prompt: Str = "", buffer_size: Int = 1000) Str;
 extern fn str_from_utf8 (utf8: Str) Str;

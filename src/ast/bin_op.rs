@@ -35,7 +35,7 @@ impl Node for BinOpNode {
             .rhs
             .borrow_mut()
             .type_check(ctx.clone())?;
-        if can_do_inline_bin_op(
+        if can_do_inline(
             ctx.clone(),
             lhs.t.clone(),
             rhs.t.clone(),
@@ -45,7 +45,7 @@ impl Node for BinOpNode {
                 self.lhs.borrow_mut().asm(ctx.clone())?;
             let rhs_asm =
                 self.rhs.borrow_mut().asm(ctx.clone())?;
-            let res = do_inline_bin_op(
+            let res = do_inline(
                 lhs_asm,
                 self.operator.clone(),
                 rhs_asm,
@@ -92,6 +92,11 @@ impl Node for BinOpNode {
         unknowns += rhs_tr.unknowns;
 
         if lhs_tr.t.borrow().is_unknown() {
+            if ctx.borrow().throw_on_unknowns() {
+                return Err(type_error(format!(
+                    "Unknown type on left hand side of binary operator"
+                )).set_interval(self.lhs.borrow().pos()));
+            }
             return Ok(TypeCheckRes::unknown_and(unknowns));
         }
 
@@ -137,7 +142,7 @@ impl Node for BinOpNode {
     }
 }
 
-fn can_do_inline_bin_op(
+fn can_do_inline(
     ctx: MutRc<Context>,
     lhs_type: MutRc<dyn Type>,
     rhs_type: MutRc<dyn Type>,
@@ -166,7 +171,7 @@ fn can_do_inline_bin_op(
     true
 }
 
-fn do_inline_bin_op(
+fn do_inline(
     lhs: String,
     op: Token,
     rhs: String,

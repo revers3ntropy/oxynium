@@ -150,7 +150,7 @@ impl Node for ExecRootNode {
         // so that things aren't redeclared
         ctx.borrow_mut().freeze();
 
-        // println!("(Pass 0) Unknowns: {} ", unknowns);
+        //println!("(Pass 0) Unknowns: {} ", unknowns);
         //let mut i = 0;
         while unknowns > 0 {
             //i += 1;
@@ -158,7 +158,11 @@ impl Node for ExecRootNode {
                 .statements
                 .borrow_mut()
                 .type_check(ctx.clone())?;
-            // println!("(Pass {}) Unknowns: {} ", i, res.unknowns);
+
+            // println!(
+            //     "(Pass {}) Unknowns: {} ",
+            //     i, res.unknowns
+            // );
 
             if res.unknowns >= unknowns {
                 break;

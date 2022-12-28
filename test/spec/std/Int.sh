@@ -142,6 +142,10 @@ expect_expr_int '0'   '0.max(0)'
 expect_expr_int '1'   '0.max(1)'
 expect_expr_int '1'   '1.max(0)'
 expect_expr_int '1'   '1.max(1)'
+expect_expr_int '9223372036854775807'   '0.max()'
+expect_expr_int '9223372036854775807'   '1.max()'
+expect_expr_int '9223372036854775807'   '9223372036854775807.max()'
+expect_expr_int '9223372036854775807'  '(-9223372036854775807).max()'
 
 describe 'fn Int.min'
 
@@ -155,6 +159,10 @@ expect_expr_int '0'    '0.min(1)'
 expect_expr_int '0'    '1.min(0)'
 expect_expr_int '0'    '0.min(0)'
 expect_expr_int '1'    '1.min(1)'
+expect_expr_int '-9223372036854775808'   '0.min()'
+expect_expr_int '-9223372036854775808'   '(-1).min()'
+expect_expr_int '-9223372036854775808'   '(-9223372036854775807).min()'
+expect_expr_int '-9223372036854775808'  '9223372036854775807.min()'
 
 describe 'fn Int.>'
 

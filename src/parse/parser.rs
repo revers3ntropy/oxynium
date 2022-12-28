@@ -1158,6 +1158,18 @@ impl Parser {
                 if tok.clone().literal.unwrap() == "new" {
                     return self.class_init();
                 }
+                if tok.clone().literal.unwrap() == "typeof"
+                {
+                    let type_of =
+                        res.register(self.expression());
+                    ret_on_err!(res);
+
+                    res.success(new_mut_rc(UnaryOpNode {
+                        operator: tok,
+                        rhs: type_of.unwrap(),
+                    }));
+                    return res;
+                }
                 if tok.clone().literal.unwrap() == "false"
                     || tok.clone().literal.unwrap()
                         == "true"
