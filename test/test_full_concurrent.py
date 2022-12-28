@@ -25,6 +25,7 @@ def main():
             ("arch",),
             ("alpine",),
             ("debian",),
+            #("macos",),
         ])
         for success, output, name in result:
             out = (u'' + output)\

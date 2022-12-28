@@ -5,21 +5,20 @@ NC='\033[0m'
 
 start=$(date +%s.%N)
 
-cp ./test/ubuntu.Dockerfile ./Dockerfile
-printf "${YELLOW}  Building 'Ubuntu'... ${NC}\n"
-sudo docker build -t oxy-spec-ubuntu .
+function run_test() {
+    name=$1
 
-cp ./test/arch.Dockerfile ./Dockerfile
-printf "${YELLOW}  Building 'Arch'... ${NC}\n"
-sudo docker build -t oxy-spec-arch .
+    cp test/"$name".Dockerfile Dockerfile
+    printf "${YELLOW}  Building '$name'... ${NC}\n"
+    sudo docker build -t oxy-spec-"$name" .
+}
 
-cp ./test/alpine.Dockerfile ./Dockerfile
-printf "${YELLOW}  Building 'Alpine'... ${NC}\n"
-sudo docker build -t oxy-spec-alpine .
-
-cp test/debian.Dockerfile Dockerfile
-printf "${YELLOW}  Building 'Debian'... ${NC}\n"
-sudo docker build -t oxy-spec-debian .
+#run_test "macos"
+run_test "ubuntu"
+run_test "alpine"
+run_test "centos"
+run_test "debian"
+#run_test "windows"
 
 rm Dockerfile
 
