@@ -9,17 +9,17 @@ cp ./test/ubuntu.Dockerfile ./Dockerfile
 printf "${YELLOW}  Building 'Ubuntu'... ${NC}\n"
 sudo docker build -t oxy-spec-ubuntu .
 
-#cp ./test/arch.Dockerfile ./Dockerfile
-#printf "${YELLOW}  Building 'Arch'... ${NC}\n"
-#sudo docker build -t oxy-spec-arch .
+cp ./test/arch.Dockerfile ./Dockerfile
+printf "${YELLOW}  Building 'Arch'... ${NC}\n"
+sudo docker build -t oxy-spec-arch .
 
-#cp ./test/alpine.Dockerfile ./Dockerfile
-#printf "${YELLOW}  Building 'Alpine'... ${NC}\n"
-#sudo docker build -t oxy-spec-alpine .
+cp ./test/alpine.Dockerfile ./Dockerfile
+printf "${YELLOW}  Building 'Alpine'... ${NC}\n"
+sudo docker build -t oxy-spec-alpine .
 
-#cp test/debian.Dockerfile Dockerfile
-#printf "${YELLOW}  Building 'Debian'... ${NC}\n"
-#sudo docker build -t oxy-spec-debian .
+cp test/debian.Dockerfile Dockerfile
+printf "${YELLOW}  Building 'Debian'... ${NC}\n"
+sudo docker build -t oxy-spec-debian .
 
 rm Dockerfile
 

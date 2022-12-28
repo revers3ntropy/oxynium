@@ -43,7 +43,15 @@ _$_allocate: ; [size: int, cb: *] => *int
     mov rdi, qword [rbp + 16]
     cmp rdi, 0
     jle _$_allocate_end
+
+    ; https://stackoverflow.com/questions/74932257
+    ; stack alignment around call to malloc
+    push rbp
+    mov rbp, rsp
+    and rsp, -16
     call malloc WRT ..plt
+    mov rsp, rbp
+    pop rbp
 
     cmp rax, 0 ; if rax is NULL, fail
     je _$_allocate_error
@@ -52,7 +60,14 @@ _$_allocate: ; [size: int, cb: *] => *int
     mov rdi, rax
     mov rsi, 0
     mov rdx, qword [rbp + 16]
+
+    push rbp
+    mov rbp, rsp
+    and rsp, -16
     call memset WRT ..plt
+    mov rsp, rbp
+    pop rbp
+
     pop rax
 
     _$_allocate_end:
@@ -123,7 +138,9 @@ input: ; [buffer_size: int, prompt: char*, cb: *] => String
 
     mov rdi, qword [rbp + 24] ; buffer_size
     add rdi, 1                ; add space for null byte
-    call malloc WRT ..plt
+    push rdi
+    call _$_allocate
+    add rsp, 8
     mov r15, rax              ; r15 = string pointer
 
     mov rax, 0
@@ -180,8 +197,9 @@ Int.str: ; [self: Int, cb: *] => String
     mov rbp, rsp
 
     ; allocate string
-    mov rdi, 64    ; much larger than needed
-    call malloc WRT ..plt
+    push 64 ; much larger than needed
+    call _$_allocate
+    add rsp, 8
 
     mov r15, rax ; save char*
     ; write string to allocated memory using `sprintf(buf, "%lld", n)`
@@ -192,15 +210,19 @@ Int.str: ; [self: Int, cb: *] => String
     mov rcx, rsi
     mov r8, 0
     mov r9, 0
+
+    push rbp
+    mov rbp, rsp
+    and rsp, -16
     call sprintf WRT ..plt
+    mov rsp, rbp
+    pop rbp
 
     mov rax, r15
 
     push rax
     call str_from_utf8
     pop rdi
-    ; clean up old string
-    ;call free WRT ..plt
 
     mov rsp, rbp
     pop rbp
@@ -289,7 +311,9 @@ str_from_utf8: ; [utf8: char*, cb: *] => char*
         mov rdi, r13
         add rdi, 64 ; add space for null terminator
         imul rdi, 8
-        call malloc WRT ..plt
+        push rdi
+        call _$_allocate
+        add rsp, 8
         ; rax = return value (pointer to heap allocated char*)
 
         pop r13 ; restore r13
@@ -502,12 +526,12 @@ Str._$_op_add: ; [other: char*, self: char*, cb: *] => char*
                                ; and the new string
     push qword [rbp + 16]      ; self
     call Str.len
-    pop rcx
+    add rsp, 8
     mov qword [rbp - 8], rax   ; [rbp - 8] = self.len()
 
     push qword [rbp + 24]      ; other
     call Str.len
-    pop rcx
+    add rsp, 8
     mov qword [rbp - 16], rax  ; [rbp - 16] = other.len()
 
     add rax, qword [rbp - 8]   ; rax = other.len() + self.len()
@@ -515,15 +539,20 @@ Str._$_op_add: ; [other: char*, self: char*, cb: *] => char*
     imul rax, 8                ; rax = (lhs.len() + rhs.len() + 1) * 8
     push rax
     call _$_allocate           ; rax = malloc((lhs.len() + rhs.len() + 1) * 8)
-    pop rcx
+    add rsp, 8
     mov qword [rbp - 24], rax  ; [rbp - 24] = new string
-
 
     mov rdx, qword [rbp - 8]   ; rcx = self.len()
     imul rdx, 8                ; rcx = self.len() * 8
     mov rsi, qword [rbp + 16]  ; rsi = self
     mov rdi, qword [rbp - 24]  ; rdx = new string
+
+    push rbp
+    mov rbp, rsp               ; stack is 16-byte aligned
+    and rsp, -16
     call memcpy WRT ..plt      ; memcpy(new string, self, self.len() * 8)
+    mov rsp, rbp
+    pop rbp
 
     mov rdx, qword [rbp - 16]  ; rcx = other.len()
     imul rdx, 8                ; rcx = other.len() * 8
@@ -532,7 +561,13 @@ Str._$_op_add: ; [other: char*, self: char*, cb: *] => char*
     mov rax, qword [rbp - 8]   ; rax = other.len()
     imul rax, 8                ; rax = other.len() * 8
     add rdi, rax               ; rdx = new string + other.len() * 8
+
+    push rbp
+    mov rbp, rsp               ; stack is 16-byte aligned
+    and rsp, -16
     call memcpy WRT ..plt      ; memcpy(new string, other, other.len() * 8)
+    mov rsp, rbp
+    pop rbp
 
     mov rax, qword [rbp - 24]  ; rax = new string
     mov rsp, rbp
@@ -546,9 +581,9 @@ Char.str: ; [char: char, cb: *] => char*
 
     push 16
     call _$_allocate
-    pop rcx
+    add rsp, 8
 
-    mov rdi, qword [rbp+16]
+    mov rdi, qword [rbp + 16]
     mov qword [rax], rdi
 
     mov rsp, rbp

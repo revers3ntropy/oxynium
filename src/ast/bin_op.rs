@@ -65,7 +65,7 @@ impl Node for BinOpNode {
             {}
             {}
             call {}
-            times 2 pop rcx
+            add rsp, 16
             push rax
         ",
             self.rhs.borrow_mut().asm(ctx.clone())?,

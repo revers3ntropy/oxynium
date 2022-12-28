@@ -212,7 +212,7 @@ impl Node for FnCallNode {
         asm.push_str(&format!(
             "
             call {}
-            times {} pop rcx
+            add rsp, {}
             {}
         ",
             if self.object.is_some() {
@@ -226,8 +226,14 @@ impl Node for FnCallNode {
             } else {
                 self.identifier.clone().literal.unwrap()
             },
-            num_params,
-            if use_return_value { "push rax" } else { "" }
+            (num_params/*+ (num_params % 2 == 1) as usize*/)
+                * 8,
+            if use_return_value {
+                "
+                push rax"
+            } else {
+                ""
+            }
         ));
 
         Ok(asm)

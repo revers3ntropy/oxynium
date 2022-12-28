@@ -111,6 +111,13 @@ impl Node for FnDeclarationNode {
             ));
         }
 
+        let stack_space_for_local_vars = (
+            data_defs.len()
+            // make sure to maintain 16 byte alignment
+            // add 1 only when even number of local vars
+            // as we 'push rbp' at the start
+            //+ (data_defs.len() % 2 == 1) as usize)
+        ) * 8;
         let self_pos = self.pos();
         ctx.borrow_mut().define(
             SymbolDef {
@@ -120,14 +127,13 @@ impl Node for FnDeclarationNode {
                     "
                     push rbp
                     mov rbp, rsp
-                    times {} push 0
+                    sub rsp, {stack_space_for_local_vars}
                     {body}
                 {end_label}:
                     mov rsp, rbp
                     pop rbp
                     ret
-                 ",
-                    data_defs.len()
+                 "
                 )),
             },
             self_pos,
