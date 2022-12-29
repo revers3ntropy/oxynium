@@ -48,6 +48,13 @@ primitive Int {
         return other
     }
 
+    fn abs (self) Int {
+        if self < 0 {
+            return -self
+        }
+        return self
+    }
+
     extern fn str (self) Str,
 }
 
@@ -102,12 +109,14 @@ class Str {
         return self
     }
 
-    fn substr (self, start = 0, end = 0) Str {
-        println("substr: "+self+" "+start.str()+"-"+end.str());
-        if self == "" {
+    fn substr (self, start = 0, end = 9223372036854775807) Str {
+            // TODO: give the end a proper default value.
+            // This will work in all cases (end = 2^63-1 = max Int),
+            // but it's not pretty.
+        if self.len() < 1 {
             return ""
         }
-        if end < 1 {
+        if end < 0 {
             return self.substr(start, Int.max(self.len() + end, 0))
         }
         if start < 0 {
@@ -117,7 +126,6 @@ class Str {
             return ""
         }
         let actual_end = Int.min(self.len(), end);
-        println(actual_end.str());
         let mut i = Int.max(start, 0);
         let mut s = "";
         while i < actual_end {
@@ -211,7 +219,11 @@ class Str {
     }
 
     fn remove (self, index: Int, count = 1) Str {
+        //println("remove: " + self + ", " + index.str() + ", " + count.str());
         if index < 0 {
+            if self.len() + index < 0 {
+                return self.substr(self.len() + index + count)
+            }
             return self.remove(self.len() + index, count)
         }
         if index >= self.len() {

@@ -205,6 +205,7 @@ expect '' 'print("".substr(1, 1))'
 expect '' 'print("".substr(-1, 0))'
 
 expect 'a'   'print("abc".substr(0, 1))'
+expect ''    'print("abc".substr(0, 0))'
 expect ''    'print("abc".substr(1, 1))'
 expect 'b'   'print("abc".substr(1, 2))'
 expect 'bc'  'print("abc".substr(1, 3))'
@@ -218,17 +219,19 @@ expect 'abc' 'print("abc".substr(0))'
 expect 'bc'  'print("abc".substr(1))'
 expect 'c'   'print("abc".substr(2))'
 expect ''    'print("abc".substr(3))'
-expect 'c'   'print("abc".substr(-1))'
-expect 'bc'  'print("abc".substr(-2))'
-expect 'abc' 'print("abc".substr(-3))'
-expect 'a'   'print("abc".substr(-3, -2))'
-expect 'ab'  'print("abc".substr(-3, -1))'
-expect 'ab'  'print("abc".substr(-3, 2))'
-expect 'a'   'print("abc".substr(-3, 1))'
-expect ''    'print("abc".substr(2, -3))'
-expect ''    'print("abc".substr(2, -2))'
 expect ''    'print("abc".substr(2, 0))'
 expect ''    'print("abc".substr(2, 1))'
+expect 'the lazy dog. | quick brown fox | dog. | lazy' '
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/slice
+    const s = "The quick brown fox jumps over the lazy dog.";
+    print(s.substr(31));
+    print(" | ");
+    print(s.substr(4, 19));
+    print(" | ");
+    print(s.substr(-4));
+    print(" | ");
+    print(s.substr(-9, -5));
+'
 
 
 describe 'fn Str.starts_with'
@@ -358,3 +361,6 @@ expect 'a'  'print("ab".remove(-1, 1))'
 expect 'b'  'print("ab".remove(-2, 1))'
 expect ''   'print("ab".remove(-2, 2))'
 expect 'a'  'print("abc".remove(1, 5))'
+expect 'bcdef'  'print("abcdef".remove(-6, 1))'
+expect 'bcdef'  'print("abcdef".remove(-7, 2))'
+expect 'bcdef'  'print("abcdef".remove(-9, 4))'

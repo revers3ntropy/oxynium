@@ -100,6 +100,31 @@ impl Node for GlobalConstNode<String> {
                 self.identifier.clone().literal.unwrap()
             )).set_interval((self.pos().0, self.identifier.end.clone())));
         }
+
+        let str = self.value.clone();
+        let symbols = str.chars();
+
+        let mut asm = String::new();
+        for symbol in symbols.clone() {
+            let mut bytes = vec![];
+            for byte in symbol.to_string().bytes() {
+                bytes.push(format!("0x{:x}", byte));
+            }
+            // pad to 8 elements
+            while bytes.len() < 8 {
+                bytes.push("0x0".to_string());
+            }
+            asm.push_str(&bytes.join(","));
+            asm.push_str(",");
+        }
+        asm.pop();
+
+        let asm_str = if symbols.into_iter().count() < 1 {
+            format!("dq 0x0")
+        } else {
+            format!("db {} \ndq 0x0", asm)
+        };
+
         ctx.borrow_mut().define(
             SymbolDef {
                 name: self
@@ -107,30 +132,10 @@ impl Node for GlobalConstNode<String> {
                     .clone()
                     .literal
                     .unwrap(),
-                // ,0 is the null terminator
-                data: Some(format!(
-                    "dq \"{}\", 0",
-                    self.value
-                )),
+                data: Some(asm_str),
                 text: None,
             },
             self.identifier.interval(),
-        )?;
-        ctx.borrow_mut().define_anon(
-            SymbolDef {
-                name: self
-                    .identifier
-                    .clone()
-                    .literal
-                    .unwrap(),
-                // ,0 is the null terminator
-                data: Some(format!(
-                    "dq \"{}\", 0",
-                    self.value
-                )),
-                text: None,
-            },
-            self.pos(),
         )?;
         Ok("".to_owned())
     }
