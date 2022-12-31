@@ -70,6 +70,7 @@ pub fn optimise(
 fn redundant_push(ast: Vec<String>) -> Vec<String> {
     let mut res = Vec::new();
 
+    #[inline]
     fn valid_push_str(line: &String) -> (bool, String) {
         let (push, register) =
             line.split_once(" ").unwrap_or(("", ""));
@@ -84,6 +85,7 @@ fn redundant_push(ast: Vec<String>) -> Vec<String> {
         )
     }
 
+    #[inline]
     fn valid_pop_str(line: &String) -> (bool, String) {
         let (push, register) =
             line.split_once(" ").unwrap_or(("", ""));

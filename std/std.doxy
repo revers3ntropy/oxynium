@@ -6,6 +6,7 @@ primitive Char {
         return !(self == other)
     }
 
+    extern fn as_int (self) Int,
     extern fn str (self) Str,
 }
 

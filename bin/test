@@ -185,6 +185,7 @@ function expect_expr_bool() {
     expect "$1" "print(($2).str())" "$3"
 }
 
+perf_names=()
 oxy_comp=()
 oxy_exec=()
 cpp_comp=()
@@ -237,6 +238,8 @@ function perf_test_comp_cpp() {
     cpp_exec+=("$(echo "$(date +"%s.%4N") - $perf_timer_start" | bc -l)")
     perf_timer_start=$(date +"%s.%4N")
 
+    perf_names+=("$current_spec_name")
+
     num_perf_tests=$((num_perf_tests+1))
 
     if [ "$cpp_out" != "$expected" ]; then
@@ -249,6 +252,17 @@ function perf_results() {
         return
     fi
 
+#    printf "        Oxy Comp | C++ Comp | Oxy Exec | C++ Exec\n"
+#
+#    for index in "${!perf_names[@]}"; do
+#        printf "#$index ${perf_names[$index]}: ${oxy_comp[$index]} ${cpp_comp[$index]} ${oxy_exec[$index]} ${cpp_exec[$index]}\n"
+#    done
+
+
+    for i in "${!perf_names[@]}"; do
+        printf "${perf_names[i]}, "
+    done
+    printf "\n"
     printf "Oxy Comp: ${oxy_comp[*]}\n"
     printf "C++ Comp: ${cpp_comp[*]}\n"
     printf "Oxy Exec: ${oxy_exec[*]}\n"

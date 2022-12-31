@@ -23,15 +23,17 @@ expect 'Љ а ߷ ߬a ߦ' 'print("Љ а ߷ ߬a ߦ")'
 
 describe 'Escape Sequences in String Literals'
 
-expect $'\t'             'print("\t")'
-expect $' \n'            'print(" \n")'
-expect $'\t\t'           'print("\t\t")'
-expect '"'               'print("\"")'
-expect 'hello "world"'   'print("hello \"world\"")'
-expect "'"               "print(\"'\")"
-expect_err 'SyntaxError' 'print("\0")'
-expect_err 'SyntaxError' 'print("\9")'
-expect_err 'SyntaxError' 'print("\x")'
+expect           $'\t'           'print("\t")'
+expect           $' \n'          'print(" \n")'
+expect           $'\t\t'         'print("\t\t")'
+expect           '"'             'print("\"")'
+expect           'hello "world"' 'print("hello \"world\"")'
+expect           "'"             "print(\"'\")"
+expect_expr_bool 'true'          '"a\
+b" == "ab"'
+expect_err       'SyntaxError'   'print("\0")'
+expect_err       'SyntaxError'   'print("\9")'
+expect_err       'SyntaxError'   'print("\x")'
 
 
 describe 'fn Str.str'

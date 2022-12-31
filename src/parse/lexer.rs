@@ -211,6 +211,10 @@ impl Lexer {
                     'r' => string.push_str("\r"),
                     '"' => string.push_str("\""),
                     '\\' => string.push_str("\\"),
+                    '\n' => {
+                        self.advance();
+                        continue;
+                    }
                     _ => {
                         return Err(syntax_error(format!(
                             "Invalid escape character '\\{}'",

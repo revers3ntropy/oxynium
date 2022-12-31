@@ -8,6 +8,7 @@ start=$(date +%s.%N)
 function run_test() {
     name=$1
 
+    rm "./test/spec-$name.log" 2> /dev/null
     cp test/"$name".Dockerfile Dockerfile
     printf "${YELLOW}  Building '$name'... ${NC}\n"
     sudo docker build -t oxy-spec-"$name" .

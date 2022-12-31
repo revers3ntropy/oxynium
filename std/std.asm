@@ -760,3 +760,10 @@ Bool._$_op_and: ; [a: bool, b: bool, cb: *] => bool
     mov rsp, rbp
     pop rbp
     ret
+
+Char.as_int: ; [char: char, cb: *] => int
+             ; returns the integer value of the character
+             ; doesn't actually do anything, just for type checking
+    mov rax, qword [rsp + 8]
+
+    ret
