@@ -8,6 +8,8 @@ primitive Char {
 
     extern fn as_int (self) Int,
     extern fn str (self) Str,
+
+    extern fn from_int (i: Int) Char,
 }
 
 primitive Bool {

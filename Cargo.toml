@@ -1,6 +1,14 @@
 [package]
 name = "oxynium"
 version = "0.1.4"
+edition = "2023"
+repository = "https://github.com/revers3ntropy/oxynium"
+readme = "README.md"
+authors = ["josephcoppin@gmail.com"]
+description = """
+Oxynium compiler
+"""
+publish = false
 
 [dependencies]
 clap = { version = "4.0.26", features = ["derive"] }
