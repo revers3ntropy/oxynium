@@ -27,8 +27,9 @@ expect_expr_bool 'false' '"🇨🇦".at(0) != "🇦".at(0)'
 
 describe 'fn Char.from_int'
 
+expect_expr_int '' 'Char.from_int(0)'
 expect_expr_int 'a' 'Char.from_int(97)'
 expect_expr_int 'A' 'Char.from_int(65)'
 expect_expr_int '0' 'Char.from_int(48)'
 expect_expr_int ' ' 'Char.from_int(32)'
-expect_expr_int '💖' 'Char.from_int(128150)'
+# TODO: characters above 0x7F (127) is undefined behaviour

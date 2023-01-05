@@ -170,7 +170,7 @@ input: ; [buffer_size: int, prompt: char*, cb: *] => String
     .last_char_after_loop:
 
     push r15
-    call str_from_utf8 ; convert to string
+    call Str.from_utf8 ; convert to string
                        ; this is necessary because the string
                        ; comes in as utf8, but the internal
                        ; string representation is 'utf64'
@@ -224,14 +224,14 @@ Int.str: ; [self: Int, cb: *] => String
     mov rax, r15
 
     push rax
-    call str_from_utf8
+    call Str.from_utf8
     pop rdi
 
     mov rsp, rbp
     pop rbp
     ret
 
-str_from_utf8: ; [utf8: char*, cb: *] => char*
+Str.from_utf8: ; [utf8: char*, cb: *] => char*
                ; converts utf8 to utf64, the encoding used by Str
                ; https://stackoverflow.com/questions/1543613/how-does-utf-8-variable-width-encoding-work
 
@@ -766,9 +766,11 @@ Bool._$_op_and: ; [a: bool, b: bool, cb: *] => bool
     pop rbp
     ret
 
+Char.from_int:
 Char.as_int: ; [char: char, cb: *] => int
-             ; returns the integer value of the character
-             ; doesn't actually do anything, just for type checking
+             ; returns the integer value of the character,
+             ; or converts an integer to a character,
+             ; both are the same thing, this is just for type checking
     mov rax, qword [rsp + 8]
 
     ret

@@ -239,6 +239,7 @@ class Str {
     }
 
     extern fn utf8_size (self) Int,
+    extern fn from_utf8 (utf8: Str) Str
 }
 
 extern fn exit (code: Int = 0);
@@ -249,7 +250,6 @@ fn println (msg: Str, line_end="\n") {
     print(line_end);
 }
 extern fn print_nl ();
-extern fn str_from_utf8 (utf8: Str) Str;
 
 //primitive Ptr <T> {
 //    extern fn + (self, value: Int) Ptr<T>,
