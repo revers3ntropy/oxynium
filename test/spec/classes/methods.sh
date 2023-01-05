@@ -82,7 +82,7 @@ expect 'hello world' '
 '
 
 
-describe 'Class Methods Require self Parameter'
+describe 'Non-Static Methods Require self Parameter'
 
 expect_err 'SyntaxError' '
     class S {
@@ -92,10 +92,5 @@ expect_err 'SyntaxError' '
 expect_err 'SyntaxError' '
     class S {
         fn log(self: Int) {}
-    }
-'
-expect_err 'SyntaxError' '
-    class S {
-        fn log() {}
     }
 '

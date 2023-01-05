@@ -9,7 +9,8 @@ perf_test_comp_cpp 1 '906609' '
             while j < 1000 {
                 let prod = i * j;
                 if prod > max {
-                    if prod.str() == prod.str().reversed()  {
+                    let prod_str = prod.str();
+                    if prod_str == prod_str.reversed()  {
                         max = prod;
                     }
                 }

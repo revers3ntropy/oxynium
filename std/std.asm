@@ -48,6 +48,7 @@ _$_allocate: ; [size: int, cb: *] => *int
     ; stack alignment around call to malloc
     push rbp
     mov rbp, rsp
+    sub rsp, 32
     and rsp, -16
     call malloc WRT ..plt
     mov rsp, rbp
@@ -63,6 +64,7 @@ _$_allocate: ; [size: int, cb: *] => *int
 
     push rbp
     mov rbp, rsp
+    sub rsp, 32
     and rsp, -16
     call memset WRT ..plt
     mov rsp, rbp
@@ -213,6 +215,7 @@ Int.str: ; [self: Int, cb: *] => String
 
     push rbp
     mov rbp, rsp
+    sub rsp, 32
     and rsp, -16
     call sprintf WRT ..plt
     mov rsp, rbp
@@ -549,6 +552,7 @@ Str._$_op_add: ; [other: char*, self: char*, cb: *] => char*
 
     push rbp
     mov rbp, rsp               ; stack is 16-byte aligned
+    sub rsp, 32
     and rsp, -16
     call memcpy WRT ..plt      ; memcpy(new string, self, self.len() * 8)
     mov rsp, rbp
@@ -564,6 +568,7 @@ Str._$_op_add: ; [other: char*, self: char*, cb: *] => char*
 
     push rbp
     mov rbp, rsp               ; stack is 16-byte aligned
+    sub rsp, 32
     and rsp, -16
     call memcpy WRT ..plt      ; memcpy(new string, other, other.len() * 8)
     mov rsp, rbp
@@ -766,4 +771,26 @@ Char.as_int: ; [char: char, cb: *] => int
              ; doesn't actually do anything, just for type checking
     mov rax, qword [rsp + 8]
 
+    ret
+
+Ptr._$_op_add: ; [ptr: *T, offset: int, cb: *] => *T
+               ; adds an offset to a pointer
+
+    mov rax, qword [rsp + 8]
+    add rax, qword [rsp + 16]
+
+    ret
+
+Ptr.str: ; [ptr: *T, cb: *] => char*
+         ; stringifies a pointer
+
+    push rbp
+    mov rbp, rsp
+
+    push qword [rbp + 16]
+    call Int.str
+    add rsp, 8
+
+    mov rsp, rbp
+    pop rbp
     ret

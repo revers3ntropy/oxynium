@@ -248,3 +248,21 @@ fn println (msg: Str, line_end="\n") {
 }
 extern fn print_nl ();
 extern fn str_from_utf8 (utf8: Str) Str;
+
+//primitive Ptr <T> {
+//    extern fn + (self, value: Int) Ptr<T>,
+//    extern fn == <O>(self, other: Ptr<O>) Bool,
+//    extern fn str(self) Str
+//}
+//
+//class Vec <T> {
+//    start: Ptr<T>,
+//    size: Int,
+//
+//    fn at(self, i: Int) Ptr<T> {
+//        if i < 0 || i >= self.size {
+//            return new Ptr<T>
+//        }
+//        return self.start + i
+//    }
+//}

@@ -9,7 +9,6 @@ use crate::symbols::{
 };
 use crate::types::class::{ClassFieldType, ClassType};
 use crate::types::function::FnType;
-use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 use std::any::Any;
 use std::collections::HashMap;
@@ -154,51 +153,6 @@ impl Node for ClassDeclarationNode {
                 ))
                 .set_interval(self_pos));
             }
-
-            if method.params.len() < 1 {
-                return Err(type_error(format!(
-                    "Method '{}' must have 'self' parameter",
-                    method.identifier.clone().literal.unwrap()
-                ))
-                .set_interval(method.pos()));
-            }
-
-            let method_first_param =
-                method.params[0].type_.take();
-            if method_first_param.is_none() {
-                return Err(type_error(format!(
-                    "Method '{}' must have 'self' parameter",
-                    method.identifier.clone().literal.unwrap()
-                ))
-                .set_interval(method.pos()));
-            }
-
-            let TypeCheckRes {
-                t: first_param_type,
-                unknowns: first_param_unknowns,
-                ..
-            } = method_first_param
-                .clone()
-                .unwrap()
-                .borrow_mut()
-                .type_check(ctx.clone())?;
-            unknowns += first_param_unknowns;
-
-            if !this_type
-                .borrow()
-                .contains(first_param_type.clone())
-            {
-                return Err(type_error(format!(
-                    "Method `{}` must have first parameter `self` of type `{}` but found `{}`",
-                    method.identifier.clone().literal.unwrap(),
-                    this_type.borrow().str(),
-                    first_param_type.borrow().str()
-                ))
-                .set_interval(method.pos()));
-            }
-            // give back after taking
-            method.params[0].type_ =
-                Some(method_first_param.unwrap());
 
             unsafe {
                 let fn_ = (&*(&method_type_res.t

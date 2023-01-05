@@ -1457,36 +1457,37 @@ impl Parser {
 
         let mut other_params = true;
 
+        let mut is_static_method = false;
         if class_name.is_some() {
-            consume!(self_tok = Identifier, self, res);
-            if self_tok.literal.unwrap() != "self" {
-                res.failure(
-                    syntax_error(
-                        "Expected 'self'".to_owned(),
-                    ),
-                    Some(self_tok.start),
-                    Some(self_tok.end),
-                );
-                return res;
-            }
-            if self.current_matches(TokenType::Comma, None)
-            {
-                consume!(Comma, self, res);
-            } else {
-                other_params = false;
-
+            if self.current_matches(
+                TokenType::Identifier,
+                Some("self".to_string()),
+            ) {
+                consume!(Identifier, self, res);
                 if self
-                    .current_matches(TokenType::Colon, None)
+                    .current_matches(TokenType::Comma, None)
                 {
-                    res.failure(syntax_error(format!(
+                    consume!(Comma, self, res);
+                } else {
+                    other_params = false;
+
+                    // catch what might be a common mistake
+                    if self.current_matches(
+                        TokenType::Colon,
+                        None,
+                    ) {
+                        res.failure(syntax_error(format!(
                             "Cannot give type annotation to parameter 'self' on method '{}'",
                             identifier.str()
                         )),
-                        Some(self.last_tok().unwrap().start),
-                        Some(self.current_tok().unwrap().end),
-                    );
-                    return res;
+                                    Some(self.last_tok().unwrap().start),
+                                    Some(self.current_tok().unwrap().end),
+                        );
+                        return res;
+                    }
                 }
+            } else {
+                is_static_method = true;
             }
         }
         let mut params = Ok(vec![]);
@@ -1504,7 +1505,7 @@ impl Parser {
 
         let mut params = params.unwrap();
 
-        if class_name.is_some() {
+        if class_name.is_some() && !is_static_method {
             // insert 'self' parameter separately as it's type is not given
             params.insert(
                 0,
