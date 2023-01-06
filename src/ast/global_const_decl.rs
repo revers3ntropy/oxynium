@@ -17,6 +17,15 @@ pub struct GlobalConstNode<T> {
     pub position: Interval,
 }
 
+impl<T> GlobalConstNode<T> {
+    fn asm_id(&self) -> String {
+        format!(
+            "_$_gc_{}",
+            self.identifier.clone().literal.unwrap()
+        )
+    }
+}
+
 impl Node for GlobalConstNode<i64> {
     fn asm(
         &mut self,
@@ -30,11 +39,7 @@ impl Node for GlobalConstNode<i64> {
         }
         ctx.borrow_mut().define(
             SymbolDef {
-                name: self
-                    .identifier
-                    .clone()
-                    .literal
-                    .unwrap(),
+                name: self.asm_id(),
                 data: Some(format!("dq {}", self.value)),
                 text: None,
             },
@@ -64,13 +69,7 @@ impl Node for GlobalConstNode<i64> {
                     .clone()
                     .literal
                     .unwrap(),
-                id: format!(
-                    "qword [{}]",
-                    self.identifier
-                        .clone()
-                        .literal
-                        .unwrap()
-                ),
+                id: format!("qword [{}]", self.asm_id()),
                 is_constant: true,
                 is_type: false,
                 require_init: true,
@@ -127,11 +126,7 @@ impl Node for GlobalConstNode<String> {
 
         ctx.borrow_mut().define(
             SymbolDef {
-                name: self
-                    .identifier
-                    .clone()
-                    .literal
-                    .unwrap(),
+                name: self.asm_id(),
                 data: Some(asm_str),
                 text: None,
             },
@@ -160,11 +155,7 @@ impl Node for GlobalConstNode<String> {
                     .clone()
                     .literal
                     .unwrap(),
-                id: self
-                    .identifier
-                    .clone()
-                    .literal
-                    .unwrap(),
+                id: self.asm_id(),
                 is_constant: true,
                 is_type: false,
                 require_init: true,

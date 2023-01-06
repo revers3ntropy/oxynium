@@ -302,13 +302,6 @@ impl Context {
             ))
             .set_interval(trace_interval));
         }
-        if !self.declarations.get(&name.clone()).is_some() {
-            return Err(type_error(format!(
-                "Symbol {} is not declared",
-                symbol.name
-            ))
-            .set_interval(trace_interval));
-        }
 
         self.definitions.insert(name.clone(), symbol);
         Ok(())

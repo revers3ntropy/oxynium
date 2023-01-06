@@ -1,4 +1,6 @@
-    extern malloc, memset, memcpy, sprintf, free
+    extern malloc, memset, memcpy, free
+    extern sprintf
+    extern time
 
 _$_print_digit: ; [number: int, cb: *]  => Void
     push rbp
@@ -796,3 +798,32 @@ Ptr.str: ; [ptr: *T, cb: *] => char*
     mov rsp, rbp
     pop rbp
     ret
+
+Time.current_seconds: ; [cb: *] => int
+					  ; returns the current time in seconds
+	push rbp
+	mov rbp, rsp
+
+	;push rbp
+	;mov rbp, rsp
+	xor rdi, rdi
+	sub rsp, 32
+	and rsp, -16
+	call time WRT ..plt ; return time(NULL)
+	;mov rsp, rbp
+	;pop rbp
+
+	mov rsp, rbp
+	pop rbp
+	ret
+
+Time.current_microseconds: ; [cb: *] => int
+						   ; returns the current time in milliseconds
+	push rbp
+	mov rbp, rsp
+
+	mov rax, 0 ; TODO: implement this
+
+	mov rsp, rbp
+	pop rbp
+	ret

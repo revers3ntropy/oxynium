@@ -27,3 +27,18 @@ expect_err 'SyntaxError' '
         const a = 0;
     }
 '
+expect '' '
+    const db = 1;
+    const $ = 1;
+    const _ = 1;
+    const and = 1;
+    const at = 1;
+    const byte = 1;
+    const eq = 1;
+    const include = 1;
+    const DB = 1;
+    const DD = 1;
+    const Dd = 1;
+    const dd = 1;
+    const DQ = 1;
+'

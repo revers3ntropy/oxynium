@@ -251,6 +251,31 @@ fn println (msg: Str, line_end="\n") {
 }
 extern fn print_nl ();
 
+class Time {
+	seconds: Int,
+	microseconds: Int,
+
+	fn - (self, other: Time) Time {
+		return new Time {
+			seconds: self.seconds - other.seconds,
+			microseconds: self.microseconds - other.microseconds
+		}
+	}
+
+	fn str (self) Str {
+		return self.seconds.str() + "." + self.microseconds.str()
+	}
+
+	extern fn current_seconds () Int,
+	extern fn current_microseconds () Int,
+	fn now() Time {
+		return new Time {
+			seconds: Time.current_seconds(),
+			microseconds: Time.current_microseconds()
+		}
+	}
+}
+
 //primitive Ptr <T> {
 //    extern fn + (self, value: Int) Ptr<T>,
 //    extern fn == <O>(self, other: Ptr<O>) Bool,
