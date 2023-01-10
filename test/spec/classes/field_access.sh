@@ -36,3 +36,38 @@ expect_err 'TypeError' '
     class S { x: Int };
     print(new S { x: 1 }.x);
 '
+expect '23' '
+    class S {
+        x: Int,
+        y: Int
+    }
+    fn main () {
+        let s = new S {
+            x: 2,
+            y: 3
+        };
+        print(s.x.str());
+        print(s.y.str());
+    }
+'
+expect '3223' '
+    class S {
+        b: Int,
+        a: Int
+    }
+    fn main () {
+        let a = new S {
+            a: 2,
+            b: 3,
+        };
+        print(a.b.str());
+        print(a.a.str());
+
+        let b = new S {
+            b: 3,
+            a: 2,
+        };
+        print(b.a.str());
+        print(b.b.str());
+    }
+'

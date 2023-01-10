@@ -58,14 +58,9 @@ impl Node for ClassInitNode {
         let mut asm = String::new();
 
         let mut fields = self.fields.clone();
-        fields.sort_by(|a, b| a.0.cmp(&b.0));
 
-        let field_asm =
+        let mut field_asm =
             self.field_asm_hashmap(ctx.clone())?;
-
-        for (name, _) in fields.iter() {
-            asm.push_str(&format!("{}\n", field_asm[name]));
-        }
 
         let class_type = ctx
             .borrow_mut()
@@ -79,6 +74,27 @@ impl Node for ClassInitNode {
             .unwrap();
         let is_primitive = class_type.is_primitive;
 
+        fields.sort_by(|a, b| {
+            class_type
+                .field_offset(a.0.clone())
+                .cmp(&class_type.field_offset(b.0.clone()))
+        });
+
+        let mut fields_asm_iter = field_asm
+            .iter()
+            .collect::<Vec<(&String, &String)>>();
+
+        fields_asm_iter.sort_by(|a, b| {
+            class_type
+                .field_offset(a.0.clone())
+                .cmp(&class_type.field_offset(b.0.clone()))
+        });
+        fields_asm_iter.reverse();
+
+        for (name, _) in fields_asm_iter {
+            asm.push_str(&format!("{}\n", field_asm[name]));
+        }
+
         if fields.len() < 1 {
             return Ok(if is_primitive {
                 format!("\n push 0 \n")
@@ -87,7 +103,7 @@ impl Node for ClassInitNode {
                     "
                 push 8
                 call _$_allocate
-                pop rcx
+                add rsp, 8
                 mov qword [rax], 0
                 push rax
             "
@@ -99,7 +115,7 @@ impl Node for ClassInitNode {
             "
             push {}
             call _$_allocate
-            pop rcx
+            add rsp, 8
         ",
             fields.len() * 8
         ));
@@ -110,7 +126,8 @@ impl Node for ClassInitNode {
             pop rdx
             mov qword [rax + {}], rdx
         ",
-                (fields.len() - i - 1) * 8
+                class_type
+                    .field_offset(fields[i].0.clone())
             ));
         }
 

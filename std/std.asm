@@ -817,12 +817,23 @@ Time.current_seconds: ; [cb: *] => int
 	pop rbp
 	ret
 
-Time.current_microseconds: ; [cb: *] => int
+Time.current_milliseconds: ; [cb: *] => int
 						   ; returns the current time in milliseconds
 	push rbp
 	mov rbp, rsp
 
-	mov rax, 0 ; TODO: implement this
+	mov rax, 96
+	lea rdi, [rsp - 16]
+	xor esi, esi
+	syscall
+	;mov ecx, 1000
+	mov rax, [rdi + 8]
+	xor edx, edx
+	div rcx
+	mov rdx, [rdi]
+	;imul rdx, rcx
+	;add rax, rdx
+    ;mov rax, rdx
 
 	mov rsp, rbp
 	pop rbp

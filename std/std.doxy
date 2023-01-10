@@ -253,25 +253,27 @@ extern fn print_nl ();
 
 class Time {
 	seconds: Int,
-	microseconds: Int,
+	milliseconds: Int,
 
 	fn - (self, other: Time) Time {
 		return new Time {
 			seconds: self.seconds - other.seconds,
-			microseconds: self.microseconds - other.microseconds
+			milliseconds: self.milliseconds - other.milliseconds
 		}
 	}
 
 	fn str (self) Str {
-		return self.seconds.str() + "." + self.microseconds.str()
+		return self.seconds.str() + "." + self.milliseconds.str()
 	}
 
 	extern fn current_seconds () Int,
-	extern fn current_microseconds () Int,
-	fn now() Time {
+	extern fn current_milliseconds () Int,
+	fn now () Time {
 		return new Time {
-			seconds: Time.current_seconds(),
-			microseconds: Time.current_microseconds()
+			//seconds: Time.current_seconds(),
+			seconds: 1,
+			//milliseconds: Time.current_milliseconds()
+			milliseconds: 2
 		}
 	}
 }
