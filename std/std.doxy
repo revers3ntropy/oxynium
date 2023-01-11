@@ -253,27 +253,45 @@ extern fn print_nl ();
 
 class Time {
 	seconds: Int,
-	milliseconds: Int,
+	microseconds: Int,
 
 	fn - (self, other: Time) Time {
-		return new Time {
-			seconds: self.seconds - other.seconds,
-			milliseconds: self.milliseconds - other.milliseconds
-		}
+	    let self_micros = self.seconds * 1000000 + self.microseconds;
+	    let other_micros = other.seconds * 1000000 + other.microseconds;
+	    let diff_micros = self_micros - other_micros;
+	    return new Time {
+	        seconds: diff_micros / 1000000,
+	        microseconds: diff_micros % 1000000
+	    }
+	}
+
+	fn + (self, other: Time) Time {
+	    let self_micros = self.seconds * 1000000 + self.microseconds;
+	    let other_micros = other.seconds * 1000000 + other.microseconds;
+	    let sum_micros = self_micros + other_micros;
+	    return new Time {
+	        seconds: sum_micros / 1000000,
+	        microseconds: sum_micros % 1000000
+	    }
 	}
 
 	fn str (self) Str {
-		return self.seconds.str() + "." + self.milliseconds.str()
+		return self.seconds.str() + "." + self.microseconds.str()
 	}
 
 	extern fn current_seconds () Int,
-	extern fn current_milliseconds () Int,
+	extern fn current_microseconds () Int,
 	fn now () Time {
 		return new Time {
-			//seconds: Time.current_seconds(),
-			seconds: 1,
-			//milliseconds: Time.current_milliseconds()
-			milliseconds: 2
+			seconds: Time.current_seconds(),
+			microseconds: Time.current_microseconds()
+		}
+	}
+
+	fn null () Time {
+		return new Time {
+			seconds: 0,
+			microseconds: 0
 		}
 	}
 }

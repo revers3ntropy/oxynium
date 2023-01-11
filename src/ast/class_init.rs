@@ -59,7 +59,7 @@ impl Node for ClassInitNode {
 
         let mut fields = self.fields.clone();
 
-        let mut field_asm =
+        let field_asm =
             self.field_asm_hashmap(ctx.clone())?;
 
         let class_type = ctx
