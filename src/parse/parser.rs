@@ -1672,6 +1672,29 @@ impl Parser {
         })
     }
 
+    fn template_params(
+        &mut self,
+    ) -> Result<Vec<Token>, Error> {
+        let mut params = vec![];
+        let mut res = ParseResults::new();
+
+        loop {
+            result_consume!(param = Identifier, self, res);
+            result_ret_on_err!(res);
+
+            params.push(param);
+
+            if self.current_matches(TokenType::Comma, None)
+            {
+                self.advance(&mut res);
+            } else {
+                break;
+            }
+        }
+
+        Ok(params)
+    }
+
     fn class_def_expr(
         &mut self,
         is_primitive: bool,
@@ -1684,6 +1707,29 @@ impl Parser {
 
         let mut fields = Vec::new();
         let mut methods = Vec::new();
+        let mut template_params = Vec::new();
+
+        if self.current_matches(TokenType::LT, None) {
+            self.advance(&mut res);
+            let template_params_res =
+                self.template_params();
+            if template_params_res.is_err() {
+                res.failure(
+                    template_params_res.err().unwrap(),
+                    Some(start.clone()),
+                    Some(
+                        self.last_tok()
+                            .unwrap()
+                            .end
+                            .clone(),
+                    ),
+                );
+                return res;
+            }
+            template_params = template_params_res.unwrap();
+
+            consume!(GT, self, res);
+        }
 
         if !self.current_matches(TokenType::OpenBrace, None)
         {
@@ -1696,6 +1742,10 @@ impl Parser {
                     self.last_tok().unwrap().end.clone(),
                 ),
                 is_primitive,
+                template_params,
+                template_ctx: Context::new(
+                    self.cli_args.clone(),
+                ),
             }));
             return res;
         }
@@ -1819,6 +1869,10 @@ impl Parser {
                 self.last_tok().unwrap().end.clone(),
             ),
             is_primitive,
+            template_params,
+            template_ctx: Context::new(
+                self.cli_args.clone(),
+            ),
         }));
         res
     }

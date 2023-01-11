@@ -7,6 +7,7 @@ use std::fmt::Debug;
 
 pub mod r#class;
 pub mod function;
+pub mod template;
 pub mod r#type;
 pub mod unknown;
 

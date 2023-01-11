@@ -9,6 +9,7 @@ use crate::symbols::{
 };
 use crate::types::class::{ClassFieldType, ClassType};
 use crate::types::function::FnType;
+use crate::types::template::TemplateType;
 use crate::util::{new_mut_rc, MutRc};
 use std::any::Any;
 use std::collections::HashMap;
@@ -44,6 +45,8 @@ pub struct ClassDeclarationNode {
     pub methods: Vec<MutRc<FnDeclarationNode>>,
     pub position: Interval,
     pub is_primitive: bool,
+    pub template_params: Vec<Token>,
+    pub template_ctx: MutRc<Context>,
 }
 
 impl Node for ClassDeclarationNode {
@@ -73,6 +76,29 @@ impl Node for ClassDeclarationNode {
                 self.identifier.clone().literal.unwrap(),
             )
             .set_interval(self.identifier.interval()));
+        }
+
+        self.template_ctx
+            .borrow_mut()
+            .set_parent(ctx.clone());
+
+        for template in self.template_params.iter() {
+            self.template_ctx.borrow_mut().declare(
+                SymbolDec {
+                    name: template.literal.clone().unwrap(),
+                    id: template.literal.clone().unwrap(),
+                    is_constant: true,
+                    is_type: true,
+                    type_: new_mut_rc(TemplateType {
+                        identifier: template.clone(),
+                    }),
+                    require_init: false,
+                    is_defined: false,
+                    is_param: false,
+                    position: template.interval(),
+                },
+                template.interval(),
+            )?;
         }
 
         let this_type: MutRc<ClassType>;
@@ -110,7 +136,7 @@ impl Node for ClassDeclarationNode {
             let type_ = field
                 .type_
                 .borrow_mut()
-                .type_check(ctx.clone())?;
+                .type_check(self.template_ctx.clone())?;
             unknowns += type_.unknowns;
             let mut stack_offset =
                 this_type.borrow().fields.len() * 8;
@@ -141,8 +167,8 @@ impl Node for ClassDeclarationNode {
 
             // This is where the context reference is handed down so the
             // method's context is attached to the global context tree
-            let method_type_res =
-                method.type_check(ctx.clone())?;
+            let method_type_res = method
+                .type_check(self.template_ctx.clone())?;
             unknowns += method_type_res.unknowns;
 
             if !method.is_external && method.body.is_none()
