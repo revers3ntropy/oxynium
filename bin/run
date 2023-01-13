@@ -14,6 +14,8 @@ export RUST_BACKTRACE=1
 bin/compile_std
 cargo run -- -ko=res-out --std std.asm "$@"
 
+echo "==============================="
+
 if test -f "./res-out"; then
     ./res-out
 else

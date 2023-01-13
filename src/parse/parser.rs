@@ -1891,11 +1891,55 @@ impl Parser {
         Ok((identifier.literal.unwrap(), value.unwrap()))
     }
 
+    fn template_args(
+        &mut self,
+    ) -> Result<Vec<MutRc<dyn Node>>, Error> {
+        let mut res = ParseResults::new();
+        let mut args = Vec::new();
+
+        loop {
+            let arg = res.register(self.type_expr());
+            result_ret_on_err!(res);
+            args.push(arg.unwrap());
+
+            if self.current_matches(TokenType::Comma, None)
+            {
+                self.advance(&mut res);
+            } else {
+                break;
+            }
+        }
+
+        Ok(args)
+    }
+
     fn class_init(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start.clone();
 
         consume!(identifier_tok = Identifier, self, res);
+        let mut template_args = Vec::new();
+
+        if self.current_matches(TokenType::LT, None) {
+            self.advance(&mut res);
+            let template_args_res = self.template_args();
+            if template_args_res.is_err() {
+                res.failure(
+                    template_args_res.err().unwrap(),
+                    Some(start.clone()),
+                    Some(
+                        self.last_tok()
+                            .unwrap()
+                            .end
+                            .clone(),
+                    ),
+                );
+                return res;
+            }
+            template_args = template_args_res.unwrap();
+
+            consume!(GT, self, res);
+        }
 
         let mut fields = Vec::new();
 
@@ -1908,6 +1952,7 @@ impl Parser {
                     start,
                     self.last_tok().unwrap().end.clone(),
                 ),
+                template_args,
             }));
             return res;
         }
@@ -1951,6 +1996,7 @@ impl Parser {
                 start,
                 self.last_tok().unwrap().end.clone(),
             ),
+            template_args,
         }));
         res
     }

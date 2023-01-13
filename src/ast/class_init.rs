@@ -4,7 +4,7 @@ use crate::error::{type_error, unknown_symbol, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::types::Type;
-use crate::util::{intersection, MutRc};
+use crate::util::{intersection, new_mut_rc, MutRc};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -12,6 +12,7 @@ pub struct ClassInitNode {
     pub identifier: Token,
     pub fields: Vec<(String, MutRc<dyn Node>)>,
     pub position: Interval,
+    pub template_args: Vec<MutRc<dyn Node>>,
 }
 
 impl ClassInitNode {
@@ -191,7 +192,21 @@ impl Node for ClassInitNode {
                 self.identifier.clone().literal.unwrap()
             )));
         }
-        let class_type = class_type.unwrap();
+        let mut class_type = class_type.unwrap();
+
+        let mut generic_args = HashMap::new();
+        let mut i = 0;
+        for arg in self.template_args.clone() {
+            let arg_type_res =
+                arg.borrow_mut().type_check(ctx.clone())?;
+            unknowns += arg_type_res.unknowns;
+            let name =
+                class_type.generic_params_order[i].clone();
+            generic_args.insert(name, arg_type_res.t);
+            i += 1;
+        }
+        class_type =
+            class_type.concrete_from_abstract(generic_args);
 
         let (instance_fields_hashmap, field_unknowns) =
             self.field_types_hashmap(ctx.clone())?;
@@ -252,7 +267,10 @@ impl Node for ClassInitNode {
             }
         }
 
-        Ok(TypeCheckRes::from(class_type_raw, unknowns))
+        Ok(TypeCheckRes::from(
+            new_mut_rc(class_type),
+            unknowns,
+        ))
     }
 
     fn pos(&self) -> Interval {

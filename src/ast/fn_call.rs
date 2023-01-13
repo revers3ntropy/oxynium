@@ -98,7 +98,7 @@ impl FnCallNode {
                 } else {
                     return Err(type_error(format!(
                         "Cannot access method of non-class type '{}'",
-                        base_type_any.borrow_mut().str()
+                        base_type_any.borrow().str()
                     ))
                     .set_interval(self.position.clone()));
                 }

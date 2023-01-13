@@ -121,17 +121,23 @@ impl Context {
 
     // Generate unique identifiers (use root context)
 
+    pub fn get_id(&mut self) -> usize {
+        if self.parent.is_some() {
+            return self
+                .with_root_mut(&mut |ctx| ctx.get_id());
+        }
+        self.anon_symbol_count += 1;
+        self.anon_symbol_count as usize
+    }
+
     pub fn get_anon_label(&mut self) -> String {
         if self.parent.is_some() {
             return self.with_root_mut(&mut |ctx| {
                 ctx.get_anon_label()
             });
         }
-        let symbol = format!(
-            "{}L{}",
-            ANON_PREFIX, self.anon_symbol_count
-        );
-        self.anon_symbol_count += 1;
+        let symbol =
+            format!("{}L{}", ANON_PREFIX, self.get_id());
         symbol
     }
 

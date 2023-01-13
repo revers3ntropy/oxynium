@@ -9,7 +9,8 @@ use crate::symbols::{
 };
 use crate::types::class::{ClassFieldType, ClassType};
 use crate::types::function::FnType;
-use crate::types::template::TemplateType;
+use crate::types::generic::GenericType;
+use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 use std::any::Any;
 use std::collections::HashMap;
@@ -89,7 +90,7 @@ impl Node for ClassDeclarationNode {
                     id: template.literal.clone().unwrap(),
                     is_constant: true,
                     is_type: true,
-                    type_: new_mut_rc(TemplateType {
+                    type_: new_mut_rc(GenericType {
                         identifier: template.clone(),
                     }),
                     require_init: false,
@@ -120,6 +121,22 @@ impl Node for ClassDeclarationNode {
                     .clone();
             }
         } else {
+            let mut generic_args = HashMap::new();
+            for template in self.template_params.iter() {
+                generic_args.insert(
+                    template.literal.clone().unwrap(),
+                    new_mut_rc(GenericType {
+                        identifier: template.clone(),
+                    })
+                        as MutRc<dyn Type>,
+                );
+            }
+            let generic_params_order = self
+                .template_params
+                .iter()
+                .map(|t| t.literal.clone().unwrap())
+                .collect();
+
             this_type = new_mut_rc(ClassType {
                 name: self
                     .identifier
@@ -129,6 +146,9 @@ impl Node for ClassDeclarationNode {
                 fields: HashMap::new(),
                 methods: HashMap::new(),
                 is_primitive: self.is_primitive,
+                id: ctx.borrow_mut().get_id(),
+                generic_args,
+                generic_params_order,
             });
         }
 

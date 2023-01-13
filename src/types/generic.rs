@@ -4,11 +4,11 @@ use crate::util::MutRc;
 use std::fmt;
 
 #[derive(Clone)]
-pub struct TemplateType {
+pub struct GenericType {
     pub identifier: Token,
 }
 
-impl fmt::Debug for TemplateType {
+impl fmt::Debug for GenericType {
     fn fmt(
         &self,
         f: &mut fmt::Formatter<'_>,
@@ -21,7 +21,7 @@ impl fmt::Debug for TemplateType {
     }
 }
 
-impl Type for TemplateType {
+impl Type for GenericType {
     fn is_ptr(&self) -> bool {
         true
     }
@@ -31,16 +31,15 @@ impl Type for TemplateType {
     }
 
     fn contains(&self, other: MutRc<dyn Type>) -> bool {
-        if other.borrow().is_unknown() {
-            return true;
-        }
-        // compare values of pointers...
-        // TODO to this properly, with IDs or something
-        format!("{:p}", self)
-            == format!("{:p}", other.as_ptr())
+        other.borrow().is_unknown()
     }
 
     fn is_unknown(&self) -> bool {
         false
+    }
+    fn as_generic(&self) -> Option<GenericType> {
+        Some(GenericType {
+            identifier: self.identifier.clone(),
+        })
     }
 }

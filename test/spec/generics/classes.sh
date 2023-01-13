@@ -1,6 +1,6 @@
 describe 'Class Generics'
 
-expect '1hi' '
+expect '1Hi' '
     class S <T> { x: T }
     println((new S <Int> { x: 1 }).x.str());
     println((new S <Str> { x: "Hi" }).x.str());
