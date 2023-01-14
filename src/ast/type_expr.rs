@@ -28,10 +28,7 @@ impl Node for TypeNode {
             }
             return Ok(TypeCheckRes::unknown());
         }
-        if !ctx
-            .borrow_mut()
-            .get_dec_from_id(&self.id())
-            .is_type
+        if !ctx.borrow().get_dec_from_id(&self.id()).is_type
         {
             return Err(type_error(format!(
                 "'{}' cannot be used as a type",

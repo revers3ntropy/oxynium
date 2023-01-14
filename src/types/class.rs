@@ -4,9 +4,8 @@ use crate::ast::class_declaration::{
 use crate::parse::token::Token;
 use crate::types::function::FnType;
 use crate::types::Type;
-use crate::util::MutRc;
+use crate::util::{new_mut_rc, MutRc};
 use std::collections::HashMap;
-use std::fmt;
 
 #[derive(Clone, Debug)]
 pub struct ClassFieldType {
@@ -14,21 +13,21 @@ pub struct ClassFieldType {
     pub type_: MutRc<dyn Type>,
     pub stack_offset: usize,
 }
-impl ClassFieldType {
-    fn str(&self) -> String {
-        if self.name == "" {
-            self.type_.borrow().str()
-        } else {
-            format!(
-                "{}: {}",
-                self.name,
-                self.type_.borrow().str()
-            )
-        }
-    }
-}
+// impl ClassFieldType {
+//     fn str(&self) -> String {
+//         if self.name == "" {
+//             self.type_.borrow().str()
+//         } else {
+//             format!(
+//                 "{}: {}",
+//                 self.name,
+//                 self.type_.borrow().str()
+//             )
+//         }
+//     }
+// }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ClassType {
     pub id: usize,
     pub name: String,
@@ -62,71 +61,6 @@ impl ClassType {
     pub fn field_offset(&self, field: String) -> usize {
         self.fields.get(&field).unwrap().stack_offset
     }
-
-    pub fn concrete_from_abstract(
-        &self,
-        generic_args: HashMap<String, MutRc<dyn Type>>,
-    ) -> ClassType {
-        let mut fields = self.fields.clone();
-
-        // Concrete-ify any abstract fields
-        let field_names = fields.clone().into_keys();
-        for name in field_names {
-            let fields_ = fields.clone();
-            let field =
-                fields_.get(name.as_str()).clone().unwrap();
-            let type_ = field.type_.borrow_mut();
-            if let Some(generic) = type_.as_generic() {
-                fields.insert(
-                    name.clone(),
-                    ClassFieldType {
-                        name: field.name.clone(),
-                        type_: generic_args
-                            .get(
-                                generic
-                                    .identifier
-                                    .literal
-                                    .clone()
-                                    .unwrap()
-                                    .as_str(),
-                            )
-                            .unwrap()
-                            .clone(),
-                        stack_offset: field.stack_offset,
-                    },
-                );
-            }
-        }
-        ClassType {
-            id: self.id,
-            name: self.name.clone(),
-            fields,
-            methods: self.methods.clone(),
-            is_primitive: self.is_primitive,
-            generic_args,
-            generic_params_order: self
-                .generic_params_order
-                .clone(),
-        }
-    }
-}
-
-impl fmt::Debug for ClassType {
-    fn fmt(
-        &self,
-        f: &mut fmt::Formatter<'_>,
-    ) -> fmt::Result {
-        write!(
-            f,
-            "{} {{ {} }}",
-            self.name,
-            self.fields
-                .iter()
-                .map(|(_, f)| f.str())
-                .collect::<Vec<String>>()
-                .join(", ")
-        )
-    }
 }
 
 impl Type for ClassType {
@@ -135,7 +69,25 @@ impl Type for ClassType {
     }
 
     fn str(&self) -> String {
-        self.name.clone()
+        if self.generic_args.len() < 1 {
+            self.name.clone()
+        } else {
+            format!(
+                "{}<{}>",
+                self.name,
+                self.generic_params_order
+                    .iter()
+                    .map(|p| {
+                        self.generic_args
+                            .get(p)
+                            .unwrap()
+                            .borrow()
+                            .str()
+                    })
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            )
+        }
     }
 
     fn operator_signature(
@@ -178,6 +130,98 @@ impl Type for ClassType {
         } else {
             false
         };
+    }
+
+    fn concrete(
+        &self,
+        generic_args: HashMap<String, MutRc<dyn Type>>,
+        already_concrete: &mut HashMap<
+            String,
+            MutRc<dyn Type>,
+        >,
+    ) -> MutRc<dyn Type> {
+        if already_concrete
+            .contains_key(&format!("{:p}", self))
+        {
+            return already_concrete
+                .get(&format!("{:p}", self))
+                .unwrap()
+                .clone();
+        }
+
+        let new_generic_args = self
+            .generic_params_order
+            .iter()
+            .map(|p| {
+                (
+                    p.clone(),
+                    self.generic_args
+                        .get(p)
+                        .unwrap()
+                        .borrow()
+                        .concrete(
+                            generic_args.clone(),
+                            already_concrete,
+                        ),
+                )
+            })
+            .collect::<HashMap<String, MutRc<dyn Type>>>();
+
+        let res = new_mut_rc(ClassType {
+            id: self.id,
+            name: self.name.clone(),
+            fields: HashMap::new(),
+            methods: HashMap::new(),
+            is_primitive: self.is_primitive,
+            generic_args: new_generic_args,
+            generic_params_order: self
+                .generic_params_order
+                .clone(),
+        });
+        already_concrete
+            .insert(format!("{:p}", self), res.clone());
+
+        for field in self.fields.values() {
+            res.borrow_mut().fields.insert(
+                field.name.clone(),
+                ClassFieldType {
+                    name: field.name.clone(),
+                    type_: field.type_.borrow().concrete(
+                        generic_args.clone(),
+                        already_concrete,
+                    ),
+                    stack_offset: field.stack_offset,
+                },
+            );
+        }
+
+        // Concrete-ify any abstract method interfaces
+        let methods = self.methods.clone();
+        let method_names = methods.clone().into_keys();
+        for name in method_names {
+            let methods_clone = methods.clone();
+            let method = methods_clone
+                .get(name.as_str())
+                .clone()
+                .unwrap();
+
+            let new_method_type = method
+                .borrow()
+                .concrete(
+                    generic_args.clone(),
+                    already_concrete,
+                )
+                .borrow()
+                .as_fn()
+                .unwrap();
+
+            res.borrow_mut().methods.insert(
+                name.clone(),
+                new_mut_rc(new_method_type),
+            );
+        }
+
+        res
     }
 
     fn as_class(&self) -> Option<ClassType> {

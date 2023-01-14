@@ -26,10 +26,8 @@ impl ClassInitNode {
         let mut unknowns = 0;
         let mut instance_fields_hashmap = HashMap::new();
         for field in self.fields.clone() {
-            let field_type_res = field
-                .1
-                .borrow_mut()
-                .type_check(ctx.clone())?;
+            let field_type_res =
+                field.1.borrow().type_check(ctx.clone())?;
             unknowns += field_type_res.unknowns;
             instance_fields_hashmap
                 .insert(field.0, field_type_res.t);
@@ -64,7 +62,7 @@ impl Node for ClassInitNode {
             self.field_asm_hashmap(ctx.clone())?;
 
         let class_type = ctx
-            .borrow_mut()
+            .borrow()
             .get_dec_from_id(
                 &self.identifier.clone().literal.unwrap(),
             )
@@ -155,7 +153,7 @@ impl Node for ClassInitNode {
     ) -> Result<TypeCheckRes, Error> {
         let mut unknowns = 0;
 
-        if !ctx.borrow_mut().has_dec_with_id(
+        if !ctx.borrow().has_dec_with_id(
             &self.identifier.clone().literal.unwrap(),
         ) {
             if ctx.borrow().throw_on_unknowns() {
@@ -168,18 +166,17 @@ impl Node for ClassInitNode {
                 .set_interval(self.identifier.interval()));
             }
             for field in self.fields.clone() {
-                let field_type_res =
-                    field
-                        .1
-                        .borrow_mut()
-                        .type_check(ctx.clone())?;
+                let field_type_res = field
+                    .1
+                    .borrow()
+                    .type_check(ctx.clone())?;
                 unknowns += field_type_res.unknowns;
             }
             return Ok(TypeCheckRes::unknown_and(unknowns));
         }
 
         let class_type_raw = ctx
-            .borrow_mut()
+            .borrow()
             .get_dec_from_id(
                 &self.identifier.clone().literal.unwrap(),
             )
@@ -198,15 +195,18 @@ impl Node for ClassInitNode {
         let mut i = 0;
         for arg in self.template_args.clone() {
             let arg_type_res =
-                arg.borrow_mut().type_check(ctx.clone())?;
+                arg.borrow().type_check(ctx.clone())?;
             unknowns += arg_type_res.unknowns;
             let name =
                 class_type.generic_params_order[i].clone();
             generic_args.insert(name, arg_type_res.t);
             i += 1;
         }
-        class_type =
-            class_type.concrete_from_abstract(generic_args);
+        class_type = class_type
+            .concrete(generic_args, &mut HashMap::new())
+            .borrow()
+            .as_class()
+            .unwrap();
 
         let (instance_fields_hashmap, field_unknowns) =
             self.field_types_hashmap(ctx.clone())?;

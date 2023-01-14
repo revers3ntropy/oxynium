@@ -144,7 +144,7 @@ impl Node for ExecRootNode {
         }
         let TypeCheckRes { mut unknowns, .. } = self
             .statements
-            .borrow_mut()
+            .borrow()
             .type_check(ctx.clone())?;
 
         // so that things aren't redeclared
@@ -156,7 +156,7 @@ impl Node for ExecRootNode {
             //i += 1;
             let res = self
                 .statements
-                .borrow_mut()
+                .borrow()
                 .type_check(ctx.clone())?;
 
             // println!(
@@ -174,10 +174,10 @@ impl Node for ExecRootNode {
 
         // especially while not stable, do this last check every time
         // but TODO: only run when there are still unknowns but no progress
-        self.statements.borrow_mut().type_check(ctx.clone())
+        self.statements.borrow().type_check(ctx.clone())
     }
 
     fn pos(&self) -> Interval {
-        self.statements.borrow_mut().pos()
+        self.statements.borrow().pos()
     }
 }

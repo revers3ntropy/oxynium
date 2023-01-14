@@ -296,20 +296,47 @@ class Time {
 	}
 }
 
-//primitive Ptr <T> {
-//    extern fn + (self, value: Int) Ptr<T>,
-//    extern fn == <O>(self, other: Ptr<O>) Bool,
-//    extern fn str(self) Str
+//class RawCmp <A, B> {
+//	val: A,
+//	extern fn eq (self, b: B) Bool;
 //}
 //
-//class Vec <T> {
-//    start: Ptr<T>,
-//    size: Int,
+//class Option <A> {
+//	value: A,
 //
-//    fn at(self, i: Int) Ptr<T> {
-//        if i < 0 || i >= self.size {
-//            return new Ptr<T>
-//        }
-//        return self.start + i
-//    }
+//	extern fn none () Option <A>,
+//	fn some (value: A) Option <A> {
+//		return new Option {
+//			value: value
+//		}
+//	},
+//
+//	fn is_ok (self) Bool {
+//		return !self.is_none()
+//	}
+//
+//	fn is_none (self) Bool {
+//		return new RawCmp { val: self.value }
+//               		.eq(Option.none())
+//	}
+//
+//	fn unwrap (self) A {
+//		if self.is_err() {
+//			exit(1)
+//		}
+//		return self.value
+//	}
 //}
+
+class List <T> {
+    start: T,
+    size: Int,
+
+    fn at (self, i: Int) T {
+		if i < 0 || i >= self.size {
+			exit(1)
+		}
+		return self.at_raw(i)
+    }
+    extern fn at_raw (self, i: Int) T
+}

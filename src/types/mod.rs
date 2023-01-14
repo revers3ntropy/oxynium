@@ -4,6 +4,7 @@ use crate::types::generic::GenericType;
 use crate::types::r#class::ClassType;
 use crate::types::r#type::TypeType;
 use crate::util::MutRc;
+use std::collections::HashMap;
 use std::fmt::Debug;
 
 pub mod r#class;
@@ -23,6 +24,15 @@ pub trait Type: Debug {
         None
     }
     fn contains(&self, other: MutRc<dyn Type>) -> bool;
+    fn concrete(
+        &self,
+        generics_map: HashMap<String, MutRc<dyn Type>>,
+        // prevent circular solidification
+        already_concreted: &mut HashMap<
+            String,
+            MutRc<dyn Type>,
+        >,
+    ) -> MutRc<dyn Type>;
 
     fn as_fn(&self) -> Option<FnType> {
         None

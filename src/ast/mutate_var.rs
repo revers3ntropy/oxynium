@@ -60,12 +60,9 @@ impl Node for MutateVar {
             t: assign_type,
             unknowns,
             ..
-        } = self
-            .value
-            .borrow_mut()
-            .type_check(ctx.clone())?;
+        } = self.value.borrow().type_check(ctx.clone())?;
         let symbol = ctx
-            .borrow_mut()
+            .borrow()
             .get_dec_from_id(&self.id())
             .clone();
         if symbol.is_type {

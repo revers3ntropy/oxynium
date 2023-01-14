@@ -1,5 +1,6 @@
 use crate::types::Type;
-use crate::util::MutRc;
+use crate::util::{new_mut_rc, MutRc};
+use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Clone)]
@@ -27,6 +28,22 @@ impl Type for TypeType {
         } else {
             false
         }
+    }
+
+    fn concrete(
+        &self,
+        generics_map: HashMap<String, MutRc<dyn Type>>,
+        already_concrete: &mut HashMap<
+            String,
+            MutRc<dyn Type>,
+        >,
+    ) -> MutRc<dyn Type> {
+        new_mut_rc(TypeType {
+            instance_type: self
+                .instance_type
+                .borrow()
+                .concrete(generics_map, already_concrete),
+        })
     }
 
     fn as_type_type(&self) -> Option<TypeType> {

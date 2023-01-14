@@ -1,6 +1,7 @@
 use crate::parse::token::Token;
 use crate::types::Type;
 use crate::util::MutRc;
+use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Clone)]
@@ -32,6 +33,31 @@ impl Type for GenericType {
 
     fn contains(&self, other: MutRc<dyn Type>) -> bool {
         other.borrow().is_unknown()
+            || format!("{:p}", self)
+                == format!("{:p}", other.as_ptr())
+    }
+
+    fn concrete(
+        &self,
+        generics_map: HashMap<String, MutRc<dyn Type>>,
+        _already_concrete: &mut HashMap<
+            String,
+            MutRc<dyn Type>,
+        >,
+    ) -> MutRc<dyn Type> {
+        generics_map
+            .get(
+                &self
+                    .identifier
+                    .clone()
+                    .literal
+                    .unwrap()
+                    .to_string(),
+            )
+            .unwrap()
+            .clone()
+        //.borrow()
+        //.concrete(generics_map, already_concrete)
     }
 
     fn is_unknown(&self) -> bool {

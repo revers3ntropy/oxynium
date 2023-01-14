@@ -20,10 +20,10 @@ impl Node for FieldAccessNode {
     ) -> Result<String, Error> {
         let offset = self
             .base
-            .borrow_mut()
+            .borrow()
             .type_check(ctx.clone())?
             .t
-            .borrow_mut()
+            .borrow()
             .as_class()
             .unwrap()
             .field_offset(
@@ -50,10 +50,7 @@ impl Node for FieldAccessNode {
             t: base_type_any,
             unknowns: base_unknowns,
             ..
-        } = self
-            .base
-            .borrow_mut()
-            .type_check(ctx.clone())?;
+        } = self.base.borrow().type_check(ctx.clone())?;
         if base_type_any.borrow().is_unknown() {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(type_error(format!(

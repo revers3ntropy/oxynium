@@ -40,10 +40,7 @@ impl Node for EmptyLocalVarNode {
 
         let TypeCheckRes {
             t: type_, unknowns, ..
-        } = self
-            .type_
-            .borrow_mut()
-            .type_check(ctx.clone())?;
+        } = self.type_.borrow().type_check(ctx.clone())?;
 
         let stack_offset =
             ctx.borrow_mut().get_new_local_var_offset();

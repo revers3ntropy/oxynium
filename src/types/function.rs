@@ -1,7 +1,8 @@
 use crate::ast::Node;
 use crate::position::Interval;
 use crate::types::Type;
-use crate::util::MutRc;
+use crate::util::{new_mut_rc, MutRc};
+use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Clone, Debug)]
@@ -80,6 +81,49 @@ impl Type for FnType {
             return true;
         }
         false
+    }
+
+    fn concrete(
+        &self,
+        generics_map: HashMap<String, MutRc<dyn Type>>,
+        already_concrete: &mut HashMap<
+            String,
+            MutRc<dyn Type>,
+        >,
+    ) -> MutRc<dyn Type> {
+        if already_concrete
+            .contains_key(&format!("{:p}", self))
+        {
+            return already_concrete
+                .get(&format!("{:p}", self))
+                .unwrap()
+                .clone();
+        }
+
+        let mut parameters = Vec::new();
+        for param in &self.parameters {
+            let type_ = param.type_.borrow().concrete(
+                generics_map.clone(),
+                already_concrete,
+            );
+            parameters.push(FnParamType {
+                name: param.name.clone(),
+                type_,
+                default_value: param.default_value.clone(),
+                position: param.position.clone(),
+            });
+        }
+        let res = new_mut_rc(FnType {
+            name: self.name.clone(),
+            ret_type: self
+                .ret_type
+                .borrow()
+                .concrete(generics_map, already_concrete),
+            parameters,
+        });
+        already_concrete
+            .insert(format!("{:p}", self), res.clone());
+        res
     }
 
     fn as_fn(&self) -> Option<FnType> {

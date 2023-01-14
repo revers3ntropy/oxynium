@@ -1457,13 +1457,17 @@ impl Parser {
 
         let mut other_params = true;
 
+        let mut self_param_interval =
+            Position::unknown_interval();
+
         let mut is_static_method = false;
         if class_name.is_some() {
             if self.current_matches(
                 TokenType::Identifier,
                 Some("self".to_string()),
             ) {
-                consume!(Identifier, self, res);
+                consume!(s = Identifier, self, res);
+                self_param_interval = s.interval();
                 if self
                     .current_matches(TokenType::Comma, None)
                 {
@@ -1518,12 +1522,16 @@ impl Parser {
                             literal: Some(
                                 class_name.clone().unwrap(),
                             ),
-                            start: Position::unknown(),
-                            end: Position::unknown(),
+                            start: self_param_interval
+                                .0
+                                .clone(),
+                            end: self_param_interval
+                                .1
+                                .clone(),
                         },
                     })),
                     default_value: None,
-                    position: Position::unknown_interval(),
+                    position: self_param_interval,
                 },
             );
         }

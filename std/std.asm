@@ -777,28 +777,6 @@ Char.as_int: ; [char: char, cb: *] => int
 
     ret
 
-Ptr._$_op_add: ; [ptr: *T, offset: int, cb: *] => *T
-               ; adds an offset to a pointer
-
-    mov rax, qword [rsp + 8]
-    add rax, qword [rsp + 16]
-
-    ret
-
-Ptr.str: ; [ptr: *T, cb: *] => char*
-         ; stringifies a pointer
-
-    push rbp
-    mov rbp, rsp
-
-    push qword [rbp + 16]
-    call Int.str
-    add rsp, 8
-
-    mov rsp, rbp
-    pop rbp
-    ret
-
 Time.current_seconds: ; [cb: *] => int
 					  ; returns the current time in seconds
 	push rbp
@@ -827,6 +805,44 @@ Time.current_microseconds: ; [cb: *] => int
 	xor esi, esi
 	syscall
 	mov rax, [rdi + 8]
+
+	mov rsp, rbp
+	pop rbp
+	ret
+
+List.at_raw: ; <T> [idx: int, self: T*, cb: *] => T
+	     ; returns the element at the given index
+
+	push rbp
+	mov rbp, rsp
+
+	mov rax, qword [rbp + 16]
+	mov rcx, qword [rbp + 24]
+	mov rax, qword [rax + rcx * 8]
+
+	mov rsp, rbp
+	pop rbp
+	ret
+
+RawCmp.eq: ; [a: *const, b: *const, cb: *] => bool
+		   ; compares two pointers for equality
+	push rbp
+	mov rbp, rsp
+
+	mov rax, qword [rbp + 16]
+	cmp rax, qword [rbp + 24]
+	sete al
+
+	mov rsp, rbp
+	pop rbp
+	ret
+
+Option.none: ; <T> [cb: *] => Option<T>
+			 ; returns an empty option
+	push rbp
+	mov rbp, rsp
+
+	xor rax, rax
 
 	mov rsp, rbp
 	pop rbp

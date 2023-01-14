@@ -155,13 +155,13 @@ impl Node for ClassDeclarationNode {
         for field in self.fields.iter() {
             let type_ = field
                 .type_
-                .borrow_mut()
+                .borrow()
                 .type_check(self.template_ctx.clone())?;
             unknowns += type_.unknowns;
             let mut stack_offset =
                 this_type.borrow().fields.len() * 8;
             if this_type
-                .borrow_mut()
+                .borrow()
                 .fields
                 .contains_key(&field.identifier.clone())
             {

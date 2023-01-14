@@ -74,10 +74,7 @@ impl Node for IfNode {
             mut always_returns,
             mut unknowns,
             ..
-        } = self
-            .body
-            .borrow_mut()
-            .type_check(ctx.clone())?;
+        } = self.body.borrow().type_check(ctx.clone())?;
 
         let TypeCheckRes {
             t: comp_type,
@@ -85,7 +82,7 @@ impl Node for IfNode {
             ..
         } = self
             .comparison
-            .borrow_mut()
+            .borrow()
             .type_check(ctx.clone())?;
         unknowns += comp_unknowns;
 
@@ -96,9 +93,7 @@ impl Node for IfNode {
             return Err(type_error(
                 "if condition must be a bool".to_string(),
             )
-            .set_interval(
-                self.comparison.borrow_mut().pos(),
-            ));
+            .set_interval(self.comparison.borrow().pos()));
         }
 
         if self.else_body.is_some() {

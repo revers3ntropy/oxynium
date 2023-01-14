@@ -14,7 +14,7 @@ impl Node for BreakNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<String, Error> {
-        let labels = ctx.borrow_mut().loop_label_peak();
+        let labels = ctx.borrow().loop_label_peak();
         if labels.is_none() {
             return Err(syntax_error(
                 "'break' statement outside of loop"

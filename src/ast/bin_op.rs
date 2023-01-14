@@ -22,19 +22,15 @@ impl Node for BinOpNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<String, Error> {
-        let lhs = self
-            .lhs
-            .borrow_mut()
-            .type_check(ctx.clone())?;
+        let lhs =
+            self.lhs.borrow().type_check(ctx.clone())?;
         let fn_signature = lhs
             .t
             .borrow()
             .operator_signature(self.operator.clone());
 
-        let rhs = self
-            .rhs
-            .borrow_mut()
-            .type_check(ctx.clone())?;
+        let rhs =
+            self.rhs.borrow().type_check(ctx.clone())?;
         if can_do_inline(
             ctx.clone(),
             lhs.t.clone(),
@@ -80,14 +76,10 @@ impl Node for BinOpNode {
     ) -> Result<TypeCheckRes, Error> {
         let mut unknowns = 0;
 
-        let lhs_tr = self
-            .lhs
-            .borrow_mut()
-            .type_check(ctx.clone())?;
-        let rhs_tr = self
-            .rhs
-            .borrow_mut()
-            .type_check(ctx.clone())?;
+        let lhs_tr =
+            self.lhs.borrow().type_check(ctx.clone())?;
+        let rhs_tr =
+            self.rhs.borrow().type_check(ctx.clone())?;
         unknowns += lhs_tr.unknowns;
         unknowns += rhs_tr.unknowns;
 
@@ -136,8 +128,8 @@ impl Node for BinOpNode {
     }
     fn pos(&self) -> Interval {
         (
-            self.lhs.borrow_mut().pos().0,
-            self.rhs.borrow_mut().pos().1,
+            self.lhs.borrow().pos().0,
+            self.rhs.borrow().pos().1,
         )
     }
 }
