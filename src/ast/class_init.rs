@@ -202,8 +202,14 @@ impl Node for ClassInitNode {
             generic_args.insert(name, arg_type_res.t);
             i += 1;
         }
+
+        ctx.borrow_mut().concrete_depth = 0;
         class_type = class_type
-            .concrete(generic_args, &mut HashMap::new())
+            .concrete(
+                ctx.clone(),
+                generic_args,
+                &mut HashMap::new(),
+            )?
             .borrow()
             .as_class()
             .unwrap();

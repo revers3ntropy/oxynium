@@ -31,6 +31,8 @@ pub mod statements;
 pub mod str;
 pub mod symbol_access;
 pub mod type_expr;
+pub mod type_expr_generic;
+pub mod type_known;
 pub mod unary_op;
 pub mod r#while;
 

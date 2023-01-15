@@ -5,11 +5,17 @@ use std::cmp::{max, min};
 use std::io::Write;
 
 #[derive(Debug, Clone)]
+pub struct ErrorHint {
+    pub message: String,
+}
+
+#[derive(Debug, Clone)]
 pub struct Error {
     pub name: String,
     pub message: String,
     pub start: Position,
     pub end: Position,
+    pub hints: Vec<ErrorHint>,
 }
 
 impl Error {
@@ -19,7 +25,14 @@ impl Error {
             message,
             start: Position::unknown(),
             end: Position::unknown(),
+            hints: vec![],
         }
+    }
+
+    #[allow(dead_code)]
+    pub fn hint(mut self, message: String) -> Error {
+        self.hints.push(ErrorHint { message });
+        self
     }
 
     pub fn set_pos(
@@ -152,6 +165,14 @@ impl Error {
                 out.push('\n');
             }
             line_idx += 1;
+        }
+
+        // Hints
+        for hint in &self.hints {
+            out.push_str(&format!(
+                "\n  [Hint] {}\n",
+                hint.message
+            ));
         }
 
         out

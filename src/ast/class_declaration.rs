@@ -1,4 +1,5 @@
 use crate::ast::fn_declaration::FnDeclarationNode;
+use crate::ast::type_known::KnownTypeNode;
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{invalid_symbol, type_error, Error};
@@ -184,6 +185,27 @@ impl Node for ClassDeclarationNode {
         for method in self.methods.iter() {
             let mut method = method.borrow_mut();
             method.class = Some(this_type.clone());
+            let has_self_arg =
+                method.params.first().is_some()
+                    && method
+                        .params
+                        .first()
+                        .unwrap()
+                        .identifier
+                        == "self";
+            if has_self_arg {
+                let first_param =
+                    method.params.first().unwrap().clone();
+                method.params.remove(0);
+
+                let mut self_param = first_param.clone();
+                self_param.type_ =
+                    Some(new_mut_rc(KnownTypeNode {
+                        t: this_type.clone(),
+                        pos: first_param.position.clone(),
+                    }));
+                method.params.insert(0, self_param);
+            }
 
             // This is where the context reference is handed down so the
             // method's context is attached to the global context tree

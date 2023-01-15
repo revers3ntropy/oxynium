@@ -1,6 +1,8 @@
 use crate::ast::class_declaration::{
     method_id, operator_method_id,
 };
+use crate::context::Context;
+use crate::error::Error;
 use crate::parse::token::Token;
 use crate::types::function::FnType;
 use crate::types::Type;
@@ -134,38 +136,23 @@ impl Type for ClassType {
 
     fn concrete(
         &self,
+        ctx: MutRc<Context>,
         generic_args: HashMap<String, MutRc<dyn Type>>,
         already_concrete: &mut HashMap<
             String,
             MutRc<dyn Type>,
         >,
-    ) -> MutRc<dyn Type> {
+    ) -> Result<MutRc<dyn Type>, Error> {
+        ctx.borrow_mut().concrete_depth += 1;
+
         if already_concrete
             .contains_key(&format!("{:p}", self))
         {
-            return already_concrete
+            return Ok(already_concrete
                 .get(&format!("{:p}", self))
                 .unwrap()
-                .clone();
+                .clone());
         }
-
-        let new_generic_args = self
-            .generic_params_order
-            .iter()
-            .map(|p| {
-                (
-                    p.clone(),
-                    self.generic_args
-                        .get(p)
-                        .unwrap()
-                        .borrow()
-                        .concrete(
-                            generic_args.clone(),
-                            already_concrete,
-                        ),
-                )
-            })
-            .collect::<HashMap<String, MutRc<dyn Type>>>();
 
         let res = new_mut_rc(ClassType {
             id: self.id,
@@ -173,7 +160,7 @@ impl Type for ClassType {
             fields: HashMap::new(),
             methods: HashMap::new(),
             is_primitive: self.is_primitive,
-            generic_args: new_generic_args,
+            generic_args: HashMap::new(),
             generic_params_order: self
                 .generic_params_order
                 .clone(),
@@ -181,15 +168,31 @@ impl Type for ClassType {
         already_concrete
             .insert(format!("{:p}", self), res.clone());
 
+        for p in self.generic_params_order.iter() {
+            res.borrow_mut().generic_args.insert(
+                p.clone(),
+                self.generic_args
+                    .get(p)
+                    .unwrap()
+                    .borrow()
+                    .concrete(
+                        ctx.clone(),
+                        generic_args.clone(),
+                        already_concrete,
+                    )?,
+            );
+        }
+
         for field in self.fields.values() {
             res.borrow_mut().fields.insert(
                 field.name.clone(),
                 ClassFieldType {
                     name: field.name.clone(),
                     type_: field.type_.borrow().concrete(
+                        ctx.clone(),
                         generic_args.clone(),
                         already_concrete,
-                    ),
+                    )?,
                     stack_offset: field.stack_offset,
                 },
             );
@@ -208,9 +211,10 @@ impl Type for ClassType {
             let new_method_type = method
                 .borrow()
                 .concrete(
+                    ctx.clone(),
                     generic_args.clone(),
                     already_concrete,
-                )
+                )?
                 .borrow()
                 .as_fn()
                 .unwrap();
@@ -221,7 +225,7 @@ impl Type for ClassType {
             );
         }
 
-        res
+        Ok(res)
     }
 
     fn as_class(&self) -> Option<ClassType> {

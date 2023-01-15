@@ -37,6 +37,8 @@ pub struct Context {
     // throw error on unknown types
     err_on_unknowns: bool,
     pub cli_args: Args,
+
+    pub concrete_depth: u64,
 }
 
 impl Context {
@@ -55,6 +57,7 @@ impl Context {
             frozen: false,
             err_on_unknowns: false,
             cli_args,
+            concrete_depth: 0,
         })
     }
 
@@ -158,6 +161,7 @@ impl Context {
         }
         if self.parent.is_some()
             && !self.allow_local_var_decls
+            && !symbol.is_type
         {
             return self
                 .parent

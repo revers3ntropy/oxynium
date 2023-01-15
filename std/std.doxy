@@ -242,15 +242,6 @@ class Str {
     extern fn from_utf8 (utf8: Str) Str
 }
 
-extern fn exit (code: Int = 0);
-extern fn input (prompt: Str = "", buffer_size: Int = 1000) Str;
-extern fn print (msg: Str);
-fn println (msg: Str, line_end="\n") {
-    print(msg);
-    print(line_end);
-}
-extern fn print_nl ();
-
 class Time {
 	seconds: Int,
 	microseconds: Int,
@@ -288,7 +279,7 @@ class Time {
 		}
 	}
 
-	fn null () Time {
+	fn epoch () Time {
 		return new Time {
 			seconds: 0,
 			microseconds: 0
@@ -296,47 +287,69 @@ class Time {
 	}
 }
 
-//class RawCmp <A, B> {
-//	val: A,
-//	extern fn eq (self, b: B) Bool;
-//}
-//
-//class Option <A> {
-//	value: A,
-//
-//	extern fn none () Option <A>,
-//	fn some (value: A) Option <A> {
-//		return new Option {
-//			value: value
-//		}
-//	},
-//
-//	fn is_ok (self) Bool {
-//		return !self.is_none()
-//	}
-//
-//	fn is_none (self) Bool {
-//		return new RawCmp { val: self.value }
-//               		.eq(Option.none())
-//	}
-//
-//	fn unwrap (self) A {
-//		if self.is_err() {
-//			exit(1)
-//		}
-//		return self.value
-//	}
-//}
+class RawCmp <A, B> {
+	val: A,
+	extern fn eq (self, b: B) Bool,
+}
 
-class List <T> {
-    start: T,
-    size: Int,
+class Option <A> {
+	value: A,
 
-    fn at (self, i: Int) T {
-		if i < 0 || i >= self.size {
+	extern fn none () Option<A>,
+	fn some (value: A) Option<A> {
+		return new Option {
+			value: value
+		}
+	}
+
+	fn is_ok (self) Bool {
+		return !self.is_none()
+	}
+
+	fn is_none (self) Bool {
+		return new RawCmp <A, Int> { val: self.value }
+               		.eq(0)
+	}
+
+	fn unwrap (self) A {
+		if self.is_none() {
 			exit(1)
 		}
-		return self.at_raw(i)
+		return self.value
+	}
+}
+
+primitive Ptr <T>;
+
+class List <T> {
+	start: T,
+    size: Int,
+
+    fn at_option (self, i: Int) Option<T> {
+		if i < 0 || i >= self.size {
+			return Option.none()
+		}
+		return Option.some(self.at_raw(i))
     }
+    fn at (self, i: Int) T {
+		if i < 0 || i >= self.size {
+			panic("Index out of bounds (" + i.str() + ")")
+		}
+		return self.at_raw(i)
+	}
     extern fn at_raw (self, i: Int) T
+}
+
+extern fn exit (code: Int = 0);
+extern fn input (prompt: Str = "", buffer_size: Int = 1000) Str;
+extern fn print (msg: Str);
+fn println (msg: Str, line_end="\n") {
+    print(msg);
+    print(line_end);
+}
+extern fn print_nl ();
+
+fn panic (msg: Str) {
+	println("PANIC: '" + msg + "'");
+	exit(1);
 }

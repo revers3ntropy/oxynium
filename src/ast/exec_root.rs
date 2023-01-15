@@ -138,9 +138,7 @@ impl Node for ExecRootNode {
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
         if ctx.borrow().is_frozen() {
-            println!(
-                "\n\n  ***  Context is frozen!  *** \n\n"
-            );
+            panic!("Cannot type check a frozen context");
         }
         let TypeCheckRes { mut unknowns, .. } = self
             .statements
@@ -159,10 +157,10 @@ impl Node for ExecRootNode {
                 .borrow()
                 .type_check(ctx.clone())?;
 
-            // println!(
-            //     "(Pass {}) Unknowns: {} ",
-            //     i, res.unknowns
-            // );
+            //println!(
+            //    "(Pass {}) Unknowns: {} ",
+            //    i, res.unknowns
+            //);
 
             if res.unknowns >= unknowns {
                 break;

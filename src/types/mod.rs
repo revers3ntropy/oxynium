@@ -1,3 +1,5 @@
+use crate::context::Context;
+use crate::error::Error;
 use crate::parse::token::Token;
 use crate::types::function::FnType;
 use crate::types::generic::GenericType;
@@ -26,13 +28,14 @@ pub trait Type: Debug {
     fn contains(&self, other: MutRc<dyn Type>) -> bool;
     fn concrete(
         &self,
+        ctx: MutRc<Context>,
         generics_map: HashMap<String, MutRc<dyn Type>>,
         // prevent circular solidification
         already_concreted: &mut HashMap<
             String,
             MutRc<dyn Type>,
         >,
-    ) -> MutRc<dyn Type>;
+    ) -> Result<MutRc<dyn Type>, Error>;
 
     fn as_fn(&self) -> Option<FnType> {
         None

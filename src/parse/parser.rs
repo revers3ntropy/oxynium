@@ -29,6 +29,7 @@ use crate::ast::statements::StatementsNode;
 use crate::ast::str::StrNode;
 use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::type_expr::TypeNode;
+use crate::ast::type_expr_generic::GenericTypeNode;
 use crate::ast::unary_op::UnaryOpNode;
 use crate::ast::Node;
 use crate::context::Context;
@@ -1303,8 +1304,32 @@ impl Parser {
 
         consume!(type_tok = Identifier, self, res);
 
-        res.success(new_mut_rc(TypeNode {
+        if !self.current_matches(TokenType::LT, None) {
+            res.success(new_mut_rc(TypeNode {
+                identifier: type_tok,
+            }));
+            return res;
+        }
+
+        // is generic type
+        self.advance(&mut res);
+        let mut generic_args = Vec::new();
+        loop {
+            let generic_type =
+                res.register(self.type_expr());
+            ret_on_err!(res);
+            generic_args.push(generic_type.unwrap());
+            if self.current_matches(TokenType::GT, None) {
+                break;
+            }
+            consume!(Comma, self, res);
+        }
+
+        consume!(GT, self, res);
+
+        res.success(new_mut_rc(GenericTypeNode {
             identifier: type_tok,
+            generic_args,
         }));
         res
     }

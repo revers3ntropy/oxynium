@@ -109,15 +109,18 @@ impl FnCallNode {
                 &self.identifier.clone().literal.unwrap(),
             );
             if method_type.is_none() {
-                return Err(type_error(format!(
-                    "Class '{}' does not have method '{}'",
-                    base_type.str(),
-                    self.identifier
-                        .clone()
-                        .literal
-                        .unwrap(),
-                ))
-                .set_interval(self.position.clone()));
+                if ctx.borrow().throw_on_unknowns() {
+                    return Err(type_error(format!(
+                        "Class '{}' does not have method '{}'",
+                        base_type.str(),
+                        self.identifier
+                            .clone()
+                            .literal
+                            .unwrap(),
+                    ))
+                        .set_interval(self.position.clone()));
+                }
+                return Ok((None, false, None, unknowns));
             }
 
             return Ok((
