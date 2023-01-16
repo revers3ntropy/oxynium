@@ -116,19 +116,6 @@ print: ; [string: char*, cb: *] => Void
         pop rbp
         ret
 
-print_nl:
-    ; print NL
-    push 13
-    call _$_print_char
-    pop rax
-
-    ; print CR
-    push 10
-    call _$_print_char
-    pop rax
-
-    ret
-
 input: ; [buffer_size: int, prompt: char*, cb: *] => String
        ; reads from stdin until a newline is reached
        ; allocates string to heap to fit input
@@ -810,39 +797,124 @@ Time.current_microseconds: ; [cb: *] => int
 	pop rbp
 	ret
 
-List.at_raw: ; <T> [idx: int, self: T*, cb: *] => T
+List.at_raw: ; <T> [idx: int, self: List<T>, cb: *] => T
 	     ; returns the element at the given index
 
 	push rbp
 	mov rbp, rsp
 
-	mov rax, qword [rbp + 16]
-	mov rcx, qword [rbp + 24]
-	mov rax, qword [rax + rcx * 8]
+	mov rax, qword [rbp + 16]       ; rax = self
+	mov rax, qword [rax]            ; rax = self.head
+	mov rcx, qword [rbp + 24]       ; rcx = idx
+	mov rax, qword [rax + rcx * 8]  ; rax = self.head[idx]
 
 	mov rsp, rbp
 	pop rbp
 	ret
 
-RawCmp.eq: ; [a: *const, b: *const, cb: *] => bool
-		   ; compares two pointers for equality
+List.push: ; <T> [val: T, self: T*, cb: *] => void
+	       ; pushes the given value onto the end of the list
 	push rbp
 	mov rbp, rsp
 
-	mov rax, qword [rbp + 16]
-	cmp rax, qword [rbp + 24]
+	; self.size++;
+
+	; #1: Allocate space for old list and new element
+
+	mov rax, qword [rbp + 16] ; rax = self
+	mov rcx, qword [rax + 8]  ; rdx = self.size
+	add rcx, 8 				  ; rdx = self.size + 8
+	mov qword [rax + 8], rcx  ; self.size = self.size + 8
+	push rcx 		          ; push self.size + 8
+	call _$_allocate          ; rax = allocate((self.size + 1) * 8)
+	add rsp, 8                ; pop self.size + 8
+
+	; #2: Copy old list to new list
+
+	mov rdi, rax ; rdi = new list
+	mov rsi, qword [rbp + 16] ; rsi = self
+	mov rdx, qword [rsi + 8]  ; rcx = self.size
+	mov rsi, qword [rsi]      ; rsi = old_list.head
+	sub rdx, 8 			      ; rcx = self.size - 8
+
+	; just before copying, while rsi = old_list.head
+	; set the location of the list to the new list
+	mov rcx, qword [rbp + 16] ; rcx = self
+	mov qword [rcx], rax      ; self.head = new_list
+
+	push rbp
+	mov rbp, rsp
+	sub rsp, 32
+	and rsp, -16
+	call memcpy WRT ..plt    ; memcpy(new list, old list, (old list size - 1) * 8)
+	mov rsp, rbp
+	pop rbp
+
+	; #3: Add new element to new list
+
+	mov rax, qword [rbp + 16]      ; rax = self
+	mov rcx, qword [rax + 8]       ; rcx = self.size
+	mov rax, qword [rax]           ; rcx = self.head (new head)
+	mov rdx, qword [rbp + 24]      ; rdx = val
+	mov qword [rax + rcx - 8], rdx ; new_list[self.len() - 1] = val
+
+	mov rsp, rbp
+	pop rbp
+	ret
+
+Any.eq: ; <A, B> [a: *const, b: *const, cb: *] => bool
+		   ; compares two values for equality
+	push rbp
+	mov rbp, rsp
+
+	xor rax, rax
+
+	mov rcx, qword [rbp + 16]
+	mov rcx, qword [rcx]
+	cmp rcx, qword [rbp + 24]
 	sete al
 
 	mov rsp, rbp
 	pop rbp
 	ret
 
-Option.none: ; <T> [cb: *] => Option<T>
-			 ; returns an empty option
+Any.str: ; <T> [self: Any<T>, cb: *] => Str
+		 ; returns a string representation of the pointer
 	push rbp
 	mov rbp, rsp
 
-	xor rax, rax
+	mov rax, qword [rbp + 16]
+	push qword [rax]
+	call Int.str
+	add rsp, 8
+
+	mov rsp, rbp
+	pop rbp
+	ret
+
+Ptr.make_from: ; <T> [value: T, self: Ptr<T>, cb: *] => Ptr<T>
+			   ; creates a pointer from a value
+	push rbp
+	mov rbp, rsp
+
+	push 8
+	call _$_allocate
+	add rsp, 8
+
+	mov rdx, qword [rbp + 24]
+	mov qword [rax], rdx
+
+	mov rsp, rbp
+	pop rbp
+	ret
+
+Ptr.unwrap: ; <T> [self: Ptr<T>, cb: *] => T
+			; returns the value of the pointer
+	push rbp
+	mov rbp, rsp
+
+	mov rax, qword [rbp + 16]
+	mov rax, qword [rax]
 
 	mov rsp, rbp
 	pop rbp

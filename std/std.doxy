@@ -287,68 +287,91 @@ class Time {
 	}
 }
 
-class RawCmp <A, B> {
-	val: A,
-	extern fn eq (self, b: B) Bool,
-}
-
 class Option <A> {
-	value: A,
+	value: Ptr<A>,
 
-	extern fn none () Option<A>,
-	fn some (value: A) Option<A> {
+	fn none () Option<A> {
 		return new Option {
-			value: value
+			value: new Ptr<A>
+		}
+	}
+	fn some (value: A) Option<A> {
+		return new Option <A> {
+			value: new Ptr<A>.make_from(value)
 		}
 	}
 
-	fn is_ok (self) Bool {
+	fn is_some (self) Bool {
 		return !self.is_none()
 	}
 
 	fn is_none (self) Bool {
-		return new RawCmp <A, Int> { val: self.value }
-               		.eq(0)
+		return self.value.is_null()
 	}
 
-	fn unwrap (self) A {
+	fn unwrap (self, err_message = "Unwrapping None Option") A {
 		if self.is_none() {
-			exit(1)
+			panic(err_message)
 		}
-		return self.value
+		return self.value.unwrap()
 	}
 }
 
-primitive Ptr <T>;
+class Any <A, B> {
+	val: A,
+	extern fn eq (self, b: B) Bool,
+	extern fn str (self) Str,
+}
+
+primitive Ptr <T> {
+	fn is_null (self) Bool {
+		return new Any <Ptr<T>, Int> {
+			val: self
+		}
+			.eq(0)
+	}
+
+	extern fn make_from (self, val: T) Ptr<T>,
+	extern fn unwrap (self) T,
+}
 
 class List <T> {
-	start: T,
+	// address of first element
+	head: Ptr<T>,
+	// number of bytes required to store list
     size: Int,
 
-    fn at_option (self, i: Int) Option<T> {
-		if i < 0 || i >= self.size {
+    fn empty () List<T> {
+		return new List {
+			head: new Ptr<T>,
+			size: 0
+		}
+	}
+
+	fn len (self) Int {
+		// number of elements in list
+		// is size of list divided by size of each element
+		// which is always 8 bytes
+		return self.size / 8
+	}
+    fn at (self, i: Int) Option<T> {
+		if i < 0 || i >= self.len() {
 			return Option.none()
 		}
 		return Option.some(self.at_raw(i))
     }
-    fn at (self, i: Int) T {
-		if i < 0 || i >= self.size {
-			panic("Index out of bounds (" + i.str() + ")")
-		}
-		return self.at_raw(i)
-	}
-    extern fn at_raw (self, i: Int) T
+    extern fn at_raw (self, i: Int) T,
+    extern fn push (self, value: T),
 }
 
 extern fn exit (code: Int = 0);
 extern fn input (prompt: Str = "", buffer_size: Int = 1000) Str;
 extern fn print (msg: Str);
+
 fn println (msg: Str, line_end="\n") {
     print(msg);
     print(line_end);
 }
-extern fn print_nl ();
-
 fn panic (msg: Str) {
 	println("PANIC: '" + msg + "'");
 	exit(1);
