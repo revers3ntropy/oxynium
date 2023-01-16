@@ -157,12 +157,13 @@ impl Node for ClassInitNode {
             &self.identifier.clone().literal.unwrap(),
         ) {
             if ctx.borrow().throw_on_unknowns() {
-                return Err(unknown_symbol(
+                return Err(unknown_symbol(format!(
+                    "Class {}",
                     self.identifier
                         .clone()
                         .literal
                         .unwrap(),
-                )
+                ))
                 .set_interval(self.identifier.interval()));
             }
             for field in self.fields.clone() {
@@ -203,12 +204,10 @@ impl Node for ClassInitNode {
             i += 1;
         }
 
-        ctx.borrow_mut().concrete_depth = 0;
         class_type = class_type
             .concrete(
                 ctx.clone(),
-                generic_args,
-                &mut HashMap::new(),
+                new_mut_rc(generic_args),
             )?
             .borrow()
             .as_class()
@@ -231,7 +230,8 @@ impl Node for ClassInitNode {
 
         if extra.len() > 0 {
             return Err(type_error(format!(
-                "Unknown fields in class initialization: {}",
+                "Unknown fields in class '{}' initialization: {}",
+                class_type.str(),
                 extra
                     .iter()
                     .map(|s| s.clone())

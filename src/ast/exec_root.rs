@@ -87,6 +87,7 @@ impl Node for ExecRootNode {
             let main_decl = ctx_ref.get_dec_from_id("main");
             let main_type = main_decl.type_.clone();
             let main_signature = FnType {
+                id: ctx.borrow_mut().get_id(),
                 name: "main".to_string(),
                 ret_type: ctx_ref
                     .get_dec_from_id("Void")
@@ -148,19 +149,21 @@ impl Node for ExecRootNode {
         // so that things aren't redeclared
         ctx.borrow_mut().freeze();
 
-        //println!("(Pass 0) Unknowns: {} ", unknowns);
-        //let mut i = 0;
+        println!("(Pass 0) Unknowns: {} ", unknowns);
+        let mut i = 0;
         while unknowns > 0 {
-            //i += 1;
+            i += 1;
+
+            ctx.borrow_mut().clear_concrete_cache();
             let res = self
                 .statements
                 .borrow()
                 .type_check(ctx.clone())?;
 
-            //println!(
-            //    "(Pass {}) Unknowns: {} ",
-            //    i, res.unknowns
-            //);
+            println!(
+                "(Pass {}) Unknowns: {} ",
+                i, res.unknowns
+            );
 
             if res.unknowns >= unknowns {
                 break;

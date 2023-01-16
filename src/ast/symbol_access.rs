@@ -1,6 +1,8 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{type_error, unknown_symbol, Error};
+use crate::error::{
+    syntax_error, type_error, unknown_symbol, Error,
+};
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::is_valid_identifier;
@@ -50,7 +52,10 @@ impl Node for SymbolAccess {
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.id()) {
-            return Err(unknown_symbol(self.id()));
+            return Err(syntax_error(format!(
+                "Invalid identifier '{}'",
+                self.id()
+            )));
         }
         if !ctx.borrow_mut().has_dec_with_id(&self.id()) {
             if ctx.borrow().throw_on_unknowns() {

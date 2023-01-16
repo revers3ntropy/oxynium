@@ -1,6 +1,6 @@
 use crate::ast::{Node, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{unknown_symbol, Error};
+use crate::error::Error;
 use crate::position::Interval;
 use crate::types::Type;
 use crate::util::MutRc;

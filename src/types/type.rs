@@ -35,21 +35,15 @@ impl Type for TypeType {
     fn concrete(
         &self,
         ctx: MutRc<Context>,
-        generics_map: HashMap<String, MutRc<dyn Type>>,
-        already_concrete: &mut HashMap<
-            String,
-            MutRc<dyn Type>,
+        generic_args: MutRc<
+            HashMap<String, MutRc<dyn Type>>,
         >,
     ) -> Result<MutRc<dyn Type>, Error> {
         Ok(new_mut_rc(TypeType {
             instance_type: self
                 .instance_type
                 .borrow()
-                .concrete(
-                    ctx,
-                    generics_map,
-                    already_concrete,
-                )?,
+                .concrete(ctx, generic_args)?,
         }))
     }
 

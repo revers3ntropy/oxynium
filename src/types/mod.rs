@@ -29,11 +29,8 @@ pub trait Type: Debug {
     fn concrete(
         &self,
         ctx: MutRc<Context>,
-        generics_map: HashMap<String, MutRc<dyn Type>>,
-        // prevent circular solidification
-        already_concreted: &mut HashMap<
-            String,
-            MutRc<dyn Type>,
+        generics_map: MutRc<
+            HashMap<String, MutRc<dyn Type>>,
         >,
     ) -> Result<MutRc<dyn Type>, Error>;
 

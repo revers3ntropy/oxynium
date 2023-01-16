@@ -33,10 +33,8 @@ impl Type for UnknownType {
     fn concrete(
         &self,
         _ctx: MutRc<Context>,
-        _generics_map: HashMap<String, MutRc<dyn Type>>,
-        _already_concrete: &mut HashMap<
-            String,
-            MutRc<dyn Type>,
+        _generic_args: MutRc<
+            HashMap<String, MutRc<dyn Type>>,
         >,
     ) -> Result<MutRc<dyn Type>, Error> {
         Ok(new_mut_rc(self.clone()))

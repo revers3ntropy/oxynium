@@ -29,7 +29,7 @@ impl Node for GenericTypeNode {
         if !ctx.borrow().has_dec_with_id(&self.id()) {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(unknown_symbol(format!(
-                    "{}",
+                    "Generic '{}'",
                     self.id(),
                 ))
                 .set_interval(self.identifier.interval()));
@@ -72,14 +72,12 @@ impl Node for GenericTypeNode {
             i += 1;
         }
 
-        ctx.borrow_mut().concrete_depth = 0;
         Ok(TypeCheckRes::from(
             new_mut_rc(
                 class_type
                     .concrete(
                         ctx.clone(),
-                        generic_args,
-                        &mut HashMap::new(),
+                        new_mut_rc(generic_args),
                     )?
                     .borrow()
                     .as_class()

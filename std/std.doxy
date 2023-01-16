@@ -287,17 +287,17 @@ class Time {
 	}
 }
 
-class Option <A> {
-	value: Ptr<A>,
+class Option <TOption> {
+	value: Ptr<TOption>,
 
-	fn none () Option<A> {
-		return new Option {
-			value: new Ptr<A>
+	fn none () Option<TOption> {
+		return new Option <TOption> {
+			value: new Ptr<TOption>
 		}
 	}
-	fn some (value: A) Option<A> {
-		return new Option <A> {
-			value: new Ptr<A>.make_from(value)
+	fn some (value: TOption) Option<TOption> {
+		return new Option <TOption> {
+			value: new Ptr<TOption>.make_from(value)
 		}
 	}
 
@@ -309,7 +309,7 @@ class Option <A> {
 		return self.value.is_null()
 	}
 
-	fn unwrap (self, err_message = "Unwrapping None Option") A {
+	fn unwrap (self, err_message = "Unwrapping None Option") TOption {
 		if self.is_none() {
 			panic(err_message)
 		}
@@ -317,36 +317,29 @@ class Option <A> {
 	}
 }
 
-class Any <A, B> {
-	val: A,
-	extern fn eq (self, b: B) Bool,
+class Any <TAny, TAnyCmp> {
+	val: TAny,
+	extern fn eq (self, other: TAnyCmp) Bool,
 	extern fn str (self) Str,
 }
 
-primitive Ptr <T> {
+primitive Ptr <TPtr> {
 	fn is_null (self) Bool {
-		return new Any <Ptr<T>, Int> {
+		return new Any <Ptr<TPtr>, Int> {
 			val: self
 		}
 			.eq(0)
 	}
 
-	extern fn make_from (self, val: T) Ptr<T>,
-	extern fn unwrap (self) T,
+	extern fn make_from (self, val: TPtr) Ptr<TPtr>,
+	extern fn unwrap (self) TPtr,
 }
 
-class List <T> {
+class List <TList> {
 	// address of first element
-	head: Ptr<T>,
+	head: Ptr<TList>,
 	// number of bytes required to store list
     size: Int,
-
-    fn empty () List<T> {
-		return new List {
-			head: new Ptr<T>,
-			size: 0
-		}
-	}
 
 	fn len (self) Int {
 		// number of elements in list
@@ -354,14 +347,17 @@ class List <T> {
 		// which is always 8 bytes
 		return self.size / 8
 	}
-    fn at (self, i: Int) Option<T> {
+    fn at (self, i: Int) Option<TList> {
+    	if i < 0 {
+    		return self.at(self.len() + i)
+		}
 		if i < 0 || i >= self.len() {
 			return Option.none()
 		}
 		return Option.some(self.at_raw(i))
     }
-    extern fn at_raw (self, i: Int) T,
-    extern fn push (self, value: T),
+    extern fn at_raw (self, i: Int) TList,
+    extern fn push (self, value: TList),
 }
 
 extern fn exit (code: Int = 0);

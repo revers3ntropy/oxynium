@@ -1,8 +1,9 @@
 use crate::context::Context;
 use crate::error::{unknown_symbol, Error};
 use crate::parse::token::Token;
+use crate::types::unknown::UnknownType;
 use crate::types::Type;
-use crate::util::MutRc;
+use crate::util::{new_mut_rc, MutRc};
 use std::collections::HashMap;
 use std::fmt;
 
@@ -41,10 +42,8 @@ impl Type for GenericType {
     fn concrete(
         &self,
         ctx: MutRc<Context>,
-        generics_map: HashMap<String, MutRc<dyn Type>>,
-        _already_concrete: &mut HashMap<
-            String,
-            MutRc<dyn Type>,
+        generic_args: MutRc<
+            HashMap<String, MutRc<dyn Type>>,
         >,
     ) -> Result<MutRc<dyn Type>, Error> {
         let key = self
@@ -53,8 +52,10 @@ impl Type for GenericType {
             .literal
             .unwrap()
             .to_string();
-        if generics_map.contains_key(&key.clone()) {
-            return Ok(generics_map
+        if generic_args.borrow().contains_key(&key.clone())
+        {
+            return Ok(generic_args
+                .borrow()
                 .get(&key)
                 .unwrap()
                 .clone());
@@ -66,9 +67,14 @@ impl Type for GenericType {
                 .get_dec_from_id(&key.clone())
                 .type_);
         }
-
-        return Err(unknown_symbol(format!("{}", key))
+        if ctx.borrow().throw_on_unknowns() {
+            return Err(unknown_symbol(format!(
+                "generic '{}'",
+                key
+            ))
             .set_interval(self.identifier.interval()));
+        }
+        Ok(new_mut_rc(UnknownType {}))
     }
 
     fn is_unknown(&self) -> bool {

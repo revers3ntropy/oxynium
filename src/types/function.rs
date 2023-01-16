@@ -2,6 +2,7 @@ use crate::ast::Node;
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
+use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 use std::collections::HashMap;
@@ -33,6 +34,7 @@ pub struct FnType {
     pub name: String,
     pub ret_type: MutRc<dyn Type>,
     pub parameters: Vec<FnParamType>,
+    pub id: usize,
 }
 
 impl Type for FnType {
@@ -88,46 +90,47 @@ impl Type for FnType {
     fn concrete(
         &self,
         ctx: MutRc<Context>,
-        generics_map: HashMap<String, MutRc<dyn Type>>,
-        already_concrete: &mut HashMap<
-            String,
-            MutRc<dyn Type>,
+        generic_args: MutRc<
+            HashMap<String, MutRc<dyn Type>>,
         >,
     ) -> Result<MutRc<dyn Type>, Error> {
-        if already_concrete
-            .contains_key(&format!("{:p}", self))
+        if let Some(cached) = ctx
+            .borrow()
+            .concrete_type_cache_get(format!("{}", self.id))
         {
-            return Ok(already_concrete
-                .get(&format!("{:p}", self))
-                .unwrap()
-                .clone());
+            return Ok(cached);
         }
 
-        let mut parameters = Vec::new();
+        let res = new_mut_rc(FnType {
+            id: self.id,
+            name: self.name.clone(),
+            ret_type: new_mut_rc(UnknownType {}),
+            parameters: Vec::new(),
+        });
+
+        ctx.borrow_mut().concrete_type_cache_set(
+            format!("{}", self.id),
+            res.clone(),
+        );
+
+        res.borrow_mut().ret_type = self
+            .ret_type
+            .borrow()
+            .concrete(ctx.clone(), generic_args.clone())?;
+
         for param in &self.parameters {
             let type_ = param.type_.borrow().concrete(
                 ctx.clone(),
-                generics_map.clone(),
-                already_concrete,
+                generic_args.clone(),
             )?;
-            parameters.push(FnParamType {
+            res.borrow_mut().parameters.push(FnParamType {
                 name: param.name.clone(),
                 type_,
                 default_value: param.default_value.clone(),
                 position: param.position.clone(),
             });
         }
-        let res = new_mut_rc(FnType {
-            name: self.name.clone(),
-            ret_type: self.ret_type.borrow().concrete(
-                ctx.clone(),
-                generics_map,
-                already_concrete,
-            )?,
-            parameters,
-        });
-        already_concrete
-            .insert(format!("{:p}", self), res.clone());
+
         Ok(res)
     }
 

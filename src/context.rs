@@ -37,8 +37,7 @@ pub struct Context {
     // throw error on unknown types
     err_on_unknowns: bool,
     pub cli_args: Args,
-
-    pub concrete_depth: u64,
+    concrete_type_cache: HashMap<String, MutRc<dyn Type>>,
 }
 
 impl Context {
@@ -57,7 +56,7 @@ impl Context {
             frozen: false,
             err_on_unknowns: false,
             cli_args,
-            concrete_depth: 0,
+            concrete_type_cache: HashMap::new(),
         })
     }
 
@@ -490,5 +489,50 @@ impl Context {
         }
         s.push_str("\n----------------------------------");
         s
+    }
+
+    // Concrete Type Cache
+
+    pub fn concrete_type_cache_get(
+        &self,
+        id: String,
+    ) -> Option<MutRc<dyn Type>> {
+        if self.parent.is_some() {
+            return self
+                .parent
+                .clone()
+                .unwrap()
+                .borrow()
+                .concrete_type_cache_get(id);
+        }
+        self.concrete_type_cache.get(&id).map(|t| t.clone())
+    }
+
+    pub fn concrete_type_cache_set(
+        &mut self,
+        id: String,
+        t: MutRc<dyn Type>,
+    ) {
+        if self.parent.is_some() {
+            return self.with_root_mut(&mut |ctx| {
+                ctx.concrete_type_cache_set(
+                    id.clone(),
+                    t.clone(),
+                )
+            });
+        }
+        if self.concrete_type_cache.contains_key(&id) {
+            panic!("Type {} already exists in cache", id);
+        }
+        self.concrete_type_cache.insert(id, t);
+    }
+
+    pub fn clear_concrete_cache(&mut self) {
+        if self.parent.is_some() {
+            return self.with_root_mut(&mut |ctx| {
+                ctx.clear_concrete_cache()
+            });
+        }
+        self.concrete_type_cache.clear();
     }
 }

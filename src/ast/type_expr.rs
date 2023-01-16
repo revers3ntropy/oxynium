@@ -7,7 +7,6 @@ use crate::position::Interval;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
-use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct TypeNode {
@@ -56,37 +55,11 @@ impl Node for TypeNode {
             let as_class = t.borrow().as_class();
             if let Some(class) = as_class {
                 if class.generic_params_order.len() > 0 {
-                    unknowns +=
-                        class.generic_params_order.len();
-
-                    if ctx.borrow().throw_on_unknowns() {
-                        return Err(unknown_symbol(
-                            format!(
-                                "Generics required for '{}'",
-                                self.id()
-                            ),
-                        )
-                        .set_interval(self.pos()));
-                    }
-
-                    let generic_args = class
-                        .generic_params_order
-                        .iter()
-                        .map(|s| {
-                            (
-                                s.clone(),
-                                new_mut_rc(UnknownType {})
-                                    as MutRc<dyn Type>,
-                            )
-                        })
-                        .collect();
-
-                    ctx.borrow_mut().concrete_depth = 0;
-                    type_ = t.borrow().concrete(
-                        ctx.clone(),
-                        generic_args,
-                        &mut HashMap::new(),
-                    )?;
+                    return Err(type_error(format!(
+                        "Generics required for '{}'",
+                        self.id()
+                    ))
+                    .set_interval(self.pos()));
                 } else {
                     type_ = t;
                 }

@@ -17,7 +17,6 @@ use crate::types::class::ClassType;
 use crate::types::function::{FnParamType, FnType};
 use crate::types::unknown::UnknownType;
 use crate::util::{new_mut_rc, MutRc};
-use std::any::Any;
 
 #[derive(Debug, Clone)]
 pub struct Parameter {
@@ -204,7 +203,7 @@ impl Node for FnDeclarationNode {
             ..
         } = self
             .ret_type
-            .borrow_mut()
+            .borrow()
             .type_check(ctx.clone())?;
 
         let mut parameters: Vec<FnParamType> = Vec::new();
@@ -326,18 +325,16 @@ impl Node for FnDeclarationNode {
                 .borrow()
                 .get_dec_from_id(&self.id())
                 .type_;
-            unsafe {
-                this_type = (&*(&this_type_any
-                    as *const dyn Any
-                    as *const MutRc<FnType>))
-                    .clone();
-            }
+            this_type = new_mut_rc(
+                this_type_any.borrow().as_fn().unwrap(),
+            );
             // override with latest data
             this_type.borrow_mut().parameters = parameters;
             this_type.borrow_mut().ret_type =
                 ret_type.clone();
         } else {
             this_type = new_mut_rc(FnType {
+                id: ctx.borrow_mut().get_id(),
                 name: self.id(),
                 ret_type: ret_type.clone(),
                 parameters,
@@ -394,7 +391,7 @@ impl Node for FnDeclarationNode {
                 .contains(body_ret_type.clone())
             {
                 return Err(type_error(format!(
-                    "Function `{}` has return type `{}` but found `{}`",
+                    "Function `{}` has return type `{}` but found `{}` being returned",
                     self.identifier.str(),
                     ret_type.borrow().str(),
                     body_ret_type.borrow().str()

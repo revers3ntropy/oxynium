@@ -229,8 +229,7 @@ impl Node for FnCallNode {
             } else {
                 self.identifier.clone().literal.unwrap()
             },
-            (num_params/*+ (num_params % 2 == 1) as usize*/)
-                * 8,
+            num_params * 8,
             if use_return_value {
                 "
                 push rax"
@@ -349,8 +348,8 @@ impl Node for FnCallNode {
         if fn_type.ret_type.borrow().is_unknown() {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(unknown_symbol(format!(
-                    "Can't find return type of function `{}`",
-                    self.identifier.clone().literal.unwrap()
+                    "Unknown return type for `{}`",
+                    fn_type.str()
                 ))
                 .set_interval(self.identifier.interval()));
             }

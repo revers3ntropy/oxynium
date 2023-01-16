@@ -15,19 +15,6 @@ pub struct ClassFieldType {
     pub type_: MutRc<dyn Type>,
     pub stack_offset: usize,
 }
-// impl ClassFieldType {
-//     fn str(&self) -> String {
-//         if self.name == "" {
-//             self.type_.borrow().str()
-//         } else {
-//             format!(
-//                 "{}: {}",
-//                 self.name,
-//                 self.type_.borrow().str()
-//             )
-//         }
-//     }
-// }
 
 #[derive(Clone, Debug)]
 pub struct ClassType {
@@ -137,21 +124,23 @@ impl Type for ClassType {
     fn concrete(
         &self,
         ctx: MutRc<Context>,
-        generic_args: HashMap<String, MutRc<dyn Type>>,
-        already_concrete: &mut HashMap<
-            String,
-            MutRc<dyn Type>,
+        generic_args: MutRc<
+            HashMap<String, MutRc<dyn Type>>,
         >,
     ) -> Result<MutRc<dyn Type>, Error> {
-        ctx.borrow_mut().concrete_depth += 1;
-
-        if already_concrete
-            .contains_key(&format!("{:p}", self))
+        if let Some(cached) = ctx
+            .borrow()
+            .concrete_type_cache_get(format!("{}", self.id))
         {
-            return Ok(already_concrete
-                .get(&format!("{:p}", self))
-                .unwrap()
-                .clone());
+            return Ok(cached);
+        }
+
+        if self.generic_params_order.len() < 1 {
+            ctx.borrow_mut().concrete_type_cache_set(
+                format!("{}", self.id),
+                new_mut_rc(self.clone()),
+            );
+            return Ok(new_mut_rc(self.clone()));
         }
 
         let res = new_mut_rc(ClassType {
@@ -165,8 +154,11 @@ impl Type for ClassType {
                 .generic_params_order
                 .clone(),
         });
-        already_concrete
-            .insert(format!("{:p}", self), res.clone());
+
+        ctx.borrow_mut().concrete_type_cache_set(
+            format!("{}", self.id),
+            res.clone(),
+        );
 
         for p in self.generic_params_order.iter() {
             res.borrow_mut().generic_args.insert(
@@ -178,7 +170,6 @@ impl Type for ClassType {
                     .concrete(
                         ctx.clone(),
                         generic_args.clone(),
-                        already_concrete,
                     )?,
             );
         }
@@ -191,7 +182,6 @@ impl Type for ClassType {
                     type_: field.type_.borrow().concrete(
                         ctx.clone(),
                         generic_args.clone(),
-                        already_concrete,
                     )?,
                     stack_offset: field.stack_offset,
                 },
@@ -213,7 +203,6 @@ impl Type for ClassType {
                 .concrete(
                     ctx.clone(),
                     generic_args.clone(),
-                    already_concrete,
                 )?
                 .borrow()
                 .as_fn()
