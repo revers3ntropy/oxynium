@@ -6,7 +6,6 @@ use crate::types::generic::GenericType;
 use crate::types::r#class::ClassType;
 use crate::types::r#type::TypeType;
 use crate::util::MutRc;
-use std::collections::HashMap;
 use std::fmt::Debug;
 
 pub mod r#class;
@@ -29,10 +28,8 @@ pub trait Type: Debug {
     fn concrete(
         &self,
         ctx: MutRc<Context>,
-        generics_map: MutRc<
-            HashMap<String, MutRc<dyn Type>>,
-        >,
     ) -> Result<MutRc<dyn Type>, Error>;
+    fn cache_id(&self, ctx: MutRc<Context>) -> String;
 
     fn as_fn(&self) -> Option<FnType> {
         None

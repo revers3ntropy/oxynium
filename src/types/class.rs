@@ -124,22 +124,16 @@ impl Type for ClassType {
     fn concrete(
         &self,
         ctx: MutRc<Context>,
-        generic_args: MutRc<
-            HashMap<String, MutRc<dyn Type>>,
-        >,
     ) -> Result<MutRc<dyn Type>, Error> {
-        if let Some(cached) = ctx
-            .borrow()
-            .concrete_type_cache_get(format!("{}", self.id))
+        if let Some(cached) =
+            ctx.borrow().concrete_type_cache_get(
+                self.cache_id(ctx.clone()),
+            )
         {
             return Ok(cached);
         }
 
         if self.generic_params_order.len() < 1 {
-            ctx.borrow_mut().concrete_type_cache_set(
-                format!("{}", self.id),
-                new_mut_rc(self.clone()),
-            );
             return Ok(new_mut_rc(self.clone()));
         }
 
@@ -155,10 +149,10 @@ impl Type for ClassType {
                 .clone(),
         });
 
-        ctx.borrow_mut().concrete_type_cache_set(
-            format!("{}", self.id),
-            res.clone(),
-        );
+        // outside of the loop to avoid borrowing issues
+        let cache_id = self.cache_id(ctx.clone());
+        ctx.borrow_mut()
+            .concrete_type_cache_set(cache_id, res.clone());
 
         for p in self.generic_params_order.iter() {
             res.borrow_mut().generic_args.insert(
@@ -167,10 +161,7 @@ impl Type for ClassType {
                     .get(p)
                     .unwrap()
                     .borrow()
-                    .concrete(
-                        ctx.clone(),
-                        generic_args.clone(),
-                    )?,
+                    .concrete(ctx.clone())?,
             );
         }
 
@@ -179,10 +170,10 @@ impl Type for ClassType {
                 field.name.clone(),
                 ClassFieldType {
                     name: field.name.clone(),
-                    type_: field.type_.borrow().concrete(
-                        ctx.clone(),
-                        generic_args.clone(),
-                    )?,
+                    type_: field
+                        .type_
+                        .borrow()
+                        .concrete(ctx.clone())?,
                     stack_offset: field.stack_offset,
                 },
             );
@@ -200,10 +191,7 @@ impl Type for ClassType {
 
             let new_method_type = method
                 .borrow()
-                .concrete(
-                    ctx.clone(),
-                    generic_args.clone(),
-                )?
+                .concrete(ctx.clone())?
                 .borrow()
                 .as_fn()
                 .unwrap();
@@ -215,6 +203,27 @@ impl Type for ClassType {
         }
 
         Ok(res)
+    }
+
+    fn cache_id(&self, ctx: MutRc<Context>) -> String {
+        if self.generic_params_order.len() < 1 {
+            return self.id.to_string();
+        }
+        format!(
+            "{}<{}>",
+            self.id,
+            self.generic_args
+                .iter()
+                .map(|(k, v)| {
+                    format!(
+                        "{}:{}",
+                        k,
+                        v.borrow().cache_id(ctx.clone())
+                    )
+                })
+                .collect::<Vec<String>>()
+                .join(",")
+        )
     }
 
     fn as_class(&self) -> Option<ClassType> {

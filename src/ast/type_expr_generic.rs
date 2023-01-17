@@ -3,9 +3,9 @@ use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
+use crate::symbols::SymbolDec;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
-use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct GenericTypeNode {
@@ -60,7 +60,9 @@ impl Node for GenericTypeNode {
             .as_class()
             .unwrap();
 
-        let mut generic_args = HashMap::new();
+        let generics_ctx =
+            Context::new(ctx.borrow().cli_args.clone());
+
         let mut i = 0;
         for arg in self.generic_args.clone() {
             let arg_type_res =
@@ -68,17 +70,29 @@ impl Node for GenericTypeNode {
             unknowns += arg_type_res.unknowns;
             let name =
                 class_type.generic_params_order[i].clone();
-            generic_args.insert(name, arg_type_res.t);
+            generics_ctx.borrow_mut().declare(
+                SymbolDec {
+                    name: name.clone(),
+                    id: name,
+                    is_constant: true,
+                    is_type: true,
+                    type_: arg_type_res.t,
+                    require_init: false,
+                    is_defined: true,
+                    is_param: true,
+                    position: arg.borrow().pos(),
+                },
+                arg.borrow().pos(),
+            )?;
             i += 1;
         }
+
+        generics_ctx.borrow_mut().set_parent(ctx.clone());
 
         Ok(TypeCheckRes::from(
             new_mut_rc(
                 class_type
-                    .concrete(
-                        ctx.clone(),
-                        new_mut_rc(generic_args),
-                    )?
+                    .concrete(generics_ctx)?
                     .borrow()
                     .as_class()
                     .unwrap(),

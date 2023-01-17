@@ -5,7 +5,6 @@ use crate::position::Interval;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
-use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Clone, Debug)]
@@ -90,13 +89,11 @@ impl Type for FnType {
     fn concrete(
         &self,
         ctx: MutRc<Context>,
-        generic_args: MutRc<
-            HashMap<String, MutRc<dyn Type>>,
-        >,
     ) -> Result<MutRc<dyn Type>, Error> {
-        if let Some(cached) = ctx
-            .borrow()
-            .concrete_type_cache_get(format!("{}", self.id))
+        if let Some(cached) =
+            ctx.borrow().concrete_type_cache_get(
+                self.cache_id(ctx.clone()),
+            )
         {
             return Ok(cached);
         }
@@ -108,21 +105,19 @@ impl Type for FnType {
             parameters: Vec::new(),
         });
 
-        ctx.borrow_mut().concrete_type_cache_set(
-            format!("{}", self.id),
-            res.clone(),
-        );
+        // outside of the loop to avoid borrowing issues
+        let cache_id = self.cache_id(ctx.clone());
+        ctx.borrow_mut()
+            .concrete_type_cache_set(cache_id, res.clone());
 
-        res.borrow_mut().ret_type = self
-            .ret_type
-            .borrow()
-            .concrete(ctx.clone(), generic_args.clone())?;
+        res.borrow_mut().ret_type =
+            self.ret_type.borrow().concrete(ctx.clone())?;
 
         for param in &self.parameters {
-            let type_ = param.type_.borrow().concrete(
-                ctx.clone(),
-                generic_args.clone(),
-            )?;
+            let type_ = param
+                .type_
+                .borrow()
+                .concrete(ctx.clone())?;
             res.borrow_mut().parameters.push(FnParamType {
                 name: param.name.clone(),
                 type_,
@@ -132,6 +127,10 @@ impl Type for FnType {
         }
 
         Ok(res)
+    }
+
+    fn cache_id(&self, _ctx: MutRc<Context>) -> String {
+        format!("({})", self.str())
     }
 
     fn as_fn(&self) -> Option<FnType> {

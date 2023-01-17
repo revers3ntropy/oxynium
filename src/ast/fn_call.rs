@@ -103,7 +103,12 @@ impl FnCallNode {
                     .set_interval(self.position.clone()));
                 }
             }
-            let base_type = base_type.unwrap();
+            let base_type = base_type
+                .unwrap()
+                .concrete(ctx.clone())?
+                .borrow()
+                .as_class()
+                .unwrap();
 
             let method_type = base_type.method_type(
                 &self.identifier.clone().literal.unwrap(),

@@ -2,7 +2,6 @@ use crate::context::Context;
 use crate::error::Error;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
-use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Clone)]
@@ -35,16 +34,22 @@ impl Type for TypeType {
     fn concrete(
         &self,
         ctx: MutRc<Context>,
-        generic_args: MutRc<
-            HashMap<String, MutRc<dyn Type>>,
-        >,
     ) -> Result<MutRc<dyn Type>, Error> {
         Ok(new_mut_rc(TypeType {
             instance_type: self
                 .instance_type
                 .borrow()
-                .concrete(ctx, generic_args)?,
+                .concrete(ctx)?,
         }))
+    }
+
+    fn cache_id(&self, ctx: MutRc<Context>) -> String {
+        format!(
+            "*{}",
+            self.instance_type
+                .borrow()
+                .cache_id(ctx.clone())
+        )
     }
 
     fn as_type_type(&self) -> Option<TypeType> {
