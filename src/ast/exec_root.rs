@@ -149,10 +149,11 @@ impl Node for ExecRootNode {
         // so that things aren't redeclared
         ctx.borrow_mut().freeze();
 
-        // println!("(Pass 0) Unknowns: {} ", unknowns);
-        // let mut i = 0;
+        //println!("(Pass 0) Unknowns: {} ", unknowns);
+        #[allow(unused_variables)]
+        let mut i = 0;
         while unknowns > 0 {
-            // i += 1;
+            i += 1;
 
             ctx.borrow_mut().clear_concrete_cache();
             let res = self

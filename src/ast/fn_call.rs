@@ -86,6 +86,38 @@ impl FnCallNode {
                         .set_interval(self.position.clone()));
                     }
 
+                    let type_type = type_type
+                        .instance_type
+                        .borrow()
+                        .as_class()
+                        .unwrap();
+                    if type_type.generic_params_order.len()
+                        > 0
+                    {
+                        for (_, type_) in
+                            type_type.generic_args.iter()
+                        {
+                            if type_
+                                .borrow()
+                                .as_generic()
+                                .is_some()
+                            {
+                                return Err(
+                                    type_error(format!(
+                                        "Can't call method on generic type `{}`",
+                                        type_type.str()
+                                    ))
+                                        .set_interval(self.position.clone())
+                                        .hint(format!(
+                                            "Type `{}` requires {} generic arguments",
+                                            type_type.str(),
+                                            type_type.generic_params_order.len()
+                                        )),
+                                );
+                            }
+                        }
+                    }
+
                     // if the type is a TypeType,
                     // is means we are doing something like this:
                     //      class C { ... }
@@ -258,6 +290,7 @@ impl Node for FnCallNode {
             base_type,
             mut unknowns,
         ) = self.get_callee_type(ctx.clone())?;
+
         if fn_type.is_none() {
             if !ctx.borrow().throw_on_unknowns() {
                 return Ok(TypeCheckRes::unknown_and(

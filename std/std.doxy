@@ -347,15 +347,15 @@ class List <TList> {
 		// which is always 8 bytes
 		return self.size / 8
 	}
-    fn at (self, i: Int) Option<TList> {
-    	if i < 0 {
-    		return self.at(self.len() + i)
-		}
-		if i < 0 || i >= self.len() {
-			return Option.none()
-		}
-		return Option.some(self.at_raw(i))
-    }
+//    fn at (self, i: Int) Option<TList> {
+//    	if i < 0 {
+//    		return self.at(self.len() + i)
+//		}
+//		if i < 0 || i >= self.len() {
+//			return Option.none()
+//		}
+//		return Option.some(self.at_raw(i))
+//    }
     extern fn at_raw (self, i: Int) TList,
     extern fn push (self, value: TList),
 }

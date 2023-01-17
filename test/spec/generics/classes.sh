@@ -78,3 +78,9 @@ expect_err 'UnknownSymbol' '
     class C <T> {}
     fn a(t: T) {}
 '
+expect_err 'TypeError' '
+    class C <T> {
+        fn a(i: Int) {}
+    }
+    C.a(1);
+'

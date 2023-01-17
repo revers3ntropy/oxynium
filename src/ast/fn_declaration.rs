@@ -17,6 +17,7 @@ use crate::types::class::ClassType;
 use crate::types::function::{FnParamType, FnType};
 use crate::types::unknown::UnknownType;
 use crate::util::{new_mut_rc, MutRc};
+use std::any::Any;
 
 #[derive(Debug, Clone)]
 pub struct Parameter {
@@ -325,9 +326,14 @@ impl Node for FnDeclarationNode {
                 .borrow()
                 .get_dec_from_id(&self.id())
                 .type_;
-            this_type = new_mut_rc(
-                this_type_any.borrow().as_fn().unwrap(),
-            );
+            unsafe {
+                // need reference to value in ctx,
+                // so can't use 'as_fn()'
+                this_type = (&*(&this_type_any
+                    as *const dyn Any
+                    as *const MutRc<FnType>))
+                    .clone();
+            }
             // override with latest data
             this_type.borrow_mut().parameters = parameters;
             this_type.borrow_mut().ret_type =
