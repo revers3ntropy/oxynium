@@ -67,17 +67,15 @@ impl Type for GenericType {
     }
 
     fn cache_id(&self, ctx: MutRc<Context>) -> String {
-        let concrete_type = ctx
-            .borrow()
-            .get_dec_from_id(
-                &self
-                    .identifier
-                    .clone()
-                    .literal
-                    .unwrap()
-                    .to_string(),
-            )
-            .type_;
+        let self_id = &self
+            .identifier
+            .clone()
+            .literal
+            .unwrap()
+            .to_string();
+
+        let concrete_type =
+            ctx.borrow().get_dec_from_id(self_id).type_;
         if format!("{:p}", concrete_type.as_ptr())
             == format!("{:p}", self)
         {

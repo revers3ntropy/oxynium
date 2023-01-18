@@ -1,4 +1,4 @@
-describe 'Performance'
+describe 'Runtime Performance'
 
 perf_test_comp_cpp 1 '149995000' '
     const n = 10000;
@@ -47,6 +47,9 @@ perf_test_comp_cpp 1 '149995000' '
         std::cout << sum;
     }
 '
+
+
+describe 'Compiletime Performance'
 
 perf_test_comp_cpp 1 '2001000' "
     fn main () {

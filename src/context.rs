@@ -535,4 +535,13 @@ impl Context {
         }
         self.concrete_type_cache.clear();
     }
+
+    pub fn concrete_type_cache_remove(&mut self, id: &str) {
+        if self.parent.is_some() {
+            return self.with_root_mut(&mut |ctx| {
+                ctx.concrete_type_cache_remove(id)
+            });
+        }
+        self.concrete_type_cache.remove(id);
+    }
 }

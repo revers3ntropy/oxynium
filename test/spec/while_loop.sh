@@ -123,5 +123,5 @@ expect 'hi' '
     while true {
         print("hi");
         break;
-    };
+    }
 '

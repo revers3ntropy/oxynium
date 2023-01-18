@@ -19,6 +19,7 @@ expect ''  '1'
 
 expect_err 'SyntaxError' '#'
 expect_err 'SyntaxError' '*&^%$#@!~'
+expect_err 'SyntaxError' '﷽'
 
 # weird EOF cases
 expect_err 'UnknownSymbol' 'mut'
@@ -91,6 +92,7 @@ expect_err 'SyntaxError' 'new S { a:'
 expect_err 'SyntaxError' 'new S { a:'
 expect_err 'SyntaxError' 'new S { fn'
 expect_err 'SyntaxError' 'new S { fn s'
+expect_err 'SyntaxError' 'new S { s: fn s() {'
 
 expect_err 'SyntaxError' '*'
 expect_err 'SyntaxError' '/'

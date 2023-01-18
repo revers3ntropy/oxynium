@@ -222,7 +222,6 @@ class Str {
     }
 
     fn remove (self, index: Int, count = 1) Str {
-        //println("remove: " + self + ", " + index.str() + ", " + count.str());
         if index < 0 {
             if self.len() + index < 0 {
                 return self.substr(self.len() + index + count)
@@ -272,6 +271,7 @@ class Time {
 
 	extern fn current_seconds () Int,
 	extern fn current_microseconds () Int,
+
 	fn now () Time {
 		return new Time {
 			seconds: Time.current_seconds(),
@@ -342,20 +342,24 @@ class List <TList> {
     size: Int,
 
 	fn len (self) Int {
-		// number of elements in list
-		// is size of list divided by size of each element
+		// number of elements in list is size of list
+		// divided by size of each element,
 		// which is always 8 bytes
 		return self.size / 8
 	}
-//    fn at (self, i: Int) Option<TList> {
-//    	if i < 0 {
-//    		return self.at(self.len() + i)
-//		}
-//		if i < 0 || i >= self.len() {
-//			return Option.none()
-//		}
-//		return Option.some(self.at_raw(i))
-//    }
+    fn at (self, i: Int) Option<TList> {
+    	if i < 0 {
+    		return self.at(self.len() + i)
+		}
+		if i < 0 || i >= self.len() {
+			return new Option<TList> {
+				value: new Ptr<TList>
+			}
+		}
+		return new Option<TList> {
+			value: new Ptr<TList>.make_from(self.at_raw(i))
+		}
+    }
     extern fn at_raw (self, i: Int) TList,
     extern fn push (self, value: TList),
 }

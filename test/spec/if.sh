@@ -1,13 +1,11 @@
 describe 'If Statements'
 
-expect '' '
+expect '2' '
     if false {
-      print("hi");
+      print("1");
     }
-'
-expect 'hi' '
     if true {
-      print("hi");
+      print("2");
     }
 '
 expect 'hi' '

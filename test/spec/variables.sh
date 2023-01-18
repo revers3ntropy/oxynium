@@ -1,24 +1,22 @@
 describe 'Local Variables'
 
 expect_err 'SyntaxError' '
-    fn f() Int {
+    fn main() Int {
         let a: Int;
-    };
+    }
 '
 expect '1' '
-    fn f() {
+    fn main() {
         let a = "1";
         print(a);
-    };
-    f();
+    }
 '
 expect '1' '
     const a = 2;
-    fn f() {
+    fn main() {
         let a = 1;
         print(a.str());
-    };
-    f();
+    }
 '
 expect '42' '
     const a = 2;
@@ -32,11 +30,10 @@ expect '42' '
 '
 expect_err 'TypeError' '
     const a = "";
-    fn f() {
+    fn main() {
         let a = 1;
         print(a);
-    };
-    f();
+    }
 '
 
 
@@ -46,25 +43,25 @@ expect_err 'TypeError' '
     fn main() {
         let a = 1;
         let a = 2;
-    };
+    }
 '
 expect_err 'TypeError' '
     fn f() {
         let mut a = 1;
         let a = 2;
-    };
+    }
 '
 expect_err 'TypeError' '
     fn f() {
         let a = 1;
         let mut a = 2;
-    };
+    }
 '
 expect_err 'TypeError' '
     fn f() {
         let a = 1;
         a = 2;
-    };
+    }
 '
 expect_err 'TypeError' '
     fn main () {

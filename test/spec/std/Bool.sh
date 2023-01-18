@@ -9,29 +9,18 @@ expect_expr_bool 'false' 'false'
 
 describe 'fn Bool.str'
 
-expect 'true' 'print(true.str())'
-expect 'false' 'print(false.str())'
-expect 'true' '
-    fn f() {
+expect 'truetruefalse' '
+    fn main() {
         let a = true;
         print(a.str());
-    };
-    f();
-'
-expect 'true' '
-    fn f() {
-        let a = true;
-        let a_str = a.str();
-        print(a_str);
-    };
-    f();
-'
-expect 'false' '
-    fn f() {
-        let a_str = false.str();
-        print(a_str);
-    };
-    f();
+
+        let b = true;
+        let b_str = b.str();
+        print(b_str);
+
+        let c_str = false.str();
+        print(c_str);
+    }
 '
 
 

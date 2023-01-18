@@ -2,20 +2,20 @@ describe 'Defining Global Constants'
 
 expect '1' '
     const a = 1;
-    print(a.str())
+    print(a.str());
 '
 expect '3' '
     const a = 1;
     const b = 2;
-    print((a + b).str())
+    print((a + b).str());
 '
 expect 'Some String' '
     const a = "Some String";
-    print(a)
+    print(a);
 '
 expect_err 'TypeError' '
     const a = 1;
-    const a = 2
+    const a = 2;
 '
 expect_err 'SyntaxError' '
     fn f() {
@@ -26,6 +26,9 @@ expect_err 'SyntaxError' '
     fn f() {
         const a = 0;
     }
+'
+expect_err 'SyntaxError' '
+    const a;
 '
 expect '' '
     const db = 1;

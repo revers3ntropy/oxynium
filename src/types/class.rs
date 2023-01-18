@@ -202,6 +202,10 @@ impl Type for ClassType {
             );
         }
 
+        let cache_id = self.cache_id(ctx.clone());
+        ctx.borrow_mut()
+            .concrete_type_cache_remove(&cache_id);
+
         Ok(res)
     }
 
@@ -214,12 +218,25 @@ impl Type for ClassType {
             self.id,
             self.generic_args
                 .iter()
-                .map(|(k, v)| {
-                    format!(
-                        "{}:{}",
-                        k,
-                        v.borrow().cache_id(ctx.clone())
-                    )
+                .map(|(k, value)| {
+                    if value.borrow().as_generic().is_some()
+                    {
+                        if !ctx.borrow().has_dec_with_id(k)
+                        {
+                            return "?".to_string();
+                        }
+                        format!(
+                            "{}:{}",
+                            k,
+                            ctx.borrow()
+                                .get_dec_from_id(&k)
+                                .type_
+                                .borrow()
+                                .cache_id(ctx.clone())
+                        )
+                    } else {
+                        value.borrow().cache_id(ctx.clone())
+                    }
                 })
                 .collect::<Vec<String>>()
                 .join(",")

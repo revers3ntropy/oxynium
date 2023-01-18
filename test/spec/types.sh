@@ -14,27 +14,27 @@ expect_err 'TypeError' '
 '
 expect_err 'TypeError' '
     class A;
-    class A
+    class A;
 '
 expect_err 'TypeError' '
     primitive A;
-    class A
+    class A;
 '
 expect_err 'TypeError' '
     primitive A;
-    primitive A
+    primitive A;
 '
 expect_err 'TypeError' '
-    primitive Str
+    primitive Str;
 '
 expect_err 'TypeError' '
-    class Str
+    class Str;
 '
 expect_err 'TypeError' '
-    primitive Int
+    primitive Int;
 '
 expect_err 'TypeError' '
-    class Int
+    class Int;
 '
 
 
