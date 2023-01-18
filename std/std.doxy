@@ -1,13 +1,30 @@
 class Void;
 
 primitive Char {
-    extern fn == (self, other: Char) Bool,
+    fn == (self, other: Char) Bool {
+    	return #asm(Bool, "
+			mov rax, qword [rbp + 16]
+			cmp rax, qword [rbp + 24]
+			sete al
+			push rax
+    	")
+    }
     fn != (self, other: Char) Bool {
         return !(self == other)
     }
 
     extern fn as_int (self) Int,
-    extern fn str (self) Str,
+    fn str (self) Str {
+    	return #asm(Str, "
+			push 16
+			call _$_allocate
+			add rsp, 8
+
+			mov rdi, qword [rbp + 16]
+			mov qword [rax], rdi
+			push rax
+    	")
+    }
 
     extern fn from_int (i: Int) Char,
 }
@@ -25,8 +42,20 @@ primitive Bool {
 }
 
 primitive Int {
-    extern fn +  (self, n: Int) Int,
-    extern fn -  (self, n: Int) Int,
+    fn + (self, n: Int) Int {
+    	return #asm(Int, "
+    	    mov rax, qword [rbp + 16]
+            add rax, qword [rbp + 24]
+            push rax
+    	")
+    }
+    fn - (self, n: Int) Int {
+		return #asm(Int, "
+			mov rax, qword [rbp + 16]
+			sub rax, qword [rbp + 24]
+			push rax
+		")
+    }
     extern fn *  (self, n: Int) Int,
     extern fn /  (self, n: Int) Int,
     extern fn %  (self, n: Int) Int,
@@ -34,7 +63,15 @@ primitive Int {
     extern fn != (self, n: Int) Bool,
     extern fn <  (self, n: Int) Bool,
     extern fn <= (self, n: Int) Bool,
-    extern fn >  (self, n: Int) Bool,
+    fn > (self, n: Int) Bool {
+		return #asm(Bool, "
+			xor rax, rax
+			mov rcx, qword [rbp + 16]
+			cmp rcx, qword [rbp + 24]
+			setg al
+			push rax
+		")
+	}
     extern fn >= (self, n: Int) Bool,
 
     fn max (self, other = 9223372036854775807) Int {
