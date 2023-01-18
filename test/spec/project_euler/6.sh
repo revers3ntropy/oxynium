@@ -26,6 +26,6 @@ perf_test_comp_cpp 50 '25164150' '
             i = i + 1;
         }
         square_of_sum = square_of_sum * square_of_sum;
-        std::cout << square_of_sum - sum_of_squares;
+        oxy_std::cout << square_of_sum - sum_of_squares;
     }
 '

@@ -33,8 +33,8 @@ perf_test_comp_cpp 1 '906609' '
             while (j < 1000) {
                 int prod = i * j;
                 if (prod > max) {
-                    std::string str_prod = std::to_string(prod);
-                    if (std::equal(str_prod.begin(), str_prod.end(),
+                    oxy_std::string str_prod = oxy_std::to_string(prod);
+                    if (oxy_std::equal(str_prod.begin(), str_prod.end(),
                                    str_prod.rbegin())) {
                         max = prod;
                     }

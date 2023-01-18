@@ -30,6 +30,7 @@ pub enum TokenType {
     LTE,          // <=
     NotEquals,    // !=
     Colon,        // :
+    Hash,         // #
 }
 
 #[derive(Clone)]
@@ -103,6 +104,7 @@ impl Token {
             TokenType::LTE => "<=".to_string(),
             TokenType::NotEquals => "!=".to_string(),
             TokenType::Colon => ":".to_string(),
+            TokenType::Hash => "#".to_string(),
         }
     }
 

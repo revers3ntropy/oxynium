@@ -1,3 +1,4 @@
+use crate::ast::str::StrNode;
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
@@ -23,8 +24,10 @@ pub mod global_const_decl;
 pub mod r#if;
 pub mod int;
 pub mod local_var_decl;
+pub mod macro_call;
 pub mod mutate_var;
 pub mod pass;
+pub mod raw_asm;
 pub mod r#return;
 pub mod scope;
 pub mod statements;
@@ -142,4 +145,8 @@ pub trait Node: Debug {
         Ok(TypeCheckRes::from_ctx(&ctx, "Void", 0))
     }
     fn pos(&self) -> Interval;
+
+    fn as_str_node(&self) -> Option<StrNode> {
+        None
+    }
 }

@@ -6,7 +6,7 @@ use crate::position::Interval;
 use crate::symbols::SymbolDef;
 use crate::util::MutRc;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StrNode {
     pub value: Token,
 }
@@ -72,5 +72,9 @@ impl Node for StrNode {
 
     fn pos(&self) -> Interval {
         self.value.interval()
+    }
+
+    fn as_str_node(&self) -> Option<StrNode> {
+        Some(self.clone())
     }
 }

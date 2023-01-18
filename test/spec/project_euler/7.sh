@@ -45,7 +45,7 @@ perf_test_comp_cpp 1 '104743' '
             if (is_prime) {
                 j = j + 1;
                 if (j == 10001) {
-                    std::cout << i;
+                    oxy_std::cout << i;
                     break;
                 }
             }

@@ -36,6 +36,6 @@ perf_test_comp_cpp 50 '4613732' '
                 break;
             }
         }
-        std::cout << sum;
+        oxy_std::cout << sum;
     }
 '

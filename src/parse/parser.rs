@@ -17,6 +17,7 @@ use crate::ast::fn_declaration::{
 use crate::ast::global_const_decl::GlobalConstNode;
 use crate::ast::int::IntNode;
 use crate::ast::local_var_decl::LocalVarNode;
+use crate::ast::macro_call::MacroCallNode;
 use crate::ast::mutate_var::MutateVar;
 use crate::ast::pass::PassNode;
 use crate::ast::r#break::BreakNode;
@@ -991,6 +992,52 @@ impl Parser {
         res
     }
 
+    fn args(
+        &mut self,
+    ) -> Result<Vec<MutRc<dyn Node>>, Error> {
+        let mut args = Vec::new();
+        let mut res = ParseResults::new();
+
+        loop {
+            let parameter = res.register(self.expression());
+            result_ret_on_err!(res);
+
+            args.push(parameter.unwrap());
+
+            if let Some(t) = self.current_tok() {
+                if t.token_type == TokenType::CloseParen {
+                    break;
+                } else if t.token_type == TokenType::Comma {
+                    self.advance(&mut res);
+                } else {
+                    return Err(syntax_error(format!(
+                        "Expected ',' or ')', found '{}'",
+                        t.str()
+                    ))
+                    .set_interval((
+                        self.last_tok().unwrap().end,
+                        Position::unknown(),
+                    )));
+                }
+            } else {
+                return Err(syntax_error(
+                    "Expected ',' or ')', found EOF"
+                        .to_owned(),
+                )
+                .set_interval((
+                    self.last_tok()
+                        .unwrap()
+                        .end
+                        .clone()
+                        .advance(None),
+                    Position::unknown(),
+                )));
+            }
+        }
+
+        Ok(args)
+    }
+
     fn function_call(
         &mut self,
         fn_identifier_tok: Token,
@@ -1021,48 +1068,12 @@ impl Parser {
             }
         }
 
-        let mut args = Vec::new();
-
-        loop {
-            let parameter = res.register(self.expression());
-            ret_on_err!(res);
-
-            args.push(parameter.unwrap());
-
-            if let Some(t) = self.current_tok() {
-                if t.token_type == TokenType::CloseParen {
-                    break;
-                } else if t.token_type == TokenType::Comma {
-                    self.advance(&mut res);
-                } else {
-                    res.failure(
-                        syntax_error(format!(
-                            "Expected ',' or ')', found '{}'",
-                            t.str()
-                        )),
-                        Some(fn_identifier_tok.start),
-                        Some(fn_identifier_tok.end),
-                    );
-                    return res;
-                }
-            } else {
-                res.failure(
-                    syntax_error(
-                        "Expected ',' or ')', found EOF"
-                            .to_owned(),
-                    ),
-                    Some(
-                        self.last_tok()
-                            .unwrap()
-                            .end
-                            .clone()
-                            .advance(None),
-                    ),
-                    None,
-                );
-                return res;
-            }
+        let args = self.args();
+        if args.is_err() {
+            res.failure(args.err().unwrap(), None, None);
+            return res;
         }
+        let args = args.unwrap();
 
         consume!(CloseParen, self, res);
 
@@ -1201,6 +1212,11 @@ impl Parser {
                     identifier: tok,
                 }));
             }
+            TokenType::Hash => {
+                // macro
+                self.advance(&mut res);
+                return self.macro_call();
+            }
             _ => {
                 res.failure(
                     syntax_error(format!(
@@ -1212,6 +1228,46 @@ impl Parser {
                 );
             }
         };
+        res
+    }
+
+    /// MacroCall ::= Identifier OpenParen <Arguments> CloseParen
+    fn macro_call(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        consume!(id_tok = Identifier, self, res);
+        let start = id_tok.start.clone();
+
+        let args: Vec<MutRc<dyn Node>>;
+
+        if self.current_matches(TokenType::OpenParen, None)
+        {
+            let args_res = self.args();
+            if args_res.is_err() {
+                res.failure(
+                    args_res.err().unwrap(),
+                    None,
+                    None,
+                );
+                return res;
+            }
+            args = args_res.unwrap();
+
+            consume!(CloseParen, self, res);
+        } else {
+            let arg = res.register(self.expression());
+            ret_on_err!(res);
+            args = vec![arg.unwrap()];
+        }
+
+        res.success(new_mut_rc(MacroCallNode {
+            identifier: id_tok,
+            args,
+            position: (
+                start,
+                self.last_tok().unwrap().end.clone(),
+            ),
+        }));
         res
     }
 

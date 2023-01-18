@@ -28,6 +28,7 @@ const SINGLE_CHAR_TOKENS: phf::Map<
     ">" => TokenType::GT,
     "<" => TokenType::LT,
     ":" => TokenType::Colon,
+    "#" => TokenType::Hash,
 };
 
 const DOUBLE_CHAR_TOKENS: phf::Map<
