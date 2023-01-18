@@ -2,7 +2,7 @@
 
 # Oxynium Compiler in Rust
 
-Tested on Ubuntu.
+Ubuntu support only at the moment.
 
 ## Requirements
 
