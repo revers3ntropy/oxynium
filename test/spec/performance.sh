@@ -44,7 +44,7 @@ perf_test_comp_cpp 1 '149995000' '
             sum = sum + i;
             i = i + 1;
         }
-        oxy_std::cout << sum;
+        std::cout << sum;
     }
 '
 

@@ -24,6 +24,6 @@ perf_test_comp_cpp 50 '233168' '
             }
             i = i + 1;
         }
-        oxy_std::cout << sum;
+        std::cout << sum;
     }
 '

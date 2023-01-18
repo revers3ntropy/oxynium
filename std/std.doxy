@@ -366,7 +366,28 @@ class List <TList> {
 
 extern fn exit (code: Int = 0);
 extern fn input (prompt: Str = "", buffer_size: Int = 1000) Str;
-extern fn print (msg: Str);
+fn print (msg: Str) {
+	#asm "
+	    mov rsi, qword [rbp+16] ; pop string
+        mov rax, rsi            ; copy string pointer
+
+        xor rdx, rdx            ; string length
+
+        ; find length of string
+        _$_print_find_length:
+            mov rcx, qword [rax]
+            test rcx, rcx
+            je _$_print_end_length
+            inc rdx
+            inc rax
+            jmp _$_print_find_length
+
+        _$_print_end_length:
+            mov rax, 1
+            mov rdi, 1
+            syscall
+	"
+}
 
 fn println (msg: Str, line_end="\n") {
     print(msg);

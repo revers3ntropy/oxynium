@@ -39,7 +39,7 @@ perf_test_comp_cpp 1 '232792560' '
                 j = j + 1;
             }
             if (is_divisible) {
-                oxy_std::cout << i;
+                std::cout << i;
                 break;
             }
         }

@@ -42,7 +42,7 @@ perf_test_comp_cpp 50 '6857' '
         if (n > max) {
             max = n;
         }
-        oxy_std::cout << max;
+        std::cout << max;
         return 0;
     }
 '

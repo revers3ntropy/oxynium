@@ -87,35 +87,6 @@ _$_allocate: ; [size: int, cb: *] => *int
         call exit
         jmp _$_allocate_end
 
-
-print: ; [string: char*, cb: *] => Void
-       ; prints characters until null byte is reached
-    push rbp
-    mov rbp, rsp
-
-    mov rsi, qword [rbp+16] ; pop string
-    mov rax, rsi ; copy string pointer
-
-    xor rdx, rdx ; string length
-
-    ; find length of string
-    _$_print_find_length:
-        mov rcx, qword [rax]
-        test rcx, rcx
-        je _$_print_end_length
-        inc rdx
-        inc rax
-        jmp _$_print_find_length
-
-    _$_print_end_length:
-        mov rax, 1
-        mov rdi, 1
-        syscall
-
-        mov rsp, rbp
-        pop rbp
-        ret
-
 input: ; [buffer_size: int, prompt: char*, cb: *] => String
        ; reads from stdin until a newline is reached
        ; allocates string to heap to fit input

@@ -1242,18 +1242,30 @@ impl Parser {
 
         if self.current_matches(TokenType::OpenParen, None)
         {
-            let args_res = self.args();
-            if args_res.is_err() {
-                res.failure(
-                    args_res.err().unwrap(),
-                    None,
-                    None,
-                );
-                return res;
-            }
-            args = args_res.unwrap();
+            self.advance(&mut res);
+            ret_on_err!(res);
 
-            consume!(CloseParen, self, res);
+            if self.current_matches(
+                TokenType::CloseParen,
+                None,
+            ) {
+                self.advance(&mut res);
+                ret_on_err!(res);
+                args = Vec::new();
+            } else {
+                let args_res = self.args();
+                if args_res.is_err() {
+                    res.failure(
+                        args_res.err().unwrap(),
+                        None,
+                        None,
+                    );
+                    return res;
+                }
+                args = args_res.unwrap();
+
+                consume!(CloseParen, self, res);
+            }
         } else {
             let arg = res.register(self.expression());
             ret_on_err!(res);
