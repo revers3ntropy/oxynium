@@ -9,7 +9,7 @@ use crate::symbols::is_valid_identifier;
 use crate::types::r#type::TypeType;
 use crate::util::{new_mut_rc, MutRc};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SymbolAccess {
     pub identifier: Token,
 }
@@ -89,5 +89,9 @@ impl Node for SymbolAccess {
 
     fn pos(&self) -> Interval {
         self.identifier.interval()
+    }
+
+    fn as_symbol_access(&self) -> Option<SymbolAccess> {
+        Some(self.clone())
     }
 }

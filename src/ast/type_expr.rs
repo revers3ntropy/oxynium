@@ -8,7 +8,7 @@ use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TypeNode {
     pub identifier: Token,
 }
@@ -77,5 +77,9 @@ impl Node for TypeNode {
 
     fn pos(&self) -> Interval {
         self.identifier.interval()
+    }
+
+    fn as_type_expr(&self) -> Option<TypeNode> {
+        Some(self.clone())
     }
 }

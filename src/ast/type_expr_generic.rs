@@ -7,7 +7,7 @@ use crate::symbols::SymbolDec;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GenericTypeNode {
     pub identifier: Token,
     pub generic_args: Vec<MutRc<dyn Node>>,
@@ -103,5 +103,11 @@ impl Node for GenericTypeNode {
 
     fn pos(&self) -> Interval {
         self.identifier.interval()
+    }
+
+    fn as_type_generic_expr(
+        &self,
+    ) -> Option<GenericTypeNode> {
+        Some(self.clone())
     }
 }

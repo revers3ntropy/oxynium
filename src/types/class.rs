@@ -92,9 +92,7 @@ impl Type for ClassType {
         if other.borrow().is_unknown() {
             return true;
         }
-        return if let Some(other) =
-            other.borrow().as_class()
-        {
+        if let Some(other) = other.borrow().as_class() {
             if other.id != self.id {
                 return false;
             }
@@ -118,7 +116,7 @@ impl Type for ClassType {
             return true;
         } else {
             false
-        };
+        }
     }
 
     fn concrete(

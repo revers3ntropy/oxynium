@@ -14,3 +14,4 @@ expect_err 'TypeError' '
 '
 
 expect 'Void' 'print(typeof #asm "")'
+expect 'Str' 'print(typeof #asm(Str, ""))'
