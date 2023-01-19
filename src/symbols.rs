@@ -58,9 +58,15 @@ const RESERVED_KEYWORDS: [&str; 50] = [
 
 pub fn is_valid_identifier(s: &str) -> bool {
     s.chars().next().map_or(false, |c| {
-        c.is_alphabetic() || c == '_' || c == '$'
+        c.is_alphabetic()
+            || c == '_'
+            || c == '$'
+            || c == '.'
     }) && s.chars().all(|c| {
-        c.is_alphanumeric() || c == '_' || c == '$'
+        c.is_alphanumeric()
+            || c == '_'
+            || c == '$'
+            || c == '.'
     }) && !s.as_bytes()[0].is_ascii_digit()
         && !s.starts_with("_$")
 }

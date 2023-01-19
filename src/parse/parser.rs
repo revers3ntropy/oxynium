@@ -40,6 +40,7 @@ use crate::parse::token::{Token, TokenType};
 use crate::position::Position;
 use crate::util::{new_mut_rc, MutRc};
 use std::any::Any;
+use std::borrow::BorrowMut;
 
 macro_rules! ret_on_err {
     ($e:expr) => {
@@ -246,28 +247,48 @@ impl Parser {
         value: Option<String>,
     ) -> bool {
         if let Some(tok) = self.current_tok() {
-            if tok.token_type == tok_type {
-                if let Some(value) = value {
-                    if tok.literal.is_some()
-                        && tok.literal.unwrap() == value
-                    {
-                        return true;
-                    }
-                } else {
-                    return true;
-                }
+            if tok.token_type != tok_type {
+                return false;
             }
+            if let Some(value) = value {
+                return tok.literal.is_some()
+                    && tok.literal.unwrap() == value;
+            }
+            return true;
         }
         false
     }
 
+    fn next_matches(
+        &self,
+        tok_type: TokenType,
+        value: Option<String>,
+    ) -> bool {
+        if let Some(tok) = self.next_tok() {
+            if tok.token_type != tok_type {
+                return false;
+            }
+            if let Some(value) = value {
+                return tok.literal.is_some()
+                    && tok.literal.unwrap() == value;
+            }
+            return true;
+        }
+        false
+    }
+
+    fn next_tok(&self) -> Option<Token> {
+        if self.tok_idx >= self.tokens.len() - 1 {
+            return None;
+        }
+        Some(self.tokens[self.tok_idx + 1].clone())
+    }
     fn current_tok(&self) -> Option<Token> {
         if self.tok_idx >= self.tokens.len() {
             return None;
         }
         Some(self.tokens[self.tok_idx].clone())
     }
-
     fn last_tok(&self) -> Option<Token> {
         if self.tok_idx == 0 {
             return None;
@@ -521,8 +542,9 @@ impl Parser {
             Some("fn".to_string()),
         ) {
             self.advance(&mut res);
-            res.node =
-                res.register(self.fn_def_expr(false, None));
+            res.node = res.register(
+                self.function_declaration(false, None),
+            );
             return res;
         }
         if self.current_matches(
@@ -553,8 +575,9 @@ impl Parser {
                 Some("fn".to_string()),
             ) {
                 self.advance(&mut res);
-                res.node = res
-                    .register(self.fn_def_expr(true, None));
+                res.node = res.register(
+                    self.function_declaration(true, None),
+                );
             } else if self.current_matches(
                 TokenType::Identifier,
                 Some("const".to_string()),
@@ -1474,13 +1497,18 @@ impl Parser {
         )))
     }
 
-    fn fn_def_expr(
+    /// FuncDef ::= Identifier ('.' Identifier)? '(' Parameters? ')' Type? '{' Scope '}'
+    fn function_declaration(
         &mut self,
         is_external: bool,
-        class_name: Option<String>,
+        mut class_name: Option<String>,
     ) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
+
+        let should_add_end_stmts = class_name.is_none();
+
+        let mut is_external_method = false;
 
         if self.current_tok().is_none() {
             res.failure(
@@ -1500,7 +1528,37 @@ impl Parser {
             return res;
         }
 
-        let identifier;
+        if self.next_matches(TokenType::Dot, None) {
+            if class_name.is_some() {
+                res.failure(
+                    syntax_error(
+                        "Unexpected '.'".to_owned(),
+                    ),
+                    Some(
+                        self.last_tok()
+                            .unwrap()
+                            .end
+                            .clone()
+                            .advance(None),
+                    ),
+                    None,
+                );
+                return res;
+            }
+            class_name = Some(
+                self.current_tok()
+                    .unwrap()
+                    .literal
+                    .clone()
+                    .unwrap(),
+            );
+            self.advance(&mut res);
+            self.advance(&mut res);
+            ret_on_err!(res);
+            is_external_method = true;
+        }
+
+        let mut identifier;
         if !self
             .current_matches(TokenType::Identifier, None)
         {
@@ -1664,6 +1722,17 @@ impl Parser {
 
         if !self.current_matches(TokenType::OpenBrace, None)
         {
+            if is_external_method {
+                res.failure(
+                    syntax_error(format!(
+                        "Expected method body for method '{}'",
+                        identifier.str()
+                    )),
+                    Some(self.last_tok().unwrap().start),
+                    Some(self.last_tok().unwrap().end),
+                );
+                return res;
+            }
             res.success(new_mut_rc(FnDeclarationNode {
                 identifier,
                 params_scope: Context::new(
@@ -1700,9 +1769,18 @@ impl Parser {
         let body = res.register(self.scope(false));
         ret_on_err!(res);
 
-        if class_name.is_none() {
+        if should_add_end_stmts {
             self.add_end_statement(&mut res);
             ret_on_err!(res);
+        }
+
+        if is_external_method {
+            identifier.borrow_mut().literal =
+                Some(format!(
+                    "{}.{}",
+                    class_name.unwrap(),
+                    identifier.str()
+                ));
         }
 
         res.success(new_mut_rc(FnDeclarationNode {
@@ -1867,11 +1945,12 @@ impl Parser {
             ) {
                 consume!(self, res);
 
-                let fn_decl =
-                    res.register(self.fn_def_expr(
+                let fn_decl = res.register(
+                    self.function_declaration(
                         false,
                         Some(identifier.clone()),
-                    ));
+                    ),
+                );
                 ret_on_err!(res);
 
                 // assume that a FnDeclarationNode is returned from fn_expr
@@ -1900,11 +1979,12 @@ impl Parser {
                 consume!(self, res);
                 consume!(Identifier, self, res);
 
-                let fn_decl =
-                    res.register(self.fn_def_expr(
+                let fn_decl = res.register(
+                    self.function_declaration(
                         true,
                         Some(identifier.clone()),
-                    ));
+                    ),
+                );
                 ret_on_err!(res);
 
                 // assume that a FnDeclarationNode is returned from fn_expr

@@ -1,3 +1,10 @@
+fn Bool.str(self) Str {
+	if self {
+		return "true"
+	}
+	return "false"
+}
+
 fn exit (code: Int = 0) {
 	#asm "
 		mov rax, 60

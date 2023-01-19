@@ -56,12 +56,7 @@ primitive Bool {
 		")
 	}
 
-    fn str (self) Str {
-        if self {
-            return "true"
-        }
-        return "false"
-    }
+    extern fn str (self) Str,
 }
 
 primitive Int {
