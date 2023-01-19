@@ -11,6 +11,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use std::process::Command as Exec;
+// use std::time::Instant;
 
 mod args;
 mod ast;
@@ -29,6 +30,8 @@ const STD_DOXY: &str = include_str!("../std/std.doxy");
 fn setup_ctx_with_doxy(
     ctx: MutRc<Context>,
 ) -> Result<MutRc<Context>, Error> {
+    //let start = Instant::now();
+
     let mut lexer = Lexer::new(
         STD_DOXY.to_owned(),
         "std.doxy".to_owned(),
@@ -38,15 +41,20 @@ fn setup_ctx_with_doxy(
         return Err(tokens.err().unwrap());
     }
 
+    // println!("Lexed STD in {:.2?}", start.elapsed());
+    // let start = Instant::now();
+
     let mut parser = Parser::new(
         ctx.borrow().cli_args.clone(),
         tokens.unwrap(),
     );
     let ast = parser.parse();
-
     if ast.error.is_some() {
         return Err(ast.error.unwrap());
     }
+
+    // println!("Parsed STD in {:.2?}", start.elapsed());
+    // let start = Instant::now();
 
     let node = ast.node.unwrap();
     let type_check_res =
@@ -54,11 +62,22 @@ fn setup_ctx_with_doxy(
     if type_check_res.is_err() {
         return Err(type_check_res.err().unwrap());
     }
+
+    // println!("Type checked STD in {:.2?}", start.elapsed());
+    // let start = Instant::now();
+
     let asm_error = node.borrow_mut().asm(ctx.clone());
     if asm_error.is_err() {
         return Err(asm_error.err().unwrap());
     }
+
+    // println!("Compiled STD in {:.2?}", start.elapsed());
+    // let start = Instant::now();
+
     ctx.borrow_mut().reset();
+
+    //println!("Reset CTX in {:.2?}", start.elapsed());
+
     Ok(ctx)
 }
 
@@ -67,6 +86,8 @@ fn compile(
     file_name: String,
     args: &Args,
 ) -> Result<(String, MutRc<Context>), Error> {
+    //let start = Instant::now();
+
     let ctx = Context::new(args.clone());
     let ctx = setup_ctx_with_doxy(ctx)?;
     ctx.borrow_mut().std_asm_path = args.std_path.clone();
@@ -75,18 +96,34 @@ fn compile(
     let mut lexer = Lexer::new(input.clone(), file_name);
     let tokens = lexer.lex()?;
 
+    // println!("[perf] Lexed in {:.2?}", start.elapsed());
+    // let start = Instant::now();
+
     let mut parser = Parser::new(args.clone(), tokens);
     let ast = parser.parse();
     if ast.error.is_some() {
         return Err(ast.error.unwrap());
     }
 
+    // println!("[perf] Parsed in {:.2?}", start.elapsed());
+    // let start = Instant::now();
+
     let root_node = ast.node.unwrap();
     root_node.borrow_mut().type_check(ctx.clone())?;
+
+    // println!("Type checked in {:.2?}", start.elapsed());
+    // let start = Instant::now();
+
     let compile_res =
         root_node.borrow_mut().asm(ctx.clone())?;
 
+    // println!("Compiled in  {:.2?}", start.elapsed());
+    // let start = Instant::now();
+
     let asm = post_process(compile_res, args);
+
+    //println!("Post processed in  {:.2?}", start.elapsed());
+
     Ok((asm, ctx.clone()))
 }
 

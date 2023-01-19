@@ -45,6 +45,7 @@ const DOUBLE_CHAR_TOKENS: phf::Map<
 
 pub struct Lexer {
     input: String,
+    input_as_bytes: Vec<char>,
     position: Position,
     current_char: Option<char>,
 }
@@ -52,6 +53,10 @@ pub struct Lexer {
 impl Lexer {
     pub fn new(input: String, file_name: String) -> Lexer {
         Lexer {
+            input_as_bytes: input
+                .chars()
+                .into_iter()
+                .collect(),
             input,
             position: Position::new(file_name, -1, 0, -1),
             current_char: None,
@@ -165,16 +170,19 @@ impl Lexer {
     fn advance(&mut self) -> Option<char> {
         self.position.advance(self.current_char);
 
-        if self.position.idx >= self.input.len() as i64 {
+        if self.position.idx
+            >= self.input_as_bytes.len() as i64
+        {
             self.current_char = None;
             return None;
         }
 
-        let current_char = self
-            .input
-            .chars()
-            .nth(self.position.idx as usize);
+        let current_char = Some(
+            self.input_as_bytes[self.position.idx as usize]
+                as char,
+        );
         self.current_char = current_char;
+
         current_char
     }
 
