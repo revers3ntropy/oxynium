@@ -51,7 +51,7 @@ impl Context {
             anon_symbol_count: 0,
             exec_mode: 0,
             std_asm_path: String::from("std.asm"),
-            allow_overrides: false,
+            allow_overrides: cli_args.allow_overrides,
             allow_local_var_decls: false,
             frozen: false,
             err_on_unknowns: false,
@@ -133,14 +133,15 @@ impl Context {
     }
 
     pub fn get_anon_label(&mut self) -> String {
+        format!(".{}", self.get_global_anon_label())
+    }
+    pub fn get_global_anon_label(&mut self) -> String {
         if self.parent.is_some() {
             return self.with_root_mut(&mut |ctx| {
-                ctx.get_anon_label()
+                ctx.get_global_anon_label()
             });
         }
-        let symbol =
-            format!("{}L{}", ANON_PREFIX, self.get_id());
-        symbol
+        format!("{}L{}", ANON_PREFIX, self.get_id())
     }
 
     // Declarations
@@ -177,7 +178,7 @@ impl Context {
                 || !duplicate.contains(&symbol)
             {
                 return Err(type_error(format!(
-                    "Symbol {} is already declared",
+                    "Symbol `{}` is already declared",
                     symbol.name
                 ))
                 .set_interval(trace_interval));
@@ -315,7 +316,7 @@ impl Context {
         self.definitions.insert(name.clone(), symbol);
         Ok(())
     }
-    pub fn define_anon(
+    pub fn define_global_anon(
         &mut self,
         mut symbol: SymbolDef,
         trace_interval: Interval,
@@ -326,9 +327,12 @@ impl Context {
                 .as_ref()
                 .unwrap()
                 .borrow_mut()
-                .define_anon(symbol, trace_interval);
+                .define_global_anon(
+                    symbol,
+                    trace_interval,
+                );
         }
-        symbol.name = self.get_anon_label();
+        symbol.name = self.get_global_anon_label();
         if self
             .definitions
             .get(symbol.name.clone().as_str())

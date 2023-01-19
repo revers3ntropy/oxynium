@@ -46,7 +46,7 @@ impl Node for StrNode {
             format!("db {} \ndq 0x0", asm)
         };
 
-        let anon_id = ctx.borrow_mut().define_anon(
+        let anon_id = ctx.borrow_mut().define_global_anon(
             SymbolDef {
                 name: "".to_string(),
                 // ,0 is the null terminator

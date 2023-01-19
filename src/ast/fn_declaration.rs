@@ -86,6 +86,13 @@ impl Node for FnDeclarationNode {
         }
 
         if !self.has_usage {
+            // TODO: emit warning
+            // kinda needs attributes before this can be done
+            // as some STD functions are 'unused' but still required
+            // also, TODO: better system (eg dependency tree)
+            //       because this will only prune functions which have
+            //       no callers anywhere, when what we want is to prune
+            //       functions which can never be called from 'main'
             //return Ok("".to_string());
         }
 

@@ -102,7 +102,7 @@ impl Node for ClassInitNode {
                 format!(
                     "
                 push 8
-                call Memory.allocate
+                call Ptr.allocate
                 add rsp, 8
                 mov qword [rax], 0
                 push rax
@@ -114,7 +114,7 @@ impl Node for ClassInitNode {
         asm.push_str(&format!(
             "
             push {}
-            call Memory.allocate
+            call Ptr.allocate
             add rsp, 8
         ",
             fields.len() * 8

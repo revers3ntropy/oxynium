@@ -16,7 +16,7 @@ primitive Char {
     fn str (self) Str {
     	return #asm(Str, "
 			push 16
-			call Memory.allocate
+			call Ptr.allocate
 			add rsp, 8
 
 			mov rdi, qword [rbp + 16]
@@ -175,7 +175,7 @@ primitive Int {
     	return #asm(Str, "
     			; allocate string
                 push 64 ; much larger than needed
-                call Memory.allocate
+                call Ptr.allocate
                 add rsp, 8
 
                 mov r15, rax ; save char*
@@ -262,7 +262,7 @@ class Str {
             inc rax                    ; rax = lhs.len() + rhs.len() + 1 (for null terminator)
             imul rax, 8                ; rax = (lhs.len() + rhs.len() + 1) * 8
             push rax
-            call Memory.allocate       ; rax = malloc((lhs.len() + rhs.len() + 1) * 8)
+            call Ptr.allocate       ; rax = malloc((lhs.len() + rhs.len() + 1) * 8)
             add rsp, 8
             mov qword [rbp - 24], rax  ; [rbp - 24] = new string
 
@@ -654,7 +654,7 @@ class Str {
 				add rdi, 64 ; add space for null terminator
 				imul rdi, 8
 				push rdi
-				call Memory.allocate
+				call Ptr.allocate
 				add rsp, 8
 				; rax = return value (pointer to heap allocated char*)
 
@@ -804,7 +804,7 @@ primitive Ptr <TPtr> {
 	fn make_from (self, val: TPtr) Ptr<TPtr> {
 		return #asm(Ptr, "
 			push 8
-			call Memory.allocate
+			call Ptr.allocate
 			add rsp, 8
 
 			mov rdx, qword [rbp + 24]
@@ -818,6 +818,54 @@ primitive Ptr <TPtr> {
 			mov rax, qword [rax]
 			push rax
 		")
+	}
+
+	/// Wrapper around `malloc`
+	fn allocate (size: Int) Ptr<TPtr> {
+		return #asm(Ptr, "
+			xor rax, rax
+
+			mov rdi, qword [rbp + 16]
+			cmp rdi, 0
+			jle _$_allocate_end
+
+			; https://stackoverflow.com/questions/74932257
+			; stack alignment around call to malloc
+			push rbp
+			mov rbp, rsp
+			sub rsp, 32
+			and rsp, -16
+			call malloc WRT ..plt
+			mov rsp, rbp
+			pop rbp
+
+			cmp rax, 0 ; if rax is NULL, fail
+			je _$_allocate_error
+
+			push rax
+			mov rdi, rax
+			mov rsi, 0
+			mov rdx, qword [rbp + 16]
+
+			push rbp
+			mov rbp, rsp
+			sub rsp, 32
+			and rsp, -16
+			call memset WRT ..plt
+			mov rsp, rbp
+			pop rbp
+
+			pop rax
+
+			_$_allocate_end:
+				mov rsp, rbp
+				pop rbp
+				ret
+
+			_$_allocate_error:
+				push _$_alloc_err_msg
+				call panic
+		");
 	}
 }
 
@@ -864,7 +912,7 @@ class List <TList> {
         	add rcx, 8 				  ; rdx = self.size + 8
         	mov qword [rax + 8], rcx  ; self.size = self.size + 8
         	push rcx 		          ; push self.size + 8
-        	call Memory.allocate      ; rax = allocate((self.size + 1) * 8)
+        	call Ptr.allocate      ; rax = allocate((self.size + 1) * 8)
         	add rsp, 8                ; pop self.size + 8
 
 
@@ -923,7 +971,7 @@ fn input (prompt: Str = "", buffer_size: Int = 1000) Str {
 		mov rdi, qword [rbp + 24] ; buffer_size
 		add rdi, 1                ; add space for null byte
 		push rdi
-		call Memory.allocate
+		call Ptr.allocate
 		add rsp, 8
 		mov r15, rax              ; r15 = string pointer
 
@@ -984,6 +1032,7 @@ fn print (msg: Str) {
 	"
 }
 
+//extern fn println (msg: Str, line_end="\n");
 fn println (msg: Str, line_end="\n") {
     print(msg);
     print(line_end);
@@ -991,52 +1040,4 @@ fn println (msg: Str, line_end="\n") {
 fn panic (msg: Str) {
 	println("PANIC: '" + msg + "'");
 	exit(1);
-}
-
-class Memory <TMem> {
-	fn allocate (size: Int) Ptr<TMem> {
-		return #asm(Ptr, "
-			xor rax, rax
-
-			mov rdi, qword [rbp + 16]
-			cmp rdi, 0
-			jle _$_allocate_end
-
-			; https://stackoverflow.com/questions/74932257
-			; stack alignment around call to malloc
-			push rbp
-			mov rbp, rsp
-			sub rsp, 32
-			and rsp, -16
-			call malloc WRT ..plt
-			mov rsp, rbp
-			pop rbp
-
-			cmp rax, 0 ; if rax is NULL, fail
-			je _$_allocate_error
-
-			push rax
-			mov rdi, rax
-			mov rsi, 0
-			mov rdx, qword [rbp + 16]
-
-			push rbp
-			mov rbp, rsp
-			sub rsp, 32
-			and rsp, -16
-			call memset WRT ..plt
-			mov rsp, rbp
-			pop rbp
-
-			pop rax
-
-			_$_allocate_end:
-				mov rsp, rbp
-				pop rbp
-				ret
-
-			_$_allocate_error:
-		");
-		panic("ERROR: Memory allocation failed");
-	}
 }

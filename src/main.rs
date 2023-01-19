@@ -157,48 +157,54 @@ fn compile_and_assemble(
         .write_all(compile_res.0.as_bytes())
         .expect("Could not write assembly output");
 
-    let nasm_out = Exec::new("nasm")
-        .arg("-f")
-        .arg("elf64")
-        .arg(asm_out_file.clone().as_str())
-        .arg("-o")
-        .arg(o_out_file.clone().as_str())
-        .output()
-        .expect("Could not assemble");
-    if !nasm_out.status.success() {
-        return Err(io_error(
-            String::from_utf8(nasm_out.stderr).unwrap(),
-        )
-        .set_pos(start_pos.clone(), Position::unknown()));
-    }
-
-    if args.exec_mode == 0 {
-        let ls_out = Exec::new("gcc")
-            .arg("-Wall")
-            .arg("-no-pie")
-            .arg(o_out_file.clone().as_str())
-            .arg("-e")
-            .arg("main")
+    if !args.stop_after_asm {
+        let nasm_out = Exec::new("nasm")
+            .arg("-f")
+            .arg("elf64")
+            .arg(asm_out_file.clone().as_str())
             .arg("-o")
-            .arg(args.out.clone().as_str())
+            .arg(o_out_file.clone().as_str())
             .output()
             .expect("Could not assemble");
-        if !ls_out.status.success() {
+        if !nasm_out.status.success() {
             return Err(io_error(
-                String::from_utf8(ls_out.stderr).unwrap(),
+                String::from_utf8(nasm_out.stderr).unwrap(),
             )
             .set_pos(
                 start_pos.clone(),
                 Position::unknown(),
             ));
         }
-    }
 
-    if !args.keep {
-        fs::remove_file(asm_out_file)
-            .expect("Could not remove assembly file");
-        fs::remove_file(o_out_file)
-            .expect("Could not remove object file");
+        if args.exec_mode == 0 {
+            let ls_out = Exec::new("gcc")
+                .arg("-Wall")
+                .arg("-no-pie")
+                .arg(o_out_file.clone().as_str())
+                .arg("-e")
+                .arg("main")
+                .arg("-o")
+                .arg(args.out.clone().as_str())
+                .output()
+                .expect("Could not assemble");
+            if !ls_out.status.success() {
+                return Err(io_error(
+                    String::from_utf8(ls_out.stderr)
+                        .unwrap(),
+                )
+                .set_pos(
+                    start_pos.clone(),
+                    Position::unknown(),
+                ));
+            }
+        }
+
+        if !args.keep {
+            fs::remove_file(asm_out_file)
+                .expect("Could not remove assembly file");
+            fs::remove_file(o_out_file)
+                .expect("Could not remove object file");
+        }
     }
 
     Ok(())

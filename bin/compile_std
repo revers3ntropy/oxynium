@@ -17,7 +17,12 @@ start=$(date +"%s.%4N")
 
 # compile, link and assemble the program
 export RUST_BACKTRACE=1
-cargo run -- std/std.oxy -kx=1 -o=std
+cargo run -- std/std.oxy \
+             --keep \
+             --exec_mode=1 \
+             --out=std \
+             --allow_overrides \
+             --stop_after_asm
 
 end=$(date +%s.%4N)
 runtime=$(echo "$end - $start" | bc -l)
