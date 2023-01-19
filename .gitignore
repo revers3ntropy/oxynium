@@ -22,6 +22,8 @@ out
 /*.out
 /*.js
 /*.ts
+/*.data
+/*.data.old
 
 # OS
 .DS_Store

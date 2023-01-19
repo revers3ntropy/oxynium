@@ -199,7 +199,7 @@ impl Context {
         Ok(symbol)
     }
     pub fn has_dec_with_id(&self, id: &str) -> bool {
-        if self.declarations.get(id).is_some() {
+        if self.declarations.contains_key(id) {
             true
         } else if self.parent.is_some() {
             self.parent
@@ -212,8 +212,8 @@ impl Context {
         }
     }
     pub fn get_dec_from_id(&self, id: &str) -> SymbolDec {
-        if self.declarations.get(id).is_some() {
-            self.declarations.get(id).unwrap().clone()
+        if let Some(dec) = self.declarations.get(id) {
+            dec.clone()
         } else if self.parent.is_some() {
             self.parent
                 .as_ref()
@@ -453,6 +453,7 @@ impl Context {
 
     // Utils
 
+    #[allow(dead_code)]
     pub fn str(&self) -> String {
         let mut s = format!(
             "--- Context {}{}{}---",

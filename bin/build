@@ -4,8 +4,8 @@ start=$(date +"%s.%3N")
 
 cargo build -r
 
-mv ./target/release/oxynium ./res
+cp ./target/release/oxynium ./res
 
 end=$(date +"%s.%3N")
 runtime=$(echo "$end - $start" | bc -l)
-echo "Test total time: $runtime s"
+echo "Build total time: $runtime s"
