@@ -1678,6 +1678,7 @@ impl Parser {
                     self.last_tok().unwrap().end.clone(),
                 ),
                 class: None,
+                has_usage: false,
             }));
             return res;
         }
@@ -1718,6 +1719,7 @@ impl Parser {
                 self.last_tok().unwrap().end.clone(),
             ),
             class: None,
+            has_usage: false,
         }));
         res
     }

@@ -37,6 +37,7 @@ pub struct FnDeclarationNode {
     pub is_external: bool,
     pub position: Interval,
     pub class: Option<MutRc<ClassType>>,
+    pub has_usage: bool,
 }
 
 impl FnDeclarationNode {
@@ -82,6 +83,10 @@ impl Node for FnDeclarationNode {
 
         if self.body.is_none() {
             return Ok("".to_string());
+        }
+
+        if !self.has_usage {
+            //return Ok("".to_string());
         }
 
         let end_label = ctx.borrow_mut().get_anon_label();

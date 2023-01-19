@@ -1,10 +1,8 @@
 use crate::args::Args;
 use crate::error::{syntax_error, Error};
 use crate::parse::token::{Token, TokenType};
-use crate::perf;
 use crate::position::Position;
 use phf::phf_map;
-use std::time::Instant;
 
 static IDENTIFIER_CHARS: &str =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$";
@@ -50,6 +48,7 @@ pub struct Lexer {
     input: Vec<char>,
     position: Position,
     current_char: Option<char>,
+    #[allow(dead_code)]
     cli_args: Args,
 }
 
@@ -69,8 +68,6 @@ impl Lexer {
 
     pub fn lex(&mut self) -> Result<Vec<Token>, Error> {
         let mut tokens = Vec::new();
-
-        let start = Instant::now();
 
         if self.input.len() == 0 {
             return Ok(tokens);
@@ -107,8 +104,11 @@ impl Lexer {
                 continue;
             }
 
+            // must come before search for identifier char as
+            // that includes digits
             if char::is_numeric(c) {
                 let start = self.position.clone();
+
                 // build a number while we can
                 let mut number = String::new();
                 while self.current_char.is_some()
@@ -203,8 +203,6 @@ impl Lexer {
                 Position::unknown(),
             )));
         }
-
-        perf!(self.cli_args, start, "! Lexer");
 
         Ok(tokens)
     }
