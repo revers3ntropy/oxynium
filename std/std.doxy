@@ -72,6 +72,7 @@ primitive Int {
             push rax
     	")
     }
+
     fn - (self, n: Int) Int {
 		return #asm(Int, "
 			mov rax, qword [rbp + 16]
@@ -79,6 +80,7 @@ primitive Int {
 			push rax
 		")
     }
+
     fn * (self, n: Int) Int {
 		return #asm(Int, "
 			mov rax, qword [rbp + 16]
@@ -86,6 +88,7 @@ primitive Int {
 			push rax
 		")
 	}
+
     fn / (self, n: Int) Int {
 		return #asm(Int, "
 			mov rax, qword [rbp + 16]
@@ -94,6 +97,7 @@ primitive Int {
 			push rax
 		")
 	}
+
     fn % (self, n: Int) Int {
 		return #asm(Int, "
 			mov rax, qword [rbp + 16]
@@ -102,6 +106,7 @@ primitive Int {
 			push rdx
 		")
 	}
+
     fn == (self, n: Int) Bool {
 		return #asm(Bool, "
 			xor rax, rax
@@ -111,9 +116,11 @@ primitive Int {
 			push rax
 		")
 	}
+
     fn != (self, n: Int) Bool {
     	return !(self == n)
 	}
+
     fn < (self, n: Int) Bool {
     	return #asm(Bool, "
     	    xor rax, rax
@@ -123,9 +130,11 @@ primitive Int {
             push rax
     	")
     }
+
     fn <= (self, n: Int) Bool {
     	return self < n || self == n
 	}
+
     fn > (self, n: Int) Bool {
 		return #asm(Bool, "
 			xor rax, rax
@@ -135,6 +144,7 @@ primitive Int {
 			push rax
 		")
 	}
+
     fn >= (self, n: Int) Bool {
     	return self > n || self == n
     }

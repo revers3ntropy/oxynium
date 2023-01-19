@@ -14,6 +14,7 @@ pub struct Args {
     pub optimise: u8,
     pub enable: Vec<String>,
     pub disable: Vec<String>,
+    pub comp_debug: bool,
 }
 
 pub fn get_int_cli_arg(
@@ -40,15 +41,16 @@ pub fn get_int_cli_arg(
 
 pub fn get_args_cmd() -> Command {
     Command::new("res").args(&[
-        arg!(-o --out       [FILE]  "File name of output"),
-        arg!(-e --eval      [EXPR]  "Compiles and prints a single expression"),
-        arg!(-s --std       [PATH]  "Path to STD assembly file"),
-        arg!(-k --keep              "Keep output assembly and object files"),
-        arg!(-x --exec_mode [INT]   "Exec mode"),
-        arg!(-O --optimise  [INT]   "Optimisation level"),
-        arg!(-E --enable    [ID]... "Enable specific optimisations"),
-        arg!(-D --disable   [ID]... "Disable specific optimisations"),
-        arg!(               [input] "Input code to evaluate"),
+        arg!(-o --out        [FILE]  "File name of output"),
+        arg!(-e --eval       [EXPR]  "Compiles and prints a single expression"),
+        arg!(-s --std        [PATH]  "Path to STD assembly file"),
+        arg!(-k --keep               "Keep output assembly and object files"),
+        arg!(-x --exec_mode  [INT]   "Exec mode"),
+        arg!(-O --optimise   [INT]   "Optimisation level"),
+        arg!(-E --enable     [ID]... "Enable specific optimisations"),
+        arg!(-D --disable    [ID]... "Disable specific optimisations"),
+        arg!(-d --comp_debug         "For debugging the compiler"),
+        arg!(                [input] "Input code to evaluate"),
     ])
 }
 
@@ -102,5 +104,6 @@ pub fn get_cli_args() -> Args {
             .into_iter()
             .map(|a| a.to_string())
             .collect(),
+        comp_debug: m.get_flag("comp_debug"),
     }
 }
