@@ -3,12 +3,26 @@ use clap::{arg, ArgMatches, Command};
 use std::env;
 use std::io::Write;
 
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub enum ExecMode {
+    Bin = 0,
+    Lib = 1,
+}
+
+fn exec_mode_from_int(i: u8) -> Option<ExecMode> {
+    match i {
+        0 => Some(ExecMode::Bin),
+        1 => Some(ExecMode::Lib),
+        _ => None,
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Args {
     pub input: String,
     pub out: String,
     pub eval: String,
-    pub exec_mode: u8,
+    pub exec_mode: ExecMode,
     pub std_path: String,
     pub keep: bool,
     pub optimise: u8,
@@ -93,7 +107,12 @@ pub fn get_cli_args() -> Args {
                 "/usr/local/bin/oxy-std.asm",
             ))
             .to_string(),
-        exec_mode: get_int_cli_arg(&m, "exec_mode", 0),
+        exec_mode: exec_mode_from_int(get_int_cli_arg(
+            &m,
+            "exec_mode",
+            0,
+        ))
+        .unwrap_or(ExecMode::Bin),
         optimise: get_int_cli_arg(&m, "optimise", 1),
         keep: m.get_flag("keep"),
         enable: m

@@ -1,3 +1,4 @@
+use crate::args::ExecMode;
 use crate::ast::Node;
 use crate::context::Context;
 use crate::error::Error;
@@ -14,7 +15,7 @@ impl Node for EmptyExecRootNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<String, Error> {
-        if ctx.borrow_mut().exec_mode == 1 {
+        if ctx.borrow_mut().exec_mode == ExecMode::Lib {
             Ok(format!(
                 "
                 section	.note.GNU-stack

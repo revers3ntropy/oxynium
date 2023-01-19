@@ -1,4 +1,4 @@
-use crate::args::Args;
+use crate::args::{Args, ExecMode};
 use crate::ast::ANON_PREFIX;
 use crate::error::{type_error, Error};
 use crate::position::Interval;
@@ -28,9 +28,9 @@ pub struct Context {
     loop_label_stack: Vec<(String, String)>,
     call_stack: Vec<CallStackFrame>,
     anon_symbol_count: u64,
-    pub exec_mode: u8,
+    pub exec_mode: ExecMode,
     pub std_asm_path: String,
-    pub allow_overrides: bool,
+    allow_overrides: bool,
     pub allow_local_var_decls: bool,
     // do not allow any more declarations
     frozen: bool,
@@ -38,6 +38,7 @@ pub struct Context {
     err_on_unknowns: bool,
     pub cli_args: Args,
     concrete_type_cache: HashMap<String, MutRc<dyn Type>>,
+    ignore_definitions: bool,
 }
 
 impl Context {
@@ -49,7 +50,7 @@ impl Context {
             loop_label_stack: Vec::new(),
             call_stack: Vec::new(),
             anon_symbol_count: 0,
-            exec_mode: 0,
+            exec_mode: ExecMode::Bin,
             std_asm_path: String::from("std.asm"),
             allow_overrides: cli_args.allow_overrides,
             allow_local_var_decls: false,
@@ -57,6 +58,7 @@ impl Context {
             err_on_unknowns: false,
             cli_args,
             concrete_type_cache: HashMap::new(),
+            ignore_definitions: false,
         })
     }
 
@@ -66,6 +68,7 @@ impl Context {
     pub fn reset(&mut self) {
         self.frozen = false;
         self.err_on_unknowns = false;
+        self.set_ignoring_definitions(false);
     }
     pub fn is_frozen(&self) -> bool {
         if let Some(ref parent) = self.parent {
@@ -174,14 +177,21 @@ impl Context {
             .declarations
             .get(symbol.name.clone().as_str())
         {
-            if !self.allow_overrides
-                || !duplicate.contains(&symbol)
-            {
+            if !self.allow_overrides {
                 return Err(type_error(format!(
                     "Symbol `{}` is already declared",
                     symbol.name
                 ))
                 .set_interval(trace_interval));
+            }
+            if !duplicate.contains(&symbol) {
+                return Err(type_error(format!(
+                    "Symbol `{}` redeclared with incompatible type: expected `{}` but found `{}`",
+                    symbol.name,
+                    duplicate.type_.borrow().str(),
+                    symbol.type_.borrow().str()
+                ))
+                    .set_interval(trace_interval));
             }
         }
         self.declarations
@@ -294,6 +304,9 @@ impl Context {
         symbol: SymbolDef,
         trace_interval: Interval,
     ) -> Result<(), Error> {
+        if self.is_ignoring_definitions() {
+            return Ok(());
+        }
         if self.parent.is_some()
             && !self.allow_local_var_decls
         {
@@ -316,23 +329,22 @@ impl Context {
         self.definitions.insert(name.clone(), symbol);
         Ok(())
     }
-    pub fn define_global_anon(
+    pub fn define_global(
         &mut self,
-        mut symbol: SymbolDef,
+        symbol: SymbolDef,
         trace_interval: Interval,
-    ) -> Result<String, Error> {
+    ) -> Result<(), Error> {
+        if self.is_ignoring_definitions() {
+            return Ok(());
+        }
         if self.parent.is_some() {
             return self
                 .parent
                 .as_ref()
                 .unwrap()
                 .borrow_mut()
-                .define_global_anon(
-                    symbol,
-                    trace_interval,
-                );
+                .define_global(symbol, trace_interval);
         }
-        symbol.name = self.get_global_anon_label();
         if self
             .definitions
             .get(symbol.name.clone().as_str())
@@ -344,31 +356,11 @@ impl Context {
             ))
             .set_interval(trace_interval));
         }
-        let name = symbol.name.clone();
-        self.definitions.insert(name.clone(), symbol);
-        Ok(name.clone())
+        self.definitions
+            .insert(symbol.name.clone(), symbol);
+        Ok(())
     }
 
-    #[allow(dead_code)]
-    pub fn get_def_from_id(
-        &self,
-        id: &str,
-    ) -> Result<SymbolDef, Error> {
-        if self.definitions.get(id).is_some() {
-            Ok(self.definitions.get(id).unwrap().clone())
-        } else if self.parent.is_some() {
-            self.parent
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .get_def_from_id(id)
-        } else {
-            Err(type_error(format!(
-                "Symbol {} is not defined",
-                id
-            )))
-        }
-    }
     pub fn get_definitions(
         &self,
     ) -> (Vec<&SymbolDef>, Vec<&SymbolDef>) {
@@ -461,13 +453,17 @@ impl Context {
 
     // Utils
 
-    #[allow(dead_code)]
     pub fn str(&self) -> String {
         let mut s = format!(
-            "--- Context {}{}---",
+            "--- Context {}{}{}---",
             if self.is_frozen() { "(frozen) " } else { "" },
             if self.err_on_unknowns {
                 "(do err) "
+            } else {
+                ""
+            },
+            if self.allow_overrides {
+                "(overrides) "
             } else {
                 ""
             }
@@ -547,5 +543,29 @@ impl Context {
             });
         }
         self.concrete_type_cache.remove(id);
+    }
+
+    // ignoring definitions
+    pub fn set_ignoring_definitions(
+        &mut self,
+        value: bool,
+    ) {
+        if self.parent.is_some() {
+            return self.with_root_mut(&mut |ctx| {
+                ctx.set_ignoring_definitions(value)
+            });
+        }
+        self.ignore_definitions = value;
+    }
+    pub fn is_ignoring_definitions(&self) -> bool {
+        if self.parent.is_some() {
+            return self
+                .parent
+                .clone()
+                .unwrap()
+                .borrow()
+                .is_ignoring_definitions();
+        }
+        self.ignore_definitions
     }
 }

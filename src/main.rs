@@ -1,4 +1,6 @@
-use crate::args::{get_args_cmd, get_cli_args, Args};
+use crate::args::{
+    get_args_cmd, get_cli_args, Args, ExecMode,
+};
 use crate::context::Context;
 use crate::error::{arg_error, io_error, Error};
 use crate::parse::lexer::Lexer;
@@ -32,6 +34,10 @@ fn setup_ctx_with_doxy(
     ctx: MutRc<Context>,
 ) -> Result<MutRc<Context>, Error> {
     let start = Instant::now();
+
+    if ctx.borrow().cli_args.exec_mode == ExecMode::Lib {
+        ctx.borrow_mut().set_ignoring_definitions(true);
+    }
 
     let mut lexer = Lexer::new(
         STD_DOXY.to_owned(),
@@ -176,7 +182,7 @@ fn compile_and_assemble(
             ));
         }
 
-        if args.exec_mode == 0 {
+        if args.exec_mode == ExecMode::Bin {
             let ls_out = Exec::new("gcc")
                 .arg("-Wall")
                 .arg("-no-pie")
@@ -222,7 +228,7 @@ fn main() -> std::io::Result<()> {
             .print_stderr();
         return Ok(());
     }
-    if args.exec_mode != 1
+    if args.exec_mode != ExecMode::Lib
         && !Path::new(&args.std_path).exists()
     {
         io_error(format!(

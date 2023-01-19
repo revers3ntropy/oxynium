@@ -1,3 +1,4 @@
+use crate::args::ExecMode;
 use crate::ast::{Node, TypeCheckRes};
 use crate::ast::{STD_ASM, STD_DATA_ASM};
 use crate::context::Context;
@@ -56,7 +57,7 @@ impl Node for ExecRootNode {
             .collect::<Vec<String>>()
             .join("\n");
 
-        if ctx_ref.exec_mode == 1 {
+        if ctx_ref.exec_mode == ExecMode::Lib {
             return Ok(format!(
                 "
                 section	.note.GNU-stack

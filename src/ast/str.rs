@@ -40,16 +40,26 @@ impl Node for StrNode {
         }
         asm.pop();
 
+        // null terminator
         let asm_str = if symbols.into_iter().count() < 1 {
             format!("dq 0x0")
         } else {
             format!("db {} \ndq 0x0", asm)
         };
 
-        let anon_id = ctx.borrow_mut().define_global_anon(
+        let mut symbol_name =
+            ctx.borrow_mut().get_anon_label();
+        if let Some(scope) = ctx.borrow().stack_frame_peak()
+        {
+            symbol_name =
+                format!("{}{}", scope.name, symbol_name);
+        } else {
+            symbol_name = format!("main{}", symbol_name);
+        }
+
+        ctx.borrow_mut().define_global(
             SymbolDef {
-                name: "".to_string(),
-                // ,0 is the null terminator
+                name: symbol_name.clone(),
                 data: Some(asm_str),
                 text: None,
             },
@@ -58,7 +68,7 @@ impl Node for StrNode {
 
         Ok(format!(
             "
-            push {anon_id}
+            push {symbol_name}
         "
         ))
     }
