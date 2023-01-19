@@ -69,8 +69,9 @@ macro_rules! consume {
                 ),
                 Some(
                     $self.tokens[$self.tokens.len() - 1]
-                        .end
-                        .clone(),
+                        .start
+                        .clone()
+                        .advance(None),
                 ),
                 None,
             );

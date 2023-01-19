@@ -36,6 +36,7 @@ fn setup_ctx_with_doxy(
     let mut lexer = Lexer::new(
         STD_DOXY.to_owned(),
         "std.doxy".to_owned(),
+        ctx.borrow().cli_args.clone(),
     );
     let tokens = lexer.lex();
     if tokens.is_err() {
@@ -87,14 +88,15 @@ fn compile(
     file_name: String,
     args: &Args,
 ) -> Result<(String, MutRc<Context>), Error> {
-    let start = Instant::now();
-
     let ctx = Context::new(args.clone());
     let ctx = setup_ctx_with_doxy(ctx)?;
     ctx.borrow_mut().std_asm_path = args.std_path.clone();
     ctx.borrow_mut().exec_mode = args.exec_mode;
 
-    let mut lexer = Lexer::new(input.clone(), file_name);
+    let start = Instant::now();
+
+    let mut lexer =
+        Lexer::new(input.clone(), file_name, args.clone());
     let tokens = lexer.lex()?;
 
     perf!(ctx.borrow().cli_args, start, "Lexed");

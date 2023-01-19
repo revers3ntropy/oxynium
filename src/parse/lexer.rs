@@ -1,7 +1,10 @@
+use crate::args::Args;
 use crate::error::{syntax_error, Error};
 use crate::parse::token::{Token, TokenType};
+use crate::perf;
 use crate::position::Position;
 use phf::phf_map;
+use std::time::Instant;
 
 static IDENTIFIER_CHARS: &str =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$";
@@ -44,27 +47,30 @@ const DOUBLE_CHAR_TOKENS: phf::Map<
 };
 
 pub struct Lexer {
-    input: String,
-    input_as_bytes: Vec<char>,
+    input: Vec<char>,
     position: Position,
     current_char: Option<char>,
+    cli_args: Args,
 }
 
 impl Lexer {
-    pub fn new(input: String, file_name: String) -> Lexer {
+    pub fn new(
+        input: String,
+        file_name: String,
+        cli_args: Args,
+    ) -> Lexer {
         Lexer {
-            input_as_bytes: input
-                .chars()
-                .into_iter()
-                .collect(),
-            input,
+            input: input.chars().into_iter().collect(),
             position: Position::new(file_name, -1, 0, -1),
             current_char: None,
+            cli_args,
         }
     }
 
     pub fn lex(&mut self) -> Result<Vec<Token>, Error> {
         let mut tokens = Vec::new();
+
+        let start = Instant::now();
 
         if self.input.len() == 0 {
             return Ok(tokens);
@@ -72,7 +78,35 @@ impl Lexer {
 
         self.advance();
 
+        // for performance
+
+        let mut double_char_keys: Vec<&str> =
+            DOUBLE_CHAR_TOKENS
+                .keys()
+                .into_iter()
+                .map(|c| c.clone())
+                .collect();
+        // sort so that it is binary-search-able
+        double_char_keys.sort();
+
+        let mut single_char_keys: Vec<char> =
+            SINGLE_CHAR_TOKENS
+                .keys()
+                .into_iter()
+                .map(|c| c.chars().next().unwrap())
+                .collect();
+        single_char_keys.sort();
+
+        let mut id_chars_sorted =
+            IDENTIFIER_CHARS.chars().collect::<Vec<char>>();
+        id_chars_sorted.sort();
+
         while let Some(c) = self.current_char {
+            if c.is_whitespace() {
+                self.advance();
+                continue;
+            }
+
             if char::is_numeric(c) {
                 let start = self.position.clone();
                 // build a number while we can
@@ -92,18 +126,25 @@ impl Lexer {
                     start,
                     self.position.clone().reverse(None),
                 ));
-            } else if IDENTIFIER_CHARS.contains(c) {
+                continue;
+            }
+
+            if id_chars_sorted.binary_search(&c).is_ok() {
                 tokens.push(self.make_identifier());
-            } else if c.is_whitespace() {
-                self.advance();
-            } else if c == '"' {
+                continue;
+            }
+
+            if c == '"' {
                 tokens.push(self.make_string()?);
-            } else if c == '/'
-                && self
-                    .input
-                    .chars()
-                    .nth((self.position.idx + 1) as usize)
-                    == Some('/')
+                continue;
+            }
+
+            if c == '/'
+                && self.position.idx
+                    < (self.input.len() - 2) as i64
+                && self.input
+                    [(self.position.idx + 1) as usize]
+                    == '/'
             {
                 self.advance();
                 while self.current_char.is_some()
@@ -111,58 +152,59 @@ impl Lexer {
                 {
                     self.advance();
                 }
-            } else if DOUBLE_CHAR_TOKENS.contains_key(
-                &(c.to_string()
-                    + &self
-                        .input
-                        .chars()
-                        .nth(
-                            (self.position.idx + 1)
-                                as usize,
-                        )
-                        .unwrap_or('\0')
-                        .to_string()),
-            ) {
-                let start = self.position.clone();
-                tokens.push(Token::new(
-                    DOUBLE_CHAR_TOKENS[&(c.to_string()
-                        + &self
-                            .input
-                            .chars()
-                            .nth(
-                                (self.position.idx + 1)
-                                    as usize,
-                            )
-                            .unwrap_or('\0')
-                            .to_string())],
-                    None,
-                    start,
-                    self.position.clone().advance(None),
-                ));
-                self.advance();
-                self.advance();
-            } else if SINGLE_CHAR_TOKENS
-                .contains_key(&c.to_string())
+                continue;
+            }
+
+            if self.position.idx
+                < (self.input.len() - 2) as i64
             {
-                let start = self.position.clone();
+                let current_and_next = c.to_string()
+                    + &self.input
+                        [(self.position.idx + 1) as usize]
+                        .to_string();
+
+                if double_char_keys
+                    .binary_search(
+                        &current_and_next.as_str(),
+                    )
+                    .is_ok()
+                {
+                    let start = self.position.clone();
+                    tokens.push(Token::new(
+                        DOUBLE_CHAR_TOKENS
+                            [current_and_next.as_str()],
+                        None,
+                        start,
+                        self.position.clone().advance(None),
+                    ));
+                    self.advance();
+                    self.advance();
+                    continue;
+                }
+            }
+
+            if single_char_keys.binary_search(&c).is_ok() {
                 tokens.push(Token::new(
                     SINGLE_CHAR_TOKENS[&c.to_string()],
                     None,
-                    start,
-                    self.position.clone(),
+                    self.position.clone().reverse(None),
+                    Position::unknown(),
                 ));
                 self.advance();
-            } else {
-                return Err(syntax_error(format!(
-                    "Unexpected character '{}'",
-                    c
-                ))
-                .set_interval((
-                    self.position.clone(),
-                    self.position.clone(),
-                )));
+                continue;
             }
+
+            return Err(syntax_error(format!(
+                "Unexpected character '{}'",
+                c
+            ))
+            .set_interval((
+                self.position.clone(),
+                Position::unknown(),
+            )));
         }
+
+        perf!(self.cli_args, start, "! Lexer");
 
         Ok(tokens)
     }
@@ -170,16 +212,13 @@ impl Lexer {
     fn advance(&mut self) -> Option<char> {
         self.position.advance(self.current_char);
 
-        if self.position.idx
-            >= self.input_as_bytes.len() as i64
-        {
+        if self.position.idx >= self.input.len() as i64 {
             self.current_char = None;
             return None;
         }
 
         let current_char = Some(
-            self.input_as_bytes[self.position.idx as usize]
-                as char,
+            self.input[self.position.idx as usize] as char,
         );
         self.current_char = current_char;
 
