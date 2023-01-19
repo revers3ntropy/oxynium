@@ -1,1 +1,1 @@
-describe 'Any'
+describe 'class Any'

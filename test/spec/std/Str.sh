@@ -1,4 +1,4 @@
-describe 'Str'
+describe 'class Str'
 
 expect '' 'print(new Str.str().str())'
 expect '' 'print(new Str.str())'
@@ -7,7 +7,7 @@ expect 'Hi' 'print("Hi")'
 expect_err 'SyntaxError' 'print("hi'
 expect_err 'SyntaxError' '"hi'
 
-describe 'UTF-8 Support'
+describe 'class Str UTF-8 Support'
 
 expect 'ݫݨݫ' 'print("ݫݨݫ")'
 expect '' 'print("")'

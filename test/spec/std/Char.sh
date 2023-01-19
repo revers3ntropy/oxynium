@@ -1,4 +1,4 @@
-describe 'Char'
+describe 'primitive Char'
 
 expect '' 'print(new Char.str())'
 expect_err 'TypeError' 'print(new Char)'

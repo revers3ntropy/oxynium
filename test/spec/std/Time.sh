@@ -1,1 +1,1 @@
-describe 'Time'
+describe 'class Time'

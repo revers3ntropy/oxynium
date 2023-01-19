@@ -1,4 +1,4 @@
-describe 'List'
+describe 'class List'
 
 expect '732truefalsetrue' '
     fn main () {

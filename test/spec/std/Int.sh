@@ -1,4 +1,4 @@
-describe 'Int'
+describe 'primitive Int'
 
 expect '0' 'print(new Int.str())'
 

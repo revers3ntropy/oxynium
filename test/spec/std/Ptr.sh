@@ -1,1 +1,1 @@
-describe 'Ptr'
+describe 'primitive Ptr'

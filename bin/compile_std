@@ -1,5 +1,12 @@
 #!/bin/bash
 
+#GREEN="\033[0;32m"
+#RED='\033[0;31m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
+
+start=$(date +"%s.%4N")
+
 {
     rm ./out.asm
     rm ./out.o
@@ -11,3 +18,7 @@
 # compile, link and assemble the program
 export RUST_BACKTRACE=1
 cargo run -- std/std.oxy -kx=1 -o=std
+
+end=$(date +%s.%4N)
+runtime=$(echo "$end - $start" | bc -l)
+printf "Compiled STD in ${YELLOW}%s${NC} seconds \n\n" "$runtime"

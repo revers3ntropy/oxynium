@@ -1,4 +1,4 @@
-describe 'Bool'
+describe 'primitive Bool'
 
 expect 'false' 'print(new Bool.str())'
 expect 'false' 'print(false.str())'

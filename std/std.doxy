@@ -13,7 +13,6 @@ primitive Char {
         return !(self == other)
     }
 
-    extern fn as_int (self) Int,
     fn str (self) Str {
     	return #asm(Str, "
 			push 16
@@ -26,12 +25,36 @@ primitive Char {
     	")
     }
 
-    extern fn from_int (i: Int) Char,
+    fn as_int (self) Int {
+    	return #asm(Int, "
+    		mov rax, qword [rbp + 16]
+    		push rax
+    	")
+    }
+    fn from_int (i: Int) Char {
+    	return #asm(Char, "
+    		mov rax, qword [rbp + 16]
+    		push rax
+    	")
+    }
 }
 
 primitive Bool {
-    extern fn || (self, other: Bool) Bool,
-    extern fn && (self, other: Bool) Bool,
+    fn || (self, other: Bool) Bool {
+    	return #asm(Bool, "
+			mov rax, qword [rbp + 16]
+			or rax, qword [rbp + 24]
+			push rax
+		")
+	}
+
+    fn && (self, other: Bool) Bool {
+		return #asm(Bool, "
+			mov rax, qword [rbp + 16]
+			and rax, qword [rbp + 24]
+			push rax
+		")
+	}
 
     fn str (self) Str {
         if self {
@@ -56,13 +79,53 @@ primitive Int {
 			push rax
 		")
     }
-    extern fn *  (self, n: Int) Int,
-    extern fn /  (self, n: Int) Int,
-    extern fn %  (self, n: Int) Int,
-    extern fn == (self, n: Int) Bool,
-    extern fn != (self, n: Int) Bool,
-    extern fn <  (self, n: Int) Bool,
-    extern fn <= (self, n: Int) Bool,
+    fn * (self, n: Int) Int {
+		return #asm(Int, "
+			mov rax, qword [rbp + 16]
+			imul rax, qword [rbp + 24]
+			push rax
+		")
+	}
+    fn / (self, n: Int) Int {
+		return #asm(Int, "
+			mov rax, qword [rbp + 16]
+			cqo
+			idiv qword [rbp + 24]
+			push rax
+		")
+	}
+    fn % (self, n: Int) Int {
+		return #asm(Int, "
+			mov rax, qword [rbp + 16]
+			cqo
+			idiv qword [rbp + 24]
+			push rdx
+		")
+	}
+    fn == (self, n: Int) Bool {
+		return #asm(Bool, "
+			xor rax, rax
+			mov rcx, qword [rbp + 16]
+			cmp rcx, qword [rbp + 24]
+			sete al
+			push rax
+		")
+	}
+    fn != (self, n: Int) Bool {
+    	return !(self == n)
+	}
+    fn < (self, n: Int) Bool {
+    	return #asm(Bool, "
+    	    xor rax, rax
+            mov rcx, qword [rbp + 16]
+            cmp rcx, qword [rbp + 24]
+            setl al
+            push rax
+    	")
+    }
+    fn <= (self, n: Int) Bool {
+    	return self < n || self == n
+	}
     fn > (self, n: Int) Bool {
 		return #asm(Bool, "
 			xor rax, rax
@@ -72,7 +135,9 @@ primitive Int {
 			push rax
 		")
 	}
-    extern fn >= (self, n: Int) Bool,
+    fn >= (self, n: Int) Bool {
+    	return self > n || self == n
+    }
 
     fn max (self, other = 9223372036854775807) Int {
         if self > other {
@@ -337,8 +402,7 @@ class Str {
         if n < 1 {
             return ""
         }
-        // TODO: helper function in assembly to do this without allocating
-        //       a new string each time through the loop
+        // TODO: implement in assembly to make fast
         return self + self.repeat(n - 1)
     }
 
@@ -628,8 +692,27 @@ class Time {
 		return self.seconds.str() + "." + self.microseconds.str()
 	}
 
-	extern fn current_seconds () Int,
-	extern fn current_microseconds () Int,
+	/// returns the current time in seconds from the UNIX epoch
+	fn current_seconds () Int {
+		return #asm(Int, "
+        	xor rdi, rdi
+        	sub rsp, 32
+        	and rsp, -16
+        	call time WRT ..plt ; return time(NULL)
+        	push rax
+		")
+	}
+
+	fn current_microseconds () Int {
+		return #asm(Int, "
+			mov rax, 96
+			lea rdi, [rsp - 16]
+			xor esi, esi
+			syscall
+			mov rax, [rdi + 8]
+			push rax
+		")
+	}
 
 	fn now () Time {
 		return new Time {
@@ -678,8 +761,26 @@ class Option <TOption> {
 
 class Any <TAny, TAnyCmp> {
 	val: TAny,
-	extern fn eq (self, other: TAnyCmp) Bool,
-	extern fn str (self) Str,
+	fn eq (self, other: TAnyCmp) Bool {
+		return #asm(Bool, "
+			xor rax, rax
+
+			mov rcx, qword [rbp + 16]
+			mov rcx, qword [rcx]
+			cmp rcx, qword [rbp + 24]
+			sete al
+			push rax
+		")
+	}
+	fn str (self) Str {
+		return #asm(Str, "
+			mov rax, qword [rbp + 16]
+			push qword [rax]
+			call Int.str
+			add rsp, 8
+			push rax
+		")
+	}
 }
 
 primitive Ptr <TPtr> {
@@ -690,8 +791,24 @@ primitive Ptr <TPtr> {
 			.eq(0)
 	}
 
-	extern fn make_from (self, val: TPtr) Ptr<TPtr>,
-	extern fn unwrap (self) TPtr,
+	fn make_from (self, val: TPtr) Ptr<TPtr> {
+		return #asm(Ptr, "
+			push 8
+			call _$_allocate
+			add rsp, 8
+
+			mov rdx, qword [rbp + 24]
+			mov qword [rax], rdx
+			push rax
+		")
+	}
+	fn unwrap (self) TPtr {
+		return #asm(TPtr, "
+			mov rax, qword [rbp + 16]
+			mov rax, qword [rax]
+			push rax
+		")
+	}
 }
 
 class List <TList> {
@@ -719,8 +836,61 @@ class List <TList> {
 			value: new Ptr<TList>.make_from(self.at_raw(i))
 		}
     }
-    extern fn at_raw (self, i: Int) TList,
-    extern fn push (self, value: TList),
+    fn at_raw (self, i: Int) TList {
+    	return #asm(TList, "
+			mov rax, qword [rbp + 16]       ; rax = self
+			mov rax, qword [rax]            ; rax = self.head
+			mov rcx, qword [rbp + 24]       ; rcx = idx
+			mov rax, qword [rax + rcx * 8]  ; rax = self.head[idx]
+			push rax
+		")
+    }
+    fn push (self, value: TList) {
+		#asm "
+			; #1: Allocate space for old list and new element
+
+        	mov rax, qword [rbp + 16] ; rax = self
+        	mov rcx, qword [rax + 8]  ; rdx = self.size
+        	add rcx, 8 				  ; rdx = self.size + 8
+        	mov qword [rax + 8], rcx  ; self.size = self.size + 8
+        	push rcx 		          ; push self.size + 8
+        	call _$_allocate          ; rax = allocate((self.size + 1) * 8)
+        	add rsp, 8                ; pop self.size + 8
+
+
+        	; #2: Copy old list to new list
+
+        	mov rdi, rax ; rdi = new list
+        	mov rsi, qword [rbp + 16] ; rsi = self
+        	mov rdx, qword [rsi + 8]  ; rcx = self.size
+        	mov rsi, qword [rsi]      ; rsi = old_list.head
+        	sub rdx, 8 			      ; rcx = self.size - 8
+
+        	; just before copying, while rsi = old_list.head
+        	; set the location of the list to the new list
+        	mov rcx, qword [rbp + 16] ; rcx = self
+        	mov qword [rcx], rax      ; self.head = new_list
+
+        	push rbp
+        	mov rbp, rsp
+        	sub rsp, 32
+        	and rsp, -16
+        	call memcpy WRT ..plt    ; memcpy(new list, old list, (old list size - 1) * 8)
+        	mov rsp, rbp
+        	pop rbp
+
+
+        	; #3: Add new element to new list
+
+        	mov rax, qword [rbp + 16]      ; rax = self
+        	mov rcx, qword [rax + 8]       ; rcx = self.size
+        	mov rax, qword [rax]           ; rcx = self.head (new head)
+        	mov rdx, qword [rbp + 24]      ; rdx = val
+        	mov qword [rax + rcx - 8], rdx ; new_list[self.len() - 1] = val
+
+			push rax
+		"
+    }
 }
 
 fn exit (code: Int = 0) {
