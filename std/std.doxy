@@ -27,7 +27,7 @@ primitive Int {
     extern fn != (self, n: Int) Bool,
     extern fn <  (self, n: Int) Bool,
     extern fn <= (self, n: Int) Bool,
-    extern fn > (self, n: Int) Bool,
+    extern fn >  (self, n: Int) Bool,
     extern fn >= (self, n: Int) Bool,
     extern fn max (self, other = 9223372036854775807) Int,
     extern fn min (self, other = -9223372036854775807 - 1) Int,
@@ -39,7 +39,7 @@ class Str {
     extern fn == (self, other: Str) Bool,
     extern fn != (self, other: Str) Bool,
     /// returns a new string that is the concatenation of lhs and rhs
-    extern fn + (self, other: Str) Str,
+    extern fn +  (self, other: Str) Str,
     extern fn at (self, i: Int) Char,
     /// Returns the character at the given index
     /// Does not check if index is out of bounds
@@ -201,7 +201,7 @@ primitive Ptr <TPtr> {
 			_$_allocate_error:
 				push _$_alloc_err_msg
 				call panic
-		");
+		")
 	}
 }
 

@@ -298,12 +298,15 @@ impl Parser {
     fn clear_end_statements(
         &mut self,
         res: &mut ParseResults,
-    ) {
+    ) -> usize {
+        let mut i = 0;
         while self
             .current_matches(TokenType::EndStatement, None)
         {
             self.advance(res);
+            i += 1;
         }
+        i
     }
 
     fn bin_op<Fa, Fb>(
@@ -366,32 +369,25 @@ impl Parser {
 
         statements.push(first_stmt.unwrap());
 
-        let mut more_statements = true;
-
         loop {
-            let mut nl_count = 0;
-            // @ts-ignore
-            while self.current_matches(
-                TokenType::EndStatement,
-                None,
-            ) {
-                self.advance(&mut res);
-                nl_count += 1;
-            }
-            if nl_count == 0 {
-                more_statements = false;
-            }
-            if !more_statements {
+            if self.clear_end_statements(&mut res) == 0 {
                 break;
             }
 
-            let statement =
-                res.try_register(self.statement());
-            ret_on_err!(res);
-            if statement.is_none() {
-                self.reverse(res.reverse_count);
-                continue;
+            // This is dependant on the fact that the only tokens that
+            // can occur after the end of `Statements` is CloseBrace,
+            // or the end of the file.
+            if self.current_tok().is_none()
+                || self.current_matches(
+                    TokenType::CloseBrace,
+                    None,
+                )
+            {
+                break;
             }
+
+            let statement = res.register(self.statement());
+            ret_on_err!(res);
             statements.push(statement.unwrap());
         }
 
@@ -2157,8 +2153,7 @@ impl Parser {
             ) {
                 break;
             }
-            self.consume(&mut res, TokenType::Comma);
-            ret_on_err!(res);
+            consume!(Comma, self, res);
         }
 
         self.consume(&mut res, TokenType::CloseBrace);
