@@ -1,5 +1,5 @@
 use crate::ast::symbol_access::SymbolAccess;
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::Token;
@@ -12,14 +12,7 @@ pub struct RawAsmNode {
     pub return_type: MutRc<SymbolAccess>,
 }
 
-impl Node for RawAsmNode {
-    fn asm(
-        &mut self,
-        _ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        Ok(self.asm.clone().literal.unwrap())
-    }
-
+impl AstNode for RawAsmNode {
     fn type_check(
         &self,
         ctx: MutRc<Context>,
@@ -37,6 +30,13 @@ impl Node for RawAsmNode {
             .unwrap()
             .instance_type;
         Ok(res)
+    }
+
+    fn asm(
+        &mut self,
+        _ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        Ok(self.asm.clone().literal.unwrap())
     }
 
     fn pos(&self) -> Interval {

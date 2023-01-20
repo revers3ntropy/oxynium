@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{syntax_error, Error};
 use crate::parse::token::Token;
@@ -11,40 +11,16 @@ use crate::util::MutRc;
 #[derive(Debug)]
 pub struct EmptyGlobalConstNode {
     pub identifier: Token,
-    pub type_: MutRc<dyn Node>,
+    pub type_: MutRc<dyn AstNode>,
     pub is_external: bool,
     pub position: Interval,
 }
 
-impl Node for EmptyGlobalConstNode {
-    fn asm(
+impl AstNode for EmptyGlobalConstNode {
+    fn setup(
         &mut self,
         ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        if ctx.borrow_mut().stack_frame_peak().is_some() {
-            return Err(syntax_error(format!(
-                "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
-                self.identifier.clone().literal.unwrap()
-            )).set_interval((self.pos().0, self.identifier.end.clone())));
-        }
-        ctx.borrow_mut().define(
-            SymbolDef {
-                name: self
-                    .identifier
-                    .clone()
-                    .literal
-                    .unwrap(),
-                data: Some(format!("dq 0")),
-                text: None,
-            },
-            self.pos(),
-        )?;
-        Ok("".to_owned())
-    }
-    fn type_check(
-        &self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    ) -> Result<(), Error> {
         if !is_valid_identifier(
             &self.identifier.clone().literal.unwrap(),
         ) {
@@ -54,6 +30,12 @@ impl Node for EmptyGlobalConstNode {
             ))
             .set_interval(self.identifier.interval()));
         }
+        self.type_.borrow_mut().setup(ctx.clone())
+    }
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         let TypeCheckRes {
             t: type_, unknowns, ..
         } = self
@@ -91,6 +73,30 @@ impl Node for EmptyGlobalConstNode {
         )?;
 
         Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))
+    }
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        if ctx.borrow_mut().stack_frame_peak().is_some() {
+            return Err(syntax_error(format!(
+                "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
+                self.identifier.clone().literal.unwrap()
+            )).set_interval((self.pos().0, self.identifier.end.clone())));
+        }
+        ctx.borrow_mut().define(
+            SymbolDef {
+                name: self
+                    .identifier
+                    .clone()
+                    .literal
+                    .unwrap(),
+                data: Some(format!("dq 0")),
+                text: None,
+            },
+            self.pos(),
+        )?;
+        Ok("".to_owned())
     }
 
     fn pos(&self) -> Interval {

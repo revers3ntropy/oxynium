@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::parse::token::Token;
@@ -10,7 +10,7 @@ use crate::util::{new_mut_rc, MutRc};
 #[derive(Debug, Clone)]
 pub struct GenericTypeNode {
     pub identifier: Token,
-    pub generic_args: Vec<MutRc<dyn Node>>,
+    pub generic_args: Vec<MutRc<dyn AstNode>>,
 }
 
 impl GenericTypeNode {
@@ -19,7 +19,16 @@ impl GenericTypeNode {
     }
 }
 
-impl Node for GenericTypeNode {
+impl AstNode for GenericTypeNode {
+    fn setup(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<(), Error> {
+        for arg in &mut self.generic_args {
+            arg.borrow_mut().setup(ctx.clone())?;
+        }
+        Ok(())
+    }
     fn type_check(
         &self,
         ctx: MutRc<Context>,

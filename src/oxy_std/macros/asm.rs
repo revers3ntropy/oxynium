@@ -1,6 +1,6 @@
 use crate::ast::raw_asm::RawAsmNode;
 use crate::ast::symbol_access::SymbolAccess;
-use crate::ast::Node;
+use crate::ast::AstNode;
 use crate::context::Context;
 use crate::error::{type_error, Error};
 use crate::oxy_std::macros::Macro;
@@ -11,14 +11,14 @@ use crate::util::MutRc;
 
 pub struct AsmMacro {
     pub position: Interval,
-    pub args: Vec<MutRc<dyn Node>>,
+    pub args: Vec<MutRc<dyn AstNode>>,
 }
 
 impl Macro for AsmMacro {
     fn resolve(
         &self,
         _ctx: MutRc<Context>,
-    ) -> Result<MutRc<dyn Node>, Error> {
+    ) -> Result<MutRc<dyn AstNode>, Error> {
         let mut args = self.args.clone();
 
         if args.len() == 1 {

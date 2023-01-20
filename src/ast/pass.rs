@@ -1,4 +1,4 @@
-use crate::ast::Node;
+use crate::ast::AstNode;
 use crate::position::Interval;
 
 #[derive(Debug)]
@@ -6,7 +6,7 @@ pub struct PassNode {
     pub position: Interval,
 }
 
-impl Node for PassNode {
+impl AstNode for PassNode {
     fn pos(&self) -> Interval {
         self.position.clone()
     }

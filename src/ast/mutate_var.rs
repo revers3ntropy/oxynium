@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{
     mismatched_types, type_error, unknown_symbol, Error,
@@ -11,7 +11,7 @@ use crate::util::MutRc;
 #[derive(Debug)]
 pub struct MutateVar {
     pub identifier: Token,
-    pub value: MutRc<dyn Node>,
+    pub value: MutRc<dyn AstNode>,
 }
 
 impl MutateVar {
@@ -20,29 +20,12 @@ impl MutateVar {
     }
 }
 
-impl Node for MutateVar {
-    fn asm(
+impl AstNode for MutateVar {
+    fn setup(
         &mut self,
         ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        let id =
-            ctx.borrow_mut().get_dec_from_id(&self.id()).id;
-
-        // get value before setting variable as initialised
-        // so that self-references are invalid until AFTER the variable is initialised
-        let value =
-            self.value.borrow_mut().asm(ctx.clone())?;
-
-        ctx.borrow_mut()
-            .set_dec_as_defined(&self.id(), self.pos())?;
-
-        Ok(format!(
-            "
-           {value}
-           pop rax
-           mov {id}, rax
-        "
-        ))
+    ) -> Result<(), Error> {
+        self.value.borrow_mut().setup(ctx.clone())
     }
 
     fn type_check(
@@ -97,6 +80,30 @@ impl Node for MutateVar {
             .set_interval(self.value.borrow_mut().pos()));
         }
         Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))
+    }
+
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        let id =
+            ctx.borrow_mut().get_dec_from_id(&self.id()).id;
+
+        // get value before setting variable as initialised
+        // so that self-references are invalid until AFTER the variable is initialised
+        let value =
+            self.value.borrow_mut().asm(ctx.clone())?;
+
+        ctx.borrow_mut()
+            .set_dec_as_defined(&self.id(), self.pos())?;
+
+        Ok(format!(
+            "
+           {value}
+           pop rax
+           mov {id}, rax
+        "
+        ))
     }
 
     fn pos(&self) -> Interval {

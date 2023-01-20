@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, Error};
 use crate::get_type;
@@ -8,62 +8,24 @@ use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug)]
 pub struct IfNode {
-    pub comparison: MutRc<dyn Node>,
-    pub body: MutRc<dyn Node>,
-    pub else_body: Option<MutRc<dyn Node>>,
+    pub comparison: MutRc<dyn AstNode>,
+    pub body: MutRc<dyn AstNode>,
+    pub else_body: Option<MutRc<dyn AstNode>>,
     pub position: Interval,
 }
 
-impl Node for IfNode {
-    fn asm(
+impl AstNode for IfNode {
+    fn setup(
         &mut self,
         ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        let body =
-            self.body.borrow_mut().asm(ctx.clone())?;
-        let comp = self
-            .comparison
-            .borrow_mut()
-            .asm(ctx.clone())?;
-        let after_lbl = ctx.borrow_mut().get_anon_label();
-
-        if self.else_body.is_some() {
-            let else_body = self
-                .else_body
-                .take()
-                .unwrap()
-                .borrow_mut()
-                .asm(ctx.clone())?;
-            let else_lbl =
-                ctx.borrow_mut().get_anon_label();
-
-            Ok(format!(
-                "
-                {comp}
-                pop rax
-                test rax, rax     ; if evaluates to false, don't do body
-                je {else_lbl}
-                {body}
-                jmp {after_lbl}
-                {else_lbl}:
-                {else_body}
-                {after_lbl}:
-            "
-            ))
-        } else {
-            Ok(format!(
-                "
-                {comp}
-                pop rax
-                test rax, rax     ; if evaluates to false, don't do body
-                je {after_lbl}
-                {body}
-                {after_lbl}:
-            "
-            ))
+    ) -> Result<(), Error> {
+        self.body.borrow_mut().setup(ctx.clone())?;
+        if let Some(ref else_body) = self.else_body.clone()
+        {
+            else_body.borrow_mut().setup(ctx.clone())?;
         }
+        self.comparison.borrow_mut().setup(ctx.clone())
     }
-
     fn type_check(
         &self,
         ctx: MutRc<Context>,
@@ -141,6 +103,55 @@ impl Node for IfNode {
         } else {
             Ok(TypeCheckRes::from_ctx(
                 &ctx, "Void", unknowns,
+            ))
+        }
+    }
+
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        let body =
+            self.body.borrow_mut().asm(ctx.clone())?;
+        let comp = self
+            .comparison
+            .borrow_mut()
+            .asm(ctx.clone())?;
+        let after_lbl = ctx.borrow_mut().get_anon_label();
+
+        if self.else_body.is_some() {
+            let else_body = self
+                .else_body
+                .take()
+                .unwrap()
+                .borrow_mut()
+                .asm(ctx.clone())?;
+            let else_lbl =
+                ctx.borrow_mut().get_anon_label();
+
+            Ok(format!(
+                "
+                {comp}
+                pop rax
+                test rax, rax     ; if evaluates to false, don't do body
+                je {else_lbl}
+                {body}
+                jmp {after_lbl}
+                {else_lbl}:
+                {else_body}
+                {after_lbl}:
+            "
+            ))
+        } else {
+            Ok(format!(
+                "
+                {comp}
+                pop rax
+                test rax, rax     ; if evaluates to false, don't do body
+                je {after_lbl}
+                {body}
+                {after_lbl}:
+            "
             ))
         }
     }

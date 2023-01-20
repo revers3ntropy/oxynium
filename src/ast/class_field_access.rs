@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, Error};
 use crate::parse::token::Token;
@@ -8,38 +8,18 @@ use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct FieldAccessNode {
-    pub base: MutRc<dyn Node>,
+    pub base: MutRc<dyn AstNode>,
     pub field_name: Token,
     pub position: Interval,
 }
 
-impl Node for FieldAccessNode {
-    fn asm(
+impl AstNode for FieldAccessNode {
+    fn setup(
         &mut self,
         ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        let offset = self
-            .base
-            .borrow()
-            .type_check(ctx.clone())?
-            .t
-            .borrow()
-            .as_class()
-            .unwrap()
-            .field_offset(
-                self.field_name.clone().literal.unwrap(),
-            );
-
-        Ok(format!(
-            "
-            {}
-            pop rax
-            push qword [rax + {offset}]
-        ",
-            self.base.borrow_mut().asm(ctx.clone())?,
-        ))
+    ) -> Result<(), Error> {
+        self.base.borrow_mut().setup(ctx.clone())
     }
-
     fn type_check(
         &self,
         ctx: MutRc<Context>,
@@ -79,6 +59,7 @@ impl Node for FieldAccessNode {
         let field_type = base_type.field_type(
             &self.field_name.clone().literal.unwrap(),
         );
+
         if field_type.is_none() {
             return if ctx.borrow().throw_on_unknowns() {
                 return Err(type_error(format!(
@@ -94,9 +75,36 @@ impl Node for FieldAccessNode {
                 Ok(TypeCheckRes::unknown_and(unknowns))
             };
         }
+
         Ok(TypeCheckRes::from(
             field_type.unwrap(),
             unknowns,
+        ))
+    }
+
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        let offset = self
+            .base
+            .borrow()
+            .type_check(ctx.clone())?
+            .t
+            .borrow()
+            .as_class()
+            .unwrap()
+            .field_offset(
+                self.field_name.clone().literal.unwrap(),
+            );
+
+        Ok(format!(
+            "
+            {}
+            pop rax
+            push qword [rax + {offset}]
+        ",
+            self.base.borrow_mut().asm(ctx.clone())?,
         ))
     }
 

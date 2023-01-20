@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{syntax_error, type_error, Error};
 use crate::parse::token::Token;
@@ -11,9 +11,9 @@ use crate::util::MutRc;
 #[derive(Debug)]
 pub struct LocalVarNode {
     pub identifier: Token,
-    pub value: MutRc<dyn Node>,
+    pub value: MutRc<dyn AstNode>,
     pub mutable: bool,
-    pub type_annotation: Option<MutRc<dyn Node>>,
+    pub type_annotation: Option<MutRc<dyn AstNode>>,
     pub start: Position,
 }
 
@@ -23,49 +23,11 @@ impl LocalVarNode {
     }
 }
 
-impl Node for LocalVarNode {
-    fn asm(
+impl AstNode for LocalVarNode {
+    fn setup(
         &mut self,
         ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        if ctx.borrow_mut().stack_frame_peak().is_none() {
-            return Err(syntax_error(format!(
-                "Cannot declare local variable '{}' outside of function. Try using 'const' instead.",
-                self.identifier.literal.as_ref().unwrap()
-            )).set_interval((self.pos().0, self.identifier.end.clone())));
-        }
-
-        // just so that space is made on stack
-        ctx.borrow_mut().define(
-            SymbolDef {
-                name: self.identifier.str(),
-                data: Some("".to_string()),
-                text: None,
-            },
-            self.pos(),
-        )?;
-
-        let id =
-            ctx.borrow_mut().get_dec_from_id(&self.id()).id;
-
-        let value_asm =
-            self.value.borrow_mut().asm(ctx.clone())?;
-        ctx.borrow_mut()
-            .set_dec_as_defined(&self.id(), self.pos())?;
-
-        Ok(format!(
-            "
-            {value_asm}
-            pop rax
-            mov {id}, rax
-        "
-        ))
-    }
-
-    fn type_check(
-        &self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    ) -> Result<(), Error> {
         if !can_declare_with_identifier(&self.id()) {
             return Err(syntax_error(format!(
                 "Invalid local variable '{}'",
@@ -73,6 +35,19 @@ impl Node for LocalVarNode {
             ))
             .set_interval(self.identifier.interval()));
         }
+        if self.type_annotation.is_some() {
+            self.type_annotation
+                .as_ref()
+                .unwrap()
+                .borrow_mut()
+                .setup(ctx.clone())?;
+        }
+        self.value.borrow_mut().setup(ctx.clone())
+    }
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         let TypeCheckRes {
             t: mut value_type,
             mut unknowns,
@@ -133,6 +108,44 @@ impl Node for LocalVarNode {
         }
 
         Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))
+    }
+
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        if ctx.borrow_mut().stack_frame_peak().is_none() {
+            return Err(syntax_error(format!(
+                "Cannot declare local variable '{}' outside of function. Try using 'const' instead.",
+                self.identifier.literal.as_ref().unwrap()
+            )).set_interval((self.pos().0, self.identifier.end.clone())));
+        }
+
+        // just so that space is made on stack
+        ctx.borrow_mut().define(
+            SymbolDef {
+                name: self.identifier.str(),
+                data: Some("".to_string()),
+                text: None,
+            },
+            self.pos(),
+        )?;
+
+        let id =
+            ctx.borrow_mut().get_dec_from_id(&self.id()).id;
+
+        let value_asm =
+            self.value.borrow_mut().asm(ctx.clone())?;
+        ctx.borrow_mut()
+            .set_dec_as_defined(&self.id(), self.pos())?;
+
+        Ok(format!(
+            "
+            {value_asm}
+            pop rax
+            mov {id}, rax
+        "
+        ))
     }
 
     fn pos(&self) -> Interval {

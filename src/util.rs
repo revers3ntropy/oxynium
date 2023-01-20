@@ -1,6 +1,9 @@
+use crate::error::{io_error, Error};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::fs::File;
 use std::hash::Hash;
+use std::io::Read;
 use std::rc::Rc;
 
 pub type MutRc<T> = Rc<RefCell<T>>;
@@ -56,6 +59,29 @@ pub fn indent(s: String, indent: usize) -> String {
         res.push_str("\n");
     }
     res[..res.len() - 1].to_string()
+}
+
+pub fn read_file(path: &str) -> Result<String, Error> {
+    let input_file = File::open(path);
+    if input_file.is_err() {
+        return Err(io_error(format!(
+            "Failed to open file '{}'",
+            path
+        )));
+    }
+
+    let mut input = String::new();
+    let read_file_result =
+        input_file.unwrap().read_to_string(&mut input);
+    if read_file_result.is_err() {
+        return Err(io_error(format!(
+            "Failed to read file '{}': {}",
+            path,
+            read_file_result.err().unwrap()
+        )));
+    }
+
+    Ok(input)
 }
 
 #[macro_export]

@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::Token;
@@ -17,7 +17,14 @@ impl StrNode {
     }
 }
 
-impl Node for StrNode {
+impl AstNode for StrNode {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
+        Ok(TypeCheckRes::from_ctx(&ctx, "Str", 0))
+    }
+
     fn asm(
         &mut self,
         ctx: MutRc<Context>,
@@ -71,13 +78,6 @@ impl Node for StrNode {
             push {symbol_name}
         "
         ))
-    }
-
-    fn type_check(
-        &self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        Ok(TypeCheckRes::from_ctx(&ctx, "Str", 0))
     }
 
     fn pos(&self) -> Interval {

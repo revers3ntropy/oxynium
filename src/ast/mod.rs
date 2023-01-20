@@ -109,6 +109,7 @@ impl TypeCheckRes {
         if t.borrow().is_unknown() {
             unknowns += 1;
         }
+
         Self {
             t,
             is_returned: false,
@@ -135,12 +136,12 @@ impl TypeCheckRes {
     }
 }
 
-pub trait Node: Debug {
-    fn asm(
+pub trait AstNode: Debug {
+    fn setup(
         &mut self,
         _ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        Ok("".to_string())
+    ) -> Result<(), Error> {
+        Ok(())
     }
     fn type_check(
         &self,
@@ -148,6 +149,13 @@ pub trait Node: Debug {
     ) -> Result<TypeCheckRes, Error> {
         Ok(TypeCheckRes::from_ctx(&ctx, "Void", 0))
     }
+    fn asm(
+        &mut self,
+        _ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        Ok("".to_string())
+    }
+
     fn pos(&self) -> Interval;
 
     fn as_str_node(&self) -> Option<StrNode> {

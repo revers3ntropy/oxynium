@@ -1,4 +1,4 @@
-use crate::ast::Node;
+use crate::ast::AstNode;
 use crate::context::Context;
 use crate::error::{syntax_error, Error};
 use crate::position::Interval;
@@ -9,7 +9,7 @@ pub struct ContinueNode {
     pub position: Interval,
 }
 
-impl Node for ContinueNode {
+impl AstNode for ContinueNode {
     fn asm(
         &mut self,
         ctx: MutRc<Context>,

@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{mismatched_types, type_error, Error};
 use crate::get_type;
@@ -12,62 +12,18 @@ use regex::Regex;
 
 #[derive(Debug)]
 pub struct BinOpNode {
-    pub lhs: MutRc<dyn Node>,
+    pub lhs: MutRc<dyn AstNode>,
     pub operator: Token,
-    pub rhs: MutRc<dyn Node>,
+    pub rhs: MutRc<dyn AstNode>,
 }
 
-impl Node for BinOpNode {
-    fn asm(
+impl AstNode for BinOpNode {
+    fn setup(
         &mut self,
         ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        let lhs =
-            self.lhs.borrow().type_check(ctx.clone())?;
-        let fn_signature = lhs
-            .t
-            .borrow()
-            .operator_signature(self.operator.clone());
-
-        let rhs =
-            self.rhs.borrow().type_check(ctx.clone())?;
-        if can_do_inline(
-            ctx.clone(),
-            lhs.t.clone(),
-            rhs.t.clone(),
-            self.operator.clone(),
-        ) {
-            let lhs_asm =
-                self.lhs.borrow_mut().asm(ctx.clone())?;
-            let rhs_asm =
-                self.rhs.borrow_mut().asm(ctx.clone())?;
-            let res = do_inline(
-                lhs_asm,
-                self.operator.clone(),
-                rhs_asm,
-                ctx.clone(),
-            );
-            if res.is_err() {
-                return Err(res
-                    .err()
-                    .unwrap()
-                    .set_interval(self.pos()));
-            }
-            return res;
-        }
-
-        Ok(format!(
-            "
-            {}
-            {}
-            call {}
-            add rsp, 16
-            push rax
-        ",
-            self.rhs.borrow_mut().asm(ctx.clone())?,
-            self.lhs.borrow_mut().asm(ctx.clone())?,
-            fn_signature.unwrap().borrow().name
-        ))
+    ) -> Result<(), Error> {
+        self.lhs.borrow_mut().setup(ctx.clone())?;
+        self.rhs.borrow_mut().setup(ctx.clone())
     }
 
     fn type_check(
@@ -125,6 +81,58 @@ impl Node for BinOpNode {
             fn_signature.borrow().ret_type.clone();
 
         Ok(TypeCheckRes::from(ret_type, unknowns))
+    }
+
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        let lhs =
+            self.lhs.borrow().type_check(ctx.clone())?;
+        let fn_signature = lhs
+            .t
+            .borrow()
+            .operator_signature(self.operator.clone());
+
+        let rhs =
+            self.rhs.borrow().type_check(ctx.clone())?;
+        if can_do_inline(
+            ctx.clone(),
+            lhs.t.clone(),
+            rhs.t.clone(),
+            self.operator.clone(),
+        ) {
+            let lhs_asm =
+                self.lhs.borrow_mut().asm(ctx.clone())?;
+            let rhs_asm =
+                self.rhs.borrow_mut().asm(ctx.clone())?;
+            let res = do_inline(
+                lhs_asm,
+                self.operator.clone(),
+                rhs_asm,
+                ctx.clone(),
+            );
+            if res.is_err() {
+                return Err(res
+                    .err()
+                    .unwrap()
+                    .set_interval(self.pos()));
+            }
+            return res;
+        }
+
+        Ok(format!(
+            "
+            {}
+            {}
+            call {}
+            add rsp, 16
+            push rax
+        ",
+            self.rhs.borrow_mut().asm(ctx.clone())?,
+            self.lhs.borrow_mut().asm(ctx.clone())?,
+            fn_signature.unwrap().borrow().name
+        ))
     }
     fn pos(&self) -> Interval {
         (

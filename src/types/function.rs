@@ -1,4 +1,4 @@
-use crate::ast::Node;
+use crate::ast::AstNode;
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
@@ -11,7 +11,7 @@ use std::fmt;
 pub struct FnParamType {
     pub name: String,
     pub type_: MutRc<dyn Type>,
-    pub default_value: Option<MutRc<dyn Node>>,
+    pub default_value: Option<MutRc<dyn AstNode>>,
     pub position: Interval,
 }
 impl FnParamType {

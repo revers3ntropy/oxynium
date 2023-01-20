@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{syntax_error, Error};
 use crate::get_type;
@@ -8,11 +8,41 @@ use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug)]
 pub struct ReturnNode {
-    pub value: Option<MutRc<dyn Node>>,
+    pub value: Option<MutRc<dyn AstNode>>,
     pub position: Interval,
 }
 
-impl Node for ReturnNode {
+impl AstNode for ReturnNode {
+    fn setup(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<(), Error> {
+        if let Some(ref value) = self.value.clone() {
+            value.borrow_mut().setup(ctx.clone())?;
+        }
+        Ok(())
+    }
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
+        if let Some(ref value) = self.value {
+            let ret_tr =
+                value.borrow().type_check(ctx.clone())?;
+            Ok(TypeCheckRes::returns(
+                true,
+                ret_tr.t,
+                ret_tr.unknowns,
+            ))
+        } else {
+            Ok(TypeCheckRes::returns(
+                true,
+                get_type!(ctx, "Void"),
+                0,
+            ))
+        }
+    }
+
     fn asm(
         &mut self,
         ctx: MutRc<Context>,
@@ -44,27 +74,6 @@ impl Node for ReturnNode {
         ",
             frame.ret_lbl
         ))
-    }
-
-    fn type_check(
-        &self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        if let Some(ref value) = self.value {
-            let ret_tr =
-                value.borrow().type_check(ctx.clone())?;
-            Ok(TypeCheckRes::returns(
-                true,
-                ret_tr.t,
-                ret_tr.unknowns,
-            ))
-        } else {
-            Ok(TypeCheckRes::returns(
-                true,
-                get_type!(ctx, "Void"),
-                0,
-            ))
-        }
     }
 
     fn pos(&self) -> Interval {

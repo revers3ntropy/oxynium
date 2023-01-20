@@ -1,6 +1,7 @@
 pub mod asm;
+pub mod include;
 
-use crate::ast::Node;
+use crate::ast::AstNode;
 use crate::context::Context;
 use crate::error::Error;
 use crate::util::MutRc;
@@ -9,5 +10,5 @@ pub trait Macro {
     fn resolve(
         &self,
         ctx: MutRc<Context>,
-    ) -> Result<MutRc<dyn Node>, Error>;
+    ) -> Result<MutRc<dyn AstNode>, Error>;
 }

@@ -6,10 +6,8 @@ use crate::ast::class_declaration::{
 };
 use crate::ast::class_field_access::FieldAccessNode;
 use crate::ast::class_init::ClassInitNode;
-use crate::ast::empty_exec_root::EmptyExecRootNode;
 use crate::ast::empty_global_const_decl::EmptyGlobalConstNode;
 use crate::ast::empty_local_var_decl::EmptyLocalVarNode;
-use crate::ast::exec_root::ExecRootNode;
 use crate::ast::fn_call::FnCallNode;
 use crate::ast::fn_declaration::{
     FnDeclarationNode, Parameter,
@@ -32,7 +30,7 @@ use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::type_expr::TypeNode;
 use crate::ast::type_expr_generic::GenericTypeNode;
 use crate::ast::unary_op::UnaryOpNode;
-use crate::ast::Node;
+use crate::ast::AstNode;
 use crate::context::Context;
 use crate::error::{numeric_overflow, syntax_error, Error};
 use crate::parse::parse_results::ParseResults;
@@ -129,20 +127,14 @@ impl Parser {
         let mut res = ParseResults::new();
 
         if self.tokens.len() == 0 {
-            res.success(new_mut_rc(EmptyExecRootNode {
-                position: (
-                    Position::unknown(),
-                    Position::unknown(),
-                ),
+            res.node = Some(new_mut_rc(PassNode {
+                position: Position::unknown_interval(),
             }));
             return res;
         }
 
         let expr = res.register(self.statements());
         ret_on_err!(res);
-        let root_node = ExecRootNode {
-            statements: expr.unwrap(),
-        };
 
         if self.tok_idx < self.tokens.len() {
             let current = self.current_tok().unwrap();
@@ -157,7 +149,7 @@ impl Parser {
             return res;
         }
 
-        res.success(new_mut_rc(root_node));
+        res.success(expr.unwrap());
         res
     }
 
@@ -356,7 +348,7 @@ impl Parser {
 
     fn statements(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
-        let mut statements: Vec<MutRc<dyn Node>> =
+        let mut statements: Vec<MutRc<dyn AstNode>> =
             Vec::new();
         self.clear_end_statements(&mut res);
 
@@ -419,7 +411,7 @@ impl Parser {
             return res;
         }
 
-        let mut statements: Option<MutRc<dyn Node>> =
+        let mut statements: Option<MutRc<dyn AstNode>> =
             Some(new_mut_rc(PassNode {
                 position: (
                     start.clone(),
@@ -669,7 +661,7 @@ impl Parser {
             return res;
         }
 
-        let mut type_: Option<MutRc<dyn Node>> = None;
+        let mut type_: Option<MutRc<dyn AstNode>> = None;
 
         if self.current_matches(TokenType::Colon, None) {
             self.advance(&mut res);
@@ -920,7 +912,7 @@ impl Parser {
     fn method_call(
         &mut self,
         start: Position,
-        base: MutRc<dyn Node>,
+        base: MutRc<dyn AstNode>,
         name_tok: Token,
     ) -> ParseResults {
         let mut res = ParseResults::new();
@@ -959,7 +951,7 @@ impl Parser {
 
     fn compound(
         &mut self,
-        base_option: Option<MutRc<dyn Node>>,
+        base_option: Option<MutRc<dyn AstNode>>,
     ) -> ParseResults {
         let mut res = ParseResults::new();
 
@@ -1013,7 +1005,7 @@ impl Parser {
 
     fn args(
         &mut self,
-    ) -> Result<Vec<MutRc<dyn Node>>, Error> {
+    ) -> Result<Vec<MutRc<dyn AstNode>>, Error> {
         let mut args = Vec::new();
         let mut res = ParseResults::new();
 
@@ -1257,7 +1249,7 @@ impl Parser {
         consume!(id_tok = Identifier, self, res);
         let start = id_tok.start.clone();
 
-        let args: Vec<MutRc<dyn Node>>;
+        let args: Vec<MutRc<dyn AstNode>>;
 
         if self.current_matches(TokenType::OpenParen, None)
         {
@@ -1298,6 +1290,7 @@ impl Parser {
                 start,
                 self.last_tok().unwrap().end.clone(),
             ),
+            resolved: None,
         }));
         res
     }
@@ -1351,7 +1344,8 @@ impl Parser {
         let statements = res.register(self.scope(true));
         ret_on_err!(res);
 
-        let mut else_body: Option<MutRc<dyn Node>> = None;
+        let mut else_body: Option<MutRc<dyn AstNode>> =
+            None;
 
         if self.current_matches(
             TokenType::Identifier,
@@ -1684,7 +1678,7 @@ impl Parser {
 
         consume!(CloseParen, self, res);
 
-        let mut ret_type: MutRc<dyn Node> =
+        let mut ret_type: MutRc<dyn AstNode> =
             new_mut_rc(TypeNode {
                 identifier: Token::new(
                     TokenType::Identifier,
@@ -2050,7 +2044,7 @@ impl Parser {
 
     fn class_init_field(
         &mut self,
-    ) -> Result<(String, MutRc<dyn Node>), Error> {
+    ) -> Result<(String, MutRc<dyn AstNode>), Error> {
         let mut res = ParseResults::new();
 
         result_consume!(identifier = Identifier, self, res);
@@ -2064,7 +2058,7 @@ impl Parser {
 
     fn template_args(
         &mut self,
-    ) -> Result<Vec<MutRc<dyn Node>>, Error> {
+    ) -> Result<Vec<MutRc<dyn AstNode>>, Error> {
         let mut res = ParseResults::new();
         let mut args = Vec::new();
 

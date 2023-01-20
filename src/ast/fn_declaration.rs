@@ -1,7 +1,7 @@
 use crate::ast::class_declaration::{
     method_id, operator_method_id,
 };
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::CallStackFrame;
 use crate::context::Context;
 use crate::error::{
@@ -22,17 +22,17 @@ use std::any::Any;
 #[derive(Debug, Clone)]
 pub struct Parameter {
     pub identifier: String,
-    pub type_: Option<MutRc<dyn Node>>,
-    pub default_value: Option<MutRc<dyn Node>>,
+    pub type_: Option<MutRc<dyn AstNode>>,
+    pub default_value: Option<MutRc<dyn AstNode>>,
     pub position: Interval,
 }
 
 #[derive(Debug)]
 pub struct FnDeclarationNode {
     pub identifier: Token,
-    pub ret_type: MutRc<dyn Node>,
+    pub ret_type: MutRc<dyn AstNode>,
     pub params: Vec<Parameter>,
-    pub body: Option<MutRc<dyn Node>>,
+    pub body: Option<MutRc<dyn AstNode>>,
     pub params_scope: MutRc<Context>,
     pub is_external: bool,
     pub position: Interval,
@@ -63,93 +63,31 @@ impl FnDeclarationNode {
     }
 }
 
-impl Node for FnDeclarationNode {
-    fn asm(
+impl AstNode for FnDeclarationNode {
+    fn setup(
         &mut self,
         ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        if ctx.borrow_mut().stack_frame_peak().is_some() {
-            return Err(syntax_error(format!(
-                "Cannot declare function '{}' inside of another function.",
-                self.identifier.str()
-            ))
-            .set_interval((self.pos().0, self.identifier.end.clone())));
+    ) -> Result<(), Error> {
+        for param in &self.params {
+            if param.default_value.is_some() {
+                param
+                    .default_value
+                    .clone()
+                    .unwrap()
+                    .borrow_mut()
+                    .setup(ctx.clone())?;
+            }
+        }
+        if self.body.is_some() {
+            self.body
+                .clone()
+                .unwrap()
+                .borrow_mut()
+                .setup(ctx.clone())?;
         }
 
-        if self.body.is_none() {
-            return Ok("".to_string());
-        }
-
-        if !self.has_usage {
-            // TODO: emit warning
-            // kinda needs attributes before this can be done
-            // as some STD functions are 'unused' but still required
-            // also, TODO: better system (eg dependency tree)
-            //       because this will only prune functions which have
-            //       no callers anywhere, when what we want is to prune
-            //       functions which can never be called from 'main'
-            //return Ok("".to_string());
-        }
-
-        let end_label = ctx.borrow_mut().get_anon_label();
-        ctx.borrow_mut().stack_frame_push(CallStackFrame {
-            name: self.id(),
-            params: self
-                .params
-                .iter()
-                .map(|a| a.identifier.clone())
-                .collect(),
-            ret_lbl: end_label.clone(),
-        });
-
-        let body = self
-            .body
-            .take()
-            .unwrap()
-            .borrow_mut()
-            .asm(self.params_scope.clone())?;
-        let params_scope = self.params_scope.clone();
-        let params_scope = params_scope.borrow_mut();
-        let (data_defs, text_defs) =
-            params_scope.get_definitions();
-        if text_defs.len() > 0 {
-            return Err(type_error(
-                "Nested functions not allowed".to_string(),
-            ));
-        }
-
-        let stack_space_for_local_vars = (
-            data_defs.len()
-            // make sure to maintain 16 byte alignment
-            // add 1 only when even number of local vars
-            // as we 'push rbp' at the start
-            //+ (data_defs.len() % 2 == 1) as usize)
-        ) * 8;
-        let self_pos = self.pos();
-        ctx.borrow_mut().define(
-            SymbolDef {
-                name: self.id(),
-                data: None,
-                text: Some(format!(
-                    "
-                    push rbp
-                    mov rbp, rsp
-                    sub rsp, {stack_space_for_local_vars}
-                    {body}
-                {end_label}:
-                    mov rsp, rbp
-                    pop rbp
-                    ret
-                 "
-                )),
-            },
-            self_pos,
-        )?;
-
-        ctx.borrow_mut().stack_frame_pop();
-        Ok("".to_string())
+        self.ret_type.borrow_mut().setup(ctx.clone())
     }
-
     fn type_check(
         &self,
         ctx: MutRc<Context>,
@@ -414,6 +352,92 @@ impl Node for FnDeclarationNode {
         }
 
         Ok(TypeCheckRes::from(this_type, unknowns))
+    }
+
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        if ctx.borrow_mut().stack_frame_peak().is_some() {
+            return Err(syntax_error(format!(
+                "Cannot declare function '{}' inside of another function.",
+                self.identifier.str()
+            ))
+            .set_interval((self.pos().0, self.identifier.end.clone())));
+        }
+
+        if self.body.is_none() {
+            return Ok("".to_string());
+        }
+
+        if !self.has_usage {
+            // TODO: emit warning
+            // kinda needs attributes before this can be done
+            // as some STD functions are 'unused' but still required
+            // also, TODO: better system (eg dependency tree)
+            //       because this will only prune functions which have
+            //       no callers anywhere, when what we want is to prune
+            //       functions which can never be called from 'main'
+            //return Ok("".to_string());
+        }
+
+        let end_label = ctx.borrow_mut().get_anon_label();
+        ctx.borrow_mut().stack_frame_push(CallStackFrame {
+            name: self.id(),
+            params: self
+                .params
+                .iter()
+                .map(|a| a.identifier.clone())
+                .collect(),
+            ret_lbl: end_label.clone(),
+        });
+
+        let body = self
+            .body
+            .take()
+            .unwrap()
+            .borrow_mut()
+            .asm(self.params_scope.clone())?;
+        let params_scope = self.params_scope.clone();
+        let params_scope = params_scope.borrow_mut();
+        let (data_defs, text_defs) =
+            params_scope.get_definitions();
+        if text_defs.len() > 0 {
+            return Err(type_error(
+                "Nested functions not allowed".to_string(),
+            ));
+        }
+
+        let stack_space_for_local_vars = (
+            data_defs.len()
+            // make sure to maintain 16 byte alignment
+            // add 1 only when even number of local vars
+            // as we 'push rbp' at the start
+            //+ (data_defs.len() % 2 == 1) as usize)
+        ) * 8;
+        let self_pos = self.pos();
+        ctx.borrow_mut().define(
+            SymbolDef {
+                name: self.id(),
+                data: None,
+                text: Some(format!(
+                    "
+                    push rbp
+                    mov rbp, rsp
+                    sub rsp, {stack_space_for_local_vars}
+                    {body}
+                {end_label}:
+                    mov rsp, rbp
+                    pop rbp
+                    ret
+                 "
+                )),
+            },
+            self_pos,
+        )?;
+
+        ctx.borrow_mut().stack_frame_pop();
+        Ok("".to_string())
     }
 
     fn pos(&self) -> Interval {

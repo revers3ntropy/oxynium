@@ -1,5 +1,5 @@
 use crate::ast::str::StrNode;
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{mismatched_types, Error};
 use crate::get_type;
@@ -11,10 +11,50 @@ use crate::util::{new_mut_rc, MutRc};
 #[derive(Debug)]
 pub struct UnaryOpNode {
     pub operator: Token,
-    pub rhs: MutRc<dyn Node>,
+    pub rhs: MutRc<dyn AstNode>,
 }
 
-impl Node for UnaryOpNode {
+impl AstNode for UnaryOpNode {
+    fn setup(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<(), Error> {
+        self.rhs.borrow_mut().setup(ctx)
+    }
+
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
+        let TypeCheckRes {
+            t: value_type,
+            unknowns,
+            ..
+        } = self.rhs.borrow().type_check(ctx.clone())?;
+
+        let t = match self.operator.token_type {
+            TokenType::Sub => get_type!(ctx, "Int"),
+            TokenType::Identifier => match self.operator.clone().literal.unwrap().as_str() {
+                "typeof" => return Ok(TypeCheckRes::from_ctx(&ctx, "Str", unknowns)),
+                _ => panic!(
+                    "Invalid arithmetic unary operator: {:?}",
+                    self.operator
+                )
+            }
+            _ => get_type!(ctx, "Bool"),
+        };
+
+        if !t.borrow().contains(value_type.clone()) {
+            return Err(mismatched_types(
+                t.clone(),
+                value_type.clone(),
+            )
+            .set_interval(self.rhs.borrow_mut().pos()));
+        }
+
+        Ok(TypeCheckRes::from(t, unknowns))
+    }
+
     fn asm(
         &mut self,
         ctx: MutRc<Context>,
@@ -81,42 +121,6 @@ impl Node for UnaryOpNode {
                 )
             }
         })
-    }
-
-    fn type_check(
-        &self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        let TypeCheckRes {
-            t: value_type,
-            unknowns,
-            ..
-        } = self
-            .rhs
-            .borrow_mut()
-            .type_check(ctx.clone())?;
-
-        let t = match self.operator.token_type {
-            TokenType::Sub => get_type!(ctx, "Int"),
-            TokenType::Identifier => match self.operator.clone().literal.unwrap().as_str() {
-                "typeof" => return Ok(TypeCheckRes::from_ctx(&ctx, "Str", unknowns)),
-                _ => panic!(
-                    "Invalid arithmetic unary operator: {:?}",
-                    self.operator
-                )
-            }
-            _ => get_type!(ctx, "Bool"),
-        };
-
-        if !t.borrow().contains(value_type.clone()) {
-            return Err(mismatched_types(
-                t.clone(),
-                value_type.clone(),
-            )
-            .set_interval(self.rhs.borrow_mut().pos()));
-        }
-
-        Ok(TypeCheckRes::from(t, unknowns))
     }
 
     fn pos(&self) -> Interval {

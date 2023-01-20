@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::parse::token::Token;
@@ -11,9 +11,9 @@ use std::collections::HashMap;
 #[derive(Debug)]
 pub struct ClassInitNode {
     pub identifier: Token,
-    pub fields: Vec<(String, MutRc<dyn Node>)>,
+    pub fields: Vec<(String, MutRc<dyn AstNode>)>,
     pub position: Interval,
-    pub template_args: Vec<MutRc<dyn Node>>,
+    pub template_args: Vec<MutRc<dyn AstNode>>,
 }
 
 impl ClassInitNode {
@@ -50,102 +50,18 @@ impl ClassInitNode {
     }
 }
 
-impl Node for ClassInitNode {
-    fn asm(
+impl AstNode for ClassInitNode {
+    fn setup(
         &mut self,
         ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        let mut asm = String::new();
-
-        let mut fields = self.fields.clone();
-
-        let field_asm =
-            self.field_asm_hashmap(ctx.clone())?;
-
-        let class_type = ctx
-            .borrow()
-            .get_dec_from_id(
-                &self.identifier.clone().literal.unwrap(),
-            )
-            .type_
-            .clone()
-            .borrow()
-            .as_class()
-            .unwrap();
-        let is_primitive = class_type.is_primitive;
-
-        fields.sort_by(|a, b| {
-            class_type
-                .field_offset(a.0.clone())
-                .cmp(&class_type.field_offset(b.0.clone()))
-        });
-
-        let mut fields_asm_iter = field_asm
-            .iter()
-            .collect::<Vec<(&String, &String)>>();
-
-        fields_asm_iter.sort_by(|a, b| {
-            class_type
-                .field_offset(a.0.clone())
-                .cmp(&class_type.field_offset(b.0.clone()))
-        });
-        fields_asm_iter.reverse();
-
-        for (name, _) in fields_asm_iter {
-            asm.push_str(&format!("{}\n", field_asm[name]));
+    ) -> Result<(), Error> {
+        for field in self.fields.clone() {
+            field.1.borrow_mut().setup(ctx.clone())?;
         }
-
-        if fields.len() < 1 {
-            return Ok(if is_primitive {
-                format!("\n push 0 \n")
-            } else {
-                format!(
-                    "
-                push 8
-                call Ptr.allocate
-                add rsp, 8
-                mov qword [rax], 0
-                push rax
-            "
-                )
-            });
+        for template_arg in self.template_args.clone() {
+            template_arg.borrow_mut().setup(ctx.clone())?;
         }
-
-        asm.push_str(&format!(
-            "
-            push {}
-            call Ptr.allocate
-            add rsp, 8
-        ",
-            fields.len() * 8
-        ));
-
-        for i in 0..fields.len() {
-            asm.push_str(&format!(
-                "
-            pop rdx
-            mov qword [rax + {}], rdx
-        ",
-                class_type
-                    .field_offset(fields[i].0.clone())
-            ));
-        }
-
-        if is_primitive {
-            asm.push_str(&format!(
-                "
-                push qword [rax]
-            "
-            ));
-        } else {
-            asm.push_str(&format!(
-                "
-                push rax
-            "
-            ));
-        }
-
-        Ok(asm)
+        Ok(())
     }
 
     fn type_check(
@@ -291,6 +207,103 @@ impl Node for ClassInitNode {
             new_mut_rc(class_type),
             unknowns,
         ))
+    }
+
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        let mut asm = String::new();
+
+        let mut fields = self.fields.clone();
+
+        let field_asm =
+            self.field_asm_hashmap(ctx.clone())?;
+
+        let class_type = ctx
+            .borrow()
+            .get_dec_from_id(
+                &self.identifier.clone().literal.unwrap(),
+            )
+            .type_
+            .clone()
+            .borrow()
+            .as_class()
+            .unwrap();
+        let is_primitive = class_type.is_primitive;
+
+        fields.sort_by(|a, b| {
+            class_type
+                .field_offset(a.0.clone())
+                .cmp(&class_type.field_offset(b.0.clone()))
+        });
+
+        let mut fields_asm_iter = field_asm
+            .iter()
+            .collect::<Vec<(&String, &String)>>();
+
+        fields_asm_iter.sort_by(|a, b| {
+            class_type
+                .field_offset(a.0.clone())
+                .cmp(&class_type.field_offset(b.0.clone()))
+        });
+        fields_asm_iter.reverse();
+
+        for (name, _) in fields_asm_iter {
+            asm.push_str(&format!("{}\n", field_asm[name]));
+        }
+
+        if fields.len() < 1 {
+            return Ok(if is_primitive {
+                format!("\n push 0 \n")
+            } else {
+                format!(
+                    "
+                push 8
+                call Ptr.allocate
+                add rsp, 8
+                mov qword [rax], 0
+                push rax
+            "
+                )
+            });
+        }
+
+        asm.push_str(&format!(
+            "
+            push {}
+            call Ptr.allocate
+            add rsp, 8
+        ",
+            fields.len() * 8
+        ));
+
+        for i in 0..fields.len() {
+            asm.push_str(&format!(
+                "
+            pop rdx
+            mov qword [rax + {}], rdx
+        ",
+                class_type
+                    .field_offset(fields[i].0.clone())
+            ));
+        }
+
+        if is_primitive {
+            asm.push_str(&format!(
+                "
+                push qword [rax]
+            "
+            ));
+        } else {
+            asm.push_str(&format!(
+                "
+                push rax
+            "
+            ));
+        }
+
+        Ok(asm)
     }
 
     fn pos(&self) -> Interval {

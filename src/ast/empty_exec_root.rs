@@ -1,5 +1,5 @@
 use crate::args::ExecMode;
-use crate::ast::Node;
+use crate::ast::AstNode;
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
@@ -10,7 +10,7 @@ pub struct EmptyExecRootNode {
     pub position: Interval,
 }
 
-impl Node for EmptyExecRootNode {
+impl AstNode for EmptyExecRootNode {
     fn asm(
         &mut self,
         ctx: MutRc<Context>,

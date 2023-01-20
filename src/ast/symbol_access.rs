@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{
     syntax_error, type_error, unknown_symbol, Error,
@@ -20,33 +20,7 @@ impl SymbolAccess {
     }
 }
 
-impl Node for SymbolAccess {
-    fn asm(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        let decl =
-            ctx.borrow_mut().get_dec_from_id(&self.id());
-        if decl.require_init && !decl.is_defined {
-            return Err(type_error(format!(
-                "Cannot use uninitialized variable '{}'",
-                self.id()
-            ))
-            .set_interval(self.pos()));
-        }
-
-        if decl.is_type {
-            return Ok("".to_string());
-        }
-
-        Ok(format!(
-            "
-            push {}
-        ",
-            ctx.borrow_mut().get_dec_from_id(&self.id()).id
-        ))
-    }
-
+impl AstNode for SymbolAccess {
     fn type_check(
         &self,
         ctx: MutRc<Context>,
@@ -85,6 +59,32 @@ impl Node for SymbolAccess {
         }
 
         Ok(TypeCheckRes::from_ctx(&ctx, &self.id(), 0))
+    }
+
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        let decl =
+            ctx.borrow_mut().get_dec_from_id(&self.id());
+        if decl.require_init && !decl.is_defined {
+            return Err(type_error(format!(
+                "Cannot use uninitialized variable '{}'",
+                self.id()
+            ))
+            .set_interval(self.pos()));
+        }
+
+        if decl.is_type {
+            return Ok("".to_string());
+        }
+
+        Ok(format!(
+            "
+            push {}
+        ",
+            ctx.borrow_mut().get_dec_from_id(&self.id()).id
+        ))
     }
 
     fn pos(&self) -> Interval {

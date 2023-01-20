@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
@@ -10,7 +10,14 @@ pub struct BoolNode {
     pub position: Interval,
 }
 
-impl Node for BoolNode {
+impl AstNode for BoolNode {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
+        Ok(TypeCheckRes::from_ctx(&ctx, "Bool", 0))
+    }
+
     fn asm(
         &mut self,
         _ctx: MutRc<Context>,
@@ -19,13 +26,6 @@ impl Node for BoolNode {
             "\n push {} \n",
             if self.value { 1 } else { 0 }
         ))
-    }
-
-    fn type_check(
-        &self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        Ok(TypeCheckRes::from_ctx(&ctx, "Bool", 0))
     }
 
     fn pos(&self) -> Interval {

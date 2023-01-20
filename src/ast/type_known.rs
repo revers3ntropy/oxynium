@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
@@ -11,7 +11,7 @@ pub struct KnownTypeNode {
     pub pos: Interval,
 }
 
-impl Node for KnownTypeNode {
+impl AstNode for KnownTypeNode {
     fn type_check(
         &self,
         _ctx: MutRc<Context>,

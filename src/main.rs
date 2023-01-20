@@ -3,8 +3,7 @@ use crate::args::{
 };
 use crate::compile::compile_and_assemble;
 use crate::error::io_error;
-use std::fs::File;
-use std::io::prelude::*;
+use crate::util::read_file;
 use std::path::Path;
 
 mod args;
@@ -61,38 +60,23 @@ fn import_exec(args: &Args) {
         return;
     }
 
-    let input_file = File::open(args.input.clone());
-    if input_file.is_err() {
-        io_error(format!(
-            "Failed to open file '{}'",
-            args.input
-        ))
-        .print_stderr();
+    let read_result = read_file(args.input.as_str());
+    if read_result.is_err() {
+        read_result.err().unwrap().print_stderr();
         return;
     }
 
-    let mut input = String::new();
-    let read_file_result =
-        input_file.unwrap().read_to_string(&mut input);
-    if read_file_result.is_err() {
-        io_error(format!(
-            "Failed to read file '{}': {}",
-            args.input,
-            read_file_result.err().unwrap()
-        ))
-        .print_stderr();
-        return;
-    }
-
+    let source_code = read_result.unwrap();
     let res = compile_and_assemble(
-        input.clone(),
+        source_code.clone(),
         args.input.clone(),
         &args,
     );
     if res.is_err() {
-        res.err()
-            .unwrap()
-            .pretty_print_stderr(input, args.input.clone())
+        res.err().unwrap().pretty_print_stderr(
+            source_code,
+            args.input.clone(),
+        )
     }
 }
 

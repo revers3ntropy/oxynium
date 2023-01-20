@@ -1,11 +1,11 @@
-use crate::ast::Node;
+use crate::ast::AstNode;
 use crate::error::Error;
 use crate::position::Position;
 use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct ParseResults {
-    pub node: Option<MutRc<dyn Node>>,
+    pub node: Option<MutRc<dyn AstNode>>,
     pub error: Option<Error>,
 
     pub reverse_count: usize,
@@ -32,7 +32,7 @@ impl ParseResults {
     pub fn register(
         &mut self,
         res: ParseResults,
-    ) -> Option<MutRc<dyn Node>> {
+    ) -> Option<MutRc<dyn AstNode>> {
         self.last_registered_advance_count =
             res.advance_count;
         self.advance_count += res.advance_count;
@@ -44,7 +44,7 @@ impl ParseResults {
 
     pub fn success(
         &mut self,
-        node: MutRc<dyn Node>,
+        node: MutRc<dyn AstNode>,
     ) -> &ParseResults {
         self.node = Some(node);
         self

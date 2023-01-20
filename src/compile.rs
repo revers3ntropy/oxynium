@@ -1,4 +1,6 @@
 use crate::args::{Args, ExecMode};
+use crate::ast::exec_root::ExecRootNode;
+use crate::ast::AstNode;
 use crate::context::Context;
 use crate::error::{io_error, Error};
 use crate::parse::lexer::Lexer;
@@ -24,34 +26,20 @@ fn setup_ctx_with_doxy(
         ctx.borrow_mut().set_ignoring_definitions(true);
     }
 
-    let mut lexer = Lexer::new(
-        STD_DOXY.to_owned(),
-        "std.doxy".to_owned(),
-        ctx.borrow().cli_args.clone(),
-    );
-    let tokens = lexer.lex();
-    if tokens.is_err() {
-        return Err(tokens.err().unwrap());
-    }
+    let mut node = ExecRootNode {
+        statements: generate_ast(
+            ctx.clone(),
+            STD_DOXY.to_owned(),
+            "std.doxy".to_owned(),
+        )?,
+    };
 
-    perf!(ctx.borrow().cli_args, start, "Lexed STD");
+    node.setup(ctx.clone())?;
+
+    perf!(ctx.borrow().cli_args, start, "Setup STD AST");
     let start = Instant::now();
 
-    let mut parser = Parser::new(
-        ctx.borrow().cli_args.clone(),
-        tokens.unwrap(),
-    );
-    let ast = parser.parse();
-    if ast.error.is_some() {
-        return Err(ast.error.unwrap());
-    }
-
-    perf!(ctx.borrow().cli_args, start, "Parsed STD");
-    let start = Instant::now();
-
-    let node = ast.node.unwrap();
-    let type_check_res =
-        node.borrow_mut().type_check(ctx.clone());
+    let type_check_res = node.type_check(ctx.clone());
     if type_check_res.is_err() {
         return Err(type_check_res.err().unwrap());
     }
@@ -59,7 +47,7 @@ fn setup_ctx_with_doxy(
     perf!(ctx.borrow().cli_args, start, "Type-checked STD");
     let start = Instant::now();
 
-    let asm_error = node.borrow_mut().asm(ctx.clone());
+    let asm_error = node.asm(ctx.clone());
     if asm_error.is_err() {
         return Err(asm_error.err().unwrap());
     }
@@ -74,7 +62,38 @@ fn setup_ctx_with_doxy(
     Ok(ctx)
 }
 
-fn compile(
+pub fn generate_ast(
+    ctx: MutRc<Context>,
+    input: String,
+    file_name: String,
+) -> Result<MutRc<dyn AstNode>, Error> {
+    let start = Instant::now();
+
+    let mut lexer = Lexer::new(
+        input.clone(),
+        file_name,
+        ctx.borrow().cli_args.clone(),
+    );
+    let tokens = lexer.lex()?;
+
+    perf!(ctx.borrow().cli_args, start, "Lexed");
+    let start = Instant::now();
+
+    let mut parser =
+        Parser::new(ctx.borrow().cli_args.clone(), tokens);
+    let ast = parser.parse();
+    if ast.error.is_some() {
+        return Err(ast.error.unwrap());
+    }
+
+    perf!(ctx.borrow().cli_args, start, "Parsed");
+
+    let ast = ast.node.unwrap();
+
+    Ok(ast)
+}
+
+pub fn compile(
     input: String,
     file_name: String,
     args: &Args,
@@ -84,32 +103,27 @@ fn compile(
     ctx.borrow_mut().std_asm_path = args.std_path.clone();
     ctx.borrow_mut().exec_mode = args.exec_mode;
 
+    let mut root_node = ExecRootNode {
+        statements: generate_ast(
+            ctx.clone(),
+            input,
+            file_name,
+        )?,
+    };
+
     let start = Instant::now();
 
-    let mut lexer =
-        Lexer::new(input.clone(), file_name, args.clone());
-    let tokens = lexer.lex()?;
+    root_node.setup(ctx.clone())?;
 
-    perf!(ctx.borrow().cli_args, start, "Lexed");
+    perf!(ctx.borrow().cli_args, start, "Setup AST");
     let start = Instant::now();
 
-    let mut parser = Parser::new(args.clone(), tokens);
-    let ast = parser.parse();
-    if ast.error.is_some() {
-        return Err(ast.error.unwrap());
-    }
-
-    perf!(ctx.borrow().cli_args, start, "Parsed");
-    let start = Instant::now();
-
-    let root_node = ast.node.unwrap();
-    root_node.borrow_mut().type_check(ctx.clone())?;
+    root_node.type_check(ctx.clone())?;
 
     perf!(ctx.borrow().cli_args, start, "Type-checked");
     let start = Instant::now();
 
-    let compile_res =
-        root_node.borrow_mut().asm(ctx.clone())?;
+    let compile_res = root_node.asm(ctx.clone())?;
 
     perf!(ctx.borrow().cli_args, start, "Compiled");
     let start = Instant::now();

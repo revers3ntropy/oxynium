@@ -1,5 +1,5 @@
 use crate::args::ExecMode;
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::ast::{STD_ASM, STD_DATA_ASM};
 use crate::context::Context;
 use crate::error::{syntax_error, type_error, Error};
@@ -10,10 +10,61 @@ use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct ExecRootNode {
-    pub statements: MutRc<dyn Node>,
+    pub statements: MutRc<dyn AstNode>,
 }
 
-impl Node for ExecRootNode {
+impl AstNode for ExecRootNode {
+    fn setup(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<(), Error> {
+        self.statements.borrow_mut().setup(ctx.clone())
+    }
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
+        if ctx.borrow().is_frozen() {
+            panic!("Cannot type check a frozen context");
+        }
+        let TypeCheckRes { mut unknowns, .. } = self
+            .statements
+            .borrow()
+            .type_check(ctx.clone())?;
+
+        // so that things aren't redeclared
+        ctx.borrow_mut().freeze();
+
+        //println!("(Pass 0) Unknowns: {} ", unknowns);
+        #[allow(unused_variables)]
+        let mut i = 0;
+        while unknowns > 0 {
+            i += 1;
+
+            ctx.borrow_mut().clear_concrete_cache();
+            let res = self
+                .statements
+                .borrow()
+                .type_check(ctx.clone())?;
+
+            // println!(
+            //     "(Pass {}) Unknowns: {} ",
+            //     i, res.unknowns
+            // );
+
+            if res.unknowns >= unknowns {
+                break;
+            }
+            unknowns = res.unknowns;
+        }
+
+        ctx.borrow_mut().finished_resolving_types();
+
+        // especially while not stable, do this last check every time
+        // but TODO: only run when there are still unknowns but no progress
+        self.statements.borrow().type_check(ctx.clone())
+    }
+
     fn asm(
         &mut self,
         ctx: MutRc<Context>,
@@ -133,51 +184,6 @@ impl Node for ExecRootNode {
         ",
             ctx_ref.std_asm_path
         ))
-    }
-
-    fn type_check(
-        &self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        if ctx.borrow().is_frozen() {
-            panic!("Cannot type check a frozen context");
-        }
-        let TypeCheckRes { mut unknowns, .. } = self
-            .statements
-            .borrow()
-            .type_check(ctx.clone())?;
-
-        // so that things aren't redeclared
-        ctx.borrow_mut().freeze();
-
-        //println!("(Pass 0) Unknowns: {} ", unknowns);
-        #[allow(unused_variables)]
-        let mut i = 0;
-        while unknowns > 0 {
-            i += 1;
-
-            ctx.borrow_mut().clear_concrete_cache();
-            let res = self
-                .statements
-                .borrow()
-                .type_check(ctx.clone())?;
-
-            // println!(
-            //     "(Pass {}) Unknowns: {} ",
-            //     i, res.unknowns
-            // );
-
-            if res.unknowns >= unknowns {
-                break;
-            }
-            unknowns = res.unknowns;
-        }
-
-        ctx.borrow_mut().finished_resolving_types();
-
-        // especially while not stable, do this last check every time
-        // but TODO: only run when there are still unknowns but no progress
-        self.statements.borrow().type_check(ctx.clone())
     }
 
     fn pos(&self) -> Interval {

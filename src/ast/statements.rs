@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, Error};
 use crate::position::Interval;
@@ -6,27 +6,19 @@ use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct StatementsNode {
-    pub statements: Vec<MutRc<dyn Node>>,
+    pub statements: Vec<MutRc<dyn AstNode>>,
 }
 
-impl Node for StatementsNode {
-    fn asm(
+impl AstNode for StatementsNode {
+    fn setup(
         &mut self,
         ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        let mut asm = String::new();
-
+    ) -> Result<(), Error> {
         for statement in self.statements.iter_mut() {
-            let stmt =
-                statement.borrow_mut().asm(ctx.clone())?;
-            if !stmt.is_empty() {
-                asm.push_str("\n");
-                asm.push_str(&stmt.clone());
-            }
+            statement.borrow_mut().setup(ctx.clone())?;
         }
-        Ok(asm)
+        Ok(())
     }
-
     fn type_check(
         &self,
         ctx: MutRc<Context>,
@@ -77,6 +69,23 @@ impl Node for StatementsNode {
         }
 
         Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))
+    }
+
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        let mut asm = String::new();
+
+        for statement in self.statements.iter_mut() {
+            let stmt =
+                statement.borrow_mut().asm(ctx.clone())?;
+            if !stmt.is_empty() {
+                asm.push_str("\n");
+                asm.push_str(&stmt.clone());
+            }
+        }
+        Ok(asm)
     }
 
     fn pos(&self) -> Interval {

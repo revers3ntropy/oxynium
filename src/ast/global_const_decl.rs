@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{syntax_error, Error};
 use crate::get_type;
@@ -26,28 +26,7 @@ impl<T> GlobalConstNode<T> {
     }
 }
 
-impl Node for GlobalConstNode<i64> {
-    fn asm(
-        &mut self,
-        ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        if ctx.borrow_mut().stack_frame_peak().is_some() {
-            return Err(syntax_error(format!(
-                "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
-                self.identifier.clone().literal.unwrap()
-            )).set_interval((self.pos().0, self.identifier.end.clone())));
-        }
-        ctx.borrow_mut().define(
-            SymbolDef {
-                name: self.asm_id(),
-                data: Some(format!("dq {}", self.value)),
-                text: None,
-            },
-            self.pos(),
-        )?;
-        Ok("".to_owned())
-    }
-
+impl AstNode for GlobalConstNode<i64> {
     fn type_check(
         &self,
         ctx: MutRc<Context>,
@@ -83,12 +62,33 @@ impl Node for GlobalConstNode<i64> {
         Ok(TypeCheckRes::from_ctx(&ctx, "Int", 0))
     }
 
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        if ctx.borrow_mut().stack_frame_peak().is_some() {
+            return Err(syntax_error(format!(
+                "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
+                self.identifier.clone().literal.unwrap()
+            )).set_interval((self.pos().0, self.identifier.end.clone())));
+        }
+        ctx.borrow_mut().define(
+            SymbolDef {
+                name: self.asm_id(),
+                data: Some(format!("dq {}", self.value)),
+                text: None,
+            },
+            self.pos(),
+        )?;
+        Ok("".to_owned())
+    }
+
     fn pos(&self) -> Interval {
         self.position.clone()
     }
 }
 
-impl Node for GlobalConstNode<String> {
+impl AstNode for GlobalConstNode<String> {
     fn asm(
         &mut self,
         ctx: MutRc<Context>,

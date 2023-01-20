@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::get_type;
@@ -19,7 +19,7 @@ impl TypeNode {
     }
 }
 
-impl Node for TypeNode {
+impl AstNode for TypeNode {
     fn type_check(
         &self,
         ctx: MutRc<Context>,

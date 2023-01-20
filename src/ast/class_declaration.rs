@@ -1,6 +1,6 @@
 use crate::ast::fn_declaration::FnDeclarationNode;
 use crate::ast::type_known::KnownTypeNode;
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{invalid_symbol, type_error, Error};
 use crate::parse::token::Token;
@@ -37,7 +37,7 @@ pub fn operator_method_id(
 #[derive(Debug)]
 pub struct ClassField {
     pub identifier: String,
-    pub type_: MutRc<dyn Node>,
+    pub type_: MutRc<dyn AstNode>,
 }
 
 #[derive(Debug)]
@@ -51,20 +51,29 @@ pub struct ClassDeclarationNode {
     pub template_ctx: MutRc<Context>,
 }
 
-impl Node for ClassDeclarationNode {
-    fn asm(
+impl AstNode for ClassDeclarationNode {
+    fn setup(
         &mut self,
         ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        let mut asm = "".to_string();
-        for method in self.methods.iter() {
-            let res =
-                method.borrow_mut().asm(ctx.clone())?;
-            asm.push_str(res.as_str());
-        }
+    ) -> Result<(), Error> {
+        self.template_ctx
+            .borrow_mut()
+            .set_parent(ctx.clone());
 
-        Ok(asm)
+        for field in &self.fields {
+            field
+                .type_
+                .borrow_mut()
+                .setup(self.template_ctx.clone())?;
+        }
+        for method in &self.methods {
+            method
+                .borrow_mut()
+                .setup(self.template_ctx.clone())?;
+        }
+        Ok(())
     }
+
     fn type_check(
         &self,
         ctx: MutRc<Context>,
@@ -79,10 +88,6 @@ impl Node for ClassDeclarationNode {
             )
             .set_interval(self.identifier.interval()));
         }
-
-        self.template_ctx
-            .borrow_mut()
-            .set_parent(ctx.clone());
 
         for template in self.template_params.iter() {
             self.template_ctx.borrow_mut().declare(
@@ -264,6 +269,19 @@ impl Node for ClassDeclarationNode {
         }
 
         Ok(TypeCheckRes::from(this_type, unknowns))
+    }
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        let mut asm = "".to_string();
+        for method in self.methods.iter() {
+            let res =
+                method.borrow_mut().asm(ctx.clone())?;
+            asm.push_str(res.as_str());
+        }
+
+        Ok(asm)
     }
 
     fn pos(&self) -> Interval {

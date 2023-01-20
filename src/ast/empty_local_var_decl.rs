@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{syntax_error, Error};
 use crate::position::Interval;
@@ -8,28 +8,15 @@ use crate::util::MutRc;
 #[derive(Debug)]
 pub struct EmptyLocalVarNode {
     pub identifier: String,
-    pub type_: MutRc<dyn Node>,
+    pub type_: MutRc<dyn AstNode>,
     pub position: Interval,
 }
 
-impl Node for EmptyLocalVarNode {
-    fn asm(
+impl AstNode for EmptyLocalVarNode {
+    fn setup(
         &mut self,
         ctx: MutRc<Context>,
-    ) -> Result<String, Error> {
-        if ctx.borrow_mut().stack_frame_peak().is_none() {
-            return Err(syntax_error(format!(
-                "Cannot declare local variable '{}' outside of function. Try using 'var' or 'const' instead.",
-                self.identifier
-            )));
-        }
-        Ok(format!(""))
-    }
-
-    fn type_check(
-        &self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    ) -> Result<(), Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(syntax_error(format!(
                 "Invalid local variable '{}'",
@@ -37,7 +24,13 @@ impl Node for EmptyLocalVarNode {
             ))
             .set_interval(self.position.clone()));
         }
+        self.type_.borrow_mut().setup(ctx.clone())
+    }
 
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         let TypeCheckRes {
             t: type_, unknowns, ..
         } = self.type_.borrow().type_check(ctx.clone())?;
@@ -59,6 +52,19 @@ impl Node for EmptyLocalVarNode {
             self.pos(),
         )?;
         Ok(TypeCheckRes::from(type_.clone(), unknowns))
+    }
+
+    fn asm(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
+        if ctx.borrow_mut().stack_frame_peak().is_none() {
+            return Err(syntax_error(format!(
+                "Cannot declare local variable '{}' outside of function. Try using 'var' or 'const' instead.",
+                self.identifier
+            )));
+        }
+        Ok(format!(""))
     }
 
     fn pos(&self) -> Interval {

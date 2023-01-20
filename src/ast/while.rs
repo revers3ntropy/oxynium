@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, Error};
 use crate::get_type;
@@ -8,12 +8,61 @@ use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug)]
 pub struct WhileLoopNode {
-    pub condition: Option<MutRc<dyn Node>>,
-    pub statements: MutRc<dyn Node>,
+    pub condition: Option<MutRc<dyn AstNode>>,
+    pub statements: MutRc<dyn AstNode>,
     pub position: Interval,
 }
 
-impl Node for WhileLoopNode {
+impl AstNode for WhileLoopNode {
+    fn setup(
+        &mut self,
+        ctx: MutRc<Context>,
+    ) -> Result<(), Error> {
+        if let Some(ref condition) = self.condition.clone()
+        {
+            condition.borrow_mut().setup(ctx.clone())?;
+        }
+        self.statements.borrow_mut().setup(ctx.clone())
+    }
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
+        let mut unknowns = 0;
+        if let Some(condition) = &self.condition {
+            let TypeCheckRes {
+                t: cond_type,
+                unknowns: condition_unknowns,
+                ..
+            } = condition
+                .borrow_mut()
+                .type_check(ctx.clone())?;
+            unknowns += condition_unknowns;
+
+            if !get_type!(ctx, "Bool")
+                .borrow()
+                .contains(cond_type)
+            {
+                return Err(type_error(
+                    "while loop condition must be a bool"
+                        .to_string(),
+                )
+                .set_interval(
+                    condition.borrow_mut().pos(),
+                ));
+            }
+        }
+        let mut statements_tr = self
+            .statements
+            .borrow_mut()
+            .type_check(ctx.clone())?;
+        statements_tr.unknowns += unknowns;
+        statements_tr.always_returns = statements_tr
+            .always_returns
+            && self.condition.is_none();
+        Ok(statements_tr)
+    }
+
     fn asm(
         &mut self,
         ctx: MutRc<Context>,
@@ -61,45 +110,6 @@ impl Node for WhileLoopNode {
             {end_lbl}:
         "
         ))
-    }
-
-    fn type_check(
-        &self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        let mut unknowns = 0;
-        if let Some(condition) = &self.condition {
-            let TypeCheckRes {
-                t: cond_type,
-                unknowns: condition_unknowns,
-                ..
-            } = condition
-                .borrow_mut()
-                .type_check(ctx.clone())?;
-            unknowns += condition_unknowns;
-
-            if !get_type!(ctx, "Bool")
-                .borrow()
-                .contains(cond_type)
-            {
-                return Err(type_error(
-                    "while loop condition must be a bool"
-                        .to_string(),
-                )
-                .set_interval(
-                    condition.borrow_mut().pos(),
-                ));
-            }
-        }
-        let mut statements_tr = self
-            .statements
-            .borrow_mut()
-            .type_check(ctx.clone())?;
-        statements_tr.unknowns += unknowns;
-        statements_tr.always_returns = statements_tr
-            .always_returns
-            && self.condition.is_none();
-        Ok(statements_tr)
     }
 
     fn pos(&self) -> Interval {

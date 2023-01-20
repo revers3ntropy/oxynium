@@ -1,4 +1,4 @@
-use crate::ast::{Node, TypeCheckRes};
+use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
@@ -10,7 +10,14 @@ pub struct IntNode {
     pub position: Interval,
 }
 
-impl Node for IntNode {
+impl AstNode for IntNode {
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
+        Ok(TypeCheckRes::from_ctx(&ctx, "Int", 0))
+    }
+
     fn asm(
         &mut self,
         _ctx: MutRc<Context>,
@@ -22,13 +29,6 @@ impl Node for IntNode {
         ",
             self.value
         ))
-    }
-
-    fn type_check(
-        &self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        Ok(TypeCheckRes::from_ctx(&ctx, "Int", 0))
     }
 
     fn pos(&self) -> Interval {
