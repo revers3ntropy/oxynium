@@ -18,8 +18,12 @@ Ubuntu support only at the moment.
 - cargo
 - rustc
 
+#### For running full testing suite:
+- python3
+- Docker (and cli)
+
 ## Examples
-See `spec/*` for more examples
+See `test/spec/*` for more examples
 
 ```shell
 $ oxy -e 'print("Hello, World!")' && ./oxy-out
@@ -70,6 +74,6 @@ $ bin/exec "1+1"
 # Run test suite
 $ bin/test
 
-# Assemble a file
-$ bin/asm <file>
+# Run full test suite (with Docker, may take a while)
+$ bin/test_full
 ```
