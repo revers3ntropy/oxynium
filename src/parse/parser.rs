@@ -40,7 +40,6 @@ use crate::parse::token::{Token, TokenType};
 use crate::position::Position;
 use crate::util::{new_mut_rc, MutRc};
 use std::any::Any;
-use std::borrow::BorrowMut;
 
 macro_rules! ret_on_err {
     ($e:expr) => {
@@ -1507,7 +1506,6 @@ impl Parser {
         let start = self.last_tok().unwrap().start;
 
         let should_add_end_stmts = class_name.is_none();
-
         let mut is_external_method = false;
 
         if self.current_tok().is_none() {
@@ -1558,7 +1556,7 @@ impl Parser {
             is_external_method = true;
         }
 
-        let mut identifier;
+        let identifier;
         if !self
             .current_matches(TokenType::Identifier, None)
         {
@@ -1747,6 +1745,7 @@ impl Parser {
                     self.last_tok().unwrap().end.clone(),
                 ),
                 class: None,
+                class_name,
                 has_usage: false,
             }));
             return res;
@@ -1774,15 +1773,6 @@ impl Parser {
             ret_on_err!(res);
         }
 
-        if is_external_method {
-            identifier.borrow_mut().literal =
-                Some(format!(
-                    "{}.{}",
-                    class_name.unwrap(),
-                    identifier.str()
-                ));
-        }
-
         res.success(new_mut_rc(FnDeclarationNode {
             identifier,
             params_scope: Context::new(
@@ -1797,6 +1787,7 @@ impl Parser {
                 self.last_tok().unwrap().end.clone(),
             ),
             class: None,
+            class_name,
             has_usage: false,
         }));
         res

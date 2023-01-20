@@ -37,6 +37,7 @@ pub struct FnDeclarationNode {
     pub is_external: bool,
     pub position: Interval,
     pub class: Option<MutRc<ClassType>>,
+    pub class_name: Option<String>,
     pub has_usage: bool,
 }
 
@@ -47,21 +48,15 @@ impl FnDeclarationNode {
         {
             let self_id =
                 self.identifier.literal.clone().unwrap();
-            match &self.class {
-                Some(class) => method_id(
-                    class.borrow().name.clone(),
-                    self_id,
-                ),
+            match &self.class_name {
+                Some(class) => {
+                    method_id(class.clone(), self_id)
+                }
                 None => self_id,
             }
         } else {
             operator_method_id(
-                self.class
-                    .clone()
-                    .unwrap()
-                    .borrow()
-                    .name
-                    .clone(),
+                self.class_name.clone().unwrap(),
                 self.identifier.clone(),
             )
         }
@@ -175,16 +170,16 @@ impl Node for FnDeclarationNode {
             }
         } else {
             // check the signature of the operator method
-            if self.class.is_none() {
+            if self.class_name.is_none() {
                 return Err(syntax_error(format!(
-                    "Cannot declare operator method outside of class."
+                    "cannot declare operator method outside of class"
                 ))
                 .set_interval(self.identifier.interval()));
             }
 
             if self.params.len() != 2 {
                 return Err(type_error(format!(
-                    "Operator overloading methods must have exactly 2 parameters, found {}",
+                    "operator overloading methods must have exactly 2 parameters, found {}",
                     self.params.len()
                 ))
                 .set_interval(self.identifier.interval()));

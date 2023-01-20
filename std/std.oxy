@@ -1,3 +1,55 @@
+/// primitive Char:
+
+fn Char.== (self, other: Char) Bool {
+	return #asm(Bool, "
+		mov rax, qword [rbp + 16]
+		cmp rax, qword [rbp + 24]
+		sete al
+		push rax
+	")
+}
+
+fn Char.!= (self, other: Char) Bool {
+	return !(self == other)
+}
+
+fn Char.str (self) Str {
+	return #asm(Str, "
+		push 16
+		call Ptr.allocate
+		add rsp, 8
+
+		mov rdi, qword [rbp + 16]
+		mov qword [rax], rdi
+		push rax
+	")
+}
+
+fn Char.as_int (self) Int {
+	return #asm(Int, "
+		mov rax, qword [rbp + 16]
+		push rax
+	")
+}
+
+fn Char.from_int (i: Int) Char {
+	return #asm(Char, "
+		mov rax, qword [rbp + 16]
+		push rax
+	")
+}
+
+
+/// primitive Bool:
+
+fn Bool.|| (self, other: Bool) Bool {
+	return #asm(Bool, "
+		mov rax, qword [rbp + 16]
+		or rax, qword [rbp + 24]
+		push rax
+	")
+}
+
 fn Bool.str(self) Str {
 	if self {
 		return "true"
@@ -5,7 +57,10 @@ fn Bool.str(self) Str {
 	return "false"
 }
 
-fn exit (code: Int = 0) {
+
+/// Functions:
+
+fn exit (code = 0) {
 	#asm "
 		mov rax, 60
 		mov rdi, qword [rbp + 16]
@@ -13,7 +68,7 @@ fn exit (code: Int = 0) {
 	"
 }
 
-fn input (prompt: Str = "", buffer_size: Int = 1000) Str {
+fn input (prompt="", buffer_size=1000) Str {
 	return #asm(Str, "
 		push qword [rbp + 16]
 		call print
@@ -89,7 +144,7 @@ fn println (msg: Str, line_end="\n") {
     print(line_end);
 }
 
-fn panic (msg: Str) {
+fn panic (msg="") {
 	println("PANIC: '" + msg + "'");
 	exit(1);
 }
