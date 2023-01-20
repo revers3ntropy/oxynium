@@ -16,17 +16,14 @@ impl AstNode for ScopeNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<(), Error> {
-        self.body.borrow_mut().setup(ctx.clone())
+        self.ctx.borrow_mut().set_parent(ctx.clone());
+        self.body.borrow_mut().setup(self.ctx.clone())
     }
 
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        _ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        // shouldn't really be doing this but assuming that the incoming context is the same
-        // on each pass...
-        self.ctx.borrow_mut().set_parent(ctx.clone());
-
         self.body.borrow_mut().type_check(self.ctx.clone())
     }
 

@@ -1,0 +1,47 @@
+fn input (prompt="", buffer_size=1000) Str {
+	return #asm(Str, "
+		push qword [rbp + 16]
+		call print
+		pop rax
+
+		mov rdi, qword [rbp + 24] ; buffer_size
+		add rdi, 1                ; add space for null byte
+		push rdi
+		call Ptr.allocate
+		add rsp, 8
+		mov r15, rax              ; r15 = string pointer
+
+		mov rax, 0
+		mov rdi, 0
+		mov rsi, r15
+		mov rdx, qword [rbp + 24]
+		syscall
+
+		; remove trailing new line, and null terminate
+		mov rax, r15
+		add rax, qword [rbp + 24]
+		inc rax
+		.last_char_loop:
+			dec rax
+			cmp byte [rax], 0
+			je .last_char_loop
+			cmp byte [rax], 10
+			je .del_last_char
+			cmp byte [rax], 13
+			je .del_last_char
+			jmp .last_char_after_loop
+
+		.del_last_char:
+			mov byte [rax], 0
+		.last_char_after_loop:
+
+		push r15
+		call Str.from_utf8 ; convert to string
+						   ; this is necessary because the string
+						   ; comes in as utf8, but the internal
+						   ; string representation is 'utf64'
+						   ; (utf8 with padding on each char up to 64 bits)
+		pop r15
+		push rax
+	")
+}

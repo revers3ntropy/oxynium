@@ -339,14 +339,14 @@ impl AstNode for FnCallNode {
         let (fn_type, calling_through_instance, _, _) =
             self.get_callee_type(ctx.clone())?;
 
-        // logically impossible for this to not exist -
-        // would require unresolved unknowns
+        // would require unresolved unknowns to be None
         let fn_type = fn_type.expect(
-            format!("function type not found: {:#?}\n\nctx:{}\n",
-                    self,
-                    ctx.borrow().str()
+            format!(
+                "function not found: {:#?}\n\nctx:\n{}\n",
+                self,
+                ctx.borrow().str()
             )
-                .as_str(),
+            .as_str(),
         );
 
         let mut args = self.args.clone();

@@ -1,0 +1,38 @@
+fn Char.== (self, other: Char) Bool {
+	return #asm(Bool, "
+		mov rax, qword [rbp + 16]
+		cmp rax, qword [rbp + 24]
+		sete al
+		push rax
+	")
+}
+
+fn Char.!= (self, other: Char) Bool {
+	return !(self == other)
+}
+
+fn Char.str (self) Str {
+	return #asm(Str, "
+		push 16
+		call Ptr.allocate
+		add rsp, 8
+
+		mov rdi, qword [rbp + 16]
+		mov qword [rax], rdi
+		push rax
+	")
+}
+
+fn Char.as_int (self) Int {
+	return #asm(Int, "
+		mov rax, qword [rbp + 16]
+		push rax
+	")
+}
+
+fn Char.from_int (i: Int) Char {
+	return #asm(Char, "
+		mov rax, qword [rbp + 16]
+		push rax
+	")
+}

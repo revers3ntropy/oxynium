@@ -1,0 +1,58 @@
+fn Time.- (self, other: Time) Time {
+	let self_micros = self.seconds * 1000000 + self.microseconds;
+	let other_micros = other.seconds * 1000000 + other.microseconds;
+	let diff_micros = self_micros - other_micros;
+	return new Time {
+		seconds: diff_micros / 1000000,
+		microseconds: diff_micros % 1000000
+	}
+}
+
+fn Time.+ (self, other: Time) Time {
+	let self_micros = self.seconds * 1000000 + self.microseconds;
+	let other_micros = other.seconds * 1000000 + other.microseconds;
+	let sum_micros = self_micros + other_micros;
+	return new Time {
+		seconds: sum_micros / 1000000,
+		microseconds: sum_micros % 1000000
+	}
+}
+
+fn Time.str (self) Str {
+	return self.seconds.str() + "." + self.microseconds.str()
+}
+
+fn Time.current_seconds () Int {
+	return #asm(Int, "
+		xor rdi, rdi
+		sub rsp, 32
+		and rsp, -16
+		call time WRT ..plt ; return time(NULL)
+		push rax
+	")
+}
+
+fn Time.current_microseconds () Int {
+	return #asm(Int, "
+		mov rax, 96
+		lea rdi, [rsp - 16]
+		xor esi, esi
+		syscall
+		mov rax, [rdi + 8]
+		push rax
+	")
+}
+
+fn Time.now () Time {
+	return new Time {
+		seconds: Time.current_seconds(),
+		microseconds: Time.current_microseconds()
+	}
+}
+
+fn Time.epoch () Time {
+	return new Time {
+		seconds: 0,
+		microseconds: 0
+	}
+}

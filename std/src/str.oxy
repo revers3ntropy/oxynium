@@ -1,0 +1,463 @@
+fn Str.== (self, other: Str) Bool {
+	return #asm(Bool, "
+		mov r14, qword [rbp + 16] ; r14 = lhs
+		mov r13, qword [rbp + 24] ; r13 = rhs
+
+		xor rax, rax ; rax = 0 (index)
+
+		.loop:
+			mov rcx, qword [r14 + rax * 8] ; lhs[rax]
+			mov rdx, qword [r13 + rax * 8] ; rhs[rax]
+			cmp rcx, rdx ; lhs[rax] != rhs[rax]
+			jne .not_equal
+
+			test rcx, rcx ; lhs[rax] == 0
+			jz .are_equal ; lhs[rax] == rhs[rax] == 0
+
+			inc rax ; rax++
+
+			jmp .loop
+
+		.are_equal:
+			mov rax, 1
+			mov rsp, rbp
+			pop rbp
+			ret
+
+		.not_equal:
+			xor rax, rax
+			push rax
+	")
+}
+fn Str.!= (self, other: Str) Bool {
+	return !(self == other)
+}
+
+/// returns a new string that is the concatenation of lhs and rhs
+fn Str.+ (self, other: Str) Str {
+	return #asm(Str, "
+		times 3 push 0             ; space for length of self and other,
+								   ; and the new string
+		push qword [rbp + 16]      ; self
+		call Str.len
+		add rsp, 8
+		mov qword [rbp - 8], rax   ; [rbp - 8] = self.len()
+
+		push qword [rbp + 24]      ; other
+		call Str.len
+		add rsp, 8
+		mov qword [rbp - 16], rax  ; [rbp - 16] = other.len()
+
+		add rax, qword [rbp - 8]   ; rax = other.len() + self.len()
+		inc rax                    ; rax = lhs.len() + rhs.len() + 1 (for null terminator)
+		imul rax, 8                ; rax = (lhs.len() + rhs.len() + 1) * 8
+		push rax
+		call Ptr.allocate       ; rax = malloc((lhs.len() + rhs.len() + 1) * 8)
+		add rsp, 8
+		mov qword [rbp - 24], rax  ; [rbp - 24] = new string
+
+		mov rdx, qword [rbp - 8]   ; rcx = self.len()
+		imul rdx, 8                ; rcx = self.len() * 8
+		mov rsi, qword [rbp + 16]  ; rsi = self
+		mov rdi, qword [rbp - 24]  ; rdx = new string
+
+		push rbp
+		mov rbp, rsp               ; stack is 16-byte aligned
+		sub rsp, 32
+		and rsp, -16
+		call memcpy WRT ..plt      ; memcpy(new string, self, self.len() * 8)
+		mov rsp, rbp
+		pop rbp
+
+		mov rdx, qword [rbp - 16]  ; rcx = other.len()
+		imul rdx, 8                ; rcx = other.len() * 8
+		mov rsi, qword [rbp + 24]  ; rsi = other
+		mov rdi, qword [rbp - 24]  ; rdx = new string
+		mov rax, qword [rbp - 8]   ; rax = other.len()
+		imul rax, 8                ; rax = other.len() * 8
+		add rdi, rax               ; rdx = new string + other.len() * 8
+
+		push rbp
+		mov rbp, rsp               ; stack is 16-byte aligned
+		sub rsp, 32
+		and rsp, -16
+		call memcpy WRT ..plt      ; memcpy(new string, other, other.len() * 8)
+		mov rsp, rbp
+		pop rbp
+
+		mov rax, qword [rbp - 24]  ; rax = new string
+		push rax
+	")
+}
+
+fn Str.at (self, i: Int) Char {
+	return #asm(Char, "
+		mov rdx, qword [rbp + 16] ; pop string
+		mov r15, qword [rbp + 24] ; pop index
+
+		cmp r15, 0
+		jl .backwards
+
+		xor rax, rax ; character
+		xor rcx, rcx ; index
+
+		.loop:
+			mov rax, qword [rdx]
+			test rax, rax
+			je .end
+			add rdx, 8
+
+			cmp rcx, r15
+			jge .end
+
+			inc rcx
+			jmp .loop
+
+		.backwards:
+			neg r15
+			mov r14, rdx
+
+			push rdx
+			call Str.len
+			pop rdx
+			imul rax, 8
+			add rdx, rax ; rdx = end of string + 1
+
+			imul r15, 8
+			sub rdx, r15 ; rdx = end of string - index
+			cmp rdx, r14 ; if rdx < r14, index is out of bounds
+			jl .end_and_clear
+
+			mov rax, qword [rdx]
+			jmp .end
+
+		.end_and_clear:
+			xor rax, rax
+		.end:
+			push rax
+	")
+}
+
+/// Returns the character at the given index
+/// Does not check if index is out of bounds
+fn Str.at_raw (self, i: Int) Char {
+	return #asm(Char, "
+		mov rdx, qword [rbp + 16]  ; self
+		mov r15, qword [rbp + 24]  ; index
+
+		mov rax, qword [rdx + r15 * 8]
+		push rax
+	")
+}
+
+fn Str.concat (self, other: Str) Str {
+	return self + other
+}
+
+fn Str.contains (self, other: Str) Bool {
+	return self.find(other) >= 0
+}
+
+fn Str.find (self, other: Str) Int {
+	if other.len() == 0 {
+		return 0
+	}
+	let mut i = 0;
+	while i < self.len() {
+		if self.at(i) == other.at(0) {
+			let mut j = 1;
+			while j < other.len() && self.at(i + j) == other.at(j) {
+				j = j + 1;
+			}
+			if j == other.len() {
+				return i
+			}
+		}
+		i = i + 1
+	}
+	return -1
+}
+
+fn Str.len (self) Int {
+	return #asm(Int, "
+		mov rdx, qword [rbp + 16] ; pop string
+
+		xor rax, rax ; string length
+
+		; find length of string
+		_$_Str.len_find_length:
+			mov rcx, qword [rdx]
+			test rcx, rcx
+			je _$_Str.len_end
+			inc rax
+			add rdx, 8
+			jmp _$_Str.len_find_length
+
+		_$_Str.len_end:
+			push rax
+	")
+}
+
+fn Str.repeat (self, n: Int) Str {
+	if n < 1 {
+		return ""
+	}
+	// TODO: implement in assembly to make fast
+	return self + self.repeat(n - 1)
+}
+
+fn Str.str (self) Str {
+	return self
+}
+
+fn Str.substr (self, start = 0, end = 9223372036854775807) Str {
+		// TODO: give the end a proper default value.
+		// This will work in all cases (end = 2^63-1 = max Int),
+		// but it's not pretty.
+	if self.len() < 1 {
+		return ""
+	}
+	if end < 0 {
+		return self.substr(start, Int.max(self.len() + end, 0))
+	}
+	if start < 0 {
+		return self.substr(Int.max(self.len() + start, 0), end)
+	}
+	if start >= end {
+		return ""
+	}
+	let actual_end = Int.min(self.len(), end);
+	let mut i = Int.max(start, 0);
+	let mut s = "";
+	while i < actual_end {
+		// use Str.at_raw here as bounds checking has already been done
+		// and we don't want to do it again every iteration
+		s = s + self.at_raw(i).str();
+		i = i + 1
+	}
+	return s
+}
+
+fn Str.starts_with (self, other: Str) Bool {
+	if other.len() > self.len() {
+		return false
+	}
+	let mut i = 0;
+	while i < other.len() {
+		if self.at(i) != other.at(i) {
+			return false
+		}
+		i = i + 1
+	}
+	return true
+}
+
+fn Str.ends_with (self, other: Str) Bool {
+	if other.len() > self.len() {
+		return false
+	}
+	let mut i = 0;
+	while i < other.len() {
+		if self.at(self.len() - i - 1) != other.at(other.len() - i - 1) {
+			return false
+		}
+		i = i + 1
+	}
+	return true
+}
+
+fn Str.reversed (self) Str {
+	let mut i = 0;
+	let mut s = "";
+	while i < self.len() {
+		s = self.at(i).str() + s;
+		i = i + 1
+	}
+	return s
+}
+
+fn Str.replace (self, search: Str, replace_with = "", max = -1) Str {
+	if search.len() == 0 {
+		return self
+	}
+	if max == 0 {
+		return self
+	}
+	let mut i = 0;
+	let mut s = "";
+	let mut replacements = 0;
+	while i < self.len() {
+		if self.at(i) == search.at(0) {
+			let mut j = 1;
+			while j < search.len() && self.at(i + j) == search.at(j) {
+				j = j + 1;
+			}
+			if j == search.len() {
+				s = s + replace_with;
+				i = i + j;
+				replacements = replacements + 1;
+				if max >= 0 && replacements >= max {
+					s = s + self.substr(i);
+					break
+				}
+				continue
+			}
+		}
+		s = s + self.at(i).str();
+		i = i + 1
+	}
+	return s
+}
+
+fn Str.insert (self, index: Int, other: Str) Str {
+	if index < 0 {
+		return self.insert(self.len() + index + 1, other)
+	}
+	if index >= self.len() {
+		return self + other
+	}
+	return self.substr(0, index) + other + self.substr(index)
+}
+
+fn Str.remove (self, index: Int, count = 1) Str {
+	if index < 0 {
+		if self.len() + index < 0 {
+			return self.substr(self.len() + index + count)
+		}
+		return self.remove(self.len() + index, count)
+	}
+	if index >= self.len() {
+		return self
+	}
+	if count < 1 {
+		return self
+	}
+	return self.substr(0, index) + self.substr(index + count)
+}
+
+fn Str.utf8_size (self) Int {
+	return #asm(Int, "
+		mov r15, qword [rbp + 16]
+
+		push r15
+		call Str.len
+		pop r15
+
+		mov rdx, rax ; rdx = number of characters
+		imul rdx, 8  ; rdx = index of last byte
+		add rdx, r15 ; rdx = pointer to last byte
+
+		xor rax, rax
+		dec r15
+		.loop:
+			inc r15
+			cmp r15, rdx
+			jg .end
+			cmp byte [r15], 0
+			je .loop
+			inc rax
+			jmp .loop
+
+		.end:
+			push rax
+	")
+}
+
+fn Str.from_utf8 (utf8: Str) Str {
+	// https://stackoverflow.com/questions/1543613
+	return #asm(Str, "
+		mov r15, qword [rbp + 16] ; utf8
+		xor r13, r13              ; number of chars in utf8
+
+		; count number of chars in utf8
+		._$_find_chars_loop:
+			xor rax, rax
+			mov al, byte [r15]
+
+			cmp al, 0
+			je ._$_find_chars_end
+
+			mov cl, al
+			shr cl, 7          ; if the first bit of the char is 0,
+			cmp cl, 0          ; then it is a single byte char
+			je ._$_1_byte_char ; otherwise, it is a multi-byte char
+
+			mov cl, al         ; 2-byte char starts with 110x xxxx
+			shr cl, 5
+			cmp cl, 6
+			je ._$_2_byte_char
+
+			mov cl, al         ; 3-byte char starts with 1110 xxxx
+			shr cl, 4
+			cmp cl, 14
+			je ._$_3_byte_char
+			; jmp ._$_4_byte_char ; 4-byte char starts with 1111 0xxx
+			; _$_4_byte_char:
+				xor rcx, rcx
+				mov cl, byte [r15+3]
+				shl rcx, 8
+				mov cl, byte [r15+2]
+				shl rcx, 8
+				mov cl, byte [r15+1]
+				shl rcx, 8
+				mov cl, byte [r15]
+				inc r13
+				push rcx
+				add r15, 4
+				jmp ._$_find_chars_loop
+
+			._$_3_byte_char:
+				xor rcx, rcx
+				mov cl, byte [r15+2]
+				shl rcx, 8
+				mov cl, byte [r15+1]
+				shl rcx, 8
+				mov cl, byte [r15]
+				inc r13
+				push rcx
+				add r15, 3
+				jmp ._$_find_chars_loop
+
+			._$_2_byte_char:
+				xor rcx, rcx
+				mov cl, byte [r15+1]
+				shl rcx, 8
+				mov cl, byte [r15]
+				inc r13
+				push rcx
+				add r15, 2
+				jmp ._$_find_chars_loop
+
+			._$_1_byte_char:
+				push rax
+				inc r13
+				inc r15
+				jmp ._$_find_chars_loop
+
+		._$_find_chars_end:
+
+			; put the string (currently on stack) into a heap allocated array
+			push r13 ; save r13 = num characters
+
+			mov rdi, r13
+			add rdi, 64 ; add space for null terminator
+			imul rdi, 8
+			push rdi
+			call Ptr.allocate
+			add rsp, 8
+			; rax = return value (pointer to heap allocated char*)
+
+			pop r13 ; restore r13
+
+		._$_move_loop:
+			cmp r13, 0
+			jle ._$_move_return
+			dec r13
+			pop rdx
+			mov qword [rax + r13 * 8], rdx
+			jmp ._$_move_loop
+
+		._$_move_return:
+			push rax
+	")
+}

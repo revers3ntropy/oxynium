@@ -42,7 +42,6 @@ impl Macro for IncludeMacro {
         let ast =
             generate_ast(ctx.clone(), read_result, path)?;
 
-        println!("CTX: {}", ctx.borrow().str());
         return Ok(new_mut_rc(ScopeNode {
             position: self.position.clone(),
             body: ast,

@@ -1,0 +1,140 @@
+fn Int.+ (self, n: Int) Int {
+	return #asm(Int, "
+		mov rax, qword [rbp + 16]
+		add rax, qword [rbp + 24]
+		push rax
+	")
+}
+
+fn Int.- (self, n: Int) Int {
+	return #asm(Int, "
+		mov rax, qword [rbp + 16]
+		sub rax, qword [rbp + 24]
+		push rax
+	")
+}
+
+fn Int.* (self, n: Int) Int {
+	return #asm(Int, "
+		mov rax, qword [rbp + 16]
+		imul rax, qword [rbp + 24]
+		push rax
+	")
+}
+
+fn Int./ (self, n: Int) Int {
+	return #asm(Int, "
+		mov rax, qword [rbp + 16]
+		cqo
+		idiv qword [rbp + 24]
+		push rax
+	")
+}
+
+fn Int.% (self, n: Int) Int {
+	return #asm(Int, "
+		mov rax, qword [rbp + 16]
+		cqo
+		idiv qword [rbp + 24]
+		push rdx
+	")
+}
+
+fn Int.== (self, n: Int) Bool {
+	return #asm(Bool, "
+		xor rax, rax
+		mov rcx, qword [rbp + 16]
+		cmp rcx, qword [rbp + 24]
+		sete al
+		push rax
+	")
+}
+
+fn Int.!= (self, n: Int) Bool {
+	return !(self == n)
+}
+
+fn Int.< (self, n: Int) Bool {
+	return #asm(Bool, "
+		xor rax, rax
+		mov rcx, qword [rbp + 16]
+		cmp rcx, qword [rbp + 24]
+		setl al
+		push rax
+	")
+}
+
+fn Int.<= (self, n: Int) Bool {
+	return self < n || self == n
+}
+
+fn Int.> (self, n: Int) Bool {
+	return #asm(Bool, "
+		xor rax, rax
+		mov rcx, qword [rbp + 16]
+		cmp rcx, qword [rbp + 24]
+		setg al
+		push rax
+	")
+}
+
+fn Int.>= (self, n: Int) Bool {
+	return self > n || self == n
+}
+
+fn Int.max (self, other = 9223372036854775807) Int {
+	if self > other {
+		return self
+	}
+	return other
+}
+
+fn Int.min (self, other = -9223372036854775807 - 1) Int {
+	if self < other {
+		return self
+	}
+	return other
+}
+
+fn Int.abs (self) Int {
+	if self < 0 {
+		return -self
+	}
+	return self
+}
+
+fn Int.str (self) Str {
+	// https://stackoverflow.com/questions/8257714
+	return #asm(Str, "
+		; allocate string
+		push 64 ; much larger than needed
+		call Ptr.allocate
+		add rsp, 8
+
+		mov r15, rax ; save char*
+		; write string to allocated memory using
+		; `sprintf(buf, \"%lld\", n)`
+		mov rdi, rax
+		mov rsi, _$_sprintf_Int_str
+		mov rdx, qword [rbp + 16]
+		mov rax, 0
+		mov rcx, rsi
+		mov r8, 0
+		mov r9, 0
+
+		push rbp
+		mov rbp, rsp
+		sub rsp, 32
+		and rsp, -16
+		call sprintf WRT ..plt
+		mov rsp, rbp
+		pop rbp
+
+		mov rax, r15
+
+		push rax
+		call Str.from_utf8
+		pop rdi
+		push rax
+	")
+}

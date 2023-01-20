@@ -54,6 +54,13 @@ impl AstNode for MacroCallNode {
         }
         self.resolved =
             Some(macro_.unwrap().resolve(ctx.clone())?);
+
+        self.resolved
+            .clone()
+            .unwrap()
+            .borrow_mut()
+            .setup(ctx)?;
+
         Ok(())
     }
 
@@ -72,9 +79,9 @@ impl AstNode for MacroCallNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<String, Error> {
-        let macro_ = self.get_macro().unwrap();
-        macro_
-            .resolve(ctx.clone())?
+        self.resolved
+            .clone()
+            .unwrap()
             .borrow_mut()
             .asm(ctx.clone())
     }

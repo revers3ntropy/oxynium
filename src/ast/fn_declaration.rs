@@ -68,30 +68,6 @@ impl AstNode for FnDeclarationNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<(), Error> {
-        for param in &self.params {
-            if param.default_value.is_some() {
-                param
-                    .default_value
-                    .clone()
-                    .unwrap()
-                    .borrow_mut()
-                    .setup(ctx.clone())?;
-            }
-        }
-        if self.body.is_some() {
-            self.body
-                .clone()
-                .unwrap()
-                .borrow_mut()
-                .setup(ctx.clone())?;
-        }
-
-        self.ret_type.borrow_mut().setup(ctx.clone())
-    }
-    fn type_check(
-        &self,
-        ctx: MutRc<Context>,
-    ) -> Result<TypeCheckRes, Error> {
         if self.identifier.token_type
             == TokenType::Identifier
         {
@@ -112,7 +88,7 @@ impl AstNode for FnDeclarationNode {
                 return Err(syntax_error(format!(
                     "cannot declare operator method outside of class"
                 ))
-                .set_interval(self.identifier.interval()));
+                    .set_interval(self.identifier.interval()));
             }
 
             if self.params.len() != 2 {
@@ -120,7 +96,7 @@ impl AstNode for FnDeclarationNode {
                     "operator overloading methods must have exactly 2 parameters, found {}",
                     self.params.len()
                 ))
-                .set_interval(self.identifier.interval()));
+                    .set_interval(self.identifier.interval()));
             }
 
             // check for no default values
@@ -129,7 +105,7 @@ impl AstNode for FnDeclarationNode {
                     return Err(type_error(format!(
                         "Operator Overload methods cannot have default values"
                     ))
-                    .set_interval(param.position.clone()));
+                        .set_interval(param.position.clone()));
                 }
             }
         }
@@ -141,6 +117,32 @@ impl AstNode for FnDeclarationNode {
             .borrow_mut()
             .allow_local_var_decls = true;
 
+        for param in &self.params {
+            if param.default_value.is_some() {
+                param
+                    .default_value
+                    .clone()
+                    .unwrap()
+                    .borrow_mut()
+                    .setup(self.params_scope.clone())?;
+            }
+        }
+        if self.body.is_some() {
+            self.body
+                .clone()
+                .unwrap()
+                .borrow_mut()
+                .setup(self.params_scope.clone())?;
+        }
+
+        self.ret_type
+            .borrow_mut()
+            .setup(self.params_scope.clone())
+    }
+    fn type_check(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<TypeCheckRes, Error> {
         // don't use param_scope so that the function can have params
         // with the same name as the function
         let TypeCheckRes {
