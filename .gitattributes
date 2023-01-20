@@ -1,0 +1,5 @@
+*.oxy linguist-language=Ox
+*.doxy linguist-language=Ox
+
+*.oxy linguist-detectable
+*.doxy linguist-detectable
