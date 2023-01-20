@@ -1,3 +1,4 @@
+use crate::error::{arg_error, Error};
 use clap::parser::ValuesRef;
 use clap::{arg, ArgMatches, Command};
 use std::env;
@@ -68,7 +69,7 @@ pub fn get_args_cmd() -> Command {
         arg!(-d --comp_debug              "For debugging the compiler"),
         arg!(   --allow_overrides         "Allows symbols to be redeclared"),
         arg!(   --stop_after_asm          "Stop after emitting assembly"),
-        arg!(                     [input] "Input code to evaluate"),
+        arg!(                     [path]  "Path to input file"),
     ])
 }
 
@@ -94,7 +95,7 @@ pub fn get_cli_args() -> Args {
             .unwrap_or(&String::from("oxy-out"))
             .to_string(),
         input: m
-            .get_one::<String>("input")
+            .get_one::<String>("path")
             .unwrap_or(&String::from(""))
             .to_string(),
         eval: m
@@ -131,4 +132,11 @@ pub fn get_cli_args() -> Args {
         allow_overrides: m.get_flag("allow_overrides"),
         stop_after_asm: m.get_flag("stop_after_asm"),
     }
+}
+
+pub fn check_args(args: &Args) -> Result<(), Error> {
+    if !args.input.is_empty() && !args.eval.is_empty() {
+        return Err(arg_error("Cannot specify both 'input' and 'eval' options\n"));
+    }
+    Ok(())
 }

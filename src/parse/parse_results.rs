@@ -42,17 +42,6 @@ impl ParseResults {
         res.node
     }
 
-    pub fn try_register(
-        &mut self,
-        res: ParseResults,
-    ) -> Option<MutRc<dyn Node>> {
-        if res.error.is_some() {
-            self.reverse_count += res.advance_count;
-            return None;
-        }
-        self.register(res)
-    }
-
     pub fn success(
         &mut self,
         node: MutRc<dyn Node>,

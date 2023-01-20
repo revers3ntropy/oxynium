@@ -210,7 +210,7 @@ fn Int.str (self) Str {
 }
 
 
-/// primitive Str:
+/// class Str:
 
 fn Str.== (self, other: Str) Bool {
 	return #asm(Bool, "
@@ -737,7 +737,6 @@ fn Time.epoch () Time {
 		microseconds: 0
 	}
 }
-
 
 /// Functions:
 

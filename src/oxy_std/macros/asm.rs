@@ -38,7 +38,7 @@ impl Macro for AsmMacro {
                     }),
                 }));
             }
-            return  Err(type_error(format!(
+            return Err(type_error(format!(
                 "Argument to macro `asm` must be a string literal"
             )).set_interval(self.position.clone()));
         }

@@ -12,10 +12,12 @@ macro_rules! perf {
     ($args:expr, $time:expr, $action:expr) => {
         if $args.comp_debug {
             println!(
-                "[perf] {:width$} in {:.2?}",
+                "[perf] {:width$} {:ms_width$} ({:.2?})",
                 $action,
+                $time.elapsed().as_micros(),
                 $time.elapsed(),
-                width = 20
+                width = 40,
+                ms_width = 6
             );
         }
     };
