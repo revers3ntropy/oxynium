@@ -26,11 +26,13 @@ Linux support only so far.
 See `test/spec/*` for more examples
 
 ```shell
-$ oxy -e 'print("Hello, World!")' && ./oxy-out
+$ oxy -e 'println("Hello, World!")' && ./oxy-out
 Hello, world!
 ```
 
 ```shell
+$ more hello_world.oxy
+println("Hello, World!")
 $ oxy hello_world.oxy && ./oxy-out
 Hello, world!
 ```
