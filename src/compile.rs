@@ -8,12 +8,13 @@ use crate::parse::parser::Parser;
 use crate::perf;
 use crate::position::Position;
 use crate::post_process::format_asm::post_process;
-use crate::util::MutRc;
-use std::fs;
+use crate::util::{string_to_static_str, MutRc};
 use std::fs::File;
 use std::io::Write;
+use std::path::Path;
 use std::process::Command;
 use std::time::Instant;
+use std::{env, fs};
 
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
@@ -28,7 +29,7 @@ fn setup_ctx_with_doxy(
 
     let mut node = ExecRootNode {
         statements: generate_ast(
-            ctx.clone(),
+            &ctx.borrow().cli_args,
             STD_DOXY.to_owned(),
             "std.doxy".to_owned(),
         )?,
@@ -63,37 +64,33 @@ fn setup_ctx_with_doxy(
 }
 
 pub fn generate_ast(
-    ctx: MutRc<Context>,
+    args: &Args,
     input: String,
     file_name: String,
 ) -> Result<MutRc<dyn AstNode>, Error> {
     let start = Instant::now();
 
-    let mut lexer = Lexer::new(
-        input.clone(),
-        file_name,
-        ctx.borrow().cli_args.clone(),
-    );
+    let mut lexer =
+        Lexer::new(input.clone(), file_name, args.clone());
     let tokens = lexer.lex()?;
 
-    perf!(ctx.borrow().cli_args, start, "Lexed");
+    perf!(args, start, "Lexed");
     let start = Instant::now();
 
-    let mut parser =
-        Parser::new(ctx.borrow().cli_args.clone(), tokens);
+    let mut parser = Parser::new(args.clone(), tokens);
     let ast = parser.parse();
     if ast.error.is_some() {
         return Err(ast.error.unwrap());
     }
 
-    perf!(ctx.borrow().cli_args, start, "Parsed");
+    perf!(args, start, "Parsed");
 
     let ast = ast.node.unwrap();
 
     Ok(ast)
 }
 
-pub fn compile(
+fn compile(
     input: String,
     file_name: String,
     args: &Args,
@@ -103,11 +100,29 @@ pub fn compile(
     ctx.borrow_mut().std_asm_path = args.std_path.clone();
     ctx.borrow_mut().exec_mode = args.exec_mode;
 
+    // TODO: Hack to extend the lifetimes of the strings,
+    //      so that they can be used in the context,
+    //      which permanently leaks their memory.
+    let current_dir = env::current_dir().unwrap();
+    let current_dir =
+        current_dir.to_str().unwrap().to_owned();
+    let current_dir_leaked_str =
+        string_to_static_str(current_dir);
+    let current_dir = Path::new(current_dir_leaked_str);
+
+    let file_path_leaked_str =
+        string_to_static_str(file_name.clone());
+    let file_dir = Path::new(file_path_leaked_str)
+        .parent()
+        .unwrap_or(current_dir);
+
+    ctx.borrow_mut().set_current_dir_path(file_dir);
+
     let mut root_node = ExecRootNode {
         statements: generate_ast(
-            ctx.clone(),
+            &ctx.borrow().cli_args,
             input,
-            file_name,
+            file_name.clone(),
         )?,
     };
 

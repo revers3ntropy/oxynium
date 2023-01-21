@@ -7,6 +7,7 @@ use crate::types::Type;
 use crate::util::{indent, new_mut_rc, MutRc};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::path::Path;
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
@@ -39,6 +40,7 @@ pub struct Context {
     pub cli_args: Args,
     concrete_type_cache: HashMap<String, MutRc<dyn Type>>,
     ignore_definitions: bool,
+    current_dir_path: Option<&'static Path>,
 }
 
 impl Context {
@@ -59,6 +61,7 @@ impl Context {
             cli_args,
             concrete_type_cache: HashMap::new(),
             ignore_definitions: false,
+            current_dir_path: None,
         })
     }
 
@@ -125,6 +128,24 @@ impl Context {
             parent.borrow_mut().with_root_mut(cb)
         } else {
             cb(self)
+        }
+    }
+
+    // Current Directory
+    pub fn set_current_dir_path(
+        &mut self,
+        path: &'static Path,
+    ) {
+        assert!(self.current_dir_path.is_none());
+        self.current_dir_path = Some(path);
+    }
+    pub fn get_current_dir_path(&self) -> &'static Path {
+        if let Some(path) = self.current_dir_path {
+            path
+        } else if let Some(ref parent) = self.parent {
+            parent.borrow().get_current_dir_path()
+        } else {
+            panic!("No current directory path set");
         }
     }
 

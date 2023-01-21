@@ -5,8 +5,9 @@ use crate::context::Context;
 use crate::error::{type_error, Error, ErrorSource};
 use crate::oxy_std::macros::Macro;
 use crate::position::Interval;
-use crate::util::MutRc;
 use crate::util::{new_mut_rc, read_file};
+use crate::util::{string_to_static_str, MutRc};
+use std::path::Path;
 
 pub struct IncludeMacro {
     pub position: Interval,
@@ -14,7 +15,10 @@ pub struct IncludeMacro {
 }
 
 impl IncludeMacro {
-    fn get_path(&self) -> Result<String, Error> {
+    fn get_path(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<String, Error> {
         let args = self.args.clone();
 
         if args.len() != 1 {
@@ -33,7 +37,12 @@ impl IncludeMacro {
         }
 
         let path_node = path_node.unwrap();
-        Ok(path_node.value.clone().literal.unwrap())
+        let path_str =
+            path_node.value.clone().literal.unwrap();
+
+        let path = ctx.borrow().get_current_dir_path();
+        let path = path.join(path_str);
+        Ok(path.to_str().unwrap().to_string())
     }
 }
 
@@ -42,7 +51,7 @@ impl Macro for IncludeMacro {
         &self,
         ctx: MutRc<Context>,
     ) -> Result<MutRc<dyn AstNode>, Error> {
-        let path = self.get_path()?;
+        let path = self.get_path(ctx.clone())?;
 
         let read_result = read_file(path.as_str())?;
 
@@ -51,8 +60,11 @@ impl Macro for IncludeMacro {
             source: read_result.clone(),
         };
 
-        let ast_res =
-            generate_ast(ctx.clone(), read_result, path);
+        let ast_res = generate_ast(
+            &ctx.borrow().cli_args,
+            read_result,
+            path.clone(),
+        );
 
         if let Err(mut err) = ast_res {
             err.try_set_source(err_source);
@@ -64,6 +76,10 @@ impl Macro for IncludeMacro {
             Context::new(ctx.borrow().cli_args.clone());
 
         ctx.borrow();
+
+        ctx.borrow_mut().set_current_dir_path(Path::new(
+            string_to_static_str(path),
+        ));
 
         return Ok(new_mut_rc(ScopeNode {
             position: self.position.clone(),
