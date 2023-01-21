@@ -8,6 +8,24 @@ describe 'fn Char.str'
 
 # TODO: requires char literals
 
+describe 'fn Char.is_digit'
+
+expect 'true,true,true,false,false,false,false' '
+    print("0".at(0).is_digit().str());
+    print(",");
+    print("4".at(0).is_digit().str());
+    print(",");
+    print("9".at(0).is_digit().str());
+    print(",");
+    print(" ".at(0).is_digit().str());
+    print(",");
+    print("a".at(0).is_digit().str());
+    print(",");
+    print("Z".at(0).is_digit().str());
+    print(",");
+    print("💖".at(0).is_digit().str());
+'
+
 
 describe 'fn Char.=='
 

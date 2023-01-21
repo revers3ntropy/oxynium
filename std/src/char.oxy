@@ -23,6 +23,11 @@ fn Char.str (self) Str {
 	")
 }
 
+fn Char.is_digit (self) Bool {
+	let as_int = self.as_int();
+	return as_int >= 48 && as_int <= 57;
+}
+
 fn Char.as_int (self) Int {
 	return #asm(Int, "
 		mov rax, qword [rbp + 16]

@@ -7,6 +7,7 @@ primitive Char {
     extern fn == (self, other: Char) Bool,
     extern fn != (self, other: Char) Bool,
     extern fn str (self) Str,
+    extern fn is_digit (self) Bool,
     extern fn as_int (self) Int,
     extern fn from_int (i: Int) Char,
 }
