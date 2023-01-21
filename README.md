@@ -2,7 +2,7 @@
 
 # Oxynium Compiler in Rust
 
-Ubuntu support only at the moment.
+Linux support only so far.
 
 ## Requirements
 
@@ -11,7 +11,7 @@ Ubuntu support only at the moment.
 
 # Installation
 
-`curl https://raw.githubusercontent.com/revers3ntropy/oxynium/master/scripts/install | sh`
+`curl https://raw.githubusercontent.com/revers3ntropy/oxynium/master/scripts/install | /bin/bash`
 
 ## Dev Requirements
 
