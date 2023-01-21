@@ -462,8 +462,9 @@ impl Parser {
             Some("const".to_string()),
         ) {
             self.advance(&mut res);
-            res.node =
-                res.register(self.global_const_decl(false));
+            res.node = res.register(
+                self.global_const_decl(false, false),
+            );
             return res;
         }
         if self.current_matches(
@@ -611,6 +612,14 @@ impl Parser {
             res.node = res.register(
                 self.class_declaration(true, true),
             );
+        } else if self.current_matches(
+            TokenType::Identifier,
+            Some("const".to_string()),
+        ) {
+            self.advance(&mut res);
+            res.node = res.register(
+                self.global_const_decl(is_extern, true),
+            );
         } else {
             let current =
                 self.current_tok().clone().unwrap();
@@ -645,8 +654,9 @@ impl Parser {
             Some("const".to_string()),
         ) {
             self.advance(&mut res);
-            res.node =
-                res.register(self.global_const_decl(true));
+            res.node = res.register(
+                self.global_const_decl(true, false),
+            );
         } else {
             res.failure(
                 syntax_error(
@@ -708,6 +718,7 @@ impl Parser {
     fn global_const_decl(
         &mut self,
         is_external: bool,
+        is_exported: bool,
     ) -> ParseResults {
         let mut res = ParseResults::new();
         let name;
@@ -764,6 +775,7 @@ impl Parser {
                 identifier: name,
                 type_: type_.unwrap(),
                 is_external,
+                is_exported,
                 position: (
                     start,
                     self.last_tok().unwrap().end.clone(),
@@ -812,6 +824,7 @@ impl Parser {
                     start,
                     self.last_tok().unwrap().end.clone(),
                 ),
+                is_exported,
             }));
             return res;
         } else if tok.token_type == TokenType::String {
@@ -823,6 +836,7 @@ impl Parser {
                     start,
                     self.last_tok().unwrap().end.clone(),
                 ),
+                is_exported,
             }));
             return res;
         }
