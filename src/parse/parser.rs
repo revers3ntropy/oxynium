@@ -529,9 +529,10 @@ impl Parser {
             Some("fn".to_string()),
         ) {
             self.advance(&mut res);
-            res.node = res.register(
-                self.function_declaration(false, None),
-            );
+            res.node =
+                res.register(self.function_declaration(
+                    false, false, None,
+                ));
             return res;
         }
         if self.current_matches(
@@ -539,8 +540,9 @@ impl Parser {
             Some("class".to_string()),
         ) {
             self.advance(&mut res);
-            res.node =
-                res.register(self.class_def_expr(false));
+            res.node = res.register(
+                self.class_declaration(false, false),
+            );
             return res;
         }
         if self.current_matches(
@@ -548,43 +550,114 @@ impl Parser {
             Some("primitive".to_string()),
         ) {
             self.advance(&mut res);
-            res.node =
-                res.register(self.class_def_expr(true));
+            res.node = res.register(
+                self.class_declaration(true, false),
+            );
             return res;
         }
+
+        if self.current_matches(
+            TokenType::Identifier,
+            Some("export".to_string()),
+        ) {
+            self.advance(&mut res);
+            return self.export_something();
+        }
+
         if self.current_matches(
             TokenType::Identifier,
             Some("extern".to_string()),
         ) {
             self.advance(&mut res);
-            if self.current_matches(
-                TokenType::Identifier,
-                Some("fn".to_string()),
-            ) {
-                self.advance(&mut res);
-                res.node = res.register(
-                    self.function_declaration(true, None),
-                );
-            } else if self.current_matches(
-                TokenType::Identifier,
-                Some("const".to_string()),
-            ) {
-                self.advance(&mut res);
-                res.node = res
-                    .register(self.global_const_decl(true));
-            } else {
-                res.failure(
-                    syntax_error(
-                        "Expected 'fn', 'var' or 'const'"
-                            .to_string(),
-                    ),
-                    Some(self.last_tok().unwrap().end),
-                    None,
-                );
-            }
-            return res;
+            return self.extern_something();
         }
         self.expression()
+    }
+
+    fn export_something(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        let mut is_extern = false;
+        if self.current_matches(
+            TokenType::Identifier,
+            Some("extern".to_string()),
+        ) {
+            self.advance(&mut res);
+            is_extern = true;
+        }
+
+        if self.current_matches(
+            TokenType::Identifier,
+            Some("fn".to_string()),
+        ) {
+            self.advance(&mut res);
+            res.node =
+                res.register(self.function_declaration(
+                    is_extern, true, None,
+                ));
+        } else if self.current_matches(
+            TokenType::Identifier,
+            Some("class".to_string()),
+        ) {
+            self.advance(&mut res);
+            res.node = res.register(
+                self.class_declaration(false, true),
+            );
+        } else if self.current_matches(
+            TokenType::Identifier,
+            Some("primitive".to_string()),
+        ) {
+            self.advance(&mut res);
+            res.node = res.register(
+                self.class_declaration(true, true),
+            );
+        } else {
+            let current =
+                self.current_tok().clone().unwrap();
+            res.failure(
+                syntax_error(
+                    "Expected 'fn', 'class' or 'primitive'"
+                        .to_string(),
+                ),
+                Some(current.start.clone()),
+                Some(current.end.clone()),
+            );
+            return res;
+        }
+
+        res
+    }
+
+    fn extern_something(&mut self) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        if self.current_matches(
+            TokenType::Identifier,
+            Some("fn".to_string()),
+        ) {
+            self.advance(&mut res);
+            res.node =
+                res.register(self.function_declaration(
+                    true, false, None,
+                ));
+        } else if self.current_matches(
+            TokenType::Identifier,
+            Some("const".to_string()),
+        ) {
+            self.advance(&mut res);
+            res.node =
+                res.register(self.global_const_decl(true));
+        } else {
+            res.failure(
+                syntax_error(
+                    "Expected 'fn', 'var' or 'const'"
+                        .to_string(),
+                ),
+                Some(self.last_tok().unwrap().end),
+                None,
+            );
+        }
+        return res;
     }
 
     fn expression(&mut self) -> ParseResults {
@@ -1380,6 +1453,7 @@ impl Parser {
         res
     }
 
+    /// TypeExpr ::= Identifier (LT TypeExpr (Comma TypeExpr)* GT)?
     fn type_expr(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
 
@@ -1415,6 +1489,7 @@ impl Parser {
         res
     }
 
+    /// Parameter ::= Identifier (Colon TypeExpr)? (Equals Expression)?
     fn parameter(&mut self) -> Result<Parameter, Error> {
         let mut res = ParseResults::new();
 
@@ -1490,6 +1565,7 @@ impl Parser {
     fn function_declaration(
         &mut self,
         is_external: bool,
+        is_exported: bool,
         mut class_name: Option<String>,
     ) -> ParseResults {
         let mut res = ParseResults::new();
@@ -1497,6 +1573,9 @@ impl Parser {
 
         let should_add_end_stmts = class_name.is_none();
         let mut is_external_method = false;
+
+        // `class C { export fn f() {} }` not allowed
+        assert!(!(is_exported && class_name.is_some()));
 
         if self.current_tok().is_none() {
             res.failure(
@@ -1737,6 +1816,7 @@ impl Parser {
                 class: None,
                 class_name,
                 has_usage: false,
+                is_exported,
             }));
             return res;
         }
@@ -1779,6 +1859,7 @@ impl Parser {
             class: None,
             class_name,
             has_usage: false,
+            is_exported,
         }));
         res
     }
@@ -1858,9 +1939,10 @@ impl Parser {
         Ok(params)
     }
 
-    fn class_def_expr(
+    fn class_declaration(
         &mut self,
         is_primitive: bool,
+        is_exported: bool,
     ) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start.clone();
@@ -1909,6 +1991,7 @@ impl Parser {
                 template_ctx: Context::new(
                     self.cli_args.clone(),
                 ),
+                is_exported,
             }));
             return res;
         }
@@ -1928,6 +2011,7 @@ impl Parser {
 
                 let fn_decl = res.register(
                     self.function_declaration(
+                        false,
                         false,
                         Some(identifier.clone()),
                     ),
@@ -1963,6 +2047,7 @@ impl Parser {
                 let fn_decl = res.register(
                     self.function_declaration(
                         true,
+                        false,
                         Some(identifier.clone()),
                     ),
                 );
@@ -2038,6 +2123,7 @@ impl Parser {
             template_ctx: Context::new(
                 self.cli_args.clone(),
             ),
+            is_exported,
         }));
         res
     }

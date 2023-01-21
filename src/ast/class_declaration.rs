@@ -49,6 +49,7 @@ pub struct ClassDeclarationNode {
     pub is_primitive: bool,
     pub template_params: Vec<Token>,
     pub template_ctx: MutRc<Context>,
+    pub is_exported: bool,
 }
 
 impl AstNode for ClassDeclarationNode {
@@ -56,6 +57,15 @@ impl AstNode for ClassDeclarationNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<(), Error> {
+        if !can_declare_with_identifier(
+            &self.identifier.clone().literal.unwrap(),
+        ) {
+            return Err(invalid_symbol(
+                self.identifier.clone().literal.unwrap(),
+            )
+            .set_interval(self.identifier.interval()));
+        }
+
         self.template_ctx
             .borrow_mut()
             .set_parent(ctx.clone());
@@ -76,18 +86,16 @@ impl AstNode for ClassDeclarationNode {
 
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        mut ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        let mut unknowns = 0;
-
-        if !can_declare_with_identifier(
-            &self.identifier.clone().literal.unwrap(),
-        ) {
-            return Err(invalid_symbol(
-                self.identifier.clone().literal.unwrap(),
-            )
-            .set_interval(self.identifier.interval()));
+        if self.is_exported {
+            let parent = ctx.borrow().get_parent();
+            if let Some(parent) = parent {
+                ctx = parent;
+            }
         }
+
+        let mut unknowns = 0;
 
         for template in self.template_params.iter() {
             self.template_ctx.borrow_mut().declare(

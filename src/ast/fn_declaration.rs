@@ -39,6 +39,7 @@ pub struct FnDeclarationNode {
     pub class: Option<MutRc<ClassType>>,
     pub class_name: Option<String>,
     pub has_usage: bool,
+    pub is_exported: bool,
 }
 
 impl FnDeclarationNode {
@@ -141,8 +142,14 @@ impl AstNode for FnDeclarationNode {
     }
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        mut ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
+        if self.is_exported {
+            let parent = ctx.borrow().get_parent();
+            if let Some(parent) = parent {
+                ctx = parent;
+            }
+        }
         // don't use param_scope so that the function can have params
         // with the same name as the function
         let TypeCheckRes {

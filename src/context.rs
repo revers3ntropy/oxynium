@@ -102,6 +102,10 @@ impl Context {
         self.parent = Some(parent);
     }
 
+    pub fn get_parent(&self) -> Option<MutRc<Context>> {
+        self.parent.clone()
+    }
+
     pub fn with_root<T>(
         &self,
         cb: &mut impl Fn(&Context) -> T,
