@@ -435,6 +435,7 @@ impl Parser {
                 ctx: Context::new(self.cli_args.clone()),
                 body: statements.unwrap(),
                 position: (start, end),
+                err_source: None,
             }));
         } else {
             res.success(statements.unwrap());

@@ -2,7 +2,7 @@ use crate::ast::scope::ScopeNode;
 use crate::ast::AstNode;
 use crate::compile::generate_ast;
 use crate::context::Context;
-use crate::error::{type_error, Error};
+use crate::error::{type_error, Error, ErrorSource};
 use crate::oxy_std::macros::Macro;
 use crate::position::Interval;
 use crate::util::MutRc;
@@ -13,11 +13,8 @@ pub struct IncludeMacro {
     pub args: Vec<MutRc<dyn AstNode>>,
 }
 
-impl Macro for IncludeMacro {
-    fn resolve(
-        &self,
-        ctx: MutRc<Context>,
-    ) -> Result<MutRc<dyn AstNode>, Error> {
+impl IncludeMacro {
+    fn get_path(&self) -> Result<String, Error> {
         let args = self.args.clone();
 
         if args.len() != 1 {
@@ -36,18 +33,43 @@ impl Macro for IncludeMacro {
         }
 
         let path_node = path_node.unwrap();
-        let path = path_node.value.clone().literal.unwrap();
+        Ok(path_node.value.clone().literal.unwrap())
+    }
+}
+
+impl Macro for IncludeMacro {
+    fn resolve(
+        &self,
+        ctx: MutRc<Context>,
+    ) -> Result<MutRc<dyn AstNode>, Error> {
+        let path = self.get_path()?;
 
         let read_result = read_file(path.as_str())?;
-        let ast =
-            generate_ast(ctx.clone(), read_result, path)?;
+
+        let err_source = ErrorSource {
+            file_name: path.clone(),
+            source: read_result.clone(),
+        };
+
+        let ast_res =
+            generate_ast(ctx.clone(), read_result, path);
+
+        if let Err(mut err) = ast_res {
+            err.try_set_source(err_source);
+            return Err(err);
+        }
+        let ast = ast_res.unwrap();
+
+        let ctx =
+            Context::new(ctx.borrow().cli_args.clone());
+
+        ctx.borrow();
 
         return Ok(new_mut_rc(ScopeNode {
             position: self.position.clone(),
             body: ast,
-            ctx: Context::new(
-                ctx.borrow().cli_args.clone(),
-            ),
+            ctx,
+            err_source: Some(err_source),
         }));
     }
 }

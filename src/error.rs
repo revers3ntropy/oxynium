@@ -10,12 +10,19 @@ pub struct ErrorHint {
 }
 
 #[derive(Debug, Clone)]
+pub struct ErrorSource {
+    pub file_name: String,
+    pub source: String,
+}
+
+#[derive(Debug, Clone)]
 pub struct Error {
     pub name: String,
     pub message: String,
     pub start: Position,
     pub end: Position,
     pub hints: Vec<ErrorHint>,
+    pub source: Option<ErrorSource>,
 }
 
 impl Error {
@@ -26,6 +33,7 @@ impl Error {
             start: Position::unknown(),
             end: Position::unknown(),
             hints: vec![],
+            source: None,
         }
     }
 
@@ -44,10 +52,16 @@ impl Error {
         self.end = end;
         self
     }
+
     pub fn set_interval(mut self, pos: Interval) -> Error {
         self.start = pos.0;
         self.end = pos.1;
         self
+    }
+    pub fn try_set_source(&mut self, source: ErrorSource) {
+        if self.source.is_none() {
+            self.source = Some(source);
+        }
     }
 
     pub fn str(&self) -> String {
@@ -69,11 +83,16 @@ impl Error {
         }
     }
 
-    pub fn str_pretty(
-        &self,
-        source_code: String,
-        file_name: String,
-    ) -> String {
+    pub fn str_pretty(&self) -> String {
+        if self.source.is_none() {
+            return self.str();
+        }
+
+        let ErrorSource {
+            source: source_code,
+            file_name,
+        } = self.source.clone().unwrap();
+
         let mut out =
             format!("{}:\n  {}\n", self.name, self.message);
         out.push('\n');
@@ -178,17 +197,9 @@ impl Error {
         out
     }
 
-    pub fn pretty_print_stderr(
-        &self,
-        source_code: String,
-        file_name: String,
-    ) {
+    pub fn pretty_print_stderr(&self) {
         let _ = std::io::stderr().write(
-            format!(
-                "{}\n",
-                self.str_pretty(source_code, file_name)
-            )
-            .as_bytes(),
+            format!("{}\n", self.str_pretty()).as_bytes(),
         );
     }
     pub fn print_stderr(&self) {

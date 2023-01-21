@@ -2,7 +2,7 @@ use crate::args::{
     check_args, get_args_cmd, get_cli_args, Args, ExecMode,
 };
 use crate::compile::compile_and_assemble;
-use crate::error::io_error;
+use crate::error::{io_error, ErrorSource};
 use crate::util::read_file;
 use std::path::Path;
 
@@ -42,11 +42,12 @@ fn cli_exec(args: &Args) {
         "CLI".to_owned(),
         &args_,
     );
-    if res.is_err() {
-        res.err().unwrap().pretty_print_stderr(
-            args.eval.clone(),
-            "CLI".to_string(),
-        )
+    if let Some(mut err) = res.err() {
+        err.try_set_source(ErrorSource {
+            file_name: "CLI".to_string(),
+            source: args.eval.clone(),
+        });
+        err.pretty_print_stderr();
     }
 }
 
@@ -72,11 +73,12 @@ fn import_exec(args: &Args) {
         args.input.clone(),
         &args,
     );
-    if res.is_err() {
-        res.err().unwrap().pretty_print_stderr(
-            source_code,
-            args.input.clone(),
-        )
+    if let Some(mut err) = res.err() {
+        err.try_set_source(ErrorSource {
+            file_name: args.input.clone(),
+            source: source_code,
+        });
+        err.pretty_print_stderr();
     }
 }
 
