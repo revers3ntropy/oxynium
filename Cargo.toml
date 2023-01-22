@@ -1,13 +1,11 @@
 [package]
 name = "oxynium"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 repository = "https://github.com/revers3ntropy/oxynium"
 readme = "README.md"
-authors = ["josephcoppin@gmail.com"]
-description = """
-Oxynium compiler
-"""
+authors = ["joseph.coppin+oxy@gmail.com"]
+description = "The Oxynium Compiler"
 publish = false
 
 [dependencies]

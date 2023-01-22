@@ -42,6 +42,19 @@ impl ParseResults {
         res.node
     }
 
+    pub fn register_result<T>(
+        &mut self,
+        res: Result<T, Error>,
+    ) -> Option<T> {
+        match res {
+            Ok(node) => Some(node),
+            Err(err) => {
+                self.error = Some(err);
+                None
+            }
+        }
+    }
+
     pub fn success(
         &mut self,
         node: MutRc<dyn AstNode>,

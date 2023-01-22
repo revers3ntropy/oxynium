@@ -60,22 +60,3 @@ e.g. `oxy -e "(1+1)*2"` instead of `oxy -e (1+1)*2`
 `0` Compile to application
 
 `1` Compile as library
-
-## Dev Commands
-
-```shell
-# Build
-$ bin/build
-
-# Compile, assemble, link and run file
-$ bin/run <file>
-
-# Compile, assemble, link and print expression
-$ bin/exec "1+1"
-
-# Run test suite
-$ bin/test
-
-# Run full test suite (with Docker, may take a while)
-$ bin/test_full
-```

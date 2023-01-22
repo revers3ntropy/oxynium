@@ -288,6 +288,25 @@ class List <TList> {
     }
 }
 
+class Result<TResultValue, TResultError> {
+	value: Option<TResultValue>,
+	error: Option<TResultError>,
+
+	fn is_ok (self) Bool {
+		return self.value.is_some()
+	}
+	fn is_err (self) Bool {
+		return self.error.is_some()
+	}
+
+	fn unwrap (self) TResultValue {
+		if self.is_err() {
+			panic("Tried to unwrap a Result that was an error")
+		}
+		return self.value.unwrap()
+	}
+}
+
 /// Reads from stdin until a newline is reached
 /// allocates string to heap to fit input
 /// returns pointer to string in rax

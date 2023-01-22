@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cargo build --release
+
+perf record ./target/release/oxynium "$@"
+
+perf report

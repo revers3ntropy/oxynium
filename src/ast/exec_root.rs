@@ -7,6 +7,7 @@ use crate::position::Interval;
 use crate::types::function::FnType;
 use crate::types::Type;
 use crate::util::MutRc;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct ExecRootNode {
@@ -145,6 +146,8 @@ impl AstNode for ExecRootNode {
                     .get_dec_from_id("Void")
                     .type_,
                 parameters: vec![],
+                generic_args: HashMap::new(),
+                generic_params_order: vec![],
             };
 
             if !main_signature.contains(main_type) {

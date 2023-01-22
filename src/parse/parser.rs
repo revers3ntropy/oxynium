@@ -76,16 +76,16 @@ macro_rules! consume {
             return $res;
         }
     };
-    ($t:ident, $self:expr, $e:expr) => {
-        $self.consume(&mut $e, TokenType::$t);
-        if $e.error.is_some() {
-            return $e;
+    ($t:ident, $self:expr, $res:expr) => {
+        $self.consume(&mut $res, TokenType::$t);
+        if $res.error.is_some() {
+            return $res;
         }
     };
-    ($res:ident = $t:ident, $self:expr, $e:expr) => {
-        let $res = $self.consume(&mut $e, TokenType::$t);
-        if $e.error.is_some() {
-            return $e;
+    ($id:ident = $t:ident, $self:expr, $res:expr) => {
+        let $id = $self.consume(&mut $res, TokenType::$t);
+        if $res.error.is_some() {
+            return $res;
         }
     };
 }
@@ -202,7 +202,7 @@ impl Parser {
             }
             res.failure(
                 syntax_error(format!(
-                    "Expected token type: {:?}, found {:?}",
+                    "expected token type: {:?}, found {:?}",
                     tok_type, tok.token_type
                 )),
                 Some(tok.start.clone()),
@@ -211,7 +211,7 @@ impl Parser {
         } else {
             res.failure(
                 syntax_error(format!(
-                    "Expected {:?}, found EOF",
+                    "expected {:?}, found EOF",
                     tok_type
                 )),
                 Some(
@@ -403,7 +403,7 @@ impl Parser {
         if self.current_tok().is_none() {
             res.failure(
                 syntax_error(
-                    "Expected statement or '}'".to_string(),
+                    "expected statement or '}'".to_string(),
                 ),
                 Some(start.clone().advance(None)),
                 None,
@@ -626,7 +626,7 @@ impl Parser {
                 self.current_tok().clone().unwrap();
             res.failure(
                 syntax_error(
-                    "Expected 'fn', 'class' or 'primitive'"
+                    "expected 'fn', 'class' or 'primitive'"
                         .to_string(),
                 ),
                 Some(current.start.clone()),
@@ -661,7 +661,7 @@ impl Parser {
         } else {
             res.failure(
                 syntax_error(
-                    "Expected 'fn', 'var' or 'const'"
+                    "expected 'fn', 'var' or 'const'"
                         .to_string(),
                 ),
                 Some(self.last_tok().unwrap().end),
@@ -722,29 +722,9 @@ impl Parser {
         is_exported: bool,
     ) -> ParseResults {
         let mut res = ParseResults::new();
-        let name;
         let start = self.last_tok().unwrap().start.clone();
 
-        if self.current_matches(TokenType::Identifier, None)
-        {
-            name = self.current_tok().unwrap();
-            self.advance(&mut res);
-        } else {
-            res.failure(
-                syntax_error(
-                    "Expected identifier".to_string(),
-                ),
-                Some(
-                    self.last_tok()
-                        .unwrap()
-                        .end
-                        .clone()
-                        .advance(None),
-                ),
-                None,
-            );
-            return res;
-        }
+        consume!(name = Identifier, self, res);
 
         let mut type_: Option<MutRc<dyn AstNode>> = None;
 
@@ -997,46 +977,6 @@ impl Parser {
         )
     }
 
-    fn method_call(
-        &mut self,
-        start: Position,
-        base: MutRc<dyn AstNode>,
-        name_tok: Token,
-    ) -> ParseResults {
-        let mut res = ParseResults::new();
-
-        self.advance(&mut res);
-        let mut args = Vec::new();
-        if !self
-            .current_matches(TokenType::CloseParen, None)
-        {
-            loop {
-                let arg = res.register(self.expression());
-                ret_on_err!(res);
-                args.push(arg.unwrap());
-                if self
-                    .current_matches(TokenType::Comma, None)
-                {
-                    self.advance(&mut res);
-                } else {
-                    break;
-                }
-            }
-        }
-        consume!(CloseParen, self, res);
-
-        res.success(new_mut_rc(FnCallNode {
-            object: Some(base),
-            identifier: name_tok,
-            args,
-            position: (
-                start,
-                self.last_tok().unwrap().end.clone(),
-            ),
-        }));
-        return res;
-    }
-
     fn compound(
         &mut self,
         base_option: Option<MutRc<dyn AstNode>>,
@@ -1055,17 +995,31 @@ impl Parser {
         if self.current_matches(TokenType::Dot, None) {
             let start =
                 self.current_tok().unwrap().start.clone();
-            self.advance(&mut res);
+
+            consume!(Dot, self, res);
             consume!(name_tok = Identifier, self, res);
 
             if self
                 .current_matches(TokenType::OpenParen, None)
             {
                 let base_option =
-                    res.register(self.method_call(
+                    res.register(self.function_call(
                         start.clone(),
-                        base,
+                        Some(base),
                         name_tok.clone(),
+                        vec![],
+                    ));
+                ret_on_err!(res);
+                return self
+                    .compound(Some(base_option.unwrap()));
+            }
+
+            if self.current_matches(TokenType::Not, None) {
+                let base_option =
+                    res.register(self.identifier_bang(
+                        start,
+                        Some(base),
+                        self.last_tok().unwrap(),
                     ));
                 ret_on_err!(res);
                 return self
@@ -1107,20 +1061,19 @@ impl Parser {
                 if t.token_type == TokenType::CloseParen {
                     break;
                 } else if t.token_type == TokenType::Comma {
-                    self.advance(&mut res);
+                    result_consume!(Comma, self, res);
                 } else {
                     return Err(syntax_error(format!(
-                        "Expected ',' or ')', found '{}'",
+                        "expected ',' or ')', found '{}'",
                         t.str()
                     ))
-                    .set_interval((
-                        self.last_tok().unwrap().end,
-                        Position::unknown(),
-                    )));
+                    .set_interval(
+                        self.last_tok().unwrap().interval(),
+                    ));
                 }
             } else {
                 return Err(syntax_error(
-                    "Expected ',' or ')', found EOF"
+                    "expected ',' or ')', found EOF"
                         .to_owned(),
                 )
                 .set_interval((
@@ -1137,13 +1090,107 @@ impl Parser {
         Ok(args)
     }
 
-    fn function_call(
+    /// IdentifierBang ::= '!' '<' GenericArgs '>' ('.' Identifier IdentifierBang? )? '(' Args ')'
+    ///
+    /// Only ever for either calling a function or calling a method
+    fn identifier_bang(
         &mut self,
-        fn_identifier_tok: Token,
+        start: Position,
+        base: Option<MutRc<dyn AstNode>>,
+        identifier: Token,
     ) -> ParseResults {
         let mut res = ParseResults::new();
 
-        let start = self.last_tok().unwrap().start;
+        consume!(Not, self, res);
+        consume!(LT, self, res);
+
+        let generic_args_result = self.generic_args();
+        if let Some(err) = generic_args_result.clone().err()
+        {
+            res.failure(err, None, None);
+            return res;
+        }
+        let generic_args = generic_args_result.unwrap();
+        consume!(GT, self, res);
+
+        // `c!<T>(...)`
+        if self.current_matches(TokenType::OpenParen, None)
+        {
+            return self.function_call(
+                start,
+                base,
+                identifier,
+                generic_args,
+            );
+        }
+
+        let base =
+            base.unwrap_or(new_mut_rc(SymbolAccess {
+                identifier: identifier.clone(),
+            }));
+
+        consume!(Dot, self, res);
+        consume!(name_tok = Identifier, self, res);
+
+        if self.current_matches(TokenType::OpenParen, None)
+        {
+            // `C!<T>.f(...)`
+            return self.function_call(
+                start.clone(),
+                Some(new_mut_rc(GenericTypeNode {
+                    base,
+                    generic_args,
+                    position: (
+                        start,
+                        self.last_tok()
+                            .clone()
+                            .unwrap()
+                            .end,
+                    ),
+                })),
+                name_tok,
+                vec![],
+            );
+        }
+
+        consume!(Not, self, res);
+        consume!(LT, self, res);
+
+        let generic_args_result = self.generic_args();
+        if let Some(err) = generic_args_result.clone().err()
+        {
+            res.failure(err, None, None);
+            return res;
+        }
+        let f_call_generic_args =
+            generic_args_result.unwrap();
+        consume!(GT, self, res);
+
+        // `C!<T1>.f!<T2>(...)`
+        self.function_call(
+            start.clone(),
+            Some(new_mut_rc(GenericTypeNode {
+                base,
+                generic_args,
+                position: (
+                    start,
+                    self.last_tok().unwrap().end,
+                ),
+            })),
+            identifier,
+            f_call_generic_args,
+        )
+    }
+
+    /// FunctionCall ::= '(' Args ')'
+    fn function_call(
+        &mut self,
+        start: Position,
+        base: Option<MutRc<dyn AstNode>>,
+        name_tok: Token,
+        generic_args: Vec<MutRc<dyn AstNode>>,
+    ) -> ParseResults {
+        let mut res = ParseResults::new();
 
         consume!(OpenParen, self, res);
 
@@ -1152,9 +1199,10 @@ impl Parser {
             if t.token_type == TokenType::CloseParen {
                 self.advance(&mut res);
                 res.success(new_mut_rc(FnCallNode {
-                    object: None,
-                    identifier: fn_identifier_tok,
+                    object: base,
+                    identifier: name_tok,
                     args: Vec::new(),
+                    generic_args,
                     position: (
                         start,
                         self.last_tok()
@@ -1177,9 +1225,10 @@ impl Parser {
         consume!(CloseParen, self, res);
 
         res.success(new_mut_rc(FnCallNode {
-            object: None,
-            identifier: fn_identifier_tok,
+            object: base,
+            identifier: name_tok,
             args,
+            generic_args,
             position: (
                 start,
                 self.last_tok().unwrap().end.clone(),
@@ -1299,7 +1348,19 @@ impl Parser {
                     if next.token_type
                         == TokenType::OpenParen
                     {
-                        return self.function_call(tok);
+                        return self.function_call(
+                            tok.start.clone(),
+                            None,
+                            tok,
+                            vec![],
+                        );
+                    }
+                    if next.token_type == TokenType::Not {
+                        return self.identifier_bang(
+                            tok.start.clone(),
+                            None,
+                            tok,
+                        );
                     }
                     if next.token_type == TokenType::Equals
                     {
@@ -1498,8 +1559,14 @@ impl Parser {
         consume!(GT, self, res);
 
         res.success(new_mut_rc(GenericTypeNode {
-            identifier: type_tok,
+            base: new_mut_rc(TypeNode {
+                identifier: type_tok.clone(),
+            }),
             generic_args,
+            position: (
+                type_tok.start,
+                self.last_tok().unwrap().end,
+            ),
         }));
         res
     }
@@ -1576,7 +1643,51 @@ impl Parser {
         )))
     }
 
-    /// FuncDef ::= Identifier ('.' Identifier)? '(' Parameters? ')' Type? '{' Scope '}'
+    fn generic_parameter(
+        &mut self,
+    ) -> Result<Token, Error> {
+        let mut res = ParseResults::new();
+        result_consume!(identifier = Identifier, self, res);
+        Ok(identifier)
+    }
+
+    fn generic_parameters(
+        &mut self,
+    ) -> Result<Vec<Token>, Error> {
+        let mut res = ParseResults::new();
+
+        let mut parameters = Vec::new();
+
+        if self.current_matches(TokenType::GT, None) {
+            return Ok(parameters);
+        }
+
+        parameters.push(self.generic_parameter()?);
+
+        while let Some(next) = self.current_tok() {
+            if next.token_type == TokenType::GT {
+                return Ok(parameters);
+            }
+
+            result_consume!(Comma, self, res);
+
+            parameters.push(self.generic_parameter()?);
+        }
+
+        Err(syntax_error(
+            "Expected ',' or '>', found EOF".to_owned(),
+        )
+        .set_interval((
+            self.last_tok()
+                .unwrap()
+                .end
+                .clone()
+                .advance(None),
+            Position::unknown(),
+        )))
+    }
+
+    /// FuncDef ::= Identifier ('.' Identifier)? ('<' Identifier (',' Identifier)*'>')? '(' Parameters? ')' Type? '{' Scope '}'
     fn function_declaration(
         &mut self,
         is_external: bool,
@@ -1687,6 +1798,18 @@ impl Parser {
             consume!(id_tok = Identifier, self, res);
             identifier = id_tok;
         }
+
+        let mut generic_parameters = vec![];
+        if self.current_matches(TokenType::LT, None) {
+            consume!(LT, self, res);
+            let generic_parameters_option = res
+                .register_result(self.generic_parameters());
+            ret_on_err!(res);
+            generic_parameters =
+                generic_parameters_option.unwrap();
+            consume!(GT, self, res);
+        }
+
         consume!(OpenParen, self, res);
 
         let mut other_params = true;
@@ -1824,6 +1947,7 @@ impl Parser {
                 is_external,
                 params,
                 body: None,
+                generic_parameters,
                 position: (
                     start,
                     self.last_tok().unwrap().end.clone(),
@@ -1866,6 +1990,7 @@ impl Parser {
             ret_type,
             params,
             body: Some(body.unwrap()),
+            generic_parameters,
             is_external: false,
             position: (
                 start,
@@ -1931,29 +2056,6 @@ impl Parser {
         })
     }
 
-    fn template_params(
-        &mut self,
-    ) -> Result<Vec<Token>, Error> {
-        let mut params = vec![];
-        let mut res = ParseResults::new();
-
-        loop {
-            result_consume!(param = Identifier, self, res);
-            result_ret_on_err!(res);
-
-            params.push(param);
-
-            if self.current_matches(TokenType::Comma, None)
-            {
-                self.advance(&mut res);
-            } else {
-                break;
-            }
-        }
-
-        Ok(params)
-    }
-
     fn class_declaration(
         &mut self,
         is_primitive: bool,
@@ -1967,15 +2069,15 @@ impl Parser {
 
         let mut fields = Vec::new();
         let mut methods = Vec::new();
-        let mut template_params = Vec::new();
+        let mut generic_parameters = Vec::new();
 
         if self.current_matches(TokenType::LT, None) {
             self.advance(&mut res);
-            let template_params_res =
-                self.template_params();
-            if template_params_res.is_err() {
+            let generic_params_res =
+                self.generic_parameters();
+            if generic_params_res.is_err() {
                 res.failure(
-                    template_params_res.err().unwrap(),
+                    generic_params_res.err().unwrap(),
                     Some(start.clone()),
                     Some(
                         self.last_tok()
@@ -1986,7 +2088,8 @@ impl Parser {
                 );
                 return res;
             }
-            template_params = template_params_res.unwrap();
+            generic_parameters =
+                generic_params_res.unwrap();
 
             consume!(GT, self, res);
         }
@@ -2002,8 +2105,8 @@ impl Parser {
                     self.last_tok().unwrap().end.clone(),
                 ),
                 is_primitive,
-                template_params,
-                template_ctx: Context::new(
+                generic_parameters,
+                generics_ctx: Context::new(
                     self.cli_args.clone(),
                 ),
                 is_exported,
@@ -2134,8 +2237,8 @@ impl Parser {
                 self.last_tok().unwrap().end.clone(),
             ),
             is_primitive,
-            template_params,
-            template_ctx: Context::new(
+            generic_parameters,
+            generics_ctx: Context::new(
                 self.cli_args.clone(),
             ),
             is_exported,
@@ -2157,7 +2260,7 @@ impl Parser {
         Ok((identifier.literal.unwrap(), value.unwrap()))
     }
 
-    fn template_args(
+    fn generic_args(
         &mut self,
     ) -> Result<Vec<MutRc<dyn AstNode>>, Error> {
         let mut res = ParseResults::new();
@@ -2184,14 +2287,14 @@ impl Parser {
         let start = self.last_tok().unwrap().start.clone();
 
         consume!(identifier_tok = Identifier, self, res);
-        let mut template_args = Vec::new();
+        let mut generic_args = Vec::new();
 
         if self.current_matches(TokenType::LT, None) {
             self.advance(&mut res);
-            let template_args_res = self.template_args();
-            if template_args_res.is_err() {
+            let generic_args_res = self.generic_args();
+            if generic_args_res.is_err() {
                 res.failure(
-                    template_args_res.err().unwrap(),
+                    generic_args_res.err().unwrap(),
                     Some(start.clone()),
                     Some(
                         self.last_tok()
@@ -2202,7 +2305,7 @@ impl Parser {
                 );
                 return res;
             }
-            template_args = template_args_res.unwrap();
+            generic_args = generic_args_res.unwrap();
 
             consume!(GT, self, res);
         }
@@ -2218,7 +2321,7 @@ impl Parser {
                     start,
                     self.last_tok().unwrap().end.clone(),
                 ),
-                template_args,
+                generic_args,
             }));
             return res;
         }
@@ -2261,7 +2364,7 @@ impl Parser {
                 start,
                 self.last_tok().unwrap().end.clone(),
             ),
-            template_args,
+            generic_args,
         }));
         res
     }

@@ -1,7 +1,6 @@
 use crate::context::Context;
-use crate::error::{unknown_symbol, Error};
+use crate::error::Error;
 use crate::parse::token::Token;
-use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 use std::fmt;
@@ -56,14 +55,7 @@ impl Type for GenericType {
                 .type_;
             return Ok(t);
         }
-        if ctx.borrow().throw_on_unknowns() {
-            return Err(unknown_symbol(format!(
-                "generic '{}'",
-                key
-            ))
-            .set_interval(self.identifier.interval()));
-        }
-        Ok(new_mut_rc(UnknownType {}))
+        Ok(new_mut_rc(self.clone()))
     }
 
     fn cache_id(&self, ctx: MutRc<Context>) -> String {

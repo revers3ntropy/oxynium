@@ -5,6 +5,7 @@ use crate::position::Interval;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
+use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Clone, Debug)]
@@ -30,10 +31,12 @@ impl FnParamType {
 
 #[derive(Clone)]
 pub struct FnType {
+    pub id: usize,
     pub name: String,
     pub ret_type: MutRc<dyn Type>,
     pub parameters: Vec<FnParamType>,
-    pub id: usize,
+    pub generic_args: HashMap<String, MutRc<dyn Type>>,
+    pub generic_params_order: Vec<String>,
 }
 
 impl Type for FnType {
@@ -42,8 +45,26 @@ impl Type for FnType {
     }
     fn str(&self) -> String {
         format!(
-            "Fn {}({}): {}",
+            "Fn {}{}({}): {}",
             self.name,
+            if self.generic_params_order.len() > 0 {
+                format!(
+                    "<{}>",
+                    self.generic_params_order
+                        .iter()
+                        .map(|p| {
+                            self.generic_args
+                                .get(p)
+                                .unwrap()
+                                .borrow()
+                                .str()
+                        })
+                        .collect::<Vec<String>>()
+                        .join(", ")
+                )
+            } else {
+                "".to_string()
+            },
             self.parameters
                 .iter()
                 .map(|p| p.str())
@@ -81,6 +102,23 @@ impl Type for FnType {
                     return false;
                 }
             }
+            for name in self.generic_args.keys() {
+                if !self
+                    .generic_args
+                    .get(name)
+                    .unwrap()
+                    .borrow()
+                    .contains(
+                        fn_type
+                            .generic_args
+                            .get(name)
+                            .unwrap()
+                            .clone(),
+                    )
+                {
+                    return false;
+                }
+            }
             return true;
         }
         false
@@ -103,12 +141,27 @@ impl Type for FnType {
             name: self.name.clone(),
             ret_type: new_mut_rc(UnknownType {}),
             parameters: Vec::new(),
+            generic_args: HashMap::new(),
+            generic_params_order: self
+                .generic_params_order
+                .clone(),
         });
 
         // outside of the loop to avoid borrowing issues
         let cache_id = self.cache_id(ctx.clone());
         ctx.borrow_mut()
             .concrete_type_cache_set(cache_id, res.clone());
+
+        for p in self.generic_params_order.iter() {
+            res.borrow_mut().generic_args.insert(
+                p.clone(),
+                self.generic_args
+                    .get(p)
+                    .unwrap()
+                    .borrow()
+                    .concrete(ctx.clone())?,
+            );
+        }
 
         let return_type =
             self.ret_type.borrow().concrete(ctx.clone())?;
@@ -134,8 +187,38 @@ impl Type for FnType {
         Ok(res)
     }
 
-    fn cache_id(&self, _ctx: MutRc<Context>) -> String {
-        format!("({})", self.str())
+    fn cache_id(&self, ctx: MutRc<Context>) -> String {
+        if self.generic_params_order.len() < 1 {
+            return format!("({})", self.str());
+        }
+        format!(
+            "({}<{}>)",
+            self.id,
+            self.generic_args
+                .iter()
+                .map(|(k, value)| {
+                    if value.borrow().as_generic().is_some()
+                    {
+                        if !ctx.borrow().has_dec_with_id(k)
+                        {
+                            return "?".to_string();
+                        }
+                        format!(
+                            "{}:{}",
+                            k,
+                            ctx.borrow()
+                                .get_dec_from_id(&k)
+                                .type_
+                                .borrow()
+                                .cache_id(ctx.clone())
+                        )
+                    } else {
+                        value.borrow().cache_id(ctx.clone())
+                    }
+                })
+                .collect::<Vec<String>>()
+                .join(",")
+        )
     }
 
     fn as_fn(&self) -> Option<FnType> {

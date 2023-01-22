@@ -184,11 +184,12 @@ impl Lexer {
             }
 
             if single_char_keys.binary_search(&c).is_ok() {
+                let pos = self.position.clone();
                 tokens.push(Token::new(
                     SINGLE_CHAR_TOKENS[&c.to_string()],
                     None,
-                    self.position.clone().reverse(None),
-                    Position::unknown(),
+                    pos.clone(),
+                    pos,
                 ));
                 self.advance();
                 continue;

@@ -13,7 +13,7 @@ pub struct ClassInitNode {
     pub identifier: Token,
     pub fields: Vec<(String, MutRc<dyn AstNode>)>,
     pub position: Interval,
-    pub template_args: Vec<MutRc<dyn AstNode>>,
+    pub generic_args: Vec<MutRc<dyn AstNode>>,
 }
 
 impl ClassInitNode {
@@ -58,8 +58,8 @@ impl AstNode for ClassInitNode {
         for field in self.fields.clone() {
             field.1.borrow_mut().setup(ctx.clone())?;
         }
-        for template_arg in self.template_args.clone() {
-            template_arg.borrow_mut().setup(ctx.clone())?;
+        for generic_arg in self.generic_args.clone() {
+            generic_arg.borrow_mut().setup(ctx.clone())?;
         }
         Ok(())
     }
@@ -113,7 +113,7 @@ impl AstNode for ClassInitNode {
             Context::new(ctx.borrow().cli_args.clone());
 
         let mut i = 0;
-        for arg in self.template_args.clone() {
+        for arg in self.generic_args.clone() {
             let arg_type_res =
                 arg.borrow().type_check(ctx.clone())?;
             unknowns += arg_type_res.unknowns;
@@ -137,6 +137,7 @@ impl AstNode for ClassInitNode {
         }
 
         generics_ctx.borrow_mut().set_parent(ctx.clone());
+
         class_type = class_type
             .concrete(generics_ctx.clone())?
             .borrow()

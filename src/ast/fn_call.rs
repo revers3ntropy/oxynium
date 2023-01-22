@@ -5,6 +5,7 @@ use crate::error::{type_error, unknown_symbol, Error};
 use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::{Interval, Position};
+use crate::symbols::SymbolDec;
 use crate::types::function::{FnParamType, FnType};
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
@@ -15,6 +16,7 @@ pub struct FnCallNode {
     pub object: Option<MutRc<dyn AstNode>>,
     pub identifier: Token,
     pub args: Vec<MutRc<dyn AstNode>>,
+    pub generic_args: Vec<MutRc<dyn AstNode>>,
     pub position: Interval,
 }
 
@@ -182,9 +184,9 @@ impl FnCallNode {
                 &self.identifier.clone().literal.unwrap(),
             )
             .type_
-            .clone()
-            .borrow()
-            .as_fn();
+            .clone();
+        let fn_type_option =
+            fn_type_option.borrow().as_fn();
         if fn_type_option.is_none() {
             return Err(unknown_symbol(format!(
                 "'{}' is not a function",
@@ -242,7 +244,66 @@ impl AstNode for FnCallNode {
             ))
             .set_interval(self.identifier.interval()));
         }
-        let fn_type = fn_type.unwrap();
+        let mut fn_type = fn_type.unwrap();
+
+        if self.generic_args.len()
+            > fn_type.generic_params_order.len()
+        {
+            return Err(type_error(format!(
+                "Too many generic arguments for function `{}`",
+                fn_type.str()
+            ))
+            .set_interval(self.position.clone())
+            .hint(format!(
+                "Function `{}` requires {} generic arguments",
+                fn_type.str(),
+                fn_type.generic_params_order.len()
+            )));
+        }
+
+        if self.generic_args.len()
+            < fn_type.generic_params_order.len()
+        {
+            return Err(type_error(format!(
+                "Not enough generic arguments for function `{}`",
+                fn_type.str()
+            ))
+            .set_interval(self.position.clone())
+            .hint(format!(
+                "Function `{}` requires {} generic arguments",
+                fn_type.str(),
+                fn_type.generic_params_order.len()
+            )));
+        }
+
+        let generics_ctx =
+            Context::new(ctx.borrow().cli_args.clone());
+
+        let mut i = 0;
+        for arg in self.generic_args.clone() {
+            let arg_type_res =
+                arg.borrow().type_check(ctx.clone())?;
+            unknowns += arg_type_res.unknowns;
+            let name =
+                fn_type.generic_params_order[i].clone();
+            generics_ctx.borrow_mut().declare(
+                SymbolDec {
+                    name: name.clone(),
+                    id: name,
+                    is_constant: true,
+                    is_type: true,
+                    type_: arg_type_res.t,
+                    require_init: false,
+                    is_defined: true,
+                    is_param: true,
+                    position: arg.borrow().pos(),
+                },
+                arg.borrow().pos(),
+            )?;
+            i += 1;
+        }
+
+        generics_ctx.borrow_mut().set_parent(ctx.clone());
 
         if is_method_call {
             args.push(FnParamType {
@@ -252,6 +313,12 @@ impl AstNode for FnCallNode {
                 position: Position::unknown_interval(),
             });
         }
+
+        fn_type = fn_type
+            .concrete(generics_ctx.clone())?
+            .borrow()
+            .as_fn()
+            .unwrap();
 
         for arg in self.args.iter() {
             let TypeCheckRes {
@@ -306,7 +373,7 @@ impl AstNode for FnCallNode {
                     .str();
                 let found = args[i].type_.borrow().str();
                 return Err(type_error(format!(
-                    "Expected argument {} to function '{}' to be of type '{expected}' but found type '{found}'",
+                    "expected argument {} to function '{}' to be of type '{expected}' but found type '{found}'",
                     i + 1,
                     self.identifier.clone().literal.unwrap(),
                 ))
@@ -317,7 +384,7 @@ impl AstNode for FnCallNode {
         if fn_type.ret_type.borrow().is_unknown() {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(unknown_symbol(format!(
-                    "Unknown return type for `{}`",
+                    "unknown return type for `{}`",
                     fn_type.str()
                 ))
                 .set_interval(self.identifier.interval()));

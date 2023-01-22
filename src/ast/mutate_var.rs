@@ -60,7 +60,7 @@ impl AstNode for MutateVar {
         }
         if symbol.is_constant {
             return Err(type_error(format!(
-                "Expected mutable variable, found constant '{}'",
+                "expected mutable variable, found constant '{}'",
                 self.id()
             ))
             .set_interval((

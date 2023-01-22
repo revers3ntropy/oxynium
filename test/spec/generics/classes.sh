@@ -84,3 +84,11 @@ expect_err 'TypeError' '
     }
     C.a(1);
 '
+expect '1' '
+    class C <T> {
+        fn a(t: T) T {
+            return t
+        }
+    }
+    print(C!<Int>.a(1).str());
+'

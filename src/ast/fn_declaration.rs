@@ -15,9 +15,12 @@ use crate::symbols::{
 };
 use crate::types::class::ClassType;
 use crate::types::function::{FnParamType, FnType};
+use crate::types::generic::GenericType;
 use crate::types::unknown::UnknownType;
+use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 use std::any::Any;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Parameter {
@@ -33,6 +36,7 @@ pub struct FnDeclarationNode {
     pub ret_type: MutRc<dyn AstNode>,
     pub params: Vec<Parameter>,
     pub body: Option<MutRc<dyn AstNode>>,
+    pub generic_parameters: Vec<Token>,
     pub params_scope: MutRc<Context>,
     pub is_external: bool,
     pub position: Interval,
@@ -111,6 +115,32 @@ impl AstNode for FnDeclarationNode {
             }
         }
 
+        for generic_param in self.generic_parameters.iter()
+        {
+            self.params_scope.borrow_mut().declare(
+                SymbolDec {
+                    name: generic_param
+                        .literal
+                        .clone()
+                        .unwrap(),
+                    id: generic_param
+                        .literal
+                        .clone()
+                        .unwrap(),
+                    is_constant: true,
+                    is_type: true,
+                    type_: new_mut_rc(GenericType {
+                        identifier: generic_param.clone(),
+                    }),
+                    require_init: false,
+                    is_defined: false,
+                    is_param: false,
+                    position: generic_param.interval(),
+                },
+                generic_param.interval(),
+            )?;
+        }
+
         self.params_scope
             .borrow_mut()
             .set_parent(ctx.clone());
@@ -159,7 +189,7 @@ impl AstNode for FnDeclarationNode {
         } = self
             .ret_type
             .borrow()
-            .type_check(ctx.clone())?;
+            .type_check(self.params_scope.clone())?;
 
         let mut parameters: Vec<FnParamType> = Vec::new();
 
@@ -183,9 +213,10 @@ impl AstNode for FnDeclarationNode {
 
             let mut param_type = None;
             if let Some(type_) = type_ {
-                let param_type_res = type_
-                    .borrow_mut()
-                    .type_check(ctx.clone())?;
+                let param_type_res =
+                    type_.borrow_mut().type_check(
+                        self.params_scope.clone(),
+                    )?;
                 param_type = Some(param_type_res.t);
                 unknowns += param_type_res.unknowns;
             }
@@ -199,9 +230,12 @@ impl AstNode for FnDeclarationNode {
                     ))
                     .set_interval(self.position.clone()));
                 }
-                let default_value_type = default_value
-                    .borrow_mut()
-                    .type_check(ctx.clone())?;
+
+                // TODO: type check on global scope
+                let default_value_type =
+                    default_value.borrow_mut().type_check(
+                        self.params_scope.clone(),
+                    )?;
                 unknowns += default_value_type.unknowns;
 
                 if param_type.is_none() {
@@ -293,11 +327,31 @@ impl AstNode for FnDeclarationNode {
             this_type.borrow_mut().ret_type =
                 ret_type.clone();
         } else {
+            let mut generic_args = HashMap::new();
+            for generic_param in
+                self.generic_parameters.iter()
+            {
+                generic_args.insert(
+                    generic_param.literal.clone().unwrap(),
+                    new_mut_rc(GenericType {
+                        identifier: generic_param.clone(),
+                    })
+                        as MutRc<dyn Type>,
+                );
+            }
+            let generic_params_order = self
+                .generic_parameters
+                .iter()
+                .map(|t| t.literal.clone().unwrap())
+                .collect();
+
             this_type = new_mut_rc(FnType {
                 id: ctx.borrow_mut().get_id(),
                 name: self.id(),
                 ret_type: ret_type.clone(),
                 parameters,
+                generic_args,
+                generic_params_order,
             });
             // declare in the parent context
             ctx.borrow_mut().declare(

@@ -20,6 +20,8 @@ mod symbols;
 mod types;
 mod util;
 
+// const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+
 fn check_std(args: &Args) -> bool {
     if args.exec_mode != ExecMode::Lib
         && !Path::new(&args.std_path).exists()

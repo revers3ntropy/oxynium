@@ -47,8 +47,8 @@ pub struct ClassDeclarationNode {
     pub methods: Vec<MutRc<FnDeclarationNode>>,
     pub position: Interval,
     pub is_primitive: bool,
-    pub template_params: Vec<Token>,
-    pub template_ctx: MutRc<Context>,
+    pub generic_parameters: Vec<Token>,
+    pub generics_ctx: MutRc<Context>,
     pub is_exported: bool,
 }
 
@@ -66,7 +66,7 @@ impl AstNode for ClassDeclarationNode {
             .set_interval(self.identifier.interval()));
         }
 
-        self.template_ctx
+        self.generics_ctx
             .borrow_mut()
             .set_parent(ctx.clone());
 
@@ -74,12 +74,12 @@ impl AstNode for ClassDeclarationNode {
             field
                 .type_
                 .borrow_mut()
-                .setup(self.template_ctx.clone())?;
+                .setup(self.generics_ctx.clone())?;
         }
         for method in &self.methods {
             method
                 .borrow_mut()
-                .setup(self.template_ctx.clone())?;
+                .setup(self.generics_ctx.clone())?;
         }
         Ok(())
     }
@@ -97,22 +97,29 @@ impl AstNode for ClassDeclarationNode {
 
         let mut unknowns = 0;
 
-        for template in self.template_params.iter() {
-            self.template_ctx.borrow_mut().declare(
+        for generic_param in self.generic_parameters.iter()
+        {
+            self.generics_ctx.borrow_mut().declare(
                 SymbolDec {
-                    name: template.literal.clone().unwrap(),
-                    id: template.literal.clone().unwrap(),
+                    name: generic_param
+                        .literal
+                        .clone()
+                        .unwrap(),
+                    id: generic_param
+                        .literal
+                        .clone()
+                        .unwrap(),
                     is_constant: true,
                     is_type: true,
                     type_: new_mut_rc(GenericType {
-                        identifier: template.clone(),
+                        identifier: generic_param.clone(),
                     }),
                     require_init: false,
                     is_defined: false,
                     is_param: false,
-                    position: template.interval(),
+                    position: generic_param.interval(),
                 },
-                template.interval(),
+                generic_param.interval(),
             )?;
         }
 
@@ -136,17 +143,19 @@ impl AstNode for ClassDeclarationNode {
             }
         } else {
             let mut generic_args = HashMap::new();
-            for template in self.template_params.iter() {
+            for generic_param in
+                self.generic_parameters.iter()
+            {
                 generic_args.insert(
-                    template.literal.clone().unwrap(),
+                    generic_param.literal.clone().unwrap(),
                     new_mut_rc(GenericType {
-                        identifier: template.clone(),
+                        identifier: generic_param.clone(),
                     })
                         as MutRc<dyn Type>,
                 );
             }
             let generic_params_order = self
-                .template_params
+                .generic_parameters
                 .iter()
                 .map(|t| t.literal.clone().unwrap())
                 .collect();
@@ -170,7 +179,7 @@ impl AstNode for ClassDeclarationNode {
             let type_ = field
                 .type_
                 .borrow()
-                .type_check(self.template_ctx.clone())?;
+                .type_check(self.generics_ctx.clone())?;
             unknowns += type_.unknowns;
             let mut stack_offset =
                 this_type.borrow().fields.len() * 8;
@@ -223,7 +232,7 @@ impl AstNode for ClassDeclarationNode {
             // This is where the context reference is handed down so the
             // method's context is attached to the global context tree
             let method_type_res = method
-                .type_check(self.template_ctx.clone())?;
+                .type_check(self.generics_ctx.clone())?;
             unknowns += method_type_res.unknowns;
 
             if !method.is_external && method.body.is_none()
