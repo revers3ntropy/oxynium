@@ -1,6 +1,7 @@
 use crate::ast::AstNode;
 use crate::context::Context;
 use crate::error::Error;
+use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
@@ -36,7 +37,7 @@ pub struct FnType {
     pub ret_type: MutRc<dyn Type>,
     pub parameters: Vec<FnParamType>,
     pub generic_args: HashMap<String, MutRc<dyn Type>>,
-    pub generic_params_order: Vec<String>,
+    pub generic_params_order: Vec<Token>,
 }
 
 impl Type for FnType {
@@ -54,7 +55,11 @@ impl Type for FnType {
                         .iter()
                         .map(|p| {
                             self.generic_args
-                                .get(p)
+                                .get(
+                                    &p.clone()
+                                        .literal
+                                        .unwrap(),
+                                )
                                 .unwrap()
                                 .borrow()
                                 .str()
@@ -154,9 +159,9 @@ impl Type for FnType {
 
         for p in self.generic_params_order.iter() {
             res.borrow_mut().generic_args.insert(
-                p.clone(),
+                p.clone().literal.unwrap(),
                 self.generic_args
-                    .get(p)
+                    .get(&p.clone().literal.unwrap())
                     .unwrap()
                     .borrow()
                     .concrete(ctx.clone())?,

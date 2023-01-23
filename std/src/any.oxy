@@ -1,0 +1,34 @@
+fn Any.eq <Cmp> (self, other: Cmp) Bool {
+	return #asm(Bool, "
+		xor rax, rax
+
+		mov rcx, qword [rbp + 16]
+		mov rcx, qword [rcx]
+		cmp rcx, qword [rbp + 24]
+		sete al
+		push rax
+	")
+}
+
+fn Any.str (self) Str {
+	return #asm(Str, "
+		mov rax, qword [rbp + 16]
+		push qword [rax]
+		call Int.str
+		add rsp, 8
+		push rax
+	")
+}
+
+fn Any.from<From>(val: From) Any<From> {
+	return new Any<From> {
+		val: val,
+	}
+}
+
+fn Any.to<To>(self) To {
+	return #asm(To, "
+		mov rax, qword [rbp + 16]
+		push rax
+	")
+}

@@ -1,8 +1,11 @@
-#include "./src/char.oxy";
-#include "./src/bool.oxy";
+#include "src/any.oxy";
+#include "src/bool.oxy";
+#include "src/char.oxy";
+#include "src/input.oxy";
 #include "src/int.oxy";
-#include "src/str.oxy";
-#include "src/time.oxy";
+#include "src/option.oxy";
 #include "src/panic.oxy";
 #include "src/print.oxy";
-#include "src/input.oxy";
+#include "src/ptr.oxy";
+#include "src/str.oxy";
+#include "src/time.oxy";

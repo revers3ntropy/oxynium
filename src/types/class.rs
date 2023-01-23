@@ -24,7 +24,7 @@ pub struct ClassType {
     pub methods: HashMap<String, MutRc<FnType>>,
     pub is_primitive: bool,
     pub generic_args: HashMap<String, MutRc<dyn Type>>,
-    pub generic_params_order: Vec<String>,
+    pub generic_params_order: Vec<Token>,
 }
 
 impl ClassType {
@@ -68,7 +68,9 @@ impl Type for ClassType {
                     .iter()
                     .map(|p| {
                         self.generic_args
-                            .get(p)
+                            .get(
+                                &p.clone().literal.unwrap(),
+                            )
                             .unwrap()
                             .borrow()
                             .str()
@@ -154,9 +156,9 @@ impl Type for ClassType {
 
         for p in self.generic_params_order.iter() {
             res.borrow_mut().generic_args.insert(
-                p.clone(),
+                p.clone().literal.unwrap(),
                 self.generic_args
-                    .get(p)
+                    .get(&p.clone().literal.unwrap())
                     .unwrap()
                     .borrow()
                     .concrete(ctx.clone())?,

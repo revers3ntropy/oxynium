@@ -112,6 +112,17 @@ impl AstNode for ClassInitNode {
         let generics_ctx =
             Context::new(ctx.borrow().cli_args.clone());
 
+        if self.generic_args.len()
+            != class_type.generic_params_order.len()
+        {
+            return Err(type_error(format!(
+                "Class {} takes {} generic arguments, but {} were given",
+                self.identifier.clone().literal.unwrap(),
+                class_type.generic_params_order.len(),
+                self.generic_args.len()
+            )).set_interval(self.identifier.interval()));
+        }
+
         let mut i = 0;
         for arg in self.generic_args.clone() {
             let arg_type_res =
@@ -121,8 +132,8 @@ impl AstNode for ClassInitNode {
                 class_type.generic_params_order[i].clone();
             generics_ctx.borrow_mut().declare(
                 SymbolDec {
-                    name: name.clone(),
-                    id: name,
+                    name: name.clone().literal.unwrap(),
+                    id: name.clone().literal.unwrap(),
                     is_constant: true,
                     is_type: true,
                     type_: arg_type_res.t,

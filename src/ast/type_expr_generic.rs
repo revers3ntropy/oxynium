@@ -90,8 +90,8 @@ impl AstNode for GenericTypeNode {
                 class_type.generic_params_order[i].clone();
             generics_ctx.borrow_mut().declare(
                 SymbolDec {
-                    name: name.clone(),
-                    id: name,
+                    name: name.clone().literal.unwrap(),
+                    id: name.clone().literal.unwrap(),
                     is_constant: true,
                     is_type: true,
                     type_: arg_type_res.t,

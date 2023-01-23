@@ -2,7 +2,7 @@ use crate::args::{Args, ExecMode};
 use crate::ast::exec_root::ExecRootNode;
 use crate::ast::AstNode;
 use crate::context::Context;
-use crate::error::{io_error, Error};
+use crate::error::{io_error, Error, ErrorSource};
 use crate::parse::lexer::Lexer;
 use crate::parse::parser::Parser;
 use crate::perf;
@@ -96,7 +96,17 @@ fn compile(
     args: &Args,
 ) -> Result<(String, MutRc<Context>), Error> {
     let ctx = Context::new(args.clone());
-    let ctx = setup_ctx_with_doxy(ctx)?;
+    let setup_ctx_res = setup_ctx_with_doxy(ctx);
+    if setup_ctx_res.is_err() {
+        let mut err = setup_ctx_res.err().unwrap();
+        err.try_set_source(ErrorSource {
+            file_name: "std.doxy".to_string(),
+            source: STD_DOXY.to_string(),
+        });
+        return Err(err);
+    }
+    let ctx = setup_ctx_res.unwrap();
+
     ctx.borrow_mut().std_asm_path = args.std_path.clone();
     ctx.borrow_mut().exec_mode = args.exec_mode;
 

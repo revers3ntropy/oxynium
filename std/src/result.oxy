@@ -1,0 +1,18 @@
+fn Result.err <Val, Err> (err: Err) Result<Val, Err> {
+	return new Result<T, Err>(err);
+}
+
+fn Result.is_ok (self) Bool {
+	return self.value.is_some()
+}
+
+fn Result.is_err (self) Bool {
+	return self.error.is_some()
+}
+
+fn Result.unwrap (self) TResultValue {
+	if self.is_err() {
+		panic("Tried to unwrap a Result that was an error")
+	}
+	return self.value.unwrap()
+}

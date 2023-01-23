@@ -78,6 +78,12 @@ expect_err 'UnknownSymbol' '
     class C <T> {}
     fn a(t: T) {}
 '
+expect_err 'UnknownSymbol' '
+    class C <T> {}
+    class D <Q> {
+        fn a(t: T) {}
+    }
+'
 expect_err 'TypeError' '
     class C <T> {
         fn a(i: Int) {}
@@ -91,4 +97,15 @@ expect '1' '
         }
     }
     print(C!<Int>.a(1).str());
+'
+
+expect_err 'TypeError' '
+    // only an error as --allow_overrides is not true
+    // but used in STD so should be working...
+    class C <T> {
+        extern fn foo(a: T) T,
+    }
+    fn C.foo(a: T) T {
+        return a
+    }
 '

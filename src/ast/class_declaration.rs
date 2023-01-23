@@ -154,11 +154,6 @@ impl AstNode for ClassDeclarationNode {
                         as MutRc<dyn Type>,
                 );
             }
-            let generic_params_order = self
-                .generic_parameters
-                .iter()
-                .map(|t| t.literal.clone().unwrap())
-                .collect();
 
             this_type = new_mut_rc(ClassType {
                 name: self
@@ -171,7 +166,9 @@ impl AstNode for ClassDeclarationNode {
                 is_primitive: self.is_primitive,
                 id: ctx.borrow_mut().get_id(),
                 generic_args,
-                generic_params_order,
+                generic_params_order: self
+                    .generic_parameters
+                    .clone(),
             });
         }
 
@@ -206,7 +203,8 @@ impl AstNode for ClassDeclarationNode {
         let self_pos = self.pos();
         for method in self.methods.iter() {
             let mut method = method.borrow_mut();
-            method.class = Some(this_type.clone());
+            method.class_name =
+                Some(this_type.borrow().name.clone());
             let has_self_arg =
                 method.params.first().is_some()
                     && method

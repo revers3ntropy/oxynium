@@ -20,7 +20,7 @@ mod symbols;
 mod types;
 mod util;
 
-// const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 fn check_std(args: &Args) -> bool {
     if args.exec_mode != ExecMode::Lib
@@ -93,6 +93,11 @@ fn main() {
 
     if let Err(e) = check_args(&args) {
         e.print_stderr();
+    }
+
+    if args.version {
+        println!("Oxynium v{}", VERSION);
+        return;
     }
 
     if !check_std(&args) {

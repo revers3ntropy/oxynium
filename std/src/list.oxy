@@ -1,0 +1,80 @@
+fn List.empty <E> () List<E> {
+	return new List<E> {
+		head: new Ptr<E>,
+		size: 0
+	};
+}
+
+fn List.len (self) Int {
+	// number of elements in list is size of list
+	// divided by size of each element,
+	// which is always 8 bytes
+	return self.size / 8
+}
+
+fn List.at (self, i: Int) Option<T> {
+	if i < 0 {
+		return self.at(self.len() + i)
+	}
+	if i < 0 || i >= self.len() {
+		return Option!<T>.none!<T>()
+	}
+	return Option!<T>.some!<T>(self.at_raw(i))
+}
+
+fn List.at_raw (self, i: Int) T {
+	return #asm(T, "
+		mov rax, qword [rbp + 16]       ; rax = self
+		mov rax, qword [rax]            ; rax = self.head
+		mov rcx, qword [rbp + 24]       ; rcx = idx
+		mov rax, qword [rax + rcx * 8]  ; rax = self.head[idx]
+		push rax
+	")
+}
+
+fn List.push (self, value: T) {
+	#asm "
+		; #1: Allocate space for old list and new element
+
+		mov rax, qword [rbp + 16] ; rax = self
+		mov rcx, qword [rax + 8]  ; rdx = self.size
+		add rcx, 8 				  ; rdx = self.size + 8
+		mov qword [rax + 8], rcx  ; self.size = self.size + 8
+		push rcx 		          ; push self.size + 8
+		call Ptr.allocate      ; rax = allocate((self.size + 1) * 8)
+		add rsp, 8                ; pop self.size + 8
+
+
+		; #2: Copy old list to new list
+
+		mov rdi, rax ; rdi = new list
+		mov rsi, qword [rbp + 16] ; rsi = self
+		mov rdx, qword [rsi + 8]  ; rcx = self.size
+		mov rsi, qword [rsi]      ; rsi = old_list.head
+		sub rdx, 8 			      ; rcx = self.size - 8
+
+		; just before copying, while rsi = old_list.head
+		; set the location of the list to the new list
+		mov rcx, qword [rbp + 16] ; rcx = self
+		mov qword [rcx], rax      ; self.head = new_list
+
+		push rbp
+		mov rbp, rsp
+		sub rsp, 32
+		and rsp, -16
+		call memcpy WRT ..plt    ; memcpy(new list, old list, (old list size - 1) * 8)
+		mov rsp, rbp
+		pop rbp
+
+
+		; #3: Add new element to new list
+
+		mov rax, qword [rbp + 16]      ; rax = self
+		mov rcx, qword [rax + 8]       ; rcx = self.size
+		mov rax, qword [rax]           ; rcx = self.head (new head)
+		mov rdx, qword [rbp + 24]      ; rdx = val
+		mov qword [rax + rcx - 8], rdx ; new_list[self.len() - 1] = val
+
+		push rax
+	"
+}

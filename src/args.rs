@@ -32,6 +32,7 @@ pub struct Args {
     pub comp_debug: bool,
     pub allow_overrides: bool,
     pub stop_after_asm: bool,
+    pub version: bool,
 }
 
 pub fn get_int_cli_arg(
@@ -69,6 +70,7 @@ pub fn get_args_cmd() -> Command {
         arg!(-d --comp_debug              "For debugging the compiler"),
         arg!(   --allow_overrides         "Allows symbols to be redeclared"),
         arg!(   --stop_after_asm          "Stop after emitting assembly"),
+        arg!(-v --version                 "Log version"),
         arg!(                     [path]  "Path to input file"),
     ])
 }
@@ -131,6 +133,7 @@ pub fn get_cli_args() -> Args {
         comp_debug: m.get_flag("comp_debug"),
         allow_overrides: m.get_flag("allow_overrides"),
         stop_after_asm: m.get_flag("stop_after_asm"),
+        version: m.get_flag("version"),
     }
 }
 

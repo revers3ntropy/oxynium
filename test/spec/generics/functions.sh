@@ -150,10 +150,9 @@ expect '1,Hi' '
     		)
     );
 '
-
-# TODO fix this
-expect '1' '
+expect_err 'TypeError' '
     class C <A> {
+        // same generic param name as for class - not allowed
         fn a <A> (self, a: A) A {
             return a
         }

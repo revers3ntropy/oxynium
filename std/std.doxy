@@ -1,5 +1,6 @@
 // This file is included as a raw string in every Oxynium program
 // and contains the declarations for the Standard Library.
+// The implementations for these functions can be found under std/src.
 
 class Void;
 
@@ -76,235 +77,50 @@ class Time {
 	extern fn epoch () Time,
 }
 
-class Option <TOption> {
-	value: Ptr<TOption>,
-
-	fn none () Option<TOption> {
-		return new Option <TOption> {
-			value: new Ptr<TOption>
-		}
-	}
-	fn some (value: TOption) Option<TOption> {
-		return new Option <TOption> {
-			value: new Ptr<TOption>.make_from(value)
-		}
-	}
-
-	fn is_some (self) Bool {
-		return !self.is_none()
-	}
-
-	fn is_none (self) Bool {
-		return self.value.is_null()
-	}
-
-	fn unwrap (self, err_message = "Unwrapping None Option") TOption {
-		if self.is_none() {
-			panic(err_message)
-		}
-		return self.value.unwrap()
-	}
+class Option <T> {
+	value: Ptr<T>,
+	extern fn none <From> () Option<From>,
+	extern fn some <From> (value: From) Option<From>,
+	extern fn is_some (self) Bool,
+	extern fn is_none (self) Bool,
+	extern fn unwrap (self, err_message = "Unwrapping None Option") T,
 }
 
-class Any <TAny, TAnyCmp> {
-	val: TAny,
-	fn eq (self, other: TAnyCmp) Bool {
-		return #asm(Bool, "
-			xor rax, rax
-
-			mov rcx, qword [rbp + 16]
-			mov rcx, qword [rcx]
-			cmp rcx, qword [rbp + 24]
-			sete al
-			push rax
-		")
-	}
-	fn str (self) Str {
-		return #asm(Str, "
-			mov rax, qword [rbp + 16]
-			push qword [rax]
-			call Int.str
-			add rsp, 8
-			push rax
-		")
-	}
+class Any <T> {
+	val: T,
+	extern fn eq <Cmp> (self, other: Cmp) Bool,
+	extern fn str (self) Str,
+	extern fn from<From>(val: From) Any<From>,
+	extern fn to<To>(self) To,
 }
 
-primitive Ptr <TPtr> {
-	fn is_null (self) Bool {
-		return new Any <Ptr<TPtr>, Int> {
-			val: self
-		}
-			.eq(0)
-	}
-
-	fn make_from (self, val: TPtr) Ptr<TPtr> {
-		return #asm(Ptr, "
-			push 8
-			call Ptr.allocate
-			add rsp, 8
-
-			mov rdx, qword [rbp + 24]
-			mov qword [rax], rdx
-			push rax
-		")
-	}
-	fn unwrap (self) TPtr {
-		return #asm(TPtr, "
-			mov rax, qword [rbp + 16]
-			mov rax, qword [rax]
-			push rax
-		")
-	}
-
+primitive Ptr <T> {
+	extern fn is_null (self) Bool,
+	extern fn make <From> (self, val: From) Ptr<From>,
+	extern fn unwrap (self) T,
 	/// Wrapper around `malloc`
-	fn allocate (size: Int) Ptr<TPtr> {
-		return #asm(Ptr, "
-			xor rax, rax
-
-			mov rdi, qword [rbp + 16]
-			cmp rdi, 0
-			jle _$_allocate_end
-
-			; https://stackoverflow.com/questions/74932257
-			; stack alignment around call to malloc
-			push rbp
-			mov rbp, rsp
-			sub rsp, 32
-			and rsp, -16
-			call malloc WRT ..plt
-			mov rsp, rbp
-			pop rbp
-
-			cmp rax, 0 ; if rax is NULL, fail
-			je _$_allocate_error
-
-			push rax
-			mov rdi, rax
-			mov rsi, 0
-			mov rdx, qword [rbp + 16]
-
-			push rbp
-			mov rbp, rsp
-			sub rsp, 32
-			and rsp, -16
-			call memset WRT ..plt
-			mov rsp, rbp
-			pop rbp
-
-			pop rax
-
-			_$_allocate_end:
-				mov rsp, rbp
-				pop rbp
-				ret
-
-			_$_allocate_error:
-				push _$_alloc_err_msg
-				call panic
-		")
-	}
+	extern fn allocate <A> (size: Int) Ptr<A>,
 }
 
-class List <TList> {
+class List <T> {
 	// address of first element
-	head: Ptr<TList>,
+	head: Ptr<T>,
 	// number of bytes required to store list
     size: Int,
-
-	fn len (self) Int {
-		// number of elements in list is size of list
-		// divided by size of each element,
-		// which is always 8 bytes
-		return self.size / 8
-	}
-    fn at (self, i: Int) Option<TList> {
-    	if i < 0 {
-    		return self.at(self.len() + i)
-		}
-		if i < 0 || i >= self.len() {
-			return new Option<TList> {
-				value: new Ptr<TList>
-			}
-		}
-		return new Option<TList> {
-			value: new Ptr<TList>.make_from(self.at_raw(i))
-		}
-    }
-    fn at_raw (self, i: Int) TList {
-    	return #asm(TList, "
-			mov rax, qword [rbp + 16]       ; rax = self
-			mov rax, qword [rax]            ; rax = self.head
-			mov rcx, qword [rbp + 24]       ; rcx = idx
-			mov rax, qword [rax + rcx * 8]  ; rax = self.head[idx]
-			push rax
-		")
-    }
-    fn push (self, value: TList) {
-		#asm "
-			; #1: Allocate space for old list and new element
-
-        	mov rax, qword [rbp + 16] ; rax = self
-        	mov rcx, qword [rax + 8]  ; rdx = self.size
-        	add rcx, 8 				  ; rdx = self.size + 8
-        	mov qword [rax + 8], rcx  ; self.size = self.size + 8
-        	push rcx 		          ; push self.size + 8
-        	call Ptr.allocate      ; rax = allocate((self.size + 1) * 8)
-        	add rsp, 8                ; pop self.size + 8
-
-
-        	; #2: Copy old list to new list
-
-        	mov rdi, rax ; rdi = new list
-        	mov rsi, qword [rbp + 16] ; rsi = self
-        	mov rdx, qword [rsi + 8]  ; rcx = self.size
-        	mov rsi, qword [rsi]      ; rsi = old_list.head
-        	sub rdx, 8 			      ; rcx = self.size - 8
-
-        	; just before copying, while rsi = old_list.head
-        	; set the location of the list to the new list
-        	mov rcx, qword [rbp + 16] ; rcx = self
-        	mov qword [rcx], rax      ; self.head = new_list
-
-        	push rbp
-        	mov rbp, rsp
-        	sub rsp, 32
-        	and rsp, -16
-        	call memcpy WRT ..plt    ; memcpy(new list, old list, (old list size - 1) * 8)
-        	mov rsp, rbp
-        	pop rbp
-
-
-        	; #3: Add new element to new list
-
-        	mov rax, qword [rbp + 16]      ; rax = self
-        	mov rcx, qword [rax + 8]       ; rcx = self.size
-        	mov rax, qword [rax]           ; rcx = self.head (new head)
-        	mov rdx, qword [rbp + 24]      ; rdx = val
-        	mov qword [rax + rcx - 8], rdx ; new_list[self.len() - 1] = val
-
-			push rax
-		"
-    }
+    extern fn empty <E> () List<E>,
+	extern fn len (self) Int,
+    extern fn at (self, i: Int) Option<T>,
+    extern fn at_raw (self, i: Int) T,
+    extern fn push (self, value: T),
 }
 
-class Result<TResultValue, TResultError> {
-	value: Option<TResultValue>,
-	error: Option<TResultError>,
-
-	fn is_ok (self) Bool {
-		return self.value.is_some()
-	}
-	fn is_err (self) Bool {
-		return self.error.is_some()
-	}
-
-	fn unwrap (self) TResultValue {
-		if self.is_err() {
-			panic("Tried to unwrap a Result that was an error")
-		}
-		return self.value.unwrap()
-	}
+class Result<T, E> {
+	value: Option<T>,
+	error: Option<E>,
+	extern fn err <Val, Err> (err: Err) Result<Val, Err>,
+	extern fn is_ok (self) Bool,
+	extern fn is_err (self) Bool,
+	extern fn unwrap (self) T,
 }
 
 /// Reads from stdin until a newline is reached

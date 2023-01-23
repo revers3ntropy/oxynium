@@ -1,0 +1,71 @@
+fn Ptr.is_null (self) Bool {
+	return Any.from!<Ptr<T>>(self)
+			  .eq!<Int>(0)
+}
+
+fn Ptr.make <From> (self, val: From) Ptr<From> {
+	return #asm(Ptr, "
+		push 8
+		call Ptr.allocate
+		add rsp, 8
+
+		mov rdx, qword [rbp + 24]
+		mov qword [rax], rdx
+		push rax
+	")
+}
+
+fn Ptr.unwrap (self) T {
+	return #asm(T, "
+		mov rax, qword [rbp + 16]
+		mov rax, qword [rax]
+		push rax
+	")
+}
+
+fn Ptr.allocate <A> (size: Int) Ptr<A> {
+	return #asm(Ptr, "
+		xor rax, rax
+
+		mov rdi, qword [rbp + 16]
+		cmp rdi, 0
+		jle _$_allocate_end
+
+		; https://stackoverflow.com/questions/74932257
+		; stack alignment around call to malloc
+		push rbp
+		mov rbp, rsp
+		sub rsp, 32
+		and rsp, -16
+		call malloc WRT ..plt
+		mov rsp, rbp
+		pop rbp
+
+		cmp rax, 0 ; if rax is NULL, fail
+		je _$_allocate_error
+
+		push rax
+		mov rdi, rax
+		mov rsi, 0
+		mov rdx, qword [rbp + 16]
+
+		push rbp
+		mov rbp, rsp
+		sub rsp, 32
+		and rsp, -16
+		call memset WRT ..plt
+		mov rsp, rbp
+		pop rbp
+
+		pop rax
+
+		_$_allocate_end:
+			mov rsp, rbp
+			pop rbp
+			ret
+
+		_$_allocate_error:
+			push _$_alloc_err_msg
+			call panic
+	")
+}
