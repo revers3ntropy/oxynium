@@ -1177,7 +1177,7 @@ impl Parser {
                     self.last_tok().unwrap().end,
                 ),
             })),
-            identifier,
+            name_tok,
             f_call_generic_args,
         )
     }

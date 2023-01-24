@@ -146,7 +146,7 @@ expect '1,Hi' '
     		.a!<Str, Ptr<Int>>(
     			"hi",
     			"Hi",
-    			new Ptr<Int>.make_from(6)
+    			Ptr.make!<Int>(6)
     		)
     );
 '

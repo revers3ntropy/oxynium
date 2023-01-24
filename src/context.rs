@@ -105,6 +105,10 @@ impl Context {
         self.parent = Some(parent);
     }
 
+    pub fn remove_parent(&mut self) {
+        self.parent = None;
+    }
+
     pub fn get_parent(&self) -> Option<MutRc<Context>> {
         self.parent.clone()
     }
@@ -185,7 +189,7 @@ impl Context {
                     self.get_dec_from_id(&symbol.name)
                 );
             }
-            panic!("(!?) Context is frozen and symbol doesn't exist yet!");
+            panic!("(!?) Context is frozen and symbol '{}' doesn't exist yet!", symbol.name);
         }
         if self.parent.is_some()
             && !self.allow_local_var_decls

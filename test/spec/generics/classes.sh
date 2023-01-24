@@ -81,24 +81,40 @@ expect_err 'UnknownSymbol' '
 expect_err 'UnknownSymbol' '
     class C <T> {}
     class D <Q> {
-        fn a(t: T) {}
+        fn a(self, t: T) {}
     }
 '
-expect_err 'TypeError' '
+expect '' '
     class C <T> {
         fn a(i: Int) {}
     }
     C.a(1);
 '
-expect '1' '
+expect_err 'UnknownSymbol' '
     class C <T> {
         fn a(t: T) T {
             return t
         }
     }
-    print(C!<Int>.a(1).str());
 '
-
+expect '1,2' '
+    class C <T> {
+        fn a(self, t: T) T {
+            return t
+        }
+    }
+    print(new C<Int>.a(1).str());
+    print(",");
+    print(C!<Int>.a(new C<Int>, 2).str());
+'
+expect_err 'TypeError' '
+    class C <T> {
+        fn a(self, t: T) T {
+            return t
+        }
+    }
+    C.a(new C<Int>, 2)
+'
 expect_err 'TypeError' '
     // only an error as --allow_overrides is not true
     // but used in STD so should be working...

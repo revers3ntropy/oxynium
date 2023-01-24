@@ -3,13 +3,13 @@ fn Ptr.is_null (self) Bool {
 			  .eq!<Int>(0)
 }
 
-fn Ptr.make <From> (self, val: From) Ptr<From> {
+fn Ptr.make <From> (val: From) Ptr<From> {
 	return #asm(Ptr, "
 		push 8
 		call Ptr.allocate
 		add rsp, 8
 
-		mov rdx, qword [rbp + 24]
+		mov rdx, qword [rbp + 16]
 		mov qword [rax], rdx
 		push rax
 	")

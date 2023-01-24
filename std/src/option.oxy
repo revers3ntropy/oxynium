@@ -6,7 +6,7 @@ fn Option.none <From> () Option<From> {
 
 fn Option.some <From> (value: From) Option<From> {
 	return new Option <From> {
-		value: Ptr!<From>.from!<From>(value)
+		value: Ptr!<From>.make!<From>(value)
 	}
 }
 
@@ -18,7 +18,7 @@ fn Option.is_none (self) Bool {
 	return self.value.is_null()
 }
 
-fn Option.unwrap (self, err_message = "Unwrapping None Option") TOption {
+fn Option.unwrap (self, err_message = "Unwrapping None Option") T {
 	if self.is_none() {
 		panic(err_message)
 	}

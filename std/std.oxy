@@ -3,6 +3,7 @@
 #include "src/char.oxy";
 #include "src/input.oxy";
 #include "src/int.oxy";
+#include "src/list.oxy";
 #include "src/option.oxy";
 #include "src/panic.oxy";
 #include "src/print.oxy";

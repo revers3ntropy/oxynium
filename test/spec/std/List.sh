@@ -3,7 +3,7 @@ describe 'class List'
 expect '732truefalsetrue' '
     fn main () {
     	let l = new List<Int> {
-    		head: new Ptr<Int>.make_from(7),
+    		head: Ptr.make!<Int>(7),
     		size: 8
     	};
     	l.push(2);

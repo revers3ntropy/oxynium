@@ -1,6 +1,6 @@
 [package]
 name = "oxynium"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 repository = "https://github.com/revers3ntropy/oxynium"
 readme = "README.md"

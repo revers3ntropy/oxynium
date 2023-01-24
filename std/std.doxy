@@ -96,7 +96,7 @@ class Any <T> {
 
 primitive Ptr <T> {
 	extern fn is_null (self) Bool,
-	extern fn make <From> (self, val: From) Ptr<From>,
+	extern fn make <From> (val: From) Ptr<From>,
 	extern fn unwrap (self) T,
 	/// Wrapper around `malloc`
 	extern fn allocate <A> (size: Int) Ptr<A>,

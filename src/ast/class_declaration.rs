@@ -77,9 +77,11 @@ impl AstNode for ClassDeclarationNode {
                 .setup(self.generics_ctx.clone())?;
         }
         for method in &self.methods {
-            method
-                .borrow_mut()
-                .setup(self.generics_ctx.clone())?;
+            // use ctx here and not self.generics_ctx
+            // because the function deals with it's own generics
+            // and the classes, we don't want to add generics
+            // to static methods for example
+            method.borrow_mut().setup(ctx.clone())?;
         }
         Ok(())
     }
@@ -227,10 +229,10 @@ impl AstNode for ClassDeclarationNode {
                 method.params.insert(0, self_param);
             }
 
-            // This is where the context reference is handed down so the
-            // method's context is attached to the global context tree
-            let method_type_res = method
-                .type_check(self.generics_ctx.clone())?;
+            // generics are entirely handled by the function itself,
+            // so use the parent ctx
+            let method_type_res =
+                method.type_check(ctx.clone())?;
             unknowns += method_type_res.unknowns;
 
             if !method.is_external && method.body.is_none()

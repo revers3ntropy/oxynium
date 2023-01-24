@@ -74,6 +74,15 @@ impl FnDeclarationNode {
         let mut generic_params =
             self.generic_parameters.clone();
 
+        if self.params.len() < 1
+            || self.params.first().unwrap().identifier
+                != "self"
+        {
+            // static methods don't get access to the
+            // class's generic parameters
+            return Ok((generic_params, 0));
+        }
+
         if let Some(ref class_name) = self.class_name {
             if !ctx.borrow().has_dec_with_id(class_name) {
                 if ctx.borrow().throw_on_unknowns() {
@@ -130,7 +139,7 @@ impl FnDeclarationNode {
 impl AstNode for FnDeclarationNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        _ctx: MutRc<Context>,
     ) -> Result<(), Error> {
         if self.identifier.token_type
             == TokenType::Identifier
@@ -176,9 +185,6 @@ impl AstNode for FnDeclarationNode {
 
         self.params_scope
             .borrow_mut()
-            .set_parent(ctx.clone());
-        self.params_scope
-            .borrow_mut()
             .allow_local_var_decls = true;
 
         for param in &self.params {
@@ -218,6 +224,11 @@ impl AstNode for FnDeclarationNode {
             self.get_generic_param_names(ctx.clone())?;
 
         for generic_param in generic_params.iter() {
+            if self.params_scope.borrow().has_dec_with_id(
+                &generic_param.literal.clone().unwrap(),
+            ) {
+                continue;
+            }
             self.params_scope.borrow_mut().declare(
                 SymbolDec {
                     name: generic_param
@@ -241,6 +252,16 @@ impl AstNode for FnDeclarationNode {
                 generic_param.interval(),
             )?;
         }
+
+        // rather than set the parent in setup, set every
+        // type checking iteration.
+        // This is as we can't always get the full list of generic
+        // parameters on the first try,
+        // after which the context is frozen, and throws an error as
+        // we are trying to declare a new symbol on the frozen ctx
+        self.params_scope
+            .borrow_mut()
+            .set_parent(ctx.clone());
 
         // don't use param_scope so that the function can have params
         // with the same name as the function
@@ -391,9 +412,7 @@ impl AstNode for FnDeclarationNode {
                 ret_type.clone();
         } else {
             let mut generic_args = HashMap::new();
-            for generic_param in
-                self.generic_parameters.iter()
-            {
+            for generic_param in generic_params.iter() {
                 generic_args.insert(
                     generic_param.literal.clone().unwrap(),
                     new_mut_rc(GenericType {
@@ -409,8 +428,7 @@ impl AstNode for FnDeclarationNode {
                 ret_type: ret_type.clone(),
                 parameters,
                 generic_args,
-                generic_params_order: self
-                    .generic_parameters
+                generic_params_order: generic_params
                     .clone(),
             });
             // declare in the parent context
@@ -474,6 +492,8 @@ impl AstNode for FnDeclarationNode {
             }
         }
 
+        self.params_scope.borrow_mut().remove_parent();
+
         Ok(TypeCheckRes::from(this_type, unknowns))
     }
 
@@ -481,6 +501,10 @@ impl AstNode for FnDeclarationNode {
         &mut self,
         ctx: MutRc<Context>,
     ) -> Result<String, Error> {
+        self.params_scope
+            .borrow_mut()
+            .set_parent(ctx.clone());
+
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare function '{}' inside of another function.",
