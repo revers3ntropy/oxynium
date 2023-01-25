@@ -250,15 +250,25 @@ expect_err 'TypeError' 'fn a(); a <= 4'
 
 describe 'fn Int.=='
 
-expect_expr_bool 'false' '1 == 2'
-expect_expr_bool 'false' '2 == 1'
-expect_expr_bool 'true' '1 == 1'
-expect_expr_bool 'false' '1 == 0'
-expect_expr_bool 'false' '0 == 1'
-expect_expr_bool 'false' '1 == -1'
-expect_expr_bool 'false' '-1 == 1'
-expect_expr_bool 'false' '1 + 4 == 2'
-expect_expr_bool 'false' '1 + 4 == 2 * 3'
+expect 'false,false,true,false,false,false,false,false,false' '
+    print((1 == 2).str());
+    print(",");
+    print((2 == 1).str());
+    print(",");
+    print((1 == 1).str());
+    print(",");
+    print((1 == 0).str());
+    print(",");
+    print((0 == 1).str());
+    print(",");
+    print((1 == -1).str());
+    print(",");
+    print((-1 == 1).str());
+    print(",");
+    print((1 + 4 == 2).str());
+    print(",");
+    print((1 + 4 == 2 * 3).str());
+'
 expect_err 'TypeError' 'true == 2'
 expect_err 'TypeError' '1 == 2 == 4'
 expect_err 'TypeError' '2 == ""'
@@ -267,15 +277,25 @@ expect_err 'TypeError' '2 == Int'
 
 describe 'fn Int.!='
 
-expect_expr_bool 'true' '1 != 2'
-expect_expr_bool 'true' '2 != 1'
-expect_expr_bool 'false' '1 != 1'
-expect_expr_bool 'true' '1 != 0'
-expect_expr_bool 'true' '0 != 1'
-expect_expr_bool 'true' '1 != -1'
-expect_expr_bool 'true' '-1 != 1'
-expect_expr_bool 'true' '1 + 4 != 2'
-expect_expr_bool 'true' '1 + 4 != 2 * 3'
+expect 'true,true,false,true,true,true,true,true,true' '
+    print((1 != 2).str());
+    print(",");
+    print((2 != 1).str());
+    print(",");
+    print((1 != 1).str());
+    print(",");
+    print((1 != 0).str());
+    print(",");
+    print((0 != 1).str());
+    print(",");
+    print((1 != -1).str());
+    print(",");
+    print((-1 != 1).str());
+    print(",");
+    print((1 + 4 != 2).str());
+    print(",");
+    print((1 + 4 != 2 * 3).str());
+'
 expect_err 'TypeError' 'true != 2'
 expect_err 'TypeError' '2 != true'
 expect_err 'TypeError' '1 != 2 != 4'

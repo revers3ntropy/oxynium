@@ -29,18 +29,28 @@ expect 'true,true,true,false,false,false,false' '
 
 describe 'fn Char.=='
 
-expect_expr_bool 'true'  '"a".at(0) == "a".at(0)'
-expect_expr_bool 'false' '"a".at(0) == "b".at(0)'
-expect_expr_bool 'true'  '"💖".at(0) == "💖".at(0)'
-expect_expr_bool 'true'  '"🇨🇦".at(0) == "🇦".at(0)'
+expect 'true,false,true,true' '
+    print(("a".at(0) == "a".at(0)).str());
+    print(",");
+    print(("a".at(0) == "b".at(0)).str());
+    print(",");
+    print(("💖".at(0) == "💖".at(0)).str());
+    print(",");
+    print(("🇨🇦".at(0) == "🇦".at(0)).str());
+'
 
 
 describe 'fn Char.!='
 
-expect_expr_bool 'false' '"a".at(0) != "a".at(0)'
-expect_expr_bool 'true'  '"a".at(0) != "b".at(0)'
-expect_expr_bool 'false' '"💖".at(0) != "💖".at(0)'
-expect_expr_bool 'false' '"🇨🇦".at(0) != "🇦".at(0)'
+expect 'false,true,false,false' '
+    print(("a".at(0) != "a".at(0)).str());
+    print(",");
+    print(("a".at(0) != "b".at(0)).str());
+    print(",");
+    print(("💖".at(0) != "💖".at(0)).str());
+    print(",");
+    print(("🇨🇦".at(0) != "🇦".at(0)).str());
+'
 
 
 describe 'fn Char.from_int'

@@ -16,3 +16,12 @@ expect '732truefalsetrue' '
     	print(l.at(-1).is_some().str());
     }
 '
+expect '02' '
+    fn main () {
+    	let l = List.empty!<Int>();
+    	print(l.len().str());
+    	l.push(2);
+    	l.push(3);
+    	print(l.len().str());
+    }
+'

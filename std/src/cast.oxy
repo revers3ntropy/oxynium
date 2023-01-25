@@ -1,0 +1,6 @@
+export fn cast <From, To> (from: From) To {
+	return #asm(To, "
+		mov rax, qword [rbp + 16]
+		push rax
+	")
+}

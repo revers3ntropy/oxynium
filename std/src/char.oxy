@@ -29,15 +29,9 @@ fn Char.is_digit (self) Bool {
 }
 
 fn Char.as_int (self) Int {
-	return #asm(Int, "
-		mov rax, qword [rbp + 16]
-		push rax
-	")
+	return cast!<Char, Int>(self)
 }
 
 fn Char.from_int (i: Int) Char {
-	return #asm(Char, "
-		mov rax, qword [rbp + 16]
-		push rax
-	")
+	return cast!<Int, Char>(i)
 }

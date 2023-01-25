@@ -131,3 +131,35 @@ extern fn exit (code: Int = 0);
 extern fn print (msg: Str);
 extern fn println (msg: Str, line_end="\n");
 extern fn panic (msg: Str);
+extern fn cast <From, To> (val: From) To;
+
+
+// Classes that may become part of the standard library in the future
+
+class Instant;
+class Duration;
+class Map;
+class Filter;
+class Iter;
+class Range;
+class Slice;
+class Vec;
+class Set;
+class Tuple;
+class File;
+class Path;
+class Thread;
+class Process;
+class Channel;
+class Collection;
+class Default;
+class Debug;
+class Display;
+class Error;
+class Hash;
+class Hint;
+class Net;
+class Ref;
+class Primitive;
+class Task;
+class Fn;
