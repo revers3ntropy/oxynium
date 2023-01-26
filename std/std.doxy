@@ -38,6 +38,8 @@ primitive Int {
 }
 
 class Str {
+    /// converts utf8 to utf64, the encoding used by Str
+    extern fn from_utf8 (utf8: Str) Str,
     extern fn == (self, other: Str) Bool,
     extern fn != (self, other: Str) Bool,
     /// returns a new string that is the concatenation of lhs and rhs
@@ -60,8 +62,6 @@ class Str {
     extern fn insert (self, index: Int, other: Str) Str,
     extern fn remove (self, index: Int, count = 1) Str,
     extern fn utf8_size (self) Int,
-    /// converts utf8 to utf64, the encoding used by Str
-    extern fn from_utf8 (utf8: Str) Str,
 }
 
 class Time {
@@ -86,13 +86,13 @@ class Option <T> {
 	extern fn unwrap (self, err_message="Unwrapping None Option") T,
 }
 
-class Any <T> {
-	val: T,
-	extern fn from<From>(val: From) Any<From>,
+primitive Any {
 	extern fn cast <From, To> (val: From) To,
+	extern fn __CAST_WRAPPER_DO_NOT_CALL (),
+	extern fn from <From>(val: From) Any,
 	extern fn eq <Cmp> (self, other: Cmp) Bool,
 	extern fn str (self) Str,
-	extern fn to<To>(self) To,
+	extern fn to <To> (self) To,
 }
 
 primitive Ptr <T> {
@@ -115,7 +115,7 @@ class List <T> {
     extern fn push (self, value: T),
 }
 
-class Result<T, E> {
+class Result <T, E> {
 	value: Option<T>,
 	error: Option<E>,
 	extern fn err <Val, Err> (err: Err) Result<Val, Err>,
@@ -125,8 +125,11 @@ class Result<T, E> {
 }
 
 class File {
-	extern fn open (path: Str, mode: Str, encoding="utf-8") File,
-	extern fn read (self, size: Int) Str,
+	handle: Ptr<Any>,
+	path: Str,
+	mode: Str,
+	extern fn open (path: Str, mode: Str) File,
+	extern fn readln (self, buffer_size=1000) Str,
 	extern fn write (self, data: Str),
 	extern fn close (self),
 	extern fn is_open (self) Bool
@@ -136,7 +139,7 @@ class File {
 /// allocates string to heap to fit input
 /// returns pointer to string in rax
 extern fn input (prompt="", buffer_size=1000) Str;
-extern fn exit (code: Int = 0);
+extern fn exit (code=0);
 extern fn print (msg: Str);
 extern fn println (msg: Str, line_end="\n");
 extern fn panic (msg: Str);
@@ -169,3 +172,4 @@ class Ref;
 class Primitive;
 class Task;
 class Fn;
+class LibC;

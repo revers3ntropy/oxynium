@@ -23,7 +23,7 @@ fn Time.str (self) Str {
 }
 
 fn Time.current_seconds () Int {
-	return #asm(Int, "
+	return Any.cast!<Void, Int>(#asm "
 		xor rdi, rdi
 		sub rsp, 32
 		and rsp, -16
@@ -33,7 +33,7 @@ fn Time.current_seconds () Int {
 }
 
 fn Time.current_microseconds () Int {
-	return #asm(Int, "
+	return Any.cast!<Void, Int>(#asm "
 		mov rax, 96
 		lea rdi, [rsp - 16]
 		xor esi, esi

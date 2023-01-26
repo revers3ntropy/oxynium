@@ -1,5 +1,5 @@
 fn Bool.|| (self, other: Bool) Bool {
-	return #asm(Bool, "
+	return Any.cast!<Void, Bool>(#asm "
 		mov rax, qword [rbp + 16]
 		or rax, qword [rbp + 24]
 		push rax
@@ -7,7 +7,7 @@ fn Bool.|| (self, other: Bool) Bool {
 }
 
 fn Bool.&& (self, other: Bool) Bool {
-	return #asm(Bool, "
+	return Any.cast!<Void, Bool>(#asm "
 		mov rax, qword [rbp + 16]
 		and rax, qword [rbp + 24]
 		push rax

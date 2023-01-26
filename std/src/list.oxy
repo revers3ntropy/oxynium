@@ -23,7 +23,7 @@ fn List.at (self, i: Int) Option<T> {
 }
 
 fn List.at_raw (self, i: Int) T {
-	return #asm(T, "
+	return Any.cast!<Void, T>(#asm "
 		mov rax, qword [rbp + 16]       ; rax = self
 		mov rax, qword [rax]            ; rax = self.head
 		mov rcx, qword [rbp + 24]       ; rcx = idx

@@ -1,5 +1,5 @@
 fn Int.+ (self, n: Int) Int {
-	return #asm(Int, "
+	return Any.cast!<Void, Int>(#asm "
 		mov rax, qword [rbp + 16]
 		add rax, qword [rbp + 24]
 		push rax
@@ -7,7 +7,7 @@ fn Int.+ (self, n: Int) Int {
 }
 
 fn Int.- (self, n: Int) Int {
-	return #asm(Int, "
+	return Any.cast!<Void, Int>(#asm "
 		mov rax, qword [rbp + 16]
 		sub rax, qword [rbp + 24]
 		push rax
@@ -15,7 +15,7 @@ fn Int.- (self, n: Int) Int {
 }
 
 fn Int.* (self, n: Int) Int {
-	return #asm(Int, "
+	return Any.cast!<Void, Int>(#asm "
 		mov rax, qword [rbp + 16]
 		imul rax, qword [rbp + 24]
 		push rax
@@ -23,7 +23,7 @@ fn Int.* (self, n: Int) Int {
 }
 
 fn Int./ (self, n: Int) Int {
-	return #asm(Int, "
+	return Any.cast!<Void, Int>(#asm "
 		mov rax, qword [rbp + 16]
 		cqo
 		idiv qword [rbp + 24]
@@ -32,7 +32,7 @@ fn Int./ (self, n: Int) Int {
 }
 
 fn Int.% (self, n: Int) Int {
-	return #asm(Int, "
+	return Any.cast!<Void, Int>(#asm "
 		mov rax, qword [rbp + 16]
 		cqo
 		idiv qword [rbp + 24]
@@ -41,7 +41,7 @@ fn Int.% (self, n: Int) Int {
 }
 
 fn Int.== (self, n: Int) Bool {
-	return #asm(Bool, "
+	return Any.cast!<Void, Bool>(#asm "
 		xor rax, rax
 		mov rcx, qword [rbp + 16]
 		cmp rcx, qword [rbp + 24]
@@ -55,7 +55,7 @@ fn Int.!= (self, n: Int) Bool {
 }
 
 fn Int.< (self, n: Int) Bool {
-	return #asm(Bool, "
+	return Any.cast!<Void, Bool>(#asm "
 		xor rax, rax
 		mov rcx, qword [rbp + 16]
 		cmp rcx, qword [rbp + 24]
@@ -69,7 +69,7 @@ fn Int.<= (self, n: Int) Bool {
 }
 
 fn Int.> (self, n: Int) Bool {
-	return #asm(Bool, "
+	return Any.cast!<Void, Bool>(#asm "
 		xor rax, rax
 		mov rcx, qword [rbp + 16]
 		cmp rcx, qword [rbp + 24]
@@ -105,7 +105,7 @@ fn Int.abs (self) Int {
 
 fn Int.str (self) Str {
 	// https://stackoverflow.com/questions/8257714
-	return #asm(Str, "
+	return Any.cast!<Void, Str>(#asm "
 		; allocate string
 		push 64 ; much larger than needed
 		call Ptr.allocate

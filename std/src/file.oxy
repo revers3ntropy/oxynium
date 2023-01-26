@@ -1,0 +1,45 @@
+fn File.open (path: Str, mode: Str) File {
+	return new File {
+		path: path,
+		mode: mode,
+		handle: Any.cast!<Void, Ptr<Any>>(#asm "
+		    ; FILE* fopen(const char* path, const char* mode);
+
+			mov rdi, [rsp + 16]
+			mov rsi, [rsp + 24]
+
+			push rbp
+			mov rbp, rsp
+			sub rsp, 32
+			and rsp, -16
+			call fopen WRT ..plt
+			mov rsp, rbp
+			pop rbp
+
+			push rax
+		")
+	}
+}
+
+fn File.readln (self, buffer_size: Int) Str {
+	let buffer = Any.cast!<Int, Char>(0)
+					.str()
+					.repeat(buffer_size);
+	return Any.cast!<Void, Str>(#asm "
+		; char* fgets (char* ptr, int size, FILE* fp);
+
+		mov rdi, [rbp - 8]
+		mov rsi, [rbp + 24]
+		mov rdx, [rbp + 32]
+
+		push rbp
+		mov rbp, rsp
+		sub rsp, 32
+		and rsp, -16
+		call fgets WRT ..plt
+		mov rsp, rbp
+		pop rbp
+
+		push rax
+	")
+}

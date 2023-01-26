@@ -8,6 +8,7 @@ use crate::types::function::FnType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 use std::collections::HashMap;
+use std::ops::Deref;
 
 #[derive(Clone, Debug)]
 pub struct ClassFieldType {
@@ -219,24 +220,36 @@ impl Type for ClassType {
             self.generic_args
                 .iter()
                 .map(|(k, value)| {
-                    if value.borrow().as_generic().is_some()
+                    if value.borrow().as_generic().is_none()
                     {
-                        if !ctx.borrow().has_dec_with_id(k)
-                        {
-                            return "?".to_string();
-                        }
-                        format!(
-                            "{}:{}",
-                            k,
+                        return value
+                            .borrow()
+                            .cache_id(ctx.clone());
+                    }
+                    if !ctx.borrow().has_dec_with_id(k) {
+                        return format!("{}:{}", k, k);
+                    }
+                    if format!("{:p}", self)
+                        == format!(
+                            "{:p}",
                             ctx.borrow()
                                 .get_dec_from_id(&k)
                                 .type_
                                 .borrow()
-                                .cache_id(ctx.clone())
+                                .deref()
                         )
-                    } else {
-                        value.borrow().cache_id(ctx.clone())
+                    {
+                        panic!()
                     }
+                    format!(
+                        "{}:{}",
+                        k,
+                        ctx.borrow()
+                            .get_dec_from_id(&k)
+                            .type_
+                            .borrow()
+                            .cache_id(ctx.clone())
+                    )
                 })
                 .collect::<Vec<String>>()
                 .join(",")

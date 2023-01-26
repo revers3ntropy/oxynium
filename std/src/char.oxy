@@ -1,5 +1,5 @@
 fn Char.== (self, other: Char) Bool {
-	return #asm(Bool, "
+	return Any.cast!<Void, Bool>(#asm "
 		mov rax, qword [rbp + 16]
 		cmp rax, qword [rbp + 24]
 		sete al
@@ -12,7 +12,7 @@ fn Char.!= (self, other: Char) Bool {
 }
 
 fn Char.str (self) Str {
-	return #asm(Str, "
+	return Any.cast!<Void, Str>(#asm "
 		push 16
 		call Ptr.allocate
 		add rsp, 8

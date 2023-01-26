@@ -1,16 +1,16 @@
 describe 'macro #asm'
 
 expect 'Void' 'print(typeof #asm "")'
-expect 'Str' 'print(typeof #asm(Str, ""))'
 expect 'hi' '
     fn asm(arg: Str) Str {
-        return #asm(Str, "
+        return Any.cast!<Void, Str>(#asm "
             push qword [rbp + 16]
         ")
     }
     println(asm("hi"))
 '
 
+expect_err 'TypeError' '#asm(Void, "")'
 expect_err 'TypeError' '#asm 1'
 expect_err 'TypeError' '#asm(1)'
 expect_err 'TypeError' '#asm()'

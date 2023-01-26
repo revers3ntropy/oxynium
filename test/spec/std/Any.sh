@@ -5,21 +5,17 @@ expect 'Hello,World,false,false,true,1,0,1,true,false,true' '
     class C;
 
     fn main () {
-        let a1 = new Any <Str> {
-            val: "Hello"
-        };
-        print(a1.val);
+        let a1 = Any.from!<Str>("Hello");
+        print(Any.cast!<Any, Str>(a1));
         print(",");
-        let a2 = new Any <Str> {
-            val: "World"
-        };
-        print(a2.val);
+        let a2 = Any.cast!<Str, Any>("World");
+        print(Any.cast!<Any, Str>(a2));
         print(",");
-        print(a1.eq!<Any<Str>>(a2).str());
+        print(a1.eq!<Any>(a2).str());
         print(",");
         print(a1.eq!<Str>("Hello").str());
         print(",");
-        print((a1.val == Any.from!<Str>("Hello").val).str());
+        print(a1.eq!<Any>(a1).str());
         print(",");
         print(Any.from!<Bool>(true).str());
         print(",");

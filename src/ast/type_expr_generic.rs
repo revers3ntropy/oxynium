@@ -81,6 +81,17 @@ impl AstNode for GenericTypeNode {
         let generics_ctx =
             Context::new(ctx.borrow().cli_args.clone());
 
+        if self.generic_args.len()
+            != class_type.generic_params_order.len()
+        {
+            return Err(type_error(format!(
+                "expected {} generic arguments, found {}",
+                class_type.generic_params_order.len(),
+                self.generic_args.len()
+            ))
+            .set_interval(self.position.clone()));
+        }
+
         let mut i = 0;
         for arg in self.generic_args.clone() {
             let arg_type_res =

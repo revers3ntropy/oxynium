@@ -1,24 +1,30 @@
-fn Any.from<From>(val: From) Any<From> {
-	return new Any<From> {
-		val: val,
-	}
+fn Any.from<From>(val: From) Any {
+	return Any.cast!<From, Any>(val)
 }
 
-fn Any.cast <From, To> (from: From) To {
-	return #asm(To, "
-		mov rax, [rbp + 16]
-		push rax
-	")
+// This is a nasty way to get around the strict type system.
+// This is the single point of failure of the reliability
+// of the type system: allowing unsafe, unchecked casts.
+// However this is effectively required for many of the
+// features of the language (especially parts of the std),
+// a necessary evil.
+fn Any.__CAST_WRAPPER_DO_NOT_CALL () {
+	#asm "
+		Any.cast:
+		    push rbp
+            mov rbp, rsp
+			mov rax, [rbp + 16]
+	"
 }
 
 fn Any.eq <Cmp> (self, other: Cmp) Bool {
-	return Any.cast!<T, Int>(self.val) == Any.cast!<Cmp, Int>(other)
+	return Any.cast!<Any, Int>(self) == Any.cast!<Cmp, Int>(other)
 }
 
 fn Any.str (self) Str {
-	return Any.cast!<T, Int>(self.val).str()
+	return Any.cast!<Any, Int>(self).str()
 }
 
 fn Any.to<To>(self) To {
-	return Any.cast!<T, To>(self.val)
+	return Any.cast!<Any, To>(self)
 }

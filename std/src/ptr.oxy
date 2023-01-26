@@ -4,7 +4,7 @@ fn Ptr.is_null (self) Bool {
 }
 
 fn Ptr.make <From> (val: From) Ptr<From> {
-	return #asm(Ptr, "
+	return Any.cast!<Void, Ptr<From>>(#asm "
 		push 8
 		call Ptr.allocate
 		add rsp, 8
@@ -16,7 +16,7 @@ fn Ptr.make <From> (val: From) Ptr<From> {
 }
 
 fn Ptr.unwrap (self) T {
-	return #asm(T, "
+	return Any.cast!<Void, T>(#asm "
 		mov rax, qword [rbp + 16]
 		mov rax, qword [rax]
 		push rax
@@ -24,7 +24,7 @@ fn Ptr.unwrap (self) T {
 }
 
 fn Ptr.allocate <A> (size: Int) Ptr<A> {
-	return #asm(Ptr, "
+	return Any.cast!<Void, Ptr<A>>(#asm "
 		xor rax, rax
 
 		mov rdi, qword [rbp + 16]
