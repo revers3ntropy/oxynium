@@ -416,7 +416,7 @@ impl AstNode for FnCallNode {
             asm.push_str("\n");
         }
 
-        let use_return_value = !get_type!(ctx, "Void")
+        let returns_void = get_type!(ctx, "Void")
             .borrow()
             .contains(fn_type.ret_type);
 
@@ -438,11 +438,10 @@ impl AstNode for FnCallNode {
                 self.identifier.clone().literal.unwrap()
             },
             num_params * 8,
-            if use_return_value {
-                "
-                push rax"
+            if returns_void {
+                "push 0"
             } else {
-                ""
+                "push rax"
             }
         ));
 

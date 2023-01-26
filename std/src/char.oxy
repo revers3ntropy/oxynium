@@ -29,9 +29,9 @@ fn Char.is_digit (self) Bool {
 }
 
 fn Char.as_int (self) Int {
-	return cast!<Char, Int>(self)
+	return Any.cast!<Char, Int>(self)
 }
 
 fn Char.from_int (i: Int) Char {
-	return cast!<Int, Char>(i)
+	return Any.cast!<Int, Char>(i)
 }

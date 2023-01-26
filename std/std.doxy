@@ -2,7 +2,7 @@
 // and contains the declarations for the Standard Library.
 // The implementations for these functions can be found under std/src.
 
-class Void;
+primitive Void;
 
 primitive Char {
     extern fn == (self, other: Char) Bool,
@@ -31,8 +31,8 @@ primitive Int {
     extern fn <= (self, n: Int) Bool,
     extern fn >  (self, n: Int) Bool,
     extern fn >= (self, n: Int) Bool,
-    extern fn max (self, other = 9223372036854775807) Int,
-    extern fn min (self, other = -9223372036854775807 - 1) Int,
+    extern fn max (self, other=9223372036854775807) Int,
+    extern fn min (self, other=-9223372036854775807-1) Int,
     extern fn abs (self) Int,
     extern fn str (self) Str,
 }
@@ -52,11 +52,11 @@ class Str {
     extern fn len (self) Int,
     extern fn repeat (self, n: Int) Str,
     extern fn str (self) Str,
-    extern fn substr (self, start = 0, end = 9223372036854775807) Str,
+    extern fn substr (self, start=0, end=9223372036854775807) Str,
     extern fn starts_with (self, other: Str) Bool,
     extern fn ends_with (self, other: Str) Bool,
     extern fn reversed (self) Str,
-    extern fn replace (self, search: Str, replace_with = "", max = -1) Str,
+    extern fn replace (self, search: Str, replace_with="", max=-1) Str,
     extern fn insert (self, index: Int, other: Str) Str,
     extern fn remove (self, index: Int, count = 1) Str,
     extern fn utf8_size (self) Int,
@@ -83,14 +83,15 @@ class Option <T> {
 	extern fn some <From> (value: From) Option<From>,
 	extern fn is_some (self) Bool,
 	extern fn is_none (self) Bool,
-	extern fn unwrap (self, err_message = "Unwrapping None Option") T,
+	extern fn unwrap (self, err_message="Unwrapping None Option") T,
 }
 
 class Any <T> {
 	val: T,
+	extern fn from<From>(val: From) Any<From>,
+	extern fn cast <From, To> (val: From) To,
 	extern fn eq <Cmp> (self, other: Cmp) Bool,
 	extern fn str (self) Str,
-	extern fn from<From>(val: From) Any<From>,
 	extern fn to<To>(self) To,
 }
 
@@ -123,16 +124,22 @@ class Result<T, E> {
 	extern fn unwrap (self) T,
 }
 
+class File {
+	extern fn open (path: Str, mode: Str, encoding="utf-8") File,
+	extern fn read (self, size: Int) Str,
+	extern fn write (self, data: Str),
+	extern fn close (self),
+	extern fn is_open (self) Bool
+}
+
 /// Reads from stdin until a newline is reached
 /// allocates string to heap to fit input
 /// returns pointer to string in rax
-extern fn input (prompt: Str = "", buffer_size: Int = 1000) Str;
+extern fn input (prompt="", buffer_size=1000) Str;
 extern fn exit (code: Int = 0);
 extern fn print (msg: Str);
 extern fn println (msg: Str, line_end="\n");
 extern fn panic (msg: Str);
-extern fn cast <From, To> (val: From) To;
-
 
 // Classes that may become part of the standard library in the future
 
@@ -146,7 +153,6 @@ class Slice;
 class Vec;
 class Set;
 class Tuple;
-class File;
 class Path;
 class Thread;
 class Process;
