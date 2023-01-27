@@ -1,6 +1,7 @@
 #include "src/any.oxy";
 #include "src/bool.oxy";
 #include "src/char.oxy";
+#include "src/errno.oxy";
 #include "src/file.oxy";
 #include "src/input.oxy";
 #include "src/int.oxy";

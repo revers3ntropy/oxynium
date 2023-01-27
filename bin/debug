@@ -1,0 +1,18 @@
+#!/bin/bash
+
+sudo rm -r /var/lib/apport/coredump/*
+
+({
+    ulimit -c unlimited
+    bin/run "$1"
+} 2>&1) | echo -e "$(cat)"
+
+ls /var/lib/apport/coredump/
+
+for file in /var/lib/apport/coredump/*; do
+    if [ -f "$file" ]; then
+        echo "Core dump found: $file"
+        echo "Running gdb..."
+        gdb ./res-out "$file"
+    fi
+done

@@ -128,8 +128,8 @@ class File {
 	handle: Ptr<Any>,
 	path: Str,
 	mode: Str,
-	extern fn open (path: Str, mode: Str) File,
-	extern fn readln (self, buffer_size=1000) Str,
+	extern fn open (path: Str, mode="r") Option<File>,
+	extern fn read_to_str (self, buffer_size=1000) Str,
 	extern fn write (self, data: Str),
 	extern fn close (self),
 	extern fn is_open (self) Bool
@@ -143,6 +143,7 @@ extern fn exit (code=0);
 extern fn print (msg: Str);
 extern fn println (msg: Str, line_end="\n");
 extern fn panic (msg: Str);
+extern fn errno () Int;
 
 // Classes that may become part of the standard library in the future
 
