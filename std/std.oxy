@@ -10,5 +10,6 @@
 #include "src/panic.oxy";
 #include "src/print.oxy";
 #include "src/ptr.oxy";
+#include "src/result.oxy";
 #include "src/str.oxy";
 #include "src/time.oxy";

@@ -119,6 +119,7 @@ class Result <T, E> {
 	value: Option<T>,
 	error: Option<E>,
 	extern func err <Val, Err> (err: Err) Result<Val, Err>,
+	extern func ok <Val, Err> (val: Val) Result<Val, Err>,
 	extern func is_ok (self) Bool,
 	extern func is_err (self) Bool,
 	extern func unwrap (self) T,
@@ -144,6 +145,20 @@ extern func print (msg: Str);
 extern func println (msg: Str, line_end="\n");
 extern func panic (msg: Str);
 extern func errno () Int;
+
+// Functions which are declared externally in asm
+extern func malloc();
+extern func memset();
+extern func memcpy();
+extern func free();
+extern func sprintf();
+extern func time();
+extern func fopen();
+extern func fseek();
+extern func fclose();
+extern func fread();
+extern func ftell();
+extern func __errno_location();
 
 // Classes that may become part of the standard library in the future
 
