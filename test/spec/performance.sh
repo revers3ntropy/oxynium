@@ -2,7 +2,7 @@ describe 'Runtime Performance'
 
 perf_test_comp_cpp 1 '149995000' '
     const n = 10000;
-    fn main () {
+    func main () {
         let mut sum = 0;
         let mut i = 0;
         while {
@@ -52,7 +52,7 @@ perf_test_comp_cpp 1 '149995000' '
 describe 'Compiletime Performance'
 
 perf_test_comp_cpp 1 '2001000' "
-    fn main () {
+    func main () {
         let mut i = 0;
         $(printf 'i = i + %d;\n' {1..2000})
         print(i.str());

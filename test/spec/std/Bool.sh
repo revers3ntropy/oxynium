@@ -7,10 +7,10 @@ expect 'true' 'print(true.str())'
 expect_expr_bool 'true' 'true'
 expect_expr_bool 'false' 'false'
 
-describe 'fn Bool.str'
+describe 'func Bool.str'
 
 expect 'truetruefalse' '
-    fn main() {
+    func main() {
         let a = true;
         print(a.str());
 
@@ -24,7 +24,7 @@ expect 'truetruefalse' '
 '
 
 
-describe 'fn Bool.&&'
+describe 'func Bool.&&'
 
 expect_expr_bool 'true' 'true && true'
 expect_expr_bool 'false' 'true && false'
@@ -44,7 +44,7 @@ expect_err 'TypeError' 'true && ""'
 expect_err 'TypeError' 'false && false && ""'
 
 
-describe 'fn Bool.||'
+describe 'func Bool.||'
 
 expect_expr_bool 'true' 'true || true'
 expect_expr_bool 'true' 'true || false'

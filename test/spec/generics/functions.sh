@@ -1,7 +1,7 @@
 describe 'Generic Functions'
 
 expect '1,hello,true' '
-    fn a <T> (a: T) T {
+    func a <T> (a: T) T {
         return a
     }
     print(a!<Int>(1).str());
@@ -11,25 +11,25 @@ expect '1,hello,true' '
     print(a!<Bool>(true).str());
 '
 expect_err 'TypeError' '
-    fn a <T> (a: T) T {
+    func a <T> (a: T) T {
         return a
     }
     a!<Int>("");
 '
 expect_err 'UnknownSymbol' '
-    fn a <T> (a: T) T {
+    func a <T> (a: T) T {
         return a
     }
     a!<T>("");
 '
 expect_err 'TypeError' '
-    fn a <T> (a: T) T {
+    func a <T> (a: T) T {
         return a
     }
     a("")
 '
 expect_err 'TypeError' '
-    fn a <T> (a: T) T {
+    func a <T> (a: T) T {
         return a
     }
     a!<Str, Str>("");
@@ -40,7 +40,7 @@ describe 'Generic Methods'
 
 expect '1' '
     class C {
-        fn a <T> (self, t: T) T {
+        func a <T> (self, t: T) T {
             return t
         }
     }
@@ -48,7 +48,7 @@ expect '1' '
 '
 expect '1' '
     class C {
-        fn a <T> (t: T) T {
+        func a <T> (t: T) T {
             return t
         }
     }
@@ -56,7 +56,7 @@ expect '1' '
 '
 expect '1,Hi' '
     class C <A> {
-        fn a <T> (self, a: A, t: T) T {
+        func a <T> (self, a: A, t: T) T {
             return t
         }
     }
@@ -66,7 +66,7 @@ expect '1,Hi' '
 '
 expect_err 'TypeError' '
     class C <A> {
-        fn a <T> (self, a: A, t: T) T {
+        func a <T> (self, a: A, t: T) T {
             return t
         }
     }
@@ -74,7 +74,7 @@ expect_err 'TypeError' '
 '
 expect_err 'TypeError' '
     class C <A> {
-        fn a <T> (self, a: A, t: T) T {
+        func a <T> (self, a: A, t: T) T {
             return t
         }
     }
@@ -82,7 +82,7 @@ expect_err 'TypeError' '
 '
 expect_err 'UnknownSymbol' '
     class C <A> {
-        fn a <T> (self, a: A, t: T) T {
+        func a <T> (self, a: A, t: T) T {
             return t
         }
     }
@@ -90,15 +90,15 @@ expect_err 'UnknownSymbol' '
 '
 expect_err 'UnknownSymbol' '
     class C <A> {
-        fn a <T> (self, a: A, t: T) T {
+        func a <T> (self, a: A, t: T) T {
             return t
         }
-        fn b (t: T) {}
+        func b (t: T) {}
     }
 '
 expect_err 'TypeError' '
     class C <A> {
-        fn a <T> (self, a: A, t: T) T {
+        func a <T> (self, a: A, t: T) T {
             return t
         }
     }
@@ -106,7 +106,7 @@ expect_err 'TypeError' '
 '
 expect_err 'TypeError' '
     class C <A> {
-        fn a <T> (self, a: A, t: T) T {
+        func a <T> (self, a: A, t: T) T {
             return t
         }
     }
@@ -114,7 +114,7 @@ expect_err 'TypeError' '
 '
 expect_err 'TypeError' '
     class C <A> {
-        fn a <T> (self, a: A, t, T) T {
+        func a <T> (self, a: A, t, T) T {
             return t
         }
     }
@@ -122,7 +122,7 @@ expect_err 'TypeError' '
 '
 expect '1,Hi' '
     class C <A, B> {
-    	fn a <X, Y> (self, a: A, x: X, y: Y) X {
+    	func a <X, Y> (self, a: A, x: X, y: Y) X {
     		return x
     	}
     }
@@ -153,7 +153,7 @@ expect '1,Hi' '
 expect_err 'TypeError' '
     class C <A> {
         // same generic param name as for class - not allowed
-        fn a <A> (self, a: A) A {
+        func a <A> (self, a: A) A {
             return a
         }
     }

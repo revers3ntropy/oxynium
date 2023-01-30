@@ -11,10 +11,10 @@ expect '1Hi1 | MyClass<Int> | MyClass<Str> | MyClass<MyClass<Int>>' '
     }
 
     class MyClass <T> {
-        fn do_something(self) {}
+        func do_something(self) {}
     }
 
-    fn main () {
+    func main () {
         print((new S <Int> { x: 1 }).x.str());
         print((new S <Str> { x: "Hi" }).x.str());
 
@@ -76,30 +76,30 @@ expect_err 'UnknownSymbol' '
 '
 expect_err 'UnknownSymbol' '
     class C <T> {}
-    fn a(t: T) {}
+    func a(t: T) {}
 '
 expect_err 'UnknownSymbol' '
     class C <T> {}
     class D <Q> {
-        fn a(self, t: T) {}
+        func a(self, t: T) {}
     }
 '
 expect '' '
     class C <T> {
-        fn a(i: Int) {}
+        func a(i: Int) {}
     }
     C.a(1);
 '
 expect_err 'UnknownSymbol' '
     class C <T> {
-        fn a(t: T) T {
+        func a(t: T) T {
             return t
         }
     }
 '
 expect '1,2' '
     class C <T> {
-        fn a(self, t: T) T {
+        func a(self, t: T) T {
             return t
         }
     }
@@ -109,7 +109,7 @@ expect '1,2' '
 '
 expect_err 'TypeError' '
     class C <T> {
-        fn a(self, t: T) T {
+        func a(self, t: T) T {
             return t
         }
     }
@@ -119,9 +119,9 @@ expect_err 'TypeError' '
     // only an error as --allow_overrides is not true
     // but used in STD so should be working...
     class C <T> {
-        extern fn foo(a: T) T,
+        extern func foo(a: T) T,
     }
-    fn C.foo(a: T) T {
+    func C.foo(a: T) T {
         return a
     }
 '

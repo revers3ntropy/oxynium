@@ -9,7 +9,7 @@ expect '13' '
         s: S,
         z: Int
     }
-    fn main () {
+    func main () {
         let s2 = new S2 {
             s: new S {
                 x: 1, y: 2
@@ -27,13 +27,13 @@ expect '12' '
     }
     class S {
         x: Int,
-        fn make_s2(self) S2 {
+        func make_s2(self) S2 {
             return new S2 {
                 x: self.x
             }
         }
     }
-    fn main () {
+    func main () {
         print(new S { x: 1 }.make_s2().x.str());
         let s = new S { x: 2 };
         print(s.make_s2().x.str());

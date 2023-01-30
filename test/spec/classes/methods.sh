@@ -3,7 +3,7 @@ describe 'Methods on Classes'
 expect 'x = 1, x = 2, ' '
     class S {
         x: Int,
-        fn log(self) Void {
+        func log(self) Void {
            print("x = ");
            print(self.x.str());
            print(", ");
@@ -14,7 +14,7 @@ expect 'x = 1, x = 2, ' '
 '
 expect_err 'TypeError' '
     class S {
-        fn log(self) {
+        func log(self) {
            self.x;
         }
     }
@@ -22,35 +22,35 @@ expect_err 'TypeError' '
 expect '' '
     class S {
         x: Int,
-        extern fn f1(self) S,
-        fn f2(self) {}
-        extern fn f3(self),
+        extern func f1(self) S,
+        func f2(self) {}
+        extern func f3(self),
         y: Int,
-        fn f4(self) {}
+        func f4(self) {}
         z: Str
     }
 '
 expect_err 'TypeError' '
     class S {
-        fn f(self, a: Int) {}
+        func f(self, a: Int) {}
     };
     (new S{}).f();
 '
 expect_err 'TypeError' '
     class S {
-        fn f(self, a: Int) {}
+        func f(self, a: Int) {}
     }
     (new S).f("");
 '
 expect '' '
     class S {
-        fn f(self, a: Int) {}
+        func f(self, a: Int) {}
     }
     (new S{}).f(1);
 '
 expect '' '
     class S {
-        fn f(self, a: Int) {}
+        func f(self, a: Int) {}
     }
     new S.f(1);
 '
@@ -60,7 +60,7 @@ describe 'Default Parameters on Methods'
 
 expect 'hi' '
     class S {
-        fn f(self, msg: Str = "hi") {
+        func f(self, msg: Str = "hi") {
             print(msg);
         }
     };
@@ -68,12 +68,12 @@ expect 'hi' '
 '
 expect 'hello world' '
     class A {
-        fn f(self, msg: Str = "hello") {
+        func f(self, msg: Str = "hello") {
             print(msg);
         }
     };
     class B {
-        fn f(self, msg: Str = " world") {
+        func f(self, msg: Str = " world") {
             print(msg);
         }
     };
@@ -86,11 +86,11 @@ describe 'Non-Static Methods Require self Parameter'
 
 expect_err 'SyntaxError' '
     class S {
-        fn log(self: S) {}
+        func log(self: S) {}
     }
 '
 expect_err 'SyntaxError' '
     class S {
-        fn log(self: Int) {}
+        func log(self: Int) {}
     }
 '

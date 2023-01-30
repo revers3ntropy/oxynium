@@ -1,13 +1,13 @@
 describe 'Invalid Declarations'
 
 expect_err 'TypeError' '
-    fn f() Int {
+    func f() Int {
         return a;
         let a = 5;
     };
 '
 expect_err 'TypeError' '
-    fn f() {
+    func f() {
         let b = a + 5;
         let a = 5;
     };
@@ -41,18 +41,18 @@ expect_err 'TypeError' '
 describe 'Out of Order Types'
 
 expect '' '
-    fn f(a: A) A {
+    func f(a: A) A {
         return a
     }
     class A;
 '
 expect_err 'UnknownSymbol' '
-    fn f(a: A) A {
+    func f(a: A) A {
         return a
     }
 '
 expect '' '
-    fn f(a: A) B {
+    func f(a: A) B {
         return a.b
     }
     class A {
@@ -61,7 +61,7 @@ expect '' '
     class B
 '
 expect '' '
-    fn f(a: A) C {
+    func f(a: A) C {
         return a.b.c
     }
     class A {
@@ -73,7 +73,7 @@ expect '' '
     class C
 '
 expect '' '
-    fn f(a: A) D {
+    func f(a: A) D {
         return a.b.c.d
     }
     class A {
@@ -89,20 +89,20 @@ expect '' '
 '
 expect '' '
     f(new A { b: new B { c: new C }});
-    fn f(a: A) C {
+    func f(a: A) C {
         return a.b.c.get_a(a).b.c
     }
     class A {
         b: B,
     }
     class C {
-        fn get_a(self, a: A) A {
+        func get_a(self, a: A) A {
             return a
         }
     }
     class B {
         c: C,
-        extern fn get_a(self, a: A) A,
+        extern func get_a(self, a: A) A,
     }
 '
 
@@ -121,29 +121,29 @@ expect_err 'TypeError' '
     a.b().c.d.e()
 '
 expect_err 'TypeError' '
-    fn main() {
+    func main() {
         let mut a: Int;
         a.b().c.d.e()
     }
 '
 expect_err 'TypeError' '
-    fn main() {
+    func main() {
         let mut a = 0;
         a.b().c.d.e()
     }
 '
 expect_err 'UnknownSymbol' '
-    fn main() {
+    func main() {
         a.b().c.d.e()
     }
 '
 expect_err 'TypeError' '
-    fn main() {
+    func main() {
         main.a
     }
 '
 expect_err 'TypeError' '
-    fn f(a: Str) {
+    func f(a: Str) {
         a.some_key_that_doesnt_exist
     }
 '

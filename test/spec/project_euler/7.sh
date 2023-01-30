@@ -1,7 +1,7 @@
 describe 'Project Euler #7: 10001st prime'
 
 perf_test_comp_cpp 1 '104743' '
-    fn main () {
+    func main () {
         let mut i = 1;
         let mut j = 0;
         while {

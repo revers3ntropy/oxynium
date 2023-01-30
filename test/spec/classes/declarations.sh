@@ -6,7 +6,7 @@ expect_err 'SyntaxError' 'class class'
 expect_err 'SyntaxError' 'class _$_MyClass'
 expect '' '
     class S {};
-    fn do_nothing(s: S) {};
+    func do_nothing(s: S) {};
 '
 expect '' '
     class S {
@@ -25,19 +25,19 @@ expect_err 'TypeError' '
     class Bool {};
 '
 expect '' '
-    fn main () {
+    func main () {
         class C;
     }
 '
 expect_err 'UnknownSymbol' '
-    fn main () {
+    func main () {
         class C
     }
-    fn f(a: C);
+    func f(a: C);
 '
 expect_err 'UnknownSymbol' '
-    fn f(a: C);
-    fn main () {
+    func f(a: C);
+    func main () {
         class C
     }
 '

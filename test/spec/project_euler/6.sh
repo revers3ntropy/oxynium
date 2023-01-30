@@ -1,7 +1,7 @@
 describe 'Project Euler #6: Sum square difference'
 
 perf_test_comp_cpp 50 '25164150' '
-    fn main () {
+    func main () {
         let mut sum_of_squares = 0;
         let mut square_of_sum = 0;
         let mut i = 1;

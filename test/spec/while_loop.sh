@@ -1,7 +1,7 @@
 describe 'Loops'
 
 expect '1' '
-    fn main () {
+    func main () {
         let mut i = 0;
         while {
             i = i + 1;
@@ -11,7 +11,7 @@ expect '1' '
     }
 '
 expect '' '
-    fn main () {
+    func main () {
         let mut i = 0;
         while {
             i = i + 1;
@@ -21,7 +21,7 @@ expect '' '
     }
 '
 expect '' '
-    fn main () {
+    func main () {
         let mut i = 0;
         while {
             i = i + 1;
@@ -31,7 +31,7 @@ expect '' '
     }
 '
 expect '1' '
-    fn main () {
+    func main () {
         let mut i = 0;
         while {
             i = i + 1;
@@ -41,7 +41,7 @@ expect '1' '
     }
 '
 expect '' '
-    fn main () {
+    func main () {
         let mut i = 0;
         while {
             i = i + 1;
@@ -61,7 +61,7 @@ expect 'hello there' '
     }
 '
 expect '5' '
-    fn main () {
+    func main () {
         let mut i = 0;
         while {
             i = i + 1;
@@ -74,7 +74,7 @@ expect '5' '
     }
 '
 expect '234 468 6912' '
-    fn main () {
+    func main () {
         let mut i = 1;
         let mut j = 1;
         while {
@@ -97,7 +97,7 @@ expect '234 468 6912' '
 '
 expect '012345678' '
     const n = 9;
-    fn main () {
+    func main () {
         let mut i = 0;
         while i < n {
             print(i.str());

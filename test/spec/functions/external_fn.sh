@@ -1,19 +1,19 @@
 describe 'External Functions'
 
 expect_err 'SyntaxError' '
-    extern fn main();
+    extern func main();
 '
 expect_err 'TypeError' '
-    extern fn print()
+    extern func print()
 '
 expect '' '
-    extern fn f();
-    extern fn g(p: Int, a: Str = "hi") Str;
+    extern func f();
+    extern func g(p: Int, a: Str = "hi") Str;
 '
 expect_err 'IoError' '
-    extern fn f();
+    extern func f();
     f()
 '
 expect_err 'SyntaxError' '
-    extern fn f() {}
+    extern func f() {}
 '

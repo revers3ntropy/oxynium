@@ -6,18 +6,18 @@ expect '' '
 '
 expect '' '
     primitive P {
-        fn f(self) {}
+        func f(self) {}
     }
 '
 expect '' '
     primitive P {
-        extern fn f(self) Int,
-        fn g(self) {}
+        extern func f(self) Int,
+        func g(self) {}
     }
 '
 expect 'hi hi ' '
     primitive P {
-        fn log(self) {
+        func log(self) {
             print("hi ");
         }
     }
@@ -31,7 +31,7 @@ expect_err 'SyntaxError' '
 '
 expect_err 'SyntaxError' '
     primitive P {
-        fn f(self) {}
+        func f(self) {}
         x: Int
     }
 '

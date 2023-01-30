@@ -1,4 +1,4 @@
-fn File.open (path: Str, mode: Str) Option<File> {
+func File.open (path: Str, mode: Str) Option<File> {
 	let f = #asm "
 		; FILE* fopen(const char* path, const char* mode);
 
@@ -27,15 +27,12 @@ fn File.open (path: Str, mode: Str) Option<File> {
 	});
 }
 
-fn File.is_open (self) Bool {
+func File.is_open (self) Bool {
 	return !self.handle.is_null();
 }
 
-fn File.read_to_str (self, buffer_size: Int) Str {
+func File.read_to_str (self) Str {
 	// src: https://stackoverflow.com/questions/14002954
-
-	//  (already done)
-	//  FILE *f = fopen("textfile.txt", "rb");
 
 	//  fseek(f, 0, SEEK_END);
 	//  long fsize = ftell(f);
@@ -51,13 +48,7 @@ fn File.read_to_str (self, buffer_size: Int) Str {
 	return Any.cast!<Void, Str>(#asm "
 		mov rdi, [rbp - 8] ; rdi = f
 
-		push rbp             ; align stack for 16 byte boundary
-		mov rbp, rsp         ; for libc calls
 		sub rsp, 32
-		and rsp, -16
-
-		sub rsp, 32
-
 		mov qword [rsp + 16], 0    ; [rsp + 16] = string
 		mov qword [rsp + 8], rdi   ; [rsp + 8]  = save f
 		mov qword [rsp], 0         ; [rsp]      = space for fsize
@@ -65,13 +56,27 @@ fn File.read_to_str (self, buffer_size: Int) Str {
 		mov rsi, 0
 		mov rdx, 2
 		mov rax, rdi
+
+		push rbp             ; align stack for 16 byte boundary
+		mov rbp, rsp         ; for libc calls
+		sub rsp, 32
+		and rsp, -16
 		call fseek WRT ..plt
+		mov rsp, rbp        ; escape libc call alignment
+		pop rbp
 
 		mov rdi, [rsp + 8]   ; rdi = f
 		mov rsi, 0
 		mov rdx, 0
 		mov rax, rdi
+
+		push rbp
+		mov rbp, rsp
+		sub rsp, 32
+		and rsp, -16
 		call ftell WRT ..plt
+		mov rsp, rbp
+		pop rbp
 
 		mov [rsp], rax       ; save fsize
 
@@ -79,7 +84,13 @@ fn File.read_to_str (self, buffer_size: Int) Str {
 		mov rsi, 0
 		mov rdx, 0
 
+		push rbp
+		mov rbp, rsp
+		sub rsp, 32
+		and rsp, -16
 		call fseek WRT ..plt
+		mov rsp, rbp
+		pop rbp
 
 		mov rdi, [rsp]       ; rdi = fsize
 		add rdi, 1
@@ -95,7 +106,13 @@ fn File.read_to_str (self, buffer_size: Int) Str {
 		mov rdx, 1
 		mov rcx, [rsp + 8]  ; rcx = f
 
+		push rbp
+		mov rbp, rsp
+		sub rsp, 32
+		and rsp, -16
 		call fread WRT ..plt
+		mov rsp, rbp
+		pop rbp
 
 		mov rdi, [rsp + 16] ; rdi = string
 		mov rsi, [rsp]      ; rsi = fsize
@@ -105,14 +122,11 @@ fn File.read_to_str (self, buffer_size: Int) Str {
 		push qword [rsp + 16]
 		call Str.from_utf8
 
-		mov rsp, rbp        ; escape libc call alignment
-		pop rbp
-
 		push rax
 	")
 }
 
-fn File.close (self) {
+func File.close (self) {
 	let _f = self.handle;
 
 	#asm "

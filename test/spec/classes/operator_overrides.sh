@@ -3,7 +3,7 @@ describe 'Operator Overloads'
 expect '341' '
     class Foo {
         x: Int,
-        fn + (self, other: Foo) Foo {
+        func + (self, other: Foo) Foo {
             return new Foo {
                 x: self.x + other.x
             }
@@ -11,18 +11,18 @@ expect '341' '
     }
     class Bar {
         x: Int,
-        fn + (self, other: Int) Bar {
+        func + (self, other: Int) Bar {
             return new Bar {
                 x: self.x + other
             }
         }
-        fn - (self, other: Foo) Bar {
+        func - (self, other: Foo) Bar {
             return new Bar {
                 x: self.x - other.x
             }
         }
     }
-    fn main() {
+    func main() {
         let a = new Foo { x: 1 };
         let b = new Foo { x: 2 };
         print((a + b).x.str());
@@ -35,18 +35,18 @@ expect '341' '
 describe 'Do Not Allow Top Level Operator Overloads'
 
 expect_err 'SyntaxError' '
-    fn + (s: Str, other: Str) Str {
+    func + (s: Str, other: Str) Str {
         return ""
     }
 '
 expect_err 'SyntaxError' '
-    fn + ()
+    func + ()
 '
 expect_err 'SyntaxError' '
-    extern fn + ()
+    extern func + ()
 '
 expect_err 'SyntaxError' '
-    fn + () Str {
+    func + () Str {
         return ""
     }
 '
@@ -56,70 +56,70 @@ describe 'Invalid Operator Overloads'
 
 expect_err 'SyntaxError' '
     class C {
-        fn ! (self) Str {
+        func ! (self) Str {
             return ""
         }
     }
 '
 expect_err 'SyntaxError' '
     class C {
-        fn === (self) Str {
+        func === (self) Str {
             return ""
         }
     }
 '
 expect_err 'SyntaxError' '
     class C {
-        fn += (self) Str {
+        func += (self) Str {
             return ""
         }
     }
 '
 expect_err 'SyntaxError' '
     class C {
-        fn ^ (self) Str {
+        func ^ (self) Str {
             return ""
         }
     }
 '
 expect_err 'SyntaxError' '
     class C {
-        fn 1 (self) Str {
+        func 1 (self) Str {
             return ""
         }
     }
 '
 expect_err 'SyntaxError' '
     class C {
-        fn "" (self) Str {
+        func "" (self) Str {
             return ""
         }
     }
 '
 expect_err 'TypeError' '
     class C {
-        fn + (self) C {
+        func + (self) C {
             return new C
         }
     }
 '
 expect_err 'TypeError' '
     class C {
-        fn + (self, a1: C, a2: C) C {
+        func + (self, a1: C, a2: C) C {
             return new C
         }
     }
 '
 expect_err 'TypeError' '
     class C {
-        fn + (self, a1: C = new C) C {
+        func + (self, a1: C = new C) C {
             return new C
         }
     }
 '
 expect '' '
     class C {
-        fn + (self, a1: C) C {
+        func + (self, a1: C) C {
             return new C
         }
     }

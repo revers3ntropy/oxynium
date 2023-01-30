@@ -1,24 +1,24 @@
-fn Option.none <From> () Option<From> {
+func Option.none <From> () Option<From> {
 	return new Option<From> {
 		value: new Ptr<From>
 	}
 }
 
-fn Option.some <From> (value: From) Option<From> {
+func Option.some <From> (value: From) Option<From> {
 	return new Option <From> {
 		value: Ptr!<From>.make!<From>(value)
 	}
 }
 
-fn Option.is_some (self) Bool {
+func Option.is_some (self) Bool {
 	return !self.value.is_null()
 }
 
-fn Option.is_none (self) Bool {
+func Option.is_none (self) Bool {
 	return self.value.is_null()
 }
 
-fn Option.unwrap (self, err_message = "Unwrapping None Option") T {
+func Option.unwrap (self, err_message = "Unwrapping None Option") T {
 	if self.is_none() {
 		panic(err_message)
 	}

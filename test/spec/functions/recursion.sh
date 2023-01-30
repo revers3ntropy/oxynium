@@ -1,7 +1,7 @@
 describe 'Recursion'
 
 expect '55' '
-    fn fib(n: Int) Int {
+    func fib(n: Int) Int {
         if n <= 1 {
             return n;
         };
@@ -10,7 +10,7 @@ expect '55' '
     print(fib(10).str());
 '
 expect '0123456789' '
-    fn a(i = 0) {
+    func a(i = 0) {
         if i > 9 {
             return
         }

@@ -1,4 +1,4 @@
-fn Any.from<From>(val: From) Any {
+func Any.from<From>(val: From) Any {
 	return Any.cast!<From, Any>(val)
 }
 
@@ -8,7 +8,7 @@ fn Any.from<From>(val: From) Any {
 // However this is effectively required for many of the
 // features of the language (especially parts of the std),
 // a necessary evil.
-fn Any.__CAST_WRAPPER_DO_NOT_CALL () {
+func Any.__CAST_WRAPPER_DO_NOT_CALL () {
 	#asm "
 		Any.cast:
 		    push rbp
@@ -17,14 +17,14 @@ fn Any.__CAST_WRAPPER_DO_NOT_CALL () {
 	"
 }
 
-fn Any.eq <Cmp> (self, other: Cmp) Bool {
+func Any.eq <Cmp> (self, other: Cmp) Bool {
 	return Any.cast!<Any, Int>(self) == Any.cast!<Cmp, Int>(other)
 }
 
-fn Any.str (self) Str {
+func Any.str (self) Str {
 	return Any.cast!<Any, Int>(self).str()
 }
 
-fn Any.to<To>(self) To {
+func Any.to<To>(self) To {
 	return Any.cast!<Any, To>(self)
 }

@@ -1,26 +1,26 @@
 describe 'Local Variables'
 
 expect_err 'SyntaxError' '
-    fn main() Int {
+    func main() Int {
         let a: Int;
     }
 '
 expect '1' '
-    fn main() {
+    func main() {
         let a = "1";
         print(a);
     }
 '
 expect '1' '
     const a = 2;
-    fn main() {
+    func main() {
         let a = 1;
         print(a.str());
     }
 '
 expect '42' '
     const a = 2;
-    fn f() {
+    func f() {
         let mut a = 1;
         a = 4;
         print(a.str());
@@ -30,7 +30,7 @@ expect '42' '
 '
 expect_err 'TypeError' '
     const a = "";
-    fn main() {
+    func main() {
         let a = 1;
         print(a);
     }
@@ -40,31 +40,31 @@ expect_err 'TypeError' '
 describe "Don't Allow Redeclaration"
 
 expect_err 'TypeError' '
-    fn main() {
+    func main() {
         let a = 1;
         let a = 2;
     }
 '
 expect_err 'TypeError' '
-    fn f() {
+    func f() {
         let mut a = 1;
         let a = 2;
     }
 '
 expect_err 'TypeError' '
-    fn f() {
+    func f() {
         let a = 1;
         let mut a = 2;
     }
 '
 expect_err 'TypeError' '
-    fn f() {
+    func f() {
         let a = 1;
         a = 2;
     }
 '
 expect_err 'TypeError' '
-    fn main () {
+    func main () {
         let a = 1;
         if true {
             let a = 2;
@@ -86,20 +86,20 @@ expect_err 'SyntaxError' '
 describe 'Local Var Reassignment'
 
 expect '1' '
-    fn main() {
+    func main() {
         let mut a: Int = 0;
         a = 1;
         print(a.str());
     };
 '
 expect_err 'TypeError' '
-    fn f() {
+    func f() {
         let mut a = 1;
         a = "";
     };
 '
 expect '4' '
-    fn f(n: Int) Int {
+    func f(n: Int) Int {
         let mut a = n*n + 3 * n;
         a = a - 1;
         return a / 2;
@@ -107,7 +107,7 @@ expect '4' '
     print(f(2).str());
 '
 expect '4' '
-    fn f(n: Int) Int {
+    func f(n: Int) Int {
         let mut a: Int;
         if n == 3 {
             a = 2;
@@ -119,7 +119,7 @@ expect '4' '
     print(f(3).str());
 '
 expect '5' '
-    fn f(n: Int) Int {
+    func f(n: Int) Int {
         if true {
             let a = n + 3;
             return a;
@@ -129,23 +129,23 @@ expect '5' '
     print(f(2).str());
 '
 expect '4' '
-    fn main() {
+    func main() {
         let a: Int = 4;
         print(a.str());
     };
 '
 expect_err 'TypeError' '
-    fn main() {
+    func main() {
         let a: Int = "";
     };
 '
 expect_err 'TypeError' '
-    fn main() {
+    func main() {
         let mut a: Int = "";
     };
 '
 expect_err 'TypeError' '
-    fn main() {
+    func main() {
         let mut a: Int = 0;
         a = ""
     };
@@ -155,13 +155,13 @@ expect_err 'TypeError' '
 describe 'Empty Local Var Declarations'
 
 expect_err 'TypeError' '
-    fn f() Int {
+    func f() Int {
         let mut a: Int;
         return a;
     };
 '
 expect '1' '
-    fn f() Int {
+    func f() Int {
         let mut a: Int;
         a = 1;
         return a;
@@ -179,25 +179,25 @@ expect_err 'SyntaxError' 'const _$_ = 1'
 # shellcheck disable=SC2016
 expect_err 'SyntaxError' 'const _$_a = 1'
 expect_err 'SyntaxError' 'const mut = 1'
-expect_err 'SyntaxError' 'const fn = 1'
+expect_err 'SyntaxError' 'const func = 1'
 
-expect_err 'SyntaxError' 'fn f() { let 1 = 1; }'
-expect_err 'SyntaxError' 'fn f() { let 1a = 1; }'
+expect_err 'SyntaxError' 'func f() { let 1 = 1; }'
+expect_err 'SyntaxError' 'func f() { let 1a = 1; }'
 # shellcheck disable=SC2016
-expect_err 'SyntaxError' 'fn f() { let _$_ = 1; }'
+expect_err 'SyntaxError' 'func f() { let _$_ = 1; }'
 # shellcheck disable=SC2016
-expect_err 'SyntaxError' 'fn f() { let _$_a = 1; }'
-expect_err 'SyntaxError' 'fn f() { let mut = 1; }'
-expect_err 'SyntaxError' 'fn f() { let fn = 1; }'
+expect_err 'SyntaxError' 'func f() { let _$_a = 1; }'
+expect_err 'SyntaxError' 'func f() { let mut = 1; }'
+expect_err 'SyntaxError' 'func f() { let func = 1; }'
 
-expect_err 'SyntaxError' 'fn f() { let mut 1 = 1; }'
-expect_err 'SyntaxError' 'fn f() { let mut 1a = 1; }'
+expect_err 'SyntaxError' 'func f() { let mut 1 = 1; }'
+expect_err 'SyntaxError' 'func f() { let mut 1a = 1; }'
 # shellcheck disable=SC2016
-expect_err 'SyntaxError' 'fn f() { let mut _$_ = 1; }'
+expect_err 'SyntaxError' 'func f() { let mut _$_ = 1; }'
 # shellcheck disable=SC2016
-expect_err 'SyntaxError' 'fn f() { let mut _$_a = 1; }'
-expect_err 'SyntaxError' 'fn f() { let mut mut = 1; }'
-expect_err 'SyntaxError' 'fn f() { let mut fn = 1; }'
+expect_err 'SyntaxError' 'func f() { let mut _$_a = 1; }'
+expect_err 'SyntaxError' 'func f() { let mut mut = 1; }'
+expect_err 'SyntaxError' 'func f() { let mut func = 1; }'
 
 
 describe 'Invalid Reassignment'

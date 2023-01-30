@@ -1,7 +1,7 @@
 describe 'Project Euler #3: Largest prime factor'
 
 perf_test_comp_cpp 50 '6857' '
-    fn main () {
+    func main () {
         let mut n = 600851475143;
         let mut i = 2;
         let mut max = 0;

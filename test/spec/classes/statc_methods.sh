@@ -2,7 +2,7 @@ describe 'Static Methods on Classes'
 
 expect 'Hello World!' '
     class C {
-        fn a() Str {
+        func a() Str {
             return "Hello World!"
         }
     }
@@ -10,7 +10,7 @@ expect 'Hello World!' '
 '
 expect 'Hello World!' '
     class C {
-        fn a(msg: Str) {
+        func a(msg: Str) {
             print(msg)
         }
     }
@@ -20,13 +20,13 @@ expect 'Hello World!' '
     class C {
         msg: Str,
 
-        fn make(msg: Str) C {
+        func make(msg: Str) C {
             return new C {
                 msg: msg
             }
         }
 
-        fn log(self) {
+        func log(self) {
             print(self.msg)
         }
     }
@@ -34,7 +34,7 @@ expect 'Hello World!' '
 '
 expect_err 'TypeError' '
     class C {
-        fn log(msg: Str) {
+        func log(msg: Str) {
             print(msg)
         }
     }
@@ -42,7 +42,7 @@ expect_err 'TypeError' '
 '
 expect 'Hello World!' '
     class C {
-        fn log(c: C, msg: Str) {
+        func log(c: C, msg: Str) {
             print(msg)
         }
     }

@@ -1,28 +1,28 @@
 describe 'Function Declarations'
 
-expect '' 'fn a ()'
-expect '' 'fn a (a: Int, b: Bool, c: Str)'
-expect '' 'fn a () Void'
-expect '' 'fn a (a: Int) Str'
-expect_err 'TypeError' 'fn a (a) Str'
-expect_err 'TypeError' 'fn a (a)'
-expect_err 'SyntaxError' 'fn ()'
-expect_err 'SyntaxError' 'fn 0 ()'
-expect_err 'SyntaxError' 'fn 0g ()'
-expect_err 'TypeError' 'fn g (); fn g()'
-expect_err 'TypeError' 'fn g (a: Int, a: Str) {}'
-expect_err 'TypeError' 'fn g (a: Int, a: Int) {}'
-expect '' 'fn g (g=1) {}'
-expect '' 'fn g (g: Str) {}'
+expect '' 'func a ()'
+expect '' 'func a (a: Int, b: Bool, c: Str)'
+expect '' 'func a () Void'
+expect '' 'func a (a: Int) Str'
+expect_err 'TypeError' 'func a (a) Str'
+expect_err 'TypeError' 'func a (a)'
+expect_err 'SyntaxError' 'func ()'
+expect_err 'SyntaxError' 'func 0 ()'
+expect_err 'SyntaxError' 'func 0g ()'
+expect_err 'TypeError' 'func g (); func g()'
+expect_err 'TypeError' 'func g (a: Int, a: Str) {}'
+expect_err 'TypeError' 'func g (a: Int, a: Int) {}'
+expect '' 'func g (g=1) {}'
+expect '' 'func g (g: Str) {}'
 expect_err 'SyntaxError' '
-    fn g() {
-        fn f() {};
+    func g() {
+        func f() {};
     };
 '
 expect_err 'SyntaxError' '
-    fn g() {
-        fn f() {
-            fn h() {};
+    func g() {
+        func f() {
+            func h() {};
         };
     };
 '

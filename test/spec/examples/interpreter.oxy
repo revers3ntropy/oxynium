@@ -1,8 +1,8 @@
-fn interp (value: Str) Str {
+func interp (value: Str) Str {
     return value;
 }
 
-fn repl () {
+func repl () {
     while {
         let inp = input("> ");
         if inp == "exit" { break }
@@ -10,6 +10,6 @@ fn repl () {
     }
 }
 
-fn main() {
+func main() {
     repl();
 }

@@ -105,7 +105,7 @@ expect_expr_int '-9223372036854775807' '9223372036854775807+2' # overflow to -ma
 expect_expr_int '-9223372036854775806' '9223372036854775807+3' # overflow to -max+2
 
 
-describe 'fn Int.str'
+describe 'func Int.str'
 
 expect '1'           'print(1.str())'
 expect '123'         'print(123.str())'
@@ -119,7 +119,7 @@ expect '0' '
     print(a.str());
 '
 expect '-106709' '
-    fn f() {
+    func f() {
         let a = -106709;
         let a_str = a.str();
         print(a_str);
@@ -128,7 +128,7 @@ expect '-106709' '
 '
 
 
-describe 'fn Int.max'
+describe 'func Int.max'
 
 expect_expr_int '2'   '1.max(2)'
 expect_expr_int '2'   '2.max(1)'
@@ -148,7 +148,7 @@ expect_expr_int '9223372036854775807'   '9223372036854775807.max()'
 expect_expr_int '9223372036854775807'  '(-9223372036854775807).max()'
 
 
-describe 'fn Int.min'
+describe 'func Int.min'
 
 expect_expr_int '1'    '1.min(2)'
 expect_expr_int '1'    '2.min(1)'
@@ -166,7 +166,7 @@ expect_expr_int '-9223372036854775808'   '(-9223372036854775807).min()'
 expect_expr_int '-9223372036854775808'  '9223372036854775807.min()'
 
 
-describe 'fn Int.>'
+describe 'func Int.>'
 
 expect_expr_bool 'false' '1 > 2'
 expect_expr_bool 'true'  '2 > 1'
@@ -184,10 +184,10 @@ expect_err 'TypeError' '"" > ""'
 expect_err 'TypeError' '"" > true'
 expect_err 'TypeError' '2 > false'
 expect_err 'TypeError' '"" > 2'
-expect_err 'TypeError' 'fn a(); a > 4'
+expect_err 'TypeError' 'func a(); a > 4'
 
 
-describe 'fn Int.<'
+describe 'func Int.<'
 
 expect_expr_bool 'true'  '1 < 2'
 expect_expr_bool 'false' '2 < 1'
@@ -205,10 +205,10 @@ expect_err 'TypeError' '"" < ""'
 expect_err 'TypeError' '"" < true'
 expect_err 'TypeError' '2 < false'
 expect_err 'TypeError' '"" < 2'
-expect_err 'TypeError' 'fn a(); a < 4'
+expect_err 'TypeError' 'func a(); a < 4'
 
 
-describe 'fn Int.>='
+describe 'func Int.>='
 
 expect_expr_bool 'false' '1 >= 2'
 expect_expr_bool 'true'  '2 >= 1'
@@ -226,10 +226,10 @@ expect_err 'TypeError' '"" >= ""'
 expect_err 'TypeError' '"" >= true'
 expect_err 'TypeError' '2 >= false'
 expect_err 'TypeError' '"" >= 2'
-expect_err 'TypeError' 'fn a(); a >= 4'
+expect_err 'TypeError' 'func a(); a >= 4'
 
 
-describe 'fn Int.<='
+describe 'func Int.<='
 
 expect_expr_bool 'true'  '1 <= 2'
 expect_expr_bool 'false' '2 <= 1'
@@ -247,10 +247,10 @@ expect_err 'TypeError' '"" <= ""'
 expect_err 'TypeError' '"" <= true'
 expect_err 'TypeError' '2 <= false'
 expect_err 'TypeError' '"" <= 2'
-expect_err 'TypeError' 'fn a(); a <= 4'
+expect_err 'TypeError' 'func a(); a <= 4'
 
 
-describe 'fn Int.=='
+describe 'func Int.=='
 
 expect 'false,false,true,false,false,false,false,false,false' '
     print((1 == 2).str());
@@ -277,7 +277,7 @@ expect_err 'TypeError' '2 == ""'
 expect_err 'TypeError' '2 == Int'
 
 
-describe 'fn Int.!='
+describe 'func Int.!='
 
 expect 'true,true,false,true,true,true,true,true,true' '
     print((1 != 2).str());

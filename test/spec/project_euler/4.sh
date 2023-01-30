@@ -1,7 +1,7 @@
 describe 'Project Euler #4: Largest palindrome product'
 
 perf_test_comp_cpp 1 '906609' '
-    fn main() {
+    func main() {
         let mut max = 0;
         let mut i = 100;
         while i < 1000 {

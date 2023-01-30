@@ -1,1 +1,1 @@
-describe 'fn exit'
+describe 'func exit'

@@ -4,11 +4,11 @@ expect '' 'print(new Char.str())'
 expect_err 'TypeError' 'print(new Char)'
 
 
-describe 'fn Char.str'
+describe 'func Char.str'
 
 # TODO: requires char literals
 
-describe 'fn Char.is_digit'
+describe 'func Char.is_digit'
 
 expect 'true,true,true,false,false,false,false' '
     print("0".at(0).is_digit().str());
@@ -27,7 +27,7 @@ expect 'true,true,true,false,false,false,false' '
 '
 
 
-describe 'fn Char.=='
+describe 'func Char.=='
 
 expect 'true,false,true,true' '
     print(("a".at(0) == "a".at(0)).str());
@@ -40,7 +40,7 @@ expect 'true,false,true,true' '
 '
 
 
-describe 'fn Char.!='
+describe 'func Char.!='
 
 expect 'false,true,false,false' '
     print(("a".at(0) != "a".at(0)).str());
@@ -53,7 +53,7 @@ expect 'false,true,false,false' '
 '
 
 
-describe 'fn Char.from_int'
+describe 'func Char.from_int'
 
 expect_expr_int '' 'Char.from_int(0)'
 expect_expr_int 'a' 'Char.from_int(97)'

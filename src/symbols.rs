@@ -17,7 +17,7 @@ const RESERVED_KEYWORDS: [&str; 50] = [
     "mut",
     "var",
     "type",
-    "fn",
+    "func",
     "extern",
     "primitive",
     "class",

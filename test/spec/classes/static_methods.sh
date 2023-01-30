@@ -3,32 +3,32 @@ describe 'Calling Methods Statically'
 expect 'hi' '
     class S {
         msg: Str,
-        fn f(self) Str {
+        func f(self) Str {
             return self.msg;
         }
     }
-    fn main () {
+    func main () {
         let s = new S { msg: "hi" };
         print(S.f(s));
     }
 '
 expect 'abc' '
     class S {
-        fn f(self, msg: Str) Str {
+        func f(self, msg: Str) Str {
             return msg;
         }
     }
-    fn main () {
+    func main () {
         print(S.f(new S, "abc"));
     }
 '
 expect 'hello' '
     class S {
-        fn f(self, a: Int, msg: Str = "hello") Str {
+        func f(self, a: Int, msg: Str = "hello") Str {
             return msg;
         }
     }
-    fn main () {
+    func main () {
         print(S.f(new S, 1));
     }
 '
@@ -38,7 +38,7 @@ expect_err 'TypeError' '
 '
 expect_err 'TypeError' '
     class S {
-        fn f(self){}
+        func f(self){}
     };
     new S.g();
 '

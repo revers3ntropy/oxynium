@@ -1,9 +1,9 @@
-fn Ptr.is_null (self) Bool {
+func Ptr.is_null (self) Bool {
 	return Any.from!<Ptr<T>>(self)
 			  .eq!<Int>(0)
 }
 
-fn Ptr.make <From> (val: From) Ptr<From> {
+func Ptr.make <From> (val: From) Ptr<From> {
 	return Any.cast!<Void, Ptr<From>>(#asm "
 		push 8
 		call Ptr.allocate
@@ -15,7 +15,7 @@ fn Ptr.make <From> (val: From) Ptr<From> {
 	")
 }
 
-fn Ptr.unwrap (self) T {
+func Ptr.unwrap (self) T {
 	return Any.cast!<Void, T>(#asm "
 		mov rax, qword [rbp + 16]
 		mov rax, qword [rax]
@@ -23,7 +23,10 @@ fn Ptr.unwrap (self) T {
 	")
 }
 
-fn Ptr.allocate <A> (size: Int) Ptr<A> {
+func Ptr.allocate <A> (size: Int) Ptr<A> {
+	if size <= 0 {
+		panic("cannot allocate a block of memory of size 0 or less")
+	}
 	return Any.cast!<Void, Ptr<A>>(#asm "
 		xor rax, rax
 

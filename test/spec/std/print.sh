@@ -1,4 +1,4 @@
-describe 'fn print'
+describe 'func print'
 
 expect 'Hello, World!' 'print("Hello, World!")'
 expect_err 'TypeError' 'print(1)'
@@ -7,10 +7,10 @@ expect_err 'TypeError' 'print("", "")'
 expect_err 'TypeError' 'print("", true)'
 
 expect '42135' '
-    fn g() {
+    func g() {
         print(1.str());
     };
-    fn f() {
+    func f() {
         print(2.str());
         g();
         print(3.str());

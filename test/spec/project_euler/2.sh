@@ -1,7 +1,7 @@
 describe 'Project Euler #2: Even Fibonacci numbers'
 
 perf_test_comp_cpp 50 '4613732' '
-    fn main () {
+    func main () {
         let mut sum = 0;
         let mut a = 1;
         let mut b = 2;

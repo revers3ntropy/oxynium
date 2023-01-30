@@ -1,2 +1,2 @@
-describe 'fn panic'
+describe 'func panic'
 

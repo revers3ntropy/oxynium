@@ -1,1 +1,1 @@
-describe 'fn println'
+describe 'func println'

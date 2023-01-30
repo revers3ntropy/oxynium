@@ -2,7 +2,7 @@ describe 'macro #asm'
 
 expect 'Void' 'print(typeof #asm "")'
 expect 'hi' '
-    fn asm(arg: Str) Str {
+    func asm(arg: Str) Str {
         return Any.cast!<Void, Str>(#asm "
             push qword [rbp + 16]
         ")
@@ -17,7 +17,7 @@ expect_err 'TypeError' '#asm()'
 expect_err 'SyntaxError' '#asm'
 expect_err 'TypeError' '#asm("", 1)'
 expect_err 'TypeError' '
-    fn main () {
+    func main () {
         let s = "";
         #asm(s);
     }

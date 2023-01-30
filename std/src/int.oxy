@@ -1,4 +1,4 @@
-fn Int.+ (self, n: Int) Int {
+func Int.+ (self, n: Int) Int {
 	return Any.cast!<Void, Int>(#asm "
 		mov rax, qword [rbp + 16]
 		add rax, qword [rbp + 24]
@@ -6,7 +6,7 @@ fn Int.+ (self, n: Int) Int {
 	")
 }
 
-fn Int.- (self, n: Int) Int {
+func Int.- (self, n: Int) Int {
 	return Any.cast!<Void, Int>(#asm "
 		mov rax, qword [rbp + 16]
 		sub rax, qword [rbp + 24]
@@ -14,7 +14,7 @@ fn Int.- (self, n: Int) Int {
 	")
 }
 
-fn Int.* (self, n: Int) Int {
+func Int.* (self, n: Int) Int {
 	return Any.cast!<Void, Int>(#asm "
 		mov rax, qword [rbp + 16]
 		imul rax, qword [rbp + 24]
@@ -22,7 +22,7 @@ fn Int.* (self, n: Int) Int {
 	")
 }
 
-fn Int./ (self, n: Int) Int {
+func Int./ (self, n: Int) Int {
 	return Any.cast!<Void, Int>(#asm "
 		mov rax, qword [rbp + 16]
 		cqo
@@ -31,7 +31,7 @@ fn Int./ (self, n: Int) Int {
 	")
 }
 
-fn Int.% (self, n: Int) Int {
+func Int.% (self, n: Int) Int {
 	return Any.cast!<Void, Int>(#asm "
 		mov rax, qword [rbp + 16]
 		cqo
@@ -40,7 +40,7 @@ fn Int.% (self, n: Int) Int {
 	")
 }
 
-fn Int.== (self, n: Int) Bool {
+func Int.== (self, n: Int) Bool {
 	return Any.cast!<Void, Bool>(#asm "
 		xor rax, rax
 		mov rcx, qword [rbp + 16]
@@ -50,11 +50,11 @@ fn Int.== (self, n: Int) Bool {
 	")
 }
 
-fn Int.!= (self, n: Int) Bool {
+func Int.!= (self, n: Int) Bool {
 	return !(self == n)
 }
 
-fn Int.< (self, n: Int) Bool {
+func Int.< (self, n: Int) Bool {
 	return Any.cast!<Void, Bool>(#asm "
 		xor rax, rax
 		mov rcx, qword [rbp + 16]
@@ -64,11 +64,11 @@ fn Int.< (self, n: Int) Bool {
 	")
 }
 
-fn Int.<= (self, n: Int) Bool {
+func Int.<= (self, n: Int) Bool {
 	return self < n || self == n
 }
 
-fn Int.> (self, n: Int) Bool {
+func Int.> (self, n: Int) Bool {
 	return Any.cast!<Void, Bool>(#asm "
 		xor rax, rax
 		mov rcx, qword [rbp + 16]
@@ -78,32 +78,32 @@ fn Int.> (self, n: Int) Bool {
 	")
 }
 
-fn Int.>= (self, n: Int) Bool {
+func Int.>= (self, n: Int) Bool {
 	return self > n || self == n
 }
 
-fn Int.max (self, other = 9223372036854775807) Int {
+func Int.max (self, other = 9223372036854775807) Int {
 	if self > other {
 		return self
 	}
 	return other
 }
 
-fn Int.min (self, other = -9223372036854775807 - 1) Int {
+func Int.min (self, other = -9223372036854775807 - 1) Int {
 	if self < other {
 		return self
 	}
 	return other
 }
 
-fn Int.abs (self) Int {
+func Int.abs (self) Int {
 	if self < 0 {
 		return -self
 	}
 	return self
 }
 
-fn Int.str (self) Str {
+func Int.str (self) Str {
 	// https://stackoverflow.com/questions/8257714
 	return Any.cast!<Void, Str>(#asm "
 		; allocate string

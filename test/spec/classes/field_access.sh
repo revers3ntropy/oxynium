@@ -21,7 +21,7 @@ expect '9hi' '
         x: Int,
         y: Str
     };
-    fn f () {
+    func f () {
         let s = new S { x: 9, y: "hi" };
         print(s.x.str());
         print(s.y);
@@ -41,7 +41,7 @@ expect '23' '
         x: Int,
         y: Int
     }
-    fn main () {
+    func main () {
         let s = new S {
             x: 2,
             y: 3
@@ -55,7 +55,7 @@ expect '3223' '
         b: Int,
         a: Int
     }
-    fn main () {
+    func main () {
         let a = new S {
             a: 2,
             b: 3,

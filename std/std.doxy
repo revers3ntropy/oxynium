@@ -5,102 +5,102 @@
 primitive Void;
 
 primitive Char {
-    extern fn == (self, other: Char) Bool,
-    extern fn != (self, other: Char) Bool,
-    extern fn str (self) Str,
-    extern fn is_digit (self) Bool,
-    extern fn as_int (self) Int,
-    extern fn from_int (i: Int) Char,
+    extern func == (self, other: Char) Bool,
+    extern func != (self, other: Char) Bool,
+    extern func str (self) Str,
+    extern func is_digit (self) Bool,
+    extern func as_int (self) Int,
+    extern func from_int (i: Int) Char,
 }
 
 primitive Bool {
-    extern fn || (self, other: Bool) Bool,
-    extern fn && (self, other: Bool) Bool,
-    extern fn str (self) Str,
+    extern func || (self, other: Bool) Bool,
+    extern func && (self, other: Bool) Bool,
+    extern func str (self) Str,
 }
 
 primitive Int {
-    extern fn +  (self, n: Int) Int,
-    extern fn -  (self, n: Int) Int,
-    extern fn *  (self, n: Int) Int,
-    extern fn /  (self, n: Int) Int,
-    extern fn %  (self, n: Int) Int,
-    extern fn == (self, n: Int) Bool,
-    extern fn != (self, n: Int) Bool,
-    extern fn <  (self, n: Int) Bool,
-    extern fn <= (self, n: Int) Bool,
-    extern fn >  (self, n: Int) Bool,
-    extern fn >= (self, n: Int) Bool,
-    extern fn max (self, other=9223372036854775807) Int,
-    extern fn min (self, other=-9223372036854775807-1) Int,
-    extern fn abs (self) Int,
-    extern fn str (self) Str,
+    extern func +  (self, n: Int) Int,
+    extern func -  (self, n: Int) Int,
+    extern func *  (self, n: Int) Int,
+    extern func /  (self, n: Int) Int,
+    extern func %  (self, n: Int) Int,
+    extern func == (self, n: Int) Bool,
+    extern func != (self, n: Int) Bool,
+    extern func <  (self, n: Int) Bool,
+    extern func <= (self, n: Int) Bool,
+    extern func >  (self, n: Int) Bool,
+    extern func >= (self, n: Int) Bool,
+    extern func max (self, other=9223372036854775807) Int,
+    extern func min (self, other=-9223372036854775807-1) Int,
+    extern func abs (self) Int,
+    extern func str (self) Str,
 }
 
 class Str {
     /// converts utf8 to utf64, the encoding used by Str
-    extern fn from_utf8 (utf8: Str) Str,
-    extern fn == (self, other: Str) Bool,
-    extern fn != (self, other: Str) Bool,
+    extern func from_utf8 (utf8: Str) Str,
+    extern func == (self, other: Str) Bool,
+    extern func != (self, other: Str) Bool,
     /// returns a new string that is the concatenation of lhs and rhs
-    extern fn +  (self, other: Str) Str,
-    extern fn at (self, i: Int) Char,
+    extern func +  (self, other: Str) Str,
+    extern func at (self, i: Int) Char,
     /// Returns the character at the given index
     /// Does not check if index is out of bounds
-    extern fn at_raw (self, i: Int) Char,
-    extern fn concat (self, other: Str) Str,
-    extern fn contains (self, other: Str) Bool,
-    extern fn find (self, other: Str) Int,
-    extern fn len (self) Int,
-    extern fn repeat (self, n: Int) Str,
-    extern fn str (self) Str,
-    extern fn substr (self, start=0, end=9223372036854775807) Str,
-    extern fn starts_with (self, other: Str) Bool,
-    extern fn ends_with (self, other: Str) Bool,
-    extern fn reversed (self) Str,
-    extern fn replace (self, search: Str, replace_with="", max=-1) Str,
-    extern fn insert (self, index: Int, other: Str) Str,
-    extern fn remove (self, index: Int, count = 1) Str,
-    extern fn utf8_size (self) Int,
+    extern func at_raw (self, i: Int) Char,
+    extern func concat (self, other: Str) Str,
+    extern func contains (self, other: Str) Bool,
+    extern func find (self, other: Str) Int,
+    extern func len (self) Int,
+    extern func repeat (self, n: Int) Str,
+    extern func str (self) Str,
+    extern func substr (self, start=0, end=9223372036854775807) Str,
+    extern func starts_with (self, other: Str) Bool,
+    extern func ends_with (self, other: Str) Bool,
+    extern func reversed (self) Str,
+    extern func replace (self, search: Str, replace_with="", max=-1) Str,
+    extern func insert (self, index: Int, other: Str) Str,
+    extern func remove (self, index: Int, count = 1) Str,
+    extern func utf8_size (self) Int,
 }
 
 class Time {
 	seconds: Int,
 	microseconds: Int,
-	extern fn - (self, other: Time) Time,
-	extern fn + (self, other: Time) Time,
-	extern fn str (self) Str,
+	extern func - (self, other: Time) Time,
+	extern func + (self, other: Time) Time,
+	extern func str (self) Str,
 	/// returns the current time in seconds from the UNIX epoch
-	extern fn current_seconds () Int,
-	extern fn current_microseconds () Int,
-	extern fn now () Time,
-	extern fn epoch () Time,
+	extern func current_seconds () Int,
+	extern func current_microseconds () Int,
+	extern func now () Time,
+	extern func epoch () Time,
 }
 
 class Option <T> {
 	value: Ptr<T>,
-	extern fn none <From> () Option<From>,
-	extern fn some <From> (value: From) Option<From>,
-	extern fn is_some (self) Bool,
-	extern fn is_none (self) Bool,
-	extern fn unwrap (self, err_message="Unwrapping None Option") T,
+	extern func none <From> () Option<From>,
+	extern func some <From> (value: From) Option<From>,
+	extern func is_some (self) Bool,
+	extern func is_none (self) Bool,
+	extern func unwrap (self, err_message="Unwrapping None Option") T,
 }
 
 primitive Any {
-	extern fn cast <From, To> (val: From) To,
-	extern fn __CAST_WRAPPER_DO_NOT_CALL (),
-	extern fn from <From>(val: From) Any,
-	extern fn eq <Cmp> (self, other: Cmp) Bool,
-	extern fn str (self) Str,
-	extern fn to <To> (self) To,
+	extern func cast <From, To> (val: From) To,
+	extern func __CAST_WRAPPER_DO_NOT_CALL (),
+	extern func from <From>(val: From) Any,
+	extern func eq <Cmp> (self, other: Cmp) Bool,
+	extern func str (self) Str,
+	extern func to <To> (self) To,
 }
 
 primitive Ptr <T> {
-	extern fn is_null (self) Bool,
-	extern fn make <From> (val: From) Ptr<From>,
-	extern fn unwrap (self) T,
+	extern func is_null (self) Bool,
+	extern func make <From> (val: From) Ptr<From>,
+	extern func unwrap (self) T,
 	/// Wrapper around `malloc`
-	extern fn allocate <A> (size: Int) Ptr<A>,
+	extern func allocate <A> (size: Int) Ptr<A>,
 }
 
 class List <T> {
@@ -108,42 +108,42 @@ class List <T> {
 	head: Ptr<T>,
 	// number of bytes required to store list
     size: Int,
-    extern fn empty <E> () List<E>,
-	extern fn len (self) Int,
-    extern fn at (self, i: Int) Option<T>,
-    extern fn at_raw (self, i: Int) T,
-    extern fn push (self, value: T),
+    extern func empty <E> () List<E>,
+	extern func len (self) Int,
+    extern func at (self, i: Int) Option<T>,
+    extern func at_raw (self, i: Int) T,
+    extern func push (self, value: T),
 }
 
 class Result <T, E> {
 	value: Option<T>,
 	error: Option<E>,
-	extern fn err <Val, Err> (err: Err) Result<Val, Err>,
-	extern fn is_ok (self) Bool,
-	extern fn is_err (self) Bool,
-	extern fn unwrap (self) T,
+	extern func err <Val, Err> (err: Err) Result<Val, Err>,
+	extern func is_ok (self) Bool,
+	extern func is_err (self) Bool,
+	extern func unwrap (self) T,
 }
 
 class File {
 	handle: Ptr<Any>,
 	path: Str,
 	mode: Str,
-	extern fn open (path: Str, mode="r") Option<File>,
-	extern fn read_to_str (self, buffer_size=1000) Str,
-	extern fn write (self, data: Str),
-	extern fn close (self),
-	extern fn is_open (self) Bool
+	extern func open (path: Str, mode="r") Option<File>,
+	extern func read_to_str (self, buffer_size=1000) Str,
+	extern func write (self, data: Str),
+	extern func close (self),
+	extern func is_open (self) Bool,
 }
 
 /// Reads from stdin until a newline is reached
 /// allocates string to heap to fit input
 /// returns pointer to string in rax
-extern fn input (prompt="", buffer_size=1000) Str;
-extern fn exit (code=0);
-extern fn print (msg: Str);
-extern fn println (msg: Str, line_end="\n");
-extern fn panic (msg: Str);
-extern fn errno () Int;
+extern func input (prompt="", buffer_size=1000) Str;
+extern func exit (code=0);
+extern func print (msg: Str);
+extern func println (msg: Str, line_end="\n");
+extern func panic (msg: Str);
+extern func errno () Int;
 
 // Classes that may become part of the standard library in the future
 
@@ -172,5 +172,6 @@ class Net;
 class Ref;
 class Primitive;
 class Task;
-class Fn;
+class Func;
+class Class;
 class LibC;
