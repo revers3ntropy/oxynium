@@ -11,7 +11,7 @@ func Char.!= (self, other: Char) Bool {
 	return !(self == other)
 }
 
-func Char.str (self) Str {
+func Char.Str (self) Str {
 	return Any.cast!<Void, Str>(#asm "
 		push 16
 		call Ptr.allocate
@@ -24,11 +24,11 @@ func Char.str (self) Str {
 }
 
 func Char.is_digit (self) Bool {
-	let as_int = self.as_int();
+	let as_int = self.Int();
 	return as_int >= 48 && as_int <= 57;
 }
 
-func Char.as_int (self) Int {
+func Char.Int (self) Int {
 	return Any.cast!<Char, Int>(self)
 }
 

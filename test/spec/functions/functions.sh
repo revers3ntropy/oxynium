@@ -23,7 +23,7 @@ expect '3' '
     func f() {
         1;
         g();
-        print(3.str());
+        print(3.Str());
         3;
     };
     f();
@@ -36,7 +36,7 @@ expect 'Hello' '
 '
 expect '22' '
       func sum_and_log(a: Int, b: Int, c: Int) {
-          print((a + b + c).str());
+          print((a + b + c).Str());
       };
       sum_and_log(5, 8, 9);
 '

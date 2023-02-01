@@ -1,24 +1,24 @@
 describe 'primitive Bool'
 
-expect 'false' 'print(new Bool.str())'
-expect 'false' 'print(false.str())'
-expect 'true' 'print(true.str())'
+expect 'false' 'print(new Bool.Str())'
+expect 'false' 'print(false.Str())'
+expect 'true' 'print(true.Str())'
 
 expect_expr_bool 'true' 'true'
 expect_expr_bool 'false' 'false'
 
-describe 'func Bool.str'
+describe 'func Bool.Str'
 
 expect 'truetruefalse' '
     func main() {
         let a = true;
-        print(a.str());
+        print(a.Str());
 
         let b = true;
-        let b_str = b.str();
+        let b_str = b.Str();
         print(b_str);
 
-        let c_str = false.str();
+        let c_str = false.Str();
         print(c_str);
     }
 '

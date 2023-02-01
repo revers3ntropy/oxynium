@@ -23,7 +23,7 @@ expect '12' '
         while {
             i = i + 1;
             if i > 2 { return };
-            print(i.str());
+            print(i.Str());
         };
     };
     f();
@@ -32,7 +32,7 @@ expect '1' '
     func f() Int {
         return 1;
     };
-    print(f().str());
+    print(f().Str());
 '
 
 expect_err 'TypeError' '
@@ -58,7 +58,7 @@ expect_err 'TypeError' '
 '
 expect_err 'TypeError' '
     func f() Str {
-        print(1.str());
+        print(1.Str());
     };
 '
 expect_err 'TypeError' '
@@ -89,7 +89,7 @@ expect '1' '
         return 1;
         print("hi");
     };
-    print(f().str());
+    print(f().Str());
 '
 expect_err 'TypeError' '
     func f() Int {
@@ -107,60 +107,60 @@ expect 'false' '
     func f() Bool {
       return 1 == 2;
     };
-    print(f().str());
+    print(f().Str());
 '
 expect 'true' '
     func f() Bool {
       return true;
     };
-    print(f().str());
+    print(f().Str());
 '
 expect '' '
     func f() Str {
         return "";
     };
-    print(f().str());
+    print(f().Str());
 '
 expect_err 'TypeError' '
     func f() Str {
         return "";
     };
-    print((f() + 2).str());
+    print((f() + 2).Str());
 '
 expect_err 'TypeError' '
     func f() Void {};
-    print(f().str());
+    print(f().Str());
 '
 expect '16' '
     func square(n: Int) Int {
         return n * n;
     };
-    print(square(4).str());
+    print(square(4).Str());
 '
 expect '17' '
     func square(n: Int) Int {
         return n * n;
     };
-    print((square(4) + square(-1)).str());
+    print((square(4) + square(-1)).Str());
 '
 expect '90' '
     func sum(a: Int, b: Int, c: Int) Int {
         return a + b + c;
     };
-    print((sum(1, 2, 3) * sum(4, 5, 6)).str());
+    print((sum(1, 2, 3) * sum(4, 5, 6)).Str());
 '
 expect '49' '
     func f(n: Int) Int {
         return n;
     };
-    print(f(4).str());
-    print((f(4) + f(5)).str());
+    print(f(4).Str());
+    print((f(4) + f(5)).Str());
 '
 expect '49' '
     func g() {
-        print(49.str());
+        print(49.Str());
         return;
-        print(true.str());
+        print(true.Str());
     };
     func f(n: Int) Void {
         return g();

@@ -29,7 +29,7 @@ const inp = "73167176531330624919225119674426574742355349194934\
             let mut product = 1;
             let mut j = 0;
             while j < 13 {
-                product = product * (inp.at(i + j).as_int() - 48);
+                product = product * (inp.at(i + j).Int() - 48);
                 j = j + 1;
             };
             if product > max {
@@ -37,7 +37,7 @@ const inp = "73167176531330624919225119674426574742355349194934\
             };
             i = i + 1;
         };
-        print(max.str());
+        print(max.Str());
     }
 ' '
     #include <iostream>

@@ -5,7 +5,7 @@ expect '1' '
         let mut i = 0;
         while {
             i = i + 1;
-            print(i.str());
+            print(i.Str());
             break;
         }
     }
@@ -15,7 +15,7 @@ expect '' '
         let mut i = 0;
         while {
             i = i + 1;
-            i.str();
+            i.Str();
             break;
         }
     }
@@ -68,7 +68,7 @@ expect '5' '
             if i < 5 {
                 continue;
             };
-            print(i.str());
+            print(i.Str());
             break;
         }
     }
@@ -81,7 +81,7 @@ expect '234 468 6912' '
             j = 1;
             while {
                 j = j + 1;
-                print((i*j).str());
+                print((i*j).Str());
                 if j > 3 {
                     break;
                 };
@@ -100,7 +100,7 @@ expect '012345678' '
     func main () {
         let mut i = 0;
         while i < n {
-            print(i.str());
+            print(i.Str());
             i = i + 1;
         }
     }

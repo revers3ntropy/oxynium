@@ -20,7 +20,7 @@ perf_test_comp_cpp 1 '149995000' '
             sum = sum + i;
             i = i + 1;
         };
-        print(sum.str());
+        print(sum.Str());
     }
 ' '
     #include <iostream>
@@ -55,7 +55,7 @@ perf_test_comp_cpp 1 '2001000' "
     func main () {
         let mut i = 0;
         $(printf 'i = i + %d;\n' {1..2000})
-        print(i.str());
+        print(i.Str());
     }
 " "
     #include <iostream>

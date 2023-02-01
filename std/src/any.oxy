@@ -21,8 +21,8 @@ func Any.eq <Cmp> (self, other: Cmp) Bool {
 	return Any.cast!<Any, Int>(self) == Any.cast!<Cmp, Int>(other)
 }
 
-func Any.str (self) Str {
-	return Any.cast!<Any, Int>(self).str()
+func Any.Str (self) Str {
+	return Any.cast!<Any, Int>(self).Str()
 }
 
 func Any.to<To>(self) To {

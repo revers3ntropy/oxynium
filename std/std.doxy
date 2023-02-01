@@ -7,16 +7,16 @@ primitive Void;
 primitive Char {
     extern func == (self, other: Char) Bool,
     extern func != (self, other: Char) Bool,
-    extern func str (self) Str,
+    extern func Str (self) Str,
     extern func is_digit (self) Bool,
-    extern func as_int (self) Int,
+    extern func Int (self) Int,
     extern func from_int (i: Int) Char,
 }
 
 primitive Bool {
     extern func || (self, other: Bool) Bool,
     extern func && (self, other: Bool) Bool,
-    extern func str (self) Str,
+    extern func Str (self) Str,
 }
 
 primitive Int {
@@ -34,7 +34,7 @@ primitive Int {
     extern func max (self, other=9223372036854775807) Int,
     extern func min (self, other=-9223372036854775807-1) Int,
     extern func abs (self) Int,
-    extern func str (self) Str,
+    extern func Str (self) Str,
 }
 
 class Str {
@@ -53,7 +53,7 @@ class Str {
     extern func find (self, other: Str) Int,
     extern func len (self) Int,
     extern func repeat (self, n: Int) Str,
-    extern func str (self) Str,
+    extern func Str (self) Str,
     extern func substr (self, start=0, end=9223372036854775807) Str,
     extern func starts_with (self, other: Str) Bool,
     extern func ends_with (self, other: Str) Bool,
@@ -69,7 +69,7 @@ class Time {
 	microseconds: Int,
 	extern func - (self, other: Time) Time,
 	extern func + (self, other: Time) Time,
-	extern func str (self) Str,
+	extern func Str (self) Str,
 	/// returns the current time in seconds from the UNIX epoch
 	extern func current_seconds () Int,
 	extern func current_microseconds () Int,
@@ -89,9 +89,9 @@ class Option <T> {
 primitive Any {
 	extern func cast <From, To> (val: From) To,
 	extern func __CAST_WRAPPER_DO_NOT_CALL (),
-	extern func from <From>(val: From) Any,
+	extern func from <From> (val: From) Any,
 	extern func eq <Cmp> (self, other: Cmp) Bool,
-	extern func str (self) Str,
+	extern func Str (self) Str,
 	extern func to <To> (self) To,
 }
 
@@ -101,6 +101,7 @@ primitive Ptr <T> {
 	extern func unwrap (self) T,
 	/// Wrapper around `malloc`
 	extern func allocate <A> (size: Int) Ptr<A>,
+	extern func Str (self) Str,
 }
 
 class List <T> {
@@ -113,6 +114,7 @@ class List <T> {
     extern func at (self, i: Int) Option<T>,
     extern func at_raw (self, i: Int) T,
     extern func push (self, value: T),
+    extern func Str (self) Str,
 }
 
 class Result <T, E> {

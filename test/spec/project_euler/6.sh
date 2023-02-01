@@ -11,7 +11,7 @@ perf_test_comp_cpp 50 '25164150' '
             i = i + 1;
         };
         square_of_sum = square_of_sum * square_of_sum;
-        print((square_of_sum - sum_of_squares).str());
+        print((square_of_sum - sum_of_squares).Str());
     }
 ' '
     #include <iostream>

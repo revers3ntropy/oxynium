@@ -10,7 +10,7 @@ perf_test_comp_cpp 50 '233168' '
             };
             i = i + 1;
         };
-        print(sum.str());
+        print(sum.Str());
     }
 ' '
     #include <iostream>

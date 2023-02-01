@@ -8,14 +8,14 @@ expect_err 'TypeError' 'print("", true)'
 
 expect '42135' '
     func g() {
-        print(1.str());
+        print(1.Str());
     };
     func f() {
-        print(2.str());
+        print(2.Str());
         g();
-        print(3.str());
+        print(3.Str());
     };
-    print(4.str());
+    print(4.Str());
     f();
-    print(5.str());
+    print(5.Str());
 '

@@ -1,55 +1,55 @@
 describe 'primitive Char'
 
-expect '' 'print(new Char.str())'
+expect '' 'print(new Char.Str())'
 expect_err 'TypeError' 'print(new Char)'
 
 
-describe 'func Char.str'
+describe 'func Char.Str'
 
 # TODO: requires char literals
 
 describe 'func Char.is_digit'
 
 expect 'true,true,true,false,false,false,false' '
-    print("0".at(0).is_digit().str());
+    print("0".at(0).is_digit().Str());
     print(",");
-    print("4".at(0).is_digit().str());
+    print("4".at(0).is_digit().Str());
     print(",");
-    print("9".at(0).is_digit().str());
+    print("9".at(0).is_digit().Str());
     print(",");
-    print(" ".at(0).is_digit().str());
+    print(" ".at(0).is_digit().Str());
     print(",");
-    print("a".at(0).is_digit().str());
+    print("a".at(0).is_digit().Str());
     print(",");
-    print("Z".at(0).is_digit().str());
+    print("Z".at(0).is_digit().Str());
     print(",");
-    print("💖".at(0).is_digit().str());
+    print("💖".at(0).is_digit().Str());
 '
 
 
 describe 'func Char.=='
 
 expect 'true,false,true,true' '
-    print(("a".at(0) == "a".at(0)).str());
+    print(("a".at(0) == "a".at(0)).Str());
     print(",");
-    print(("a".at(0) == "b".at(0)).str());
+    print(("a".at(0) == "b".at(0)).Str());
     print(",");
-    print(("💖".at(0) == "💖".at(0)).str());
+    print(("💖".at(0) == "💖".at(0)).Str());
     print(",");
-    print(("🇨🇦".at(0) == "🇦".at(0)).str());
+    print(("🇨🇦".at(0) == "🇦".at(0)).Str());
 '
 
 
 describe 'func Char.!='
 
 expect 'false,true,false,false' '
-    print(("a".at(0) != "a".at(0)).str());
+    print(("a".at(0) != "a".at(0)).Str());
     print(",");
-    print(("a".at(0) != "b".at(0)).str());
+    print(("a".at(0) != "b".at(0)).Str());
     print(",");
-    print(("💖".at(0) != "💖".at(0)).str());
+    print(("💖".at(0) != "💖".at(0)).Str());
     print(",");
-    print(("🇨🇦".at(0) != "🇦".at(0)).str());
+    print(("🇨🇦".at(0) != "🇦".at(0)).Str());
 '
 
 

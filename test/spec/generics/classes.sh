@@ -17,13 +17,13 @@ expect '1Hi1 | MyClass<Int> | MyClass<Str> | MyClass<MyClass<Int>>' '
     class TrailingCommaInGenerics <T,>;
 
     func main () {
-        print((new S <Int> { x: 1 }).x.str());
-        print((new S <Str> { x: "Hi" }).x.str());
+        print((new S <Int> { x: 1 }).x.Str());
+        print((new S <Str> { x: "Hi" }).x.Str());
 
         let a = new A <B> {
             x: new B { b: 1 }
         };
-        print(a.x.b.str());
+        print(a.x.b.Str());
         print(" | ");
         print(typeof (new MyClass<Int> {}));
         print(" | ");
@@ -70,7 +70,7 @@ expect '1' '
               x: 1
           }
        }
-    }.x.x.x.str())
+    }.x.x.x.Str())
 '
 expect_err 'UnknownSymbol' '
     class C <T> {}
@@ -105,9 +105,9 @@ expect '1,2' '
             return t
         }
     }
-    print(new C<Int>.a(1).str());
+    print(new C<Int>.a(1).Str());
     print(",");
-    print(C!<Int>.a(new C<Int>, 2).str());
+    print(C!<Int>.a(new C<Int>, 2).Str());
 '
 expect_err 'TypeError' '
     class C <T> {

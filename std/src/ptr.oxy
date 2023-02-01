@@ -72,3 +72,7 @@ func Ptr.allocate <A> (size: Int) Ptr<A> {
 			call panic
 	")
 }
+
+func Ptr.Str (self) Str {
+	return "Ptr@" + Any.cast!<Ptr<T>, Int>(self).Str()
+}

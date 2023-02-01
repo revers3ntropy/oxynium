@@ -16,7 +16,7 @@ perf_test_comp_cpp 1 '232792560' '
                 j = j + 1;
             }
             if is_divisible {
-                print(i.str());
+                print(i.Str());
                 break
             }
         }

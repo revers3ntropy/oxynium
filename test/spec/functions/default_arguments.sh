@@ -2,16 +2,16 @@ describe 'Default Arguments to Functions'
 
 expect '123' '
     func f(a: Int, b: Int = 2, c: Int = 3) {
-        print(a.str());
-        print(b.str());
-        print(c.str());
+        print(a.Str());
+        print(b.Str());
+        print(c.Str());
     };
     f(1);
 '
 expect '14' '
     const a = 1;
     func f(a: Int = a) {
-        print(a.str());
+        print(a.Str());
     };
     f();
     f(4);
@@ -19,19 +19,19 @@ expect '14' '
 expect '44' '
     const u = 1;
     func f(a: Int, b: Int = 5-u) {
-        print(a.str());
-        print(b.str());
+        print(a.Str());
+        print(b.Str());
     };
     f(4);
 '
 expect 'true2hi3' '
     func f(a: Bool, b = 2, c: Str = "hi") Int {
-        print(a.str());
-        print(b.str());
+        print(a.Str());
+        print(b.Str());
         print(c);
         return b + 1;
     };
-    print(f(true).str());
+    print(f(true).Str());
 '
 expect_err 'TypeError' '
     func f(a: Int = "") {};

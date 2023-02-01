@@ -14,7 +14,7 @@ func Bool.&& (self, other: Bool) Bool {
 	")
 }
 
-func Bool.str(self) Str {
+func Bool.Str (self) Str {
 	if self {
 		return "true"
 	}

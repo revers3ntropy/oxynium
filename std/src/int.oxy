@@ -103,7 +103,7 @@ func Int.abs (self) Int {
 	return self
 }
 
-func Int.str (self) Str {
+func Int.Str (self) Str {
 	// https://stackoverflow.com/questions/8257714
 	return Any.cast!<Void, Str>(#asm "
 		; allocate string

@@ -18,8 +18,8 @@ func Time.+ (self, other: Time) Time {
 	}
 }
 
-func Time.str (self) Str {
-	return self.seconds.str() + "." + self.microseconds.str()
+func Time.Str (self) Str {
+	return self.seconds.Str() + "." + self.microseconds.Str()
 }
 
 func Time.current_seconds () Int {

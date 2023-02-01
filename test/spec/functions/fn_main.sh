@@ -63,6 +63,6 @@ expect 'Hello' '
 expect '16' '
     const s = 16;
     func main() {
-        print(s.str());
+        print(s.Str());
     };
 '

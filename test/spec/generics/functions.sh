@@ -4,11 +4,11 @@ expect '1,hello,true' '
     func a <T> (a: T) T {
         return a
     }
-    print(a!<Int>(1).str());
+    print(a!<Int>(1).Str());
     print(",");
-    print(a!<Str>("hello").str());
+    print(a!<Str>("hello").Str());
     print(",");
-    print(a!<Bool>(true).str());
+    print(a!<Bool>(true).Str());
 
     func trailing_comma_in_generic_params <T,> (a: T) T {
         return a
@@ -48,7 +48,7 @@ expect '1' '
             return t
         }
     }
-    print(new C.a!<Int>(1).str());
+    print(new C.a!<Int>(1).Str());
 '
 expect '1' '
     class C {
@@ -56,7 +56,7 @@ expect '1' '
             return t
         }
     }
-    print(C.a!<Int>(1).str());
+    print(C.a!<Int>(1).Str());
 '
 expect '1,Hi' '
     class C <A> {
@@ -64,7 +64,7 @@ expect '1,Hi' '
             return t
         }
     }
-    print(new C<Int>.a!<Int>(1, 1).str());
+    print(new C<Int>.a!<Int>(1, 1).Str());
     print(",");
     print(new C<Int>.a!<Str>(1, "Hi"));
 '
@@ -133,7 +133,7 @@ expect '1,Hi' '
     print(
         new C<Int, C<Int, Void>>
             .a!<Int, Str>(2, 1, "ho")
-            .str()
+            .Str()
     );
     print(",");
     print(
@@ -161,5 +161,5 @@ expect_err 'TypeError' '
             return a
         }
     }
-    print(new C<Int>.a!<Str>(1).str());
+    print(new C<Int>.a!<Str>(1).Str());
 '

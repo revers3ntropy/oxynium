@@ -16,7 +16,7 @@ perf_test_comp_cpp 50 '4613732' '
                 break;
             };
         };
-        print(sum.str());
+        print(sum.Str());
     }
 ' '
     #include <iostream>

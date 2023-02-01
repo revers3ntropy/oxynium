@@ -179,10 +179,10 @@ function expect_err() {
 }
 
 function expect_expr_int() {
-    expect "$1" "print(($2).str())" "$3"
+    expect "$1" "print(($2).Str())" "$3"
 }
 function expect_expr_bool() {
-    expect "$1" "print(($2).str())" "$3"
+    expect "$1" "print(($2).Str())" "$3"
 }
 
 perf_names=()

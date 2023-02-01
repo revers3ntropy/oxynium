@@ -206,7 +206,7 @@ func Str.repeat (self, n: Int) Str {
 	return self + self.repeat(n - 1)
 }
 
-func Str.str (self) Str {
+func Str.Str (self) Str {
 	return self
 }
 
@@ -232,7 +232,7 @@ func Str.substr (self, start = 0, end = 9223372036854775807) Str {
 	while i < actual_end {
 		// use Str.at_raw here as bounds checking has already been done
 		// and we don't want to do it again every iteration
-		s = s + self.at_raw(i).str();
+		s = s + self.at_raw(i).Str();
 		i = i + 1
 	}
 	return s
@@ -270,13 +270,13 @@ func Str.reversed (self) Str {
 	let mut i = 0;
 	let mut s = "";
 	while i < self.len() {
-		s = self.at(i).str() + s;
+		s = self.at(i).Str() + s;
 		i = i + 1
 	}
 	return s
 }
 
-func Str.replace (self, search: Str, replace_with = "", max = -1) Str {
+func Str.replace (self, search: Str, replace_with="", max=-1) Str {
 	if search.len() == 0 {
 		return self
 	}
@@ -303,7 +303,7 @@ func Str.replace (self, search: Str, replace_with = "", max = -1) Str {
 				continue
 			}
 		}
-		s = s + self.at(i).str();
+		s = s + self.at(i).Str();
 		i = i + 1
 	}
 	return s

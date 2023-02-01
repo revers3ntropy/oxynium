@@ -5,7 +5,7 @@ expect 'x = 1, x = 2, ' '
         x: Int,
         func log(self) Void {
            print("x = ");
-           print(self.x.str());
+           print(self.x.Str());
            print(", ");
         }
     }

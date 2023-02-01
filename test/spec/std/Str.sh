@@ -1,7 +1,7 @@
 describe 'class Str'
 
-expect '' 'print(new Str.str().str())'
-expect '' 'print(new Str.str())'
+expect '' 'print(new Str.Str().Str())'
+expect '' 'print(new Str.Str())'
 expect '' 'print(new Str)'
 expect 'Hi' 'print("Hi")'
 expect_err 'SyntaxError' 'print("hi'
@@ -36,10 +36,10 @@ expect_err       'SyntaxError'   'print("\9")'
 expect_err       'SyntaxError'   'print("\x")'
 
 
-describe 'func Str.str'
+describe 'func Str.Str'
 
-expect ''   'print("".str())'
-expect 'hi' 'print("hi".str())'
+expect ''   'print("".Str())'
+expect 'hi' 'print("hi".Str())'
 
 
 describe 'func Str.len'
@@ -53,21 +53,21 @@ expect_err 'TypeError' 'print("abcd".len())'
 
 describe 'func Str.at'
 
-expect 'c'  'print("abc".at(-1).str())'
-expect 'b'  'print("abc".at(-2).str())'
-expect 'a'  'print("abc".at(-3).str())'
-expect ''   'print("abc".at(-4).str())'
-expect 'a'  'print("abc".at(0).str())'
-expect 'b'  'print("abc".at(1).str())'
-expect 'c'  'print("abc".at(2).str())'
-expect ''   'print("abc".at(4).str())'
-expect '💖' 'print("💖💖".at(0).str())'
-expect ''   'print("💖💖".at(4).str())'
-expect '🏳' 'print("🏳️‍🌈".at(0).str())'
+expect 'c'  'print("abc".at(-1).Str())'
+expect 'b'  'print("abc".at(-2).Str())'
+expect 'a'  'print("abc".at(-3).Str())'
+expect ''   'print("abc".at(-4).Str())'
+expect 'a'  'print("abc".at(0).Str())'
+expect 'b'  'print("abc".at(1).Str())'
+expect 'c'  'print("abc".at(2).Str())'
+expect ''   'print("abc".at(4).Str())'
+expect '💖' 'print("💖💖".at(0).Str())'
+expect ''   'print("💖💖".at(4).Str())'
+expect '🏳' 'print("🏳️‍🌈".at(0).Str())'
 # (0-width character, is something there...)
-expect '️'  'print("🏳️‍🌈".at(1).str())'
-expect '🇦' 'print("🇨🇦".at(1).str())'
-expect '🇨' 'print("🇨🇦".at(0).str())'
+expect '️'  'print("🏳️‍🌈".at(1).Str())'
+expect '🇦' 'print("🇨🇦".at(1).Str())'
+expect '🇨' 'print("🇨🇦".at(0).Str())'
 
 
 

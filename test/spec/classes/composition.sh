@@ -16,8 +16,8 @@ expect '13' '
             },
             z: 3
         };
-        print(s2.s.x.str());
-        print(s2.z.str());
+        print(s2.s.x.Str());
+        print(s2.z.Str());
     }
 '
 
@@ -34,8 +34,8 @@ expect '12' '
         }
     }
     func main () {
-        print(new S { x: 1 }.make_s2().x.str());
+        print(new S { x: 1 }.make_s2().x.Str());
         let s = new S { x: 2 };
-        print(s.make_s2().x.str());
+        print(s.make_s2().x.Str());
     }
 '

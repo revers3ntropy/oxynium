@@ -25,9 +25,9 @@ expect '341' '
     func main() {
         let a = new Foo { x: 1 };
         let b = new Foo { x: 2 };
-        print((a + b).x.str());
-        print((new Bar { x: 1 } + 3).x.str());
-        print((new Bar { x: 2 } - a).x.str());
+        print((a + b).x.Str());
+        print((new Bar { x: 1 } + 3).x.Str());
+        print((new Bar { x: 2 } - a).x.Str());
     }
 '
 

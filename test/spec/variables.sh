@@ -15,7 +15,7 @@ expect '1' '
     const a = 2;
     func main() {
         let a = 1;
-        print(a.str());
+        print(a.Str());
     }
 '
 expect '42' '
@@ -23,10 +23,10 @@ expect '42' '
     func f() {
         let mut a = 1;
         a = 4;
-        print(a.str());
+        print(a.Str());
     };
     f();
-    print(a.str());
+    print(a.Str());
 '
 expect_err 'TypeError' '
     const a = "";
@@ -100,7 +100,7 @@ expect '1' '
     func main () {
         let mut a: Int = 0;
         a = 1;
-        print(a.str());
+        print(a.Str());
     }
 '
 expect_err 'TypeError' '
@@ -115,7 +115,7 @@ expect '4' '
         a = a - 1;
         return a / 2;
     };
-    print(f(2).str());
+    print(f(2).Str());
 '
 expect '4' '
     func f (n: Int) Int {
@@ -127,7 +127,7 @@ expect '4' '
         };
         return a * 2;
     };
-    print(f(3).str());
+    print(f(3).Str());
 '
 expect '5' '
     func f(n: Int) Int {
@@ -137,12 +137,12 @@ expect '5' '
         };
         return n;
     };
-    print(f(2).str());
+    print(f(2).Str());
 '
 expect '4' '
     func main () {
         let a: Int = 4;
-        print(a.str());
+        print(a.Str());
     }
 '
 expect_err 'TypeError' '
@@ -177,7 +177,7 @@ expect '1' '
         a = 1;
         return a;
     };
-    print(f().str());
+    print(f().Str());
 '
 expect_err 'SyntaxError' '
     func f() {

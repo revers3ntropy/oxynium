@@ -8,20 +8,20 @@ expect '732truefalsetrue' '
     	};
     	l.push(2);
     	l.push(3);
-    	print(l.at(0).unwrap().str());
-    	print(l.at(2).unwrap().str());
-    	print(l.at(1).unwrap().str());
-    	print(l.at(1).is_some().str());
-    	print(l.at(3).is_some().str());
-    	print(l.at(-1).is_some().str());
+    	print(l.at(0).unwrap().Str());
+    	print(l.at(2).unwrap().Str());
+    	print(l.at(1).unwrap().Str());
+    	print(l.at(1).is_some().Str());
+    	print(l.at(3).is_some().Str());
+    	print(l.at(-1).is_some().Str());
     }
 '
 expect '02' '
     func main () {
     	let l = List.empty!<Int>();
-    	print(l.len().str());
+    	print(l.len().Str());
     	l.push(2);
     	l.push(3);
-    	print(l.len().str());
+    	print(l.len().Str());
     }
 '

@@ -19,16 +19,16 @@ expect 'hi' '
 expect '' 'if true { 1 }'
 expect '2' '
     if false {
-      print(1.str());
+      print(1.Str());
     } else {
-      print(2.str());
+      print(2.Str());
     }
 '
 expect '1' '
     if true {
-      print(1.str());
+      print(1.Str());
     } else {
-      print(2.str());
+      print(2.Str());
     }
 '
 expect '2' '
@@ -40,26 +40,26 @@ expect '2' '
 '
 expect '2' '
     if false {
-      print(1.str());
+      print(1.Str());
     } else if true {
-      print(2.str());
+      print(2.Str());
     } else {
-      print(3.str());
+      print(3.Str());
     }
 '
 expect '3' '
     if false {
-      print(1.str());
+      print(1.Str());
     } else if false {
-      print(2.str());
+      print(2.Str());
     } else {
-      print(3.str());
+      print(3.Str());
     }
 '
 
 expect_err 'SyntaxError' 'if'
 expect_err 'SyntaxError' 'if ()'
-expect_err 'SyntaxError' 'if (false) print(2.str());'
+expect_err 'SyntaxError' 'if (false) print(2.Str());'
 expect_err 'SyntaxError' 'if {}'
 expect_err 'SyntaxError' 'if { print(); }'
 expect_err 'SyntaxError' 'if { print(); }'

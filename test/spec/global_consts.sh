@@ -2,12 +2,12 @@ describe 'Defining Global Constants'
 
 expect '1' '
     const a = 1;
-    print(a.str());
+    print(a.Str());
 '
 expect '3' '
     const a = 1;
     const b = 2;
-    print((a + b).str());
+    print((a + b).Str());
 '
 expect 'Some String' '
     const a = "Some String";

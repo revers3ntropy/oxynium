@@ -19,7 +19,7 @@ perf_test_comp_cpp 50 '6857' '
         if n > max {
             max = n;
         };
-        print(max.str());
+        print(max.Str());
     }
 ' '
     #include <iostream>

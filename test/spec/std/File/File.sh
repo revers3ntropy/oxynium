@@ -6,10 +6,10 @@ expect 'true,false' '
         let path = "./test/spec/std/File/example1.txt";
         let mut f = File.open(path)
                         .unwrap("Failed to open file");
-        print(f.is_open().str());
+        print(f.is_open().Str());
         print(",");
         f.close();
-        print(f.is_open().str());
+        print(f.is_open().Str());
 //        print(",");
 //
 //        f = File.open("./" + path);

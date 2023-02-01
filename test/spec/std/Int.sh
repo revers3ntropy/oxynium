@@ -1,6 +1,6 @@
 describe 'primitive Int'
 
-expect '0' 'print(new Int.str())'
+expect '0' 'print(new Int.Str())'
 
 expect_err 'TypeError' '0 && 1'
 expect_err 'TypeError' '!8'
@@ -61,32 +61,32 @@ expect_expr_int '27' '1+((2*3)+4*5)'
 
 # as these get optimized, make sure they are working
 expect '13-132119-2' '
-    print((2 - 1).str());
-    print((2 + 1).str());
-    print((1 - 2).str());
-    print((1 + 2).str());
-    print((2 + 0).str());
+    print((2 - 1).Str());
+    print((2 + 1).Str());
+    print((1 - 2).Str());
+    print((1 + 2).Str());
+    print((2 + 0).Str());
     const a = 9;
-    print((0 + a + 2).str());
-    print((a - 0).str());
-    print((0 - 2).str());
+    print((0 + a + 2).Str());
+    print((a - 0).Str());
+    print((0 - 2).Str());
 '
 expect '10003200' '
-    print((1 * 1).str());
-    print((1 * 0).str());
-    print((0 * 1).str());
-    print((0 * 0).str());
-    print((1 * 3).str());
-    print((2 * 1).str());
-    print((2 * 0).str());
-    print((0 * 2).str());
+    print((1 * 1).Str());
+    print((1 * 0).Str());
+    print((0 * 1).Str());
+    print((0 * 0).Str());
+    print((1 * 3).Str());
+    print((2 * 1).Str());
+    print((2 * 0).Str());
+    print((0 * 2).Str());
 '
 expect '10020' '
-    print((1 / 1).str());
-    print((0 / 1).str());
-    print((1 / 3).str());
-    print((2 / 1).str());
-    print((0 / 2).str());
+    print((1 / 1).Str());
+    print((0 / 1).Str());
+    print((1 / 3).Str());
+    print((2 / 1).Str());
+    print((0 / 2).Str());
 '
 expect_err 'TypeError' '1 / 0'
 expect_err 'TypeError' '0 / 0'
@@ -105,23 +105,23 @@ expect_expr_int '-9223372036854775807' '9223372036854775807+2' # overflow to -ma
 expect_expr_int '-9223372036854775806' '9223372036854775807+3' # overflow to -max+2
 
 
-describe 'func Int.str'
+describe 'func Int.Str'
 
-expect '1'           'print(1.str())'
-expect '123'         'print(123.str())'
-expect '1234567890'  'print(1234567890.str())'
-expect '0'           'print(0.str())'
-expect '-1'          'print((-1).str())'
-expect '-123'        'print((-123).str())'
-expect '-1234567890' 'print((-1234567890).str())'
+expect '1'           'print(1.Str())'
+expect '123'         'print(123.Str())'
+expect '1234567890'  'print(1234567890.Str())'
+expect '0'           'print(0.Str())'
+expect '-1'          'print((-1).Str())'
+expect '-123'        'print((-123).Str())'
+expect '-1234567890' 'print((-1234567890).Str())'
 expect '0' '
     const a = 0;
-    print(a.str());
+    print(a.Str());
 '
 expect '-106709' '
     func f() {
         let a = -106709;
-        let a_str = a.str();
+        let a_str = a.Str();
         print(a_str);
     };
     f();
@@ -253,23 +253,23 @@ expect_err 'TypeError' 'func a(); a <= 4'
 describe 'func Int.=='
 
 expect 'false,false,true,false,false,false,false,false,false' '
-    print((1 == 2).str());
+    print((1 == 2).Str());
     print(",");
-    print((2 == 1).str());
+    print((2 == 1).Str());
     print(",");
-    print((1 == 1).str());
+    print((1 == 1).Str());
     print(",");
-    print((1 == 0).str());
+    print((1 == 0).Str());
     print(",");
-    print((0 == 1).str());
+    print((0 == 1).Str());
     print(",");
-    print((1 == -1).str());
+    print((1 == -1).Str());
     print(",");
-    print((-1 == 1).str());
+    print((-1 == 1).Str());
     print(",");
-    print((1 + 4 == 2).str());
+    print((1 + 4 == 2).Str());
     print(",");
-    print((1 + 4 == 2 * 3).str());
+    print((1 + 4 == 2 * 3).Str());
 '
 expect_err 'TypeError' 'true == 2'
 expect_err 'TypeError' '1 == 2 == 4'
@@ -280,23 +280,23 @@ expect_err 'TypeError' '2 == Int'
 describe 'func Int.!='
 
 expect 'true,true,false,true,true,true,true,true,true' '
-    print((1 != 2).str());
+    print((1 != 2).Str());
     print(",");
-    print((2 != 1).str());
+    print((2 != 1).Str());
     print(",");
-    print((1 != 1).str());
+    print((1 != 1).Str());
     print(",");
-    print((1 != 0).str());
+    print((1 != 0).Str());
     print(",");
-    print((0 != 1).str());
+    print((0 != 1).Str());
     print(",");
-    print((1 != -1).str());
+    print((1 != -1).Str());
     print(",");
-    print((-1 != 1).str());
+    print((-1 != 1).Str());
     print(",");
-    print((1 + 4 != 2).str());
+    print((1 + 4 != 2).Str());
     print(",");
-    print((1 + 4 != 2 * 3).str());
+    print((1 + 4 != 2 * 3).Str());
 '
 expect_err 'TypeError' 'true != 2'
 expect_err 'TypeError' '2 != true'

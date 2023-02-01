@@ -78,3 +78,7 @@ func List.push (self, value: T) {
 		push rax
 	"
 }
+
+func List.Str (self) Str {
+	return "List[" + self.len().Str() + "]"
+}
