@@ -71,6 +71,17 @@ expect_err 'TypeError' '
         }
     }
 '
+expect '' '
+    func main () {
+        let mut a: Int;
+        if true {
+            a = 2;
+        } else {
+            a = 3;
+        }
+        a = 4;
+    }
+'
 
 
 describe "Don't Allow Local Var Dec in Global Scope"
@@ -86,20 +97,20 @@ expect_err 'SyntaxError' '
 describe 'Local Var Reassignment'
 
 expect '1' '
-    func main() {
+    func main () {
         let mut a: Int = 0;
         a = 1;
         print(a.str());
-    };
+    }
 '
 expect_err 'TypeError' '
-    func f() {
+    func main () {
         let mut a = 1;
         a = "";
-    };
+    }
 '
 expect '4' '
-    func f(n: Int) Int {
+    func f (n: Int) Int {
         let mut a = n*n + 3 * n;
         a = a - 1;
         return a / 2;
@@ -107,7 +118,7 @@ expect '4' '
     print(f(2).str());
 '
 expect '4' '
-    func f(n: Int) Int {
+    func f (n: Int) Int {
         let mut a: Int;
         if n == 3 {
             a = 2;
@@ -129,26 +140,26 @@ expect '5' '
     print(f(2).str());
 '
 expect '4' '
-    func main() {
+    func main () {
         let a: Int = 4;
         print(a.str());
-    };
+    }
 '
 expect_err 'TypeError' '
-    func main() {
+    func main () {
         let a: Int = "";
-    };
+    }
 '
 expect_err 'TypeError' '
-    func main() {
+    func main () {
         let mut a: Int = "";
-    };
+    }
 '
 expect_err 'TypeError' '
-    func main() {
+    func main () {
         let mut a: Int = 0;
         a = ""
-    };
+    }
 '
 
 
@@ -167,6 +178,16 @@ expect '1' '
         return a;
     };
     print(f().str());
+'
+expect_err 'SyntaxError' '
+    func f() {
+        let a;
+    }
+'
+expect_err 'SyntaxError' '
+    func f() {
+        let a: Int;
+    }
 '
 
 

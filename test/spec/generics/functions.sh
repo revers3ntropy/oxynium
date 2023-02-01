@@ -9,6 +9,10 @@ expect '1,hello,true' '
     print(a!<Str>("hello").str());
     print(",");
     print(a!<Bool>(true).str());
+
+    func trailing_comma_in_generic_params <T,> (a: T) T {
+        return a
+    }
 '
 expect_err 'TypeError' '
     func a <T> (a: T) T {

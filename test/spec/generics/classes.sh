@@ -14,6 +14,8 @@ expect '1Hi1 | MyClass<Int> | MyClass<Str> | MyClass<MyClass<Int>>' '
         func do_something(self) {}
     }
 
+    class TrailingCommaInGenerics <T,>;
+
     func main () {
         print((new S <Int> { x: 1 }).x.str());
         print((new S <Str> { x: "Hi" }).x.str());

@@ -1,24 +1,24 @@
 describe 'Class Instance Instantiation'
 
 expect '' '
-    class S { x: Int }
-    new S { x: 1 };
-'
-expect '' '
-    class S {
+    class A { x: Int }
+    new A { x: 1 };
+
+    class B {
         x: Int,
         y: Bool,
     };
-    new S { x: 1, y: true };
+    new B { x: 1, y: true };
+    new B { x: 1, y: true, };
 '
 expect_err 'TypeError' '
     class S { x: Int };
     class S2 { s: S };
-    new S2 { s: new S { x: "hi" } };
+    new S2 { s: new S { x: "hi", }, };
 '
 expect_err 'TypeError' '
     class S { x: Int };
-    new S {};
+    new S { };
 '
 expect_err 'TypeError' '
     class S { x: Int };
@@ -31,6 +31,14 @@ expect_err 'TypeError' '
 expect_err 'TypeError' '
     class S { x: Int };
     new S { x: 1, y: 2 };
+'
+expect_err 'TypeError' '
+    class S { x: Int, y: Str };
+    new S { x: 1, y: 2 };
+'
+expect_err 'TypeError' '
+    class S { x: Int, y: Str, z: Int };
+    new S { x: 1, y: "" };
 '
 expect_err 'UnknownSymbol' 'new s'
 expect_err 'SyntaxError' 'new 1'

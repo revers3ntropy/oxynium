@@ -42,6 +42,9 @@ expect_err 'TypeError' '
 expect_err 'TypeError' '
     func f(a: Int, b: Int = 1, c: Int) {};
 '
+expect_err 'TypeError' '
+    func f(b=1, d=4, c: Int) {};
+'
 expect_err 'SyntaxError' 'func f(true: Bool) {}'
 expect_err 'SyntaxError' 'func f(func: Bool) {}'
 expect_err 'SyntaxError' 'func f(while: Bool) {}'

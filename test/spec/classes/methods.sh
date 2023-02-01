@@ -26,7 +26,8 @@ expect '' '
         func f2(self) {}
         extern func f3(self),
         y: Int,
-        func f4(self) {}
+        func f4(self) {},
+        extern func f5(a: Int,),
         z: Str
     }
 '
@@ -47,11 +48,6 @@ expect '' '
         func f(self, a: Int) {}
     }
     (new S{}).f(1);
-'
-expect '' '
-    class S {
-        func f(self, a: Int) {}
-    }
     new S.f(1);
 '
 

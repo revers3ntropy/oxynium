@@ -1627,6 +1627,13 @@ impl Parser {
 
             result_consume!(Comma, self, res);
 
+            if self.current_matches(
+                TokenType::CloseParen,
+                None,
+            ) {
+                return Ok(parameters);
+            }
+
             parameters.push(self.parameter()?);
         }
 
@@ -1670,6 +1677,10 @@ impl Parser {
             }
 
             result_consume!(Comma, self, res);
+
+            if self.current_matches(TokenType::GT, None) {
+                return Ok(parameters);
+            }
 
             parameters.push(self.generic_parameter()?);
         }
@@ -2142,6 +2153,12 @@ impl Parser {
                             MutRc<FnDeclarationNode>,
                         >);
                     methods.push(fn_.clone().unwrap());
+                }
+
+                if self
+                    .current_matches(TokenType::Comma, None)
+                {
+                    consume!(self, res);
                 }
 
                 if self.current_matches(

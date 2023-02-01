@@ -1,9 +1,5 @@
 describe 'Class Instance Field Access'
 
-expect '' '
-    class S { x: Int };
-    (new S { x: 1 }).x;
-'
 expect '1' '
     class S { x: Int };
     print(new S { x: 1 }.x.str());
