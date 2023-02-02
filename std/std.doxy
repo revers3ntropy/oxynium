@@ -84,6 +84,7 @@ class Option <T> {
 	extern func is_some (self) Bool,
 	extern func is_none (self) Bool,
 	extern func unwrap (self, err_message="Unwrapping None Option") T,
+	extern func unwrap_or (self, default: T) T,
 }
 
 primitive Any {

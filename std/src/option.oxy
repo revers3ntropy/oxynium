@@ -24,3 +24,10 @@ func Option.unwrap (self, err_message = "Unwrapping None Option") T {
 	}
 	return self.value.unwrap()
 }
+
+func Option.unwrap_or (self, default_value: T) T {
+	if self.is_none() {
+		return default_value
+	}
+	return self.value.unwrap()
+}

@@ -29,6 +29,7 @@ use crate::ast::str::StrNode;
 use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::type_expr::TypeNode;
 use crate::ast::type_expr_generic::GenericTypeNode;
+use crate::ast::type_expr_optional::OptionalTypeNode;
 use crate::ast::unary_op::UnaryOpNode;
 use crate::ast::AstNode;
 use crate::context::Context;
@@ -730,7 +731,7 @@ impl Parser {
 
         if self.current_matches(TokenType::Colon, None) {
             self.advance(&mut res);
-            type_ = res.register(self.type_expr());
+            type_ = res.register(self.type_expr(None));
             ret_on_err!(res);
         }
 
@@ -854,7 +855,7 @@ impl Parser {
         if self.current_matches(TokenType::Colon, None) {
             self.advance(&mut res);
 
-            let type_ = res.register(self.type_expr());
+            let type_ = res.register(self.type_expr(None));
             ret_on_err!(res);
             type_annotation = Some(type_.unwrap());
         }
@@ -1529,8 +1530,10 @@ impl Parser {
         res
     }
 
-    /// TypeExpr ::= Identifier (LT TypeExpr (Comma TypeExpr)* GT)?
-    fn type_expr(&mut self) -> ParseResults {
+    /// SimpleTypeExpr ::= Identifier (LT TypeExpr (Comma TypeExpr)* GT)?
+    fn simple_or_generic_type_expr(
+        &mut self,
+    ) -> ParseResults {
         let mut res = ParseResults::new();
 
         consume!(type_tok = Identifier, self, res);
@@ -1547,7 +1550,7 @@ impl Parser {
         let mut generic_args = Vec::new();
         loop {
             let generic_type =
-                res.register(self.type_expr());
+                res.register(self.type_expr(None));
             ret_on_err!(res);
             generic_args.push(generic_type.unwrap());
             if self.current_matches(TokenType::GT, None) {
@@ -1571,6 +1574,38 @@ impl Parser {
         res
     }
 
+    /// TypeExpr ::= SimpleTypeExpr QM?
+    fn type_expr(
+        &mut self,
+        base: Option<MutRc<dyn AstNode>>,
+    ) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        let value;
+        if let Some(base) = base {
+            value = base;
+        } else {
+            let simple_type_res = res.register(
+                self.simple_or_generic_type_expr(),
+            );
+            ret_on_err!(res);
+            value = simple_type_res.unwrap();
+        }
+
+        if !self.current_matches(TokenType::QM, None) {
+            res.success(value);
+            return res;
+        }
+
+        consume!(QM, self, res);
+
+        let start = value.clone().borrow().pos().0;
+        self.type_expr(Some(new_mut_rc(OptionalTypeNode {
+            value,
+            position: (start, self.last_tok().unwrap().end),
+        })))
+    }
+
     /// Parameter ::= Identifier (Colon TypeExpr)? (Equals Expression)?
     fn parameter(&mut self) -> Result<Parameter, Error> {
         let mut res = ParseResults::new();
@@ -1581,7 +1616,7 @@ impl Parser {
         let mut type_expr = None;
         if self.current_matches(TokenType::Colon, None) {
             result_consume!(Colon, self, res);
-            type_expr = res.register(self.type_expr());
+            type_expr = res.register(self.type_expr(None));
             result_ret_on_err!(res);
         }
 
@@ -1931,7 +1966,7 @@ impl Parser {
             && self.current_tok().is_some()
         {
             let ret_type_option =
-                res.register(self.type_expr());
+                res.register(self.type_expr(None));
             ret_on_err!(res);
             ret_type = ret_type_option.unwrap();
         }
@@ -2056,7 +2091,7 @@ impl Parser {
         result_consume!(identifier = Identifier, self, res);
         result_consume!(Colon, self, res);
 
-        let type_expr = res.register(self.type_expr());
+        let type_expr = res.register(self.type_expr(None));
         result_ret_on_err!(res);
 
         Ok(ClassField {
@@ -2282,7 +2317,7 @@ impl Parser {
         let mut args = Vec::new();
 
         loop {
-            let arg = res.register(self.type_expr());
+            let arg = res.register(self.type_expr(None));
             result_ret_on_err!(res);
             args.push(arg.unwrap());
 

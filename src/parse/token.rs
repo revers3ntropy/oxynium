@@ -31,6 +31,7 @@ pub enum TokenType {
     NotEquals,    // !=
     Colon,        // :
     Hash,         // #
+    QM,           // ?
 }
 
 #[derive(Clone)]
@@ -105,6 +106,7 @@ impl Token {
             TokenType::NotEquals => "!=".to_string(),
             TokenType::Colon => ":".to_string(),
             TokenType::Hash => "#".to_string(),
+            TokenType::QM => "?".to_string(),
         }
     }
 

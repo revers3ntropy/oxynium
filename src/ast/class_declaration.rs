@@ -287,6 +287,7 @@ impl AstNode for ClassDeclarationNode {
 
         Ok(TypeCheckRes::from(this_type, unknowns))
     }
+
     fn asm(
         &mut self,
         ctx: MutRc<Context>,

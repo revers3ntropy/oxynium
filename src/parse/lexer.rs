@@ -30,6 +30,7 @@ const SINGLE_CHAR_TOKENS: phf::Map<
     "<" => TokenType::LT,
     ":" => TokenType::Colon,
     "#" => TokenType::Hash,
+    "?" => TokenType::QM,
 };
 
 const DOUBLE_CHAR_TOKENS: phf::Map<
