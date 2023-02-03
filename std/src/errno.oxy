@@ -1,4 +1,4 @@
-func errno () Int {
+def errno () Int {
 	return Any.cast!<Void, Int>(#asm "
 		push rbp
 		mov rbp, rsp

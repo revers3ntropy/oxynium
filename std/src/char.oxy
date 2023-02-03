@@ -1,4 +1,4 @@
-func Char.== (self, other: Char) Bool {
+def Char.== (self, other: Char) Bool {
 	return Any.cast!<Void, Bool>(#asm "
 		mov rax, qword [rbp + 16]
 		cmp rax, qword [rbp + 24]
@@ -7,11 +7,11 @@ func Char.== (self, other: Char) Bool {
 	")
 }
 
-func Char.!= (self, other: Char) Bool {
+def Char.!= (self, other: Char) Bool {
 	return !(self == other)
 }
 
-func Char.Str (self) Str {
+def Char.Str (self) Str {
 	return Any.cast!<Void, Str>(#asm "
 		push 16
 		call Ptr.allocate
@@ -23,15 +23,15 @@ func Char.Str (self) Str {
 	")
 }
 
-func Char.is_digit (self) Bool {
+def Char.is_digit (self) Bool {
 	let as_int = self.Int();
 	return as_int >= 48 && as_int <= 57;
 }
 
-func Char.Int (self) Int {
+def Char.Int (self) Int {
 	return Any.cast!<Char, Int>(self)
 }
 
-func Char.from_int (i: Int) Char {
+def Char.from_int (i: Int) Char {
 	return Any.cast!<Int, Char>(i)
 }

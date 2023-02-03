@@ -529,7 +529,7 @@ impl Parser {
         }
         if self.current_matches(
             TokenType::Identifier,
-            Some("func".to_string()),
+            Some("def".to_string()),
         ) {
             self.advance(&mut res);
             res.node =
@@ -591,7 +591,7 @@ impl Parser {
 
         if self.current_matches(
             TokenType::Identifier,
-            Some("func".to_string()),
+            Some("def".to_string()),
         ) {
             self.advance(&mut res);
             res.node =
@@ -644,7 +644,7 @@ impl Parser {
 
         if self.current_matches(
             TokenType::Identifier,
-            Some("func".to_string()),
+            Some("def".to_string()),
         ) {
             self.advance(&mut res);
             res.node =
@@ -2167,7 +2167,7 @@ impl Parser {
 
             if self.current_matches(
                 TokenType::Identifier,
-                Some("func".to_string()),
+                Some("def".to_string()),
             ) {
                 consume!(self, res);
 

@@ -4,7 +4,7 @@ expect 'Hello,World,false,false,true,1,0,1,true,false,true' '
 
     class C;
 
-    func main () {
+    def main () {
         let a1 = Any.from!<Str>("Hello");
         print(Any.cast!<Any, Str>(a1));
         print(",");
@@ -35,12 +35,12 @@ expect 'Hello,World,false,false,true,1,0,1,true,false,true' '
 '
 
 
-describe 'func Any.cast'
+describe 'def Any.cast'
 
 expect '1,true,true,true,true,false,A,0,0,103' '
-    func void () { 2 }
+    def void () { 2 }
 
-    func main () {
+    def main () {
         print(Any.cast!<Bool, Int>(true).Str());
         print(",");
         print(Any.cast!<Int, Bool>(1).Str());

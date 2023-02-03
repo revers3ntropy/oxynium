@@ -36,13 +36,13 @@ expect_err       'SyntaxError'   'print("\9")'
 expect_err       'SyntaxError'   'print("\x")'
 
 
-describe 'func Str.Str'
+describe 'def Str.Str'
 
 expect ''   'print("".Str())'
 expect 'hi' 'print("hi".Str())'
 
 
-describe 'func Str.len'
+describe 'def Str.len'
 
 expect_expr_int '0'    '"".len()'
 expect_expr_int '2'    '"hi".len()'
@@ -51,7 +51,7 @@ expect_expr_int '4'    '"abcd".len()'
 expect_err 'TypeError' 'print("abcd".len())'
 
 
-describe 'func Str.at'
+describe 'def Str.at'
 
 expect 'c'  'print("abc".at(-1).Str())'
 expect 'b'  'print("abc".at(-2).Str())'
@@ -71,7 +71,7 @@ expect '🇨' 'print("🇨🇦".at(0).Str())'
 
 
 
-describe 'func Str.=='
+describe 'def Str.=='
 
 expect_expr_bool 'true'  '"abc" == "abc"'
 expect_expr_bool 'true'  '"💖" == "💖"'
@@ -90,7 +90,7 @@ expect_expr_bool 'false' '" " == ""'
 expect_expr_bool 'false' '"\n" == ""'
 expect_expr_bool 'false' '"\"" == "\\\""'
 
-describe 'func Str.!='
+describe 'def Str.!='
 
 expect_expr_bool 'false' '"abc" != "abc"'
 expect_expr_bool 'false' '"💖" != "💖"'
@@ -110,7 +110,7 @@ expect_expr_bool 'true'  '"\n" != ""'
 expect_expr_bool 'true'  '"\"" != "\\\""'
 
 
-describe 'func Str.+'
+describe 'def Str.+'
 
 expect 'abc'  'print("" + "abc")'
 expect 'abc'  'print("a" + "bc")'
@@ -123,7 +123,7 @@ expect 'abc'  'print("" + "a" + "b" + "c" + "")'
 expect '💖 ﷽' 'print("💖" + " " + "﷽")'
 
 
-describe 'func Str.concat'
+describe 'def Str.concat'
 
 expect 'abc' 'print("".concat("abc"))'
 expect 'abc' 'print("a".concat("bc"))'
@@ -134,7 +134,7 @@ expect 'abc' 'print("a".concat("b").concat("c").concat(""))'
 expect '💖﷽' 'print("💖".concat("﷽"))'
 
 
-describe 'func Str.repeat'
+describe 'def Str.repeat'
 
 expect ''       'print("".repeat(0))'
 expect ''       'print("".repeat(1))'
@@ -147,7 +147,7 @@ expect ''       'print("💖".repeat(0))'
 expect ''       'print("💖".repeat(-1))'
 
 
-describe 'func Str.find'
+describe 'def Str.find'
 
 expect_expr_int '0'  '"abc".find("a")'
 expect_expr_int '1'  '"abc".find("b")'
@@ -166,7 +166,7 @@ expect_expr_int '3'  '"a💖b💖c💖".find("💖c")'
 expect_expr_int '3'  '"a💖b💖c💖".find("💖c💖")'
 
 
-describe 'func Str.contains'
+describe 'def Str.contains'
 
 expect_expr_bool 'true'  '"abc".contains("a")'
 expect_expr_bool 'true'  '"abc".contains("b")'
@@ -185,7 +185,7 @@ expect_expr_bool 'true'  '"a💖b💖c💖".contains("💖c")'
 expect_expr_bool 'true'  '"a💖b💖c💖".contains("💖c💖")'
 
 
-describe 'func Str.utf8_size'
+describe 'def Str.utf8_size'
 
 expect_expr_int '0'  '"".utf8_size()'
 expect_expr_int '1'  '"a".utf8_size()'
@@ -197,7 +197,7 @@ expect_expr_int '8'  '"🇨🇦".utf8_size()'
 expect_expr_int '19' '"1🇨🇦2💖3﷽4".utf8_size()'
 
 
-describe 'func Str.substr'
+describe 'def Str.substr'
 
 expect '' 'print("".substr(0, 0))'
 expect '' 'print("".substr(0, 1))'
@@ -236,7 +236,7 @@ expect 'the lazy dog. | quick brown fox | dog. | lazy' '
 '
 
 
-describe 'func Str.starts_with'
+describe 'def Str.starts_with'
 
 expect_expr_bool 'true'  '"a".starts_with("a")'
 expect_expr_bool 'true'  '"abc".starts_with("")'
@@ -258,7 +258,7 @@ expect_expr_bool 'true'  '"a💖b💖c💖".starts_with("a💖b💖")'
 expect_expr_bool 'false' '"a💖b💖c💖".starts_with("💖")'
 
 
-describe 'func Str.ends_with'
+describe 'def Str.ends_with'
 
 expect_expr_bool 'true'  '"a".ends_with("a")'
 expect_expr_bool 'true'  '"abc".ends_with("")'
@@ -282,7 +282,7 @@ expect_expr_bool 'false' '"a💖b💖c💖".ends_with("a💖b💖c💖💖")'
 expect_expr_bool 'false' '"a💖b💖c💖".ends_with("a💖b💖c💖d")'
 
 
-describe 'func Str.reversed'
+describe 'def Str.reversed'
 
 expect ''           'print("".reversed())'
 expect 'a'          'print("a".reversed())'
@@ -291,7 +291,7 @@ expect '💖'         'print("💖".reversed())'
 expect '4💖3💖2💖1' 'print("1💖2💖3💖4".reversed())'
 
 
-describe 'func Str.replace'
+describe 'def Str.replace'
 
 expect 'b'       'print("a".replace("a", "b"))'
 expect 'bbb'     'print("aaa".replace("a", "b"))'
@@ -320,7 +320,7 @@ expect 'That at' 'print("This is".replace("is", "at", -10))'
 expect 'This is' 'print("This is".replace("is", "at", 0))'
 
 
-describe 'func Str.insert'
+describe 'def Str.insert'
 
 expect 'a'       'print("".insert(0, "a"))'
 expect 'a'       'print("".insert(1, "a"))'
@@ -339,7 +339,7 @@ expect '12345'   'print("1245".insert(-3, "3"))'
 expect '123456' 'print("123".insert(100, "456"))'
 
 
-describe 'func Str.remove'
+describe 'def Str.remove'
 
 expect ''   'print("".remove(0, 0))'
 expect ''   'print("".remove(0, 1))'

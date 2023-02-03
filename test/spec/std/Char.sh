@@ -4,11 +4,11 @@ expect '' 'print(new Char.Str())'
 expect_err 'TypeError' 'print(new Char)'
 
 
-describe 'func Char.Str'
+describe 'def Char.Str'
 
 # TODO: requires char literals
 
-describe 'func Char.is_digit'
+describe 'def Char.is_digit'
 
 expect 'true,true,true,false,false,false,false' '
     print("0".at(0).is_digit().Str());
@@ -27,7 +27,7 @@ expect 'true,true,true,false,false,false,false' '
 '
 
 
-describe 'func Char.=='
+describe 'def Char.=='
 
 expect 'true,false,true,true' '
     print(("a".at(0) == "a".at(0)).Str());
@@ -40,7 +40,7 @@ expect 'true,false,true,true' '
 '
 
 
-describe 'func Char.!='
+describe 'def Char.!='
 
 expect 'false,true,false,false' '
     print(("a".at(0) != "a".at(0)).Str());
@@ -53,7 +53,7 @@ expect 'false,true,false,false' '
 '
 
 
-describe 'func Char.from_int'
+describe 'def Char.from_int'
 
 expect_expr_int '' 'Char.from_int(0)'
 expect_expr_int 'a' 'Char.from_int(97)'

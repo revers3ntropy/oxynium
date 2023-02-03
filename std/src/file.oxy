@@ -1,4 +1,4 @@
-func File.open (path: Str, mode: Str) Option<File> {
+def File.open (path: Str, mode: Str) Option<File> {
 	let f = #asm "
 		; FILE* fopen(const char* path, const char* mode);
 
@@ -27,11 +27,11 @@ func File.open (path: Str, mode: Str) Option<File> {
 	});
 }
 
-func File.is_open (self) Bool {
+def File.is_open (self) Bool {
 	return !self.handle.is_null();
 }
 
-func File.read_to_str (self) Str {
+def File.read_to_str (self) Str {
 	// src: https://stackoverflow.com/questions/14002954
 
 	//  fseek(f, 0, SEEK_END);
@@ -126,7 +126,7 @@ func File.read_to_str (self) Str {
 	")
 }
 
-func File.close (self) {
+def File.close (self) {
 	let _f = self.handle;
 
 	#asm "

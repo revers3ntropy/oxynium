@@ -1,4 +1,4 @@
-func Time.- (self, other: Time) Time {
+def Time.- (self, other: Time) Time {
 	let self_micros = self.seconds * 1000000 + self.microseconds;
 	let other_micros = other.seconds * 1000000 + other.microseconds;
 	let diff_micros = self_micros - other_micros;
@@ -8,7 +8,7 @@ func Time.- (self, other: Time) Time {
 	}
 }
 
-func Time.+ (self, other: Time) Time {
+def Time.+ (self, other: Time) Time {
 	let self_micros = self.seconds * 1000000 + self.microseconds;
 	let other_micros = other.seconds * 1000000 + other.microseconds;
 	let sum_micros = self_micros + other_micros;
@@ -18,11 +18,11 @@ func Time.+ (self, other: Time) Time {
 	}
 }
 
-func Time.Str (self) Str {
+def Time.Str (self) Str {
 	return self.seconds.Str() + "." + self.microseconds.Str()
 }
 
-func Time.current_seconds () Int {
+def Time.current_seconds () Int {
 	return Any.cast!<Void, Int>(#asm "
 		xor rdi, rdi
 		sub rsp, 32
@@ -32,7 +32,7 @@ func Time.current_seconds () Int {
 	")
 }
 
-func Time.current_microseconds () Int {
+def Time.current_microseconds () Int {
 	return Any.cast!<Void, Int>(#asm "
 		mov rax, 96
 		lea rdi, [rsp - 16]
@@ -43,14 +43,14 @@ func Time.current_microseconds () Int {
 	")
 }
 
-func Time.now () Time {
+def Time.now () Time {
 	return new Time {
 		seconds: Time.current_seconds(),
 		microseconds: Time.current_microseconds()
 	}
 }
 
-func Time.epoch () Time {
+def Time.epoch () Time {
 	return new Time {
 		seconds: 0,
 		microseconds: 0

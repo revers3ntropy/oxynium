@@ -1,7 +1,7 @@
 describe 'Return from Functions'
 
 expect '' '
-    func f() {
+    def f() {
         return;
         print("hi");
     };
@@ -9,7 +9,7 @@ expect '' '
 '
 
 expect '1' '
-    func f() {
+    def f() {
         print("1");
         return;
         print("2");
@@ -18,7 +18,7 @@ expect '1' '
 '
 
 expect '12' '
-    func f() {
+    def f() {
         let mut i = 0;
         while {
             i = i + 1;
@@ -29,147 +29,147 @@ expect '12' '
     f();
 '
 expect '1' '
-    func f() Int {
+    def f() Int {
         return 1;
     };
     print(f().Str());
 '
 
 expect_err 'TypeError' '
-    func f() Int {
+    def f() Int {
       return "";
     };
 '
 expect_err 'TypeError' '
-    func f() Int {
+    def f() Int {
         return "";
     };
 '
 expect_err 'TypeError' '
-    func f() {
+    def f() {
       return "";
     };
 '
 expect_err 'TypeError' '
-    func f() Int {
+    def f() Int {
         print("hi");
         return;
     };
 '
 expect_err 'TypeError' '
-    func f() Str {
+    def f() Str {
         print(1.Str());
     };
 '
 expect_err 'TypeError' '
-    func f() Void {
+    def f() Void {
         return 1;
     };
 '
 expect '' '
-    func f() Void {
+    def f() Void {
         return;
     };
     f();
 '
 expect '' '
-    func f() Void {
+    def f() Void {
         1;
     };
     f();
 '
 expect 'hi' '
-    func f() Void {
+    def f() Void {
         print("hi");
     };
     f();
 '
 expect '1' '
-    func f() Int {
+    def f() Int {
         return 1;
         print("hi");
     };
     print(f().Str());
 '
 expect_err 'TypeError' '
-    func f() Int {
+    def f() Int {
         return 1;
         return true;
     };
 '
 expect 'hi' '
-    func f() Str {
+    def f() Str {
       return "hi";
     };
     print(f());
 '
 expect 'false' '
-    func f() Bool {
+    def f() Bool {
       return 1 == 2;
     };
     print(f().Str());
 '
 expect 'true' '
-    func f() Bool {
+    def f() Bool {
       return true;
     };
     print(f().Str());
 '
 expect '' '
-    func f() Str {
+    def f() Str {
         return "";
     };
     print(f().Str());
 '
 expect_err 'TypeError' '
-    func f() Str {
+    def f() Str {
         return "";
     };
     print((f() + 2).Str());
 '
 expect_err 'TypeError' '
-    func f() Void {};
+    def f() Void {};
     print(f().Str());
 '
 expect '16' '
-    func square(n: Int) Int {
+    def square(n: Int) Int {
         return n * n;
     };
     print(square(4).Str());
 '
 expect '17' '
-    func square(n: Int) Int {
+    def square(n: Int) Int {
         return n * n;
     };
     print((square(4) + square(-1)).Str());
 '
 expect '90' '
-    func sum(a: Int, b: Int, c: Int) Int {
+    def sum(a: Int, b: Int, c: Int) Int {
         return a + b + c;
     };
     print((sum(1, 2, 3) * sum(4, 5, 6)).Str());
 '
 expect '49' '
-    func f(n: Int) Int {
+    def f(n: Int) Int {
         return n;
     };
     print(f(4).Str());
     print((f(4) + f(5)).Str());
 '
 expect '49' '
-    func g() {
+    def g() {
         print(49.Str());
         return;
         print(true.Str());
     };
-    func f(n: Int) Void {
+    def f(n: Int) Void {
         return g();
     };
     f(4);
 '
 expect '' '
-    func g(a: Str) {};
-    func f(n: Int, m: Int) Void {
+    def g(a: Str) {};
+    def f(n: Int, m: Int) Void {
       return g("");
     };
     f(4, 6);
@@ -189,16 +189,16 @@ expect_err 'SyntaxError' '
 '
 expect_err 'SyntaxError' '
     return;
-    func main() {}
+    def main() {}
 '
 expect_err 'SyntaxError' '
-    func main() {
+    def main() {
         return
     }
     return
 '
 expect_err 'SyntaxError' '
-    func main() {
+    def main() {
         return
     }
     return 1
@@ -208,7 +208,7 @@ expect_err 'SyntaxError' '
 describe 'All Execution Paths Must Return'
 
 expect_err 'TypeError' '
-    func f() Int {
+    def f() Int {
         if true {
             return 1
         } else {
@@ -217,7 +217,7 @@ expect_err 'TypeError' '
     }
 '
 expect '' '
-    func f() Int {
+    def f() Int {
         if true {
             return 1
         } else {
@@ -226,22 +226,22 @@ expect '' '
     }
 '
 expect_err 'TypeError' '
-    func f() Int {}
+    def f() Int {}
 '
 expect '' '
-    func f() Int {
+    def f() Int {
         return 1
     }
 '
 expect_err 'TypeError' '
-    func f() Int {
+    def f() Int {
         if true {
             return 1
         }
     }
 '
 expect_err 'TypeError' '
-    func f() Int {
+    def f() Int {
         if true {
             if false {
                 return 1
@@ -252,7 +252,7 @@ expect_err 'TypeError' '
     }
 '
 expect '' '
-    func f() Int {
+    def f() Int {
         if true {
             if false {
                 return 1
@@ -262,14 +262,14 @@ expect '' '
     }
 '
 expect '' '
-    func f() Int {
+    def f() Int {
         while {
             return 1
         }
     }
 '
 expect '' '
-    func f(a: Bool) Int {
+    def f(a: Bool) Int {
         while a {
             return 1
         }
@@ -277,7 +277,7 @@ expect '' '
     }
 '
 expect_err 'TypeError' '
-    func f(a: Bool) Int {
+    def f(a: Bool) Int {
         while a {
             return 1
         }

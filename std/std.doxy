@@ -1,108 +1,108 @@
 // This file is included as a raw string in every Oxynium program
 // and contains the declarations for the Standard Library.
-// The implementations for these functions can be found under std/src.
+// The implementations for these deftions can be found under std/src.
 
 primitive Void;
 
 primitive Char {
-    extern func == (self, other: Char) Bool,
-    extern func != (self, other: Char) Bool,
-    extern func Str (self) Str,
-    extern func is_digit (self) Bool,
-    extern func Int (self) Int,
-    extern func from_int (i: Int) Char,
+    extern def == (self, other: Char) Bool,
+    extern def != (self, other: Char) Bool,
+    extern def Str (self) Str,
+    extern def is_digit (self) Bool,
+    extern def Int (self) Int,
+    extern def from_int (i: Int) Char,
 }
 
 primitive Bool {
-    extern func || (self, other: Bool) Bool,
-    extern func && (self, other: Bool) Bool,
-    extern func Str (self) Str,
+    extern def || (self, other: Bool) Bool,
+    extern def && (self, other: Bool) Bool,
+    extern def Str (self) Str,
 }
 
 primitive Int {
-    extern func +  (self, n: Int) Int,
-    extern func -  (self, n: Int) Int,
-    extern func *  (self, n: Int) Int,
-    extern func /  (self, n: Int) Int,
-    extern func %  (self, n: Int) Int,
-    extern func == (self, n: Int) Bool,
-    extern func != (self, n: Int) Bool,
-    extern func <  (self, n: Int) Bool,
-    extern func <= (self, n: Int) Bool,
-    extern func >  (self, n: Int) Bool,
-    extern func >= (self, n: Int) Bool,
-    extern func max (self, other=9223372036854775807) Int,
-    extern func min (self, other=-9223372036854775807-1) Int,
-    extern func abs (self) Int,
-    extern func Str (self) Str,
+    extern def +  (self, n: Int) Int,
+    extern def -  (self, n: Int) Int,
+    extern def *  (self, n: Int) Int,
+    extern def /  (self, n: Int) Int,
+    extern def %  (self, n: Int) Int,
+    extern def == (self, n: Int) Bool,
+    extern def != (self, n: Int) Bool,
+    extern def <  (self, n: Int) Bool,
+    extern def <= (self, n: Int) Bool,
+    extern def >  (self, n: Int) Bool,
+    extern def >= (self, n: Int) Bool,
+    extern def max (self, other=9223372036854775807) Int,
+    extern def min (self, other=-9223372036854775807-1) Int,
+    extern def abs (self) Int,
+    extern def Str (self) Str,
 }
 
 class Str {
     /// converts utf8 to utf64, the encoding used by Str
-    extern func from_utf8 (utf8: Str) Str,
-    extern func == (self, other: Str) Bool,
-    extern func != (self, other: Str) Bool,
+    extern def from_utf8 (utf8: Str) Str,
+    extern def == (self, other: Str) Bool,
+    extern def != (self, other: Str) Bool,
     /// returns a new string that is the concatenation of lhs and rhs
-    extern func +  (self, other: Str) Str,
-    extern func at (self, i: Int) Char,
+    extern def +  (self, other: Str) Str,
+    extern def at (self, i: Int) Char,
     /// Returns the character at the given index
     /// Does not check if index is out of bounds
-    extern func at_raw (self, i: Int) Char,
-    extern func concat (self, other: Str) Str,
-    extern func contains (self, other: Str) Bool,
-    extern func find (self, other: Str) Int,
-    extern func len (self) Int,
-    extern func repeat (self, n: Int) Str,
-    extern func Str (self) Str,
-    extern func substr (self, start=0, end=9223372036854775807) Str,
-    extern func starts_with (self, other: Str) Bool,
-    extern func ends_with (self, other: Str) Bool,
-    extern func reversed (self) Str,
-    extern func replace (self, search: Str, replace_with="", max=-1) Str,
-    extern func insert (self, index: Int, other: Str) Str,
-    extern func remove (self, index: Int, count = 1) Str,
-    extern func utf8_size (self) Int,
+    extern def at_raw (self, i: Int) Char,
+    extern def concat (self, other: Str) Str,
+    extern def contains (self, other: Str) Bool,
+    extern def find (self, other: Str) Int,
+    extern def len (self) Int,
+    extern def repeat (self, n: Int) Str,
+    extern def Str (self) Str,
+    extern def substr (self, start=0, end=9223372036854775807) Str,
+    extern def starts_with (self, other: Str) Bool,
+    extern def ends_with (self, other: Str) Bool,
+    extern def reversed (self) Str,
+    extern def replace (self, search: Str, replace_with="", max=-1) Str,
+    extern def insert (self, index: Int, other: Str) Str,
+    extern def remove (self, index: Int, count = 1) Str,
+    extern def utf8_size (self) Int,
 }
 
 class Time {
 	seconds: Int,
 	microseconds: Int,
-	extern func - (self, other: Time) Time,
-	extern func + (self, other: Time) Time,
-	extern func Str (self) Str,
+	extern def - (self, other: Time) Time,
+	extern def + (self, other: Time) Time,
+	extern def Str (self) Str,
 	/// returns the current time in seconds from the UNIX epoch
-	extern func current_seconds () Int,
-	extern func current_microseconds () Int,
-	extern func now () Time,
-	extern func epoch () Time,
+	extern def current_seconds () Int,
+	extern def current_microseconds () Int,
+	extern def now () Time,
+	extern def epoch () Time,
 }
 
 class Option <T> {
 	value: Ptr<T>,
-	extern func none <From> () Option<From>,
-	extern func some <From> (value: From) Option<From>,
-	extern func is_some (self) Bool,
-	extern func is_none (self) Bool,
-	extern func unwrap (self, err_message="Unwrapping None Option") T,
-	extern func unwrap_or (self, default: T) T,
+	extern def none <From> () Option<From>,
+	extern def some <From> (value: From) Option<From>,
+	extern def is_some (self) Bool,
+	extern def is_none (self) Bool,
+	extern def unwrap (self, err_message="Unwrapping None Option") T,
+	extern def unwrap_or (self, default: T) T,
 }
 
 primitive Any {
-	extern func cast <From, To> (val: From) To,
-	extern func __CAST_WRAPPER_DO_NOT_CALL (),
-	extern func from <From> (val: From) Any,
-	extern func eq <Cmp> (self, other: Cmp) Bool,
-	extern func Str (self) Str,
-	extern func to <To> (self) To,
+	extern def cast <From, To> (val: From) To,
+	extern def __CAST_WRAPPER_DO_NOT_CALL (),
+	extern def from <From> (val: From) Any,
+	extern def eq <Cmp> (self, other: Cmp) Bool,
+	extern def Str (self) Str,
+	extern def to <To> (self) To,
 }
 
 primitive Ptr <T> {
-	extern func is_null (self) Bool,
-	extern func make <From> (val: From) Ptr<From>,
-	extern func unwrap (self) T,
+	extern def is_null (self) Bool,
+	extern def make <From> (val: From) Ptr<From>,
+	extern def unwrap (self) T,
 	/// Wrapper around `malloc`
-	extern func allocate <A> (size: Int) Ptr<A>,
-	extern func Str (self) Str,
+	extern def allocate <A> (size: Int) Ptr<A>,
+	extern def Str (self) Str,
 }
 
 class List <T> {
@@ -110,58 +110,58 @@ class List <T> {
 	head: Ptr<T>,
 	// number of bytes required to store list
     size: Int,
-    extern func empty <E> () List<E>,
-	extern func len (self) Int,
-    extern func at (self, i: Int) Option<T>,
-    extern func at_raw (self, i: Int) T,
-    extern func push (self, value: T),
-    extern func Str (self) Str,
+    extern def empty <E> () List<E>,
+	extern def len (self) Int,
+    extern def at (self, i: Int) Option<T>,
+    extern def at_raw (self, i: Int) T,
+    extern def push (self, value: T),
+    extern def Str (self) Str,
 }
 
 class Result <T, E> {
 	value: Option<T>,
 	error: Option<E>,
-	extern func err <Val, Err> (err: Err) Result<Val, Err>,
-	extern func ok <Val, Err> (val: Val) Result<Val, Err>,
-	extern func is_ok (self) Bool,
-	extern func is_err (self) Bool,
-	extern func unwrap (self) T,
+	extern def err <Val, Err> (err: Err) Result<Val, Err>,
+	extern def ok <Val, Err> (val: Val) Result<Val, Err>,
+	extern def is_ok (self) Bool,
+	extern def is_err (self) Bool,
+	extern def unwrap (self) T,
 }
 
 class File {
 	handle: Ptr<Any>,
 	path: Str,
 	mode: Str,
-	extern func open (path: Str, mode="r") Option<File>,
-	extern func read_to_str (self, buffer_size=1000) Str,
-	extern func write (self, data: Str),
-	extern func close (self),
-	extern func is_open (self) Bool,
+	extern def open (path: Str, mode="r") Option<File>,
+	extern def read_to_str (self, buffer_size=1000) Str,
+	extern def write (self, data: Str),
+	extern def close (self),
+	extern def is_open (self) Bool,
 }
 
 /// Reads from stdin until a newline is reached
 /// allocates string to heap to fit input
 /// returns pointer to string in rax
-extern func input (prompt="", buffer_size=1000) Str;
-extern func exit (code=0);
-extern func print (msg: Str);
-extern func println (msg: Str, line_end="\n");
-extern func panic (msg: Str);
-extern func errno () Int;
+extern def input (prompt="", buffer_size=1000) Str;
+extern def exit (code=0);
+extern def print (msg: Str);
+extern def println (msg: Str, line_end="\n");
+extern def panic (msg: Str);
+extern def errno () Int;
 
 // Functions which are declared externally in asm
-extern func malloc();
-extern func memset();
-extern func memcpy();
-extern func free();
-extern func sprintf();
-extern func time();
-extern func fopen();
-extern func fseek();
-extern func fclose();
-extern func fread();
-extern func ftell();
-extern func __errno_location();
+extern def malloc();
+extern def memset();
+extern def memcpy();
+extern def free();
+extern def sprintf();
+extern def time();
+extern def fopen();
+extern def fseek();
+extern def fclose();
+extern def fread();
+extern def ftell();
+extern def __errno_location();
 
 // Classes that may become part of the standard library in the future
 

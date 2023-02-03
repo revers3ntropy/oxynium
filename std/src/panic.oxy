@@ -1,4 +1,4 @@
-func exit (code=0) {
+def exit (code=0) {
 	#asm "
 		mov rax, 60
 		mov rdi, qword [rbp + 16]
@@ -6,7 +6,7 @@ func exit (code=0) {
 	"
 }
 
-func panic (msg="") {
+def panic (msg="") {
 	println("PANIC: '" + msg + "'");
 	exit(1);
 }

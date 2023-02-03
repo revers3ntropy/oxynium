@@ -22,7 +22,7 @@ expect "PANIC: 'cannot allocate a block of memory of size 0 or less'" '
     Ptr.allocate!<Int>(-99)
 '
 expect '0' '
-    func main () {
+    def main () {
         print(Ptr.allocate!<Int>(1).unwrap().Str())
     }
 '

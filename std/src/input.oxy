@@ -1,4 +1,4 @@
-func input (prompt="", buffer_size=1000) Str {
+def input (prompt="", buffer_size=1000) Str {
 	return Any.cast!<Void, Str>(#asm "
 		push qword [rbp + 16]
 		call print

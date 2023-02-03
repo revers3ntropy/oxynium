@@ -1,2 +1,2 @@
-describe 'func panic'
+describe 'def panic'
 

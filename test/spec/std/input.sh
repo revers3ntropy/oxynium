@@ -1,4 +1,4 @@
-describe 'func input'
+describe 'def input'
 
 expect 'abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ' '
     print(input())
@@ -16,14 +16,14 @@ expect_err 'TypeError'         'input(4)'               '2'
 expect_err 'TypeError'         'input("h", true)'       '2'
 expect     'true'  'print((input() == "a").Str())'      'a'
 expect     'true'  '
-    func main () {
+    def main () {
         let i = input();
         print((i == "a").Str())
     }
 ' 'a'
 
 
-describe 'func input Giving Correctly Encoded Str'
+describe 'def input Giving Correctly Encoded Str'
 
 expect     'true'  'print((input() == "abcdef").Str())' 'abcdef'
 expect     'false' 'print((input() == "a").Str())'      'b'

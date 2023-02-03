@@ -1,4 +1,4 @@
-func Str.== (self, other: Str) Bool {
+def Str.== (self, other: Str) Bool {
 	return Any.cast!<Void, Bool>(#asm "
 		mov r14, qword [rbp + 16] ; r14 = lhs
 		mov r13, qword [rbp + 24] ; r13 = rhs
@@ -29,12 +29,12 @@ func Str.== (self, other: Str) Bool {
 			push rax
 	")
 }
-func Str.!= (self, other: Str) Bool {
+def Str.!= (self, other: Str) Bool {
 	return !(self == other)
 }
 
 /// returns a new string that is the concatenation of lhs and rhs
-func Str.+ (self, other: Str) Str {
+def Str.+ (self, other: Str) Str {
 	return Any.cast!<Void, Str>(#asm "
 		times 3 push 0             ; space for length of self and other,
 								   ; and the new string
@@ -90,7 +90,7 @@ func Str.+ (self, other: Str) Str {
 	")
 }
 
-func Str.at (self, i: Int) Char {
+def Str.at (self, i: Int) Char {
 	return Any.cast!<Void, Char>(#asm "
 		mov rdx, qword [rbp + 16] ; pop string
 		mov r15, qword [rbp + 24] ; pop index
@@ -140,7 +140,7 @@ func Str.at (self, i: Int) Char {
 
 /// Returns the character at the given index
 /// Does not check if index is out of bounds
-func Str.at_raw (self, i: Int) Char {
+def Str.at_raw (self, i: Int) Char {
 	return Any.cast!<Void, Char>(#asm "
 		mov rdx, qword [rbp + 16]  ; self
 		mov r15, qword [rbp + 24]  ; index
@@ -150,15 +150,15 @@ func Str.at_raw (self, i: Int) Char {
 	")
 }
 
-func Str.concat (self, other: Str) Str {
+def Str.concat (self, other: Str) Str {
 	return self + other
 }
 
-func Str.contains (self, other: Str) Bool {
+def Str.contains (self, other: Str) Bool {
 	return self.find(other) >= 0
 }
 
-func Str.find (self, other: Str) Int {
+def Str.find (self, other: Str) Int {
 	if other.len() == 0 {
 		return 0
 	}
@@ -178,7 +178,7 @@ func Str.find (self, other: Str) Int {
 	return -1
 }
 
-func Str.len (self) Int {
+def Str.len (self) Int {
 	return Any.cast!<Void, Int>(#asm "
 		mov rdx, qword [rbp + 16] ; pop string
 
@@ -198,7 +198,7 @@ func Str.len (self) Int {
 	")
 }
 
-func Str.repeat (self, n: Int) Str {
+def Str.repeat (self, n: Int) Str {
 	if n < 1 {
 		return ""
 	}
@@ -206,11 +206,11 @@ func Str.repeat (self, n: Int) Str {
 	return self + self.repeat(n - 1)
 }
 
-func Str.Str (self) Str {
+def Str.Str (self) Str {
 	return self
 }
 
-func Str.substr (self, start = 0, end = 9223372036854775807) Str {
+def Str.substr (self, start = 0, end = 9223372036854775807) Str {
 		// TODO: give the end a proper default value.
 		// This will work in all cases (end = 2^63-1 = max Int),
 		// but it's not pretty.
@@ -238,7 +238,7 @@ func Str.substr (self, start = 0, end = 9223372036854775807) Str {
 	return s
 }
 
-func Str.starts_with (self, other: Str) Bool {
+def Str.starts_with (self, other: Str) Bool {
 	if other.len() > self.len() {
 		return false
 	}
@@ -252,7 +252,7 @@ func Str.starts_with (self, other: Str) Bool {
 	return true
 }
 
-func Str.ends_with (self, other: Str) Bool {
+def Str.ends_with (self, other: Str) Bool {
 	if other.len() > self.len() {
 		return false
 	}
@@ -266,7 +266,7 @@ func Str.ends_with (self, other: Str) Bool {
 	return true
 }
 
-func Str.reversed (self) Str {
+def Str.reversed (self) Str {
 	let mut i = 0;
 	let mut s = "";
 	while i < self.len() {
@@ -276,7 +276,7 @@ func Str.reversed (self) Str {
 	return s
 }
 
-func Str.replace (self, search: Str, replace_with="", max=-1) Str {
+def Str.replace (self, search: Str, replace_with="", max=-1) Str {
 	if search.len() == 0 {
 		return self
 	}
@@ -309,7 +309,7 @@ func Str.replace (self, search: Str, replace_with="", max=-1) Str {
 	return s
 }
 
-func Str.insert (self, index: Int, other: Str) Str {
+def Str.insert (self, index: Int, other: Str) Str {
 	if index < 0 {
 		return self.insert(self.len() + index + 1, other)
 	}
@@ -319,7 +319,7 @@ func Str.insert (self, index: Int, other: Str) Str {
 	return self.substr(0, index) + other + self.substr(index)
 }
 
-func Str.remove (self, index: Int, count=1) Str {
+def Str.remove (self, index: Int, count=1) Str {
 	if index < 0 {
 		if self.len() + index < 0 {
 			return self.substr(self.len() + index + count)
@@ -335,7 +335,7 @@ func Str.remove (self, index: Int, count=1) Str {
 	return self.substr(0, index) + self.substr(index + count)
 }
 
-func Str.utf8_size (self) Int {
+def Str.utf8_size (self) Int {
 	return Any.cast!<Void, Int>(#asm "
 		mov r15, qword [rbp + 16]
 
@@ -363,7 +363,7 @@ func Str.utf8_size (self) Int {
 	")
 }
 
-func Str.from_utf8 (utf8: Str) Str {
+def Str.from_utf8 (utf8: Str) Str {
 	// https://stackoverflow.com/questions/1543613
 	return Any.cast!<Void, Str>(#asm "
 		mov r15, qword [rbp + 16] ; utf8

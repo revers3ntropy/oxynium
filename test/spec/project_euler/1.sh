@@ -1,7 +1,7 @@
 describe 'Project Euler #1: Multiples of 3 or 5'
 
 perf_test_comp_cpp 50 '233168' '
-    func main () {
+    def main () {
         let mut sum = 0;
         let mut i = 0;
         while i < 1000 {

@@ -1,7 +1,7 @@
 describe 'Project Euler #5: Smallest multiple'
 
 perf_test_comp_cpp 1 '232792560' '
-    func main () {
+    def main () {
         let mut i = 2 * 3 * 5 * 7 * 11 * 13 * 17 * 19;
         while {
             i = i + 1;

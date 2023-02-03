@@ -11,12 +11,12 @@ expect '1Hi1 | MyClass<Int> | MyClass<Str> | MyClass<MyClass<Int>>' '
     }
 
     class MyClass <T> {
-        func do_something(self) {}
+        def do_something(self) {}
     }
 
     class TrailingCommaInGenerics <T,>;
 
-    func main () {
+    def main () {
         print((new S <Int> { x: 1 }).x.Str());
         print((new S <Str> { x: "Hi" }).x.Str());
 
@@ -78,30 +78,30 @@ expect_err 'UnknownSymbol' '
 '
 expect_err 'UnknownSymbol' '
     class C <T> {}
-    func a(t: T) {}
+    def a(t: T) {}
 '
 expect_err 'UnknownSymbol' '
     class C <T> {}
     class D <Q> {
-        func a(self, t: T) {}
+        def a(self, t: T) {}
     }
 '
 expect '' '
     class C <T> {
-        func a(i: Int) {}
+        def a(i: Int) {}
     }
     C.a(1);
 '
 expect_err 'UnknownSymbol' '
     class C <T> {
-        func a(t: T) T {
+        def a(t: T) T {
             return t
         }
     }
 '
 expect '1,2' '
     class C <T> {
-        func a(self, t: T) T {
+        def a(self, t: T) T {
             return t
         }
     }
@@ -111,7 +111,7 @@ expect '1,2' '
 '
 expect_err 'TypeError' '
     class C <T> {
-        func a(self, t: T) T {
+        def a(self, t: T) T {
             return t
         }
     }
@@ -121,9 +121,9 @@ expect_err 'TypeError' '
     // only an error as --allow_overrides is not true
     // but used in STD so should be working...
     class C <T> {
-        extern func foo(a: T) T,
+        extern def foo(a: T) T,
     }
-    func C.foo(a: T) T {
+    def C.foo(a: T) T {
         return a
     }
 '

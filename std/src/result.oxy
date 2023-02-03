@@ -1,25 +1,25 @@
-func Result.err <Val, Err> (err: Err) Result<Val, Err> {
+def Result.err <Val, Err> (err: Err) Result<Val, Err> {
 	return new Result<Val, Err> {
 		error: Option.some!<Err>(err),
 		value: Option.none!<Val>()
 	}
 }
-func Result.ok <Val, Err> (val: Val) Result<Val, Err> {
+def Result.ok <Val, Err> (val: Val) Result<Val, Err> {
 	return new Result<Val, Err> {
 		error: Option.none!<Err>(),
 		value: Option.some!<Val>(val)
 	}
 }
 
-func Result.is_ok (self) Bool {
+def Result.is_ok (self) Bool {
 	return self.value.is_some()
 }
 
-func Result.is_err (self) Bool {
+def Result.is_err (self) Bool {
 	return self.error.is_some()
 }
 
-func Result.unwrap (self) T {
+def Result.unwrap (self) T {
 	if self.is_err() {
 		panic("Tried to unwrap a Result that was an error")
 	}

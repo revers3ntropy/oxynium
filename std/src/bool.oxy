@@ -1,4 +1,4 @@
-func Bool.|| (self, other: Bool) Bool {
+def Bool.|| (self, other: Bool) Bool {
 	return Any.cast!<Void, Bool>(#asm "
 		mov rax, qword [rbp + 16]
 		or rax, qword [rbp + 24]
@@ -6,7 +6,7 @@ func Bool.|| (self, other: Bool) Bool {
 	")
 }
 
-func Bool.&& (self, other: Bool) Bool {
+def Bool.&& (self, other: Bool) Bool {
 	return Any.cast!<Void, Bool>(#asm "
 		mov rax, qword [rbp + 16]
 		and rax, qword [rbp + 24]
@@ -14,7 +14,7 @@ func Bool.&& (self, other: Bool) Bool {
 	")
 }
 
-func Bool.Str (self) Str {
+def Bool.Str (self) Str {
 	if self {
 		return "true"
 	}

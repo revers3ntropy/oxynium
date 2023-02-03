@@ -1,18 +1,18 @@
-func List.empty <E> () List<E> {
+def List.empty <E> () List<E> {
 	return new List<E> {
 		head: new Ptr<E>,
 		size: 0
 	};
 }
 
-func List.len (self) Int {
+def List.len (self) Int {
 	// number of elements in list is size of list
 	// divided by size of each element,
 	// which is always 8 bytes
 	return self.size / 8
 }
 
-func List.at (self, i: Int) Option<T> {
+def List.at (self, i: Int) Option<T> {
 	if i < 0 {
 		return self.at(self.len() + i)
 	}
@@ -22,7 +22,7 @@ func List.at (self, i: Int) Option<T> {
 	return Option!<T>.some!<T>(self.at_raw(i))
 }
 
-func List.at_raw (self, i: Int) T {
+def List.at_raw (self, i: Int) T {
 	return Any.cast!<Void, T>(#asm "
 		mov rax, qword [rbp + 16]       ; rax = self
 		mov rax, qword [rax]            ; rax = self.head
@@ -32,7 +32,7 @@ func List.at_raw (self, i: Int) T {
 	")
 }
 
-func List.push (self, value: T) {
+def List.push (self, value: T) {
 	#asm "
 		; #1: Allocate space for old list and new element
 
@@ -79,6 +79,6 @@ func List.push (self, value: T) {
 	"
 }
 
-func List.Str (self) Str {
+def List.Str (self) Str {
 	return "List[" + self.len().Str() + "]"
 }

@@ -3,21 +3,21 @@ describe 'Class Declarations'
 expect '' '
     class S {};
     class MyClass;
-    func do_nothing(s: S) {};
+    def do_nothing(s: S) {};
 
     class TrailingCommaInClassDeclarations {
         x: Int,
     }
     class TrailingCommaAgain {
-        func f(self,) {},
+        def f(self,) {},
     }
     class _ {
-        func f(self,) {},
+        def f(self,) {},
         x: Int,
     }
     class __ {
         x: Int,
-        func f(self, a: Int,) {},
+        def f(self, a: Int,) {},
     }
 
     class S1 {
@@ -27,7 +27,7 @@ expect '' '
     class A1 {
         a: A1
     }
-    func main () {
+    def main () {
         class C1;
         class S1;
     }
@@ -43,14 +43,14 @@ expect_err 'TypeError' '
     class Bool {};
 '
 expect_err 'UnknownSymbol' '
-    func main () {
+    def main () {
         class C
     }
-    func f(a: C);
+    def f(a: C);
 '
 expect_err 'UnknownSymbol' '
-    func f(a: C);
-    func main () {
+    def f(a: C);
+    def main () {
         class C
     }
 '

@@ -2,7 +2,7 @@ describe 'class File'
 
 #true,false,Hello World!,Hello World!,Hello World!,Hello World!
 expect 'true,false' '
-    func main () {
+    def main () {
         let path = "./test/spec/std/File/example1.txt";
         let mut f = File.open(path)
                         .unwrap("Failed to open file");

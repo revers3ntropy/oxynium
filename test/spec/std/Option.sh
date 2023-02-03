@@ -1,15 +1,15 @@
 describe 'Option'
 
 expect 'Option<Str>,hello,hello,Option<Str>,world,false,true,true,false,Option<Option<Option<Result<Option<Int>, Str>>>>' '
-    func some () Str? {
+    def some () Str? {
         return Option.some!<Str>("hello");
     }
 
-    func none () Option<Str> {
+    def none () Option<Str> {
         return Option.none!<Str>();
     }
 
-    func main () {
+    def main () {
         print(typeof some());
         print(",");
         print(some().unwrap());

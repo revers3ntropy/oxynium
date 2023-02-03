@@ -1,49 +1,49 @@
 describe 'Function Declarations'
 
 expect '' '
-    func a () {}
-    func b (a: Int, b: Bool, c: Str) {}
-    func c () Void;
-    func d (a: Int) Void {}
-    func e (a=1,b=1) {}
-    func f (a=1) {}
-    func g (g: Str) {}
-    func h (g: Str, a: Int) {}
+    def a () {}
+    def b (a: Int, b: Bool, c: Str) {}
+    def c () Void;
+    def d (a: Int) Void {}
+    def e (a=1,b=1) {}
+    def f (a=1) {}
+    def g (g: Str) {}
+    def h (g: Str, a: Int) {}
 '
 expect '' '
     // trailing comma
-    func e (a: Int,) Str;
-    func f (a: Int, b: Int,) Str;
+    def e (a: Int,) Str;
+    def f (a: Int, b: Int,) Str;
     class C {
-        func g (a: Int,) {}
-        func h (a: Int, b: Str,) {}
+        def g (a: Int,) {}
+        def h (a: Int, b: Str,) {}
     }
 '
-expect_err 'TypeError' 'func a (a) Str {}'
-expect_err 'TypeError' 'func a (a) {}'
-expect_err 'SyntaxError' 'func () {}'
-expect_err 'SyntaxError' 'func 0 () {}'
-expect_err 'SyntaxError' 'func f (,) {}'
-expect_err 'SyntaxError' 'func 0g () {}'
-expect_err 'TypeError' 'func g () {}; func g() {}'
-expect_err 'TypeError' 'func g (a: Int, a: Str) {}'
-expect_err 'TypeError' 'func g (a: Int, a: Int) {}'
+expect_err 'TypeError' 'def a (a) Str {}'
+expect_err 'TypeError' 'def a (a) {}'
+expect_err 'SyntaxError' 'def () {}'
+expect_err 'SyntaxError' 'def 0 () {}'
+expect_err 'SyntaxError' 'def f (,) {}'
+expect_err 'SyntaxError' 'def 0g () {}'
+expect_err 'TypeError' 'def g () {}; def g() {}'
+expect_err 'TypeError' 'def g (a: Int, a: Str) {}'
+expect_err 'TypeError' 'def g (a: Int, a: Int) {}'
 expect_err 'SyntaxError' '
-    func g() {
-        func f() {}
+    def g() {
+        def f() {}
     }
 '
 expect_err 'SyntaxError' '
-    func g() {
-        func f() {
-            func h () {}
+    def g() {
+        def f() {
+            def h () {}
         }
     };
 '
 expect_err 'SyntaxError' '
     class C {
-        func f () {
-            func h () {}
+        def f () {
+            def h () {}
         }
     }
 '

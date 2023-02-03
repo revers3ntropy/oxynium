@@ -1,68 +1,68 @@
 describe 'main Function'
 
 expect 'hi' '
-    func main() {
+    def main() {
         print("hi");
     }
 '
 expect_err 'TypeError' '
-    func main(a: Int) {}
+    def main(a: Int) {}
 '
 expect_err 'TypeError' '
-    func main() {
+    def main() {
         return "hi"
     }
 '
 expect_err 'TypeError' '
-    func main() {
+    def main() {
         return 1;
     };
 '
 expect_err 'TypeError' '
-    func main() Str {};
+    def main() Str {};
 '
 expect_err 'SyntaxError' '
-    func main();
+    def main();
 '
 
 
 describe 'Top Level Statements with main Function'
 
 expect_err 'SyntaxError' '
-    func f () {};
-    func main() {
+    def f () {};
+    def main() {
         print("hi");
     };
     f();
 '
 expect_err 'SyntaxError' '
-    func f () {};
+    def f () {};
     f();
-    func main() {
+    def main() {
         print("hi");
     };
 '
 expect_err 'SyntaxError' '
-    func main() {
+    def main() {
         print("hi");
     };
     if true {};
 '
 expect_err 'SyntaxError' '
     if false {};
-    func main() {
+    def main() {
         print("hi");
     };
 '
 expect 'Hello' '
     const s = "Hello";
-    func main() {
+    def main() {
         print(s);
     };
 '
 expect '16' '
     const s = 16;
-    func main() {
+    def main() {
         print(s.Str());
     };
 '

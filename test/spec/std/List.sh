@@ -1,7 +1,7 @@
 describe 'class List'
 
 expect '732truefalsetrue' '
-    func main () {
+    def main () {
     	let l = new List<Int> {
     		head: Ptr.make!<Int>(7),
     		size: 8
@@ -17,7 +17,7 @@ expect '732truefalsetrue' '
     }
 '
 expect '02' '
-    func main () {
+    def main () {
     	let l = List.empty!<Int>();
     	print(l.len().Str());
     	l.push(2);

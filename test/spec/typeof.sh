@@ -30,7 +30,7 @@ expect 'Str Str Int Void Type Type Type Type C Bool Str Str'  '
 '
 expect_err 'UnknownSymbol' 'print(typeof Type)'
 expect 'Func a(): Void,Void' '
-    func a() {}
+    def a() {}
     print(typeof a);
     print(",");
     print(typeof a());
@@ -48,17 +48,17 @@ expect_err 'SyntaxError' 'print(typeof new 1)'
 expect_err 'SyntaxError' 'print(typeof typeof)'
 expect_err 'SyntaxError' 'print(typeof while {})'
 expect_err 'SyntaxError' 'print(typeof if true {})'
-expect_err 'SyntaxError' 'print(typeof func a() {})'
+expect_err 'SyntaxError' 'print(typeof def a() {})'
 
 expect 'T,Type,Int,Str' '
-    func a <T> (a: T) T {
+    def a <T> (a: T) T {
         print(typeof a);
         print(",");
         print(typeof T);
         print(",");
         return a
     }
-    func main () {
+    def main () {
         let int = a!<Int>(1);
         print(typeof int);
         print(",");

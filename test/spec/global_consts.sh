@@ -18,12 +18,12 @@ expect_err 'TypeError' '
     const a = 2;
 '
 expect_err 'SyntaxError' '
-    func f() {
+    def f() {
         const a;
     }
 '
 expect_err 'SyntaxError' '
-    func f() {
+    def f() {
         const a = 0;
     }
 '

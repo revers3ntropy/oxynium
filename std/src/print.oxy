@@ -1,4 +1,4 @@
-func print (msg: Str) {
+def print (msg: Str) {
 	#asm "
 	    mov rsi, qword [rbp+16] ; pop string
         mov rax, rsi            ; copy string pointer
@@ -21,7 +21,7 @@ func print (msg: Str) {
 	"
 }
 
-func println (msg: Str, line_end="\n") {
+def println (msg: Str, line_end="\n") {
     print(msg);
     print(line_end);
 }

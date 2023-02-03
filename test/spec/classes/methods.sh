@@ -3,7 +3,7 @@ describe 'Methods on Classes'
 expect 'x = 1, x = 2, ' '
     class S {
         x: Int,
-        func log(self) Void {
+        def log(self) Void {
            print("x = ");
            print(self.x.Str());
            print(", ");
@@ -14,7 +14,7 @@ expect 'x = 1, x = 2, ' '
 '
 expect_err 'TypeError' '
     class S {
-        func log(self) {
+        def log(self) {
            self.x;
         }
     }
@@ -22,30 +22,30 @@ expect_err 'TypeError' '
 expect '' '
     class S {
         x: Int,
-        extern func f1(self) S,
-        func f2(self) {}
-        extern func f3(self),
+        extern def f1(self) S,
+        def f2(self) {}
+        extern def f3(self),
         y: Int,
-        func f4(self) {},
-        extern func f5(a: Int,),
+        def f4(self) {},
+        extern def f5(a: Int,),
         z: Str
     }
 '
 expect_err 'TypeError' '
     class S {
-        func f(self, a: Int) {}
+        def f(self, a: Int) {}
     };
     (new S{}).f();
 '
 expect_err 'TypeError' '
     class S {
-        func f(self, a: Int) {}
+        def f(self, a: Int) {}
     }
     (new S).f("");
 '
 expect '' '
     class S {
-        func f(self, a: Int) {}
+        def f(self, a: Int) {}
     }
     (new S{}).f(1);
     new S.f(1);
@@ -56,7 +56,7 @@ describe 'Default Parameters on Methods'
 
 expect 'hi' '
     class S {
-        func f(self, msg: Str = "hi") {
+        def f(self, msg: Str = "hi") {
             print(msg);
         }
     };
@@ -64,12 +64,12 @@ expect 'hi' '
 '
 expect 'hello world' '
     class A {
-        func f(self, msg: Str = "hello") {
+        def f(self, msg: Str = "hello") {
             print(msg);
         }
     };
     class B {
-        func f(self, msg: Str = " world") {
+        def f(self, msg: Str = " world") {
             print(msg);
         }
     };
@@ -82,11 +82,11 @@ describe 'Non-Static Methods Require self Parameter'
 
 expect_err 'SyntaxError' '
     class S {
-        func log(self: S) {}
+        def log(self: S) {}
     }
 '
 expect_err 'SyntaxError' '
     class S {
-        func log(self: Int) {}
+        def log(self: Int) {}
     }
 '
