@@ -43,6 +43,7 @@ const DOUBLE_CHAR_TOKENS: phf::Map<
     "<=" => TokenType::LTE,
     "!=" => TokenType::NotEquals,
     "=="=> TokenType::DblEquals,
+    "??"=> TokenType::DblQM,
 };
 
 pub struct Lexer {

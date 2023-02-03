@@ -10,6 +10,13 @@ def Option.some <From> (value: From) Option<From> {
 	}
 }
 
+def Option.?? (self, value: T) T {
+	if self.is_none() {
+		return value
+	}
+	return self.unwrap()
+}
+
 def Option.is_some (self) Bool {
 	return !self.value.is_null()
 }

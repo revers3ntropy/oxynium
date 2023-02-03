@@ -79,6 +79,7 @@ class Time {
 
 class Option <T> {
 	value: Ptr<T>,
+	extern def ?? (self, other: T) T,
 	extern def none <From> () Option<From>,
 	extern def some <From> (value: From) Option<From>,
 	extern def is_some (self) Bool,

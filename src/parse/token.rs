@@ -32,6 +32,7 @@ pub enum TokenType {
     Colon,        // :
     Hash,         // #
     QM,           // ?
+    DblQM,        // ??
 }
 
 #[derive(Clone)]
@@ -107,6 +108,7 @@ impl Token {
             TokenType::Colon => ":".to_string(),
             TokenType::Hash => "#".to_string(),
             TokenType::QM => "?".to_string(),
+            TokenType::DblQM => "??".to_string(),
         }
     }
 
@@ -125,6 +127,7 @@ impl Token {
             TokenType::NotEquals => Some("neq"),
             TokenType::Or => Some("or"),
             TokenType::And => Some("and"),
+            TokenType::DblQM => Some("none_coalesce"),
             _ => None,
         };
     }

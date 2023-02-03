@@ -203,8 +203,9 @@ impl Parser {
             }
             res.failure(
                 syntax_error(format!(
-                    "expected token type: {:?}, found {:?}",
-                    tok_type, tok.token_type
+                    "expected token of type `{:?}`, found `{}`",
+                    tok_type,
+                    tok.str()
                 )),
                 Some(tok.start.clone()),
                 None,
@@ -212,7 +213,7 @@ impl Parser {
         } else {
             res.failure(
                 syntax_error(format!(
-                    "expected {:?}, found EOF",
+                    "expected `{:?}`, found EOF",
                     tok_type
                 )),
                 Some(
@@ -677,22 +678,19 @@ impl Parser {
         self.clear_end_statements(&mut res);
         ret_on_err!(res);
         self.bin_op(
-            |this| this.as_expr(),
+            |this| this.none_coal_expr(),
             vec![
                 (TokenType::And, None),
                 (TokenType::Or, None),
             ],
-            |this| this.as_expr(),
+            |this| this.none_coal_expr(),
         )
     }
 
-    fn as_expr(&mut self) -> ParseResults {
+    fn none_coal_expr(&mut self) -> ParseResults {
         self.bin_op(
             |this| this.comparison_expr(),
-            vec![(
-                TokenType::Identifier,
-                Some(format!("as")),
-            )],
+            vec![(TokenType::DblQM, None)],
             |this| this.comparison_expr(),
         )
     }
