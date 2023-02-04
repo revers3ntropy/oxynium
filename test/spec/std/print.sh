@@ -3,7 +3,7 @@ describe 'def print'
 expect 'Hello, World!' 'print("Hello, World!")'
 expect_err 'TypeError' 'print(1)'
 expect_err 'TypeError' 'print(true)'
-expect_err 'TypeError' 'print("", "")'
+expect '' 'print("", "")'
 expect_err 'TypeError' 'print("", true)'
 
 expect '42135' '
