@@ -33,3 +33,26 @@ expect 'Option<Str>,hello,hello,Option<Str>,world,false,true,true,false,Option<O
         print(typeof op_op);
     }
 '
+
+describe 'Option None Coalescing'
+
+expect '0,1,2,0,1,2' '
+    def main () {
+        let mut op: Option<Int> = Option.none!<Int>();
+        let mut op2: Option<Int> = Option.some!<Int>(1);
+        let mut op3: Option<Int> = Option.some!<Int>(2);
+
+        print(op.unwrap_or(0).Str());
+        print(",");
+        print(op2.unwrap_or(0).Str());
+        print(",");
+        print(op3.unwrap_or(0).Str());
+        print(",");
+        print((op ?? 0).Str());
+        print(",");
+        print((op2 ?? 0).Str());
+        print(",");
+        print((op3 ?? 0).Str());
+    }
+
+'

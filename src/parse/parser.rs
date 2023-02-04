@@ -1590,18 +1590,46 @@ impl Parser {
             value = simple_type_res.unwrap();
         }
 
-        if !self.current_matches(TokenType::QM, None) {
-            res.success(value);
-            return res;
+        if self.current_matches(TokenType::DblQM, None) {
+            // eg `Int??`
+            // which should doubly wrap the type in an optional
+
+            consume!(DblQM, self, res);
+
+            let start = value.clone().borrow().pos().0;
+            return self.type_expr(Some(new_mut_rc(
+                OptionalTypeNode {
+                    value: new_mut_rc(OptionalTypeNode {
+                        value,
+                        position: (
+                            start.clone(),
+                            self.last_tok().unwrap().end,
+                        ),
+                    }),
+                    position: (
+                        start,
+                        self.last_tok().unwrap().end,
+                    ),
+                },
+            )));
         }
 
-        consume!(QM, self, res);
+        if self.current_matches(TokenType::QM, None) {
+            consume!(QM, self, res);
 
-        let start = value.clone().borrow().pos().0;
-        self.type_expr(Some(new_mut_rc(OptionalTypeNode {
-            value,
-            position: (start, self.last_tok().unwrap().end),
-        })))
+            let start = value.clone().borrow().pos().0;
+            return self.type_expr(Some(new_mut_rc(
+                OptionalTypeNode {
+                    value,
+                    position: (
+                        start,
+                        self.last_tok().unwrap().end,
+                    ),
+                },
+            )));
+        }
+        res.success(value);
+        res
     }
 
     /// Parameter ::= Identifier (Colon TypeExpr)? (Equals Expression)?
