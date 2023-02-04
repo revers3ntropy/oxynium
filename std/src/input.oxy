@@ -36,7 +36,7 @@ def input (prompt="", buffer_size=1000) Str {
 		.last_char_after_loop:
 
 		push r15
-		call Str.from_utf8 ; convert to string
+		call Utf8Str.Str ; convert to string
 						   ; this is necessary because the string
 						   ; comes in as utf8, but the internal
 						   ; string representation is 'utf64'

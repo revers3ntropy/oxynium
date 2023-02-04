@@ -15,10 +15,10 @@ expect '1,hi,2,3' '
 
 describe 'Ptr.allocate'
 
-expect "PANIC: 'cannot allocate a block of memory of size 0 or less'" '
+expect "PANIC: 'cannot allocate a block of memory of size 0'" '
     Ptr.allocate!<Int>(0)
 '
-expect "PANIC: 'cannot allocate a block of memory of size 0 or less'" '
+expect "PANIC: 'cannot allocate a block of memory of size -99'" '
     Ptr.allocate!<Int>(-99)
 '
 expect '0' '

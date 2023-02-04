@@ -39,11 +39,12 @@ primitive Int {
 
 class Str {
     /// converts utf8 to utf64, the encoding used by Str
-    extern def from_utf8 (utf8: Str) Str,
     extern def == (self, other: Str) Bool,
     extern def != (self, other: Str) Bool,
     /// returns a new string that is the concatenation of lhs and rhs
     extern def +  (self, other: Str) Str,
+	extern def Str (self) Str,
+	extern def Utf8Str (self) Utf8Str,
     extern def at (self, i: Int) Char,
     /// Returns the character at the given index
     /// Does not check if index is out of bounds
@@ -53,7 +54,6 @@ class Str {
     extern def find (self, other: Str) Int,
     extern def len (self) Int,
     extern def repeat (self, n: Int) Str,
-    extern def Str (self) Str,
     extern def substr (self, start=0, end=9223372036854775807) Str,
     extern def starts_with (self, other: Str) Bool,
     extern def ends_with (self, other: Str) Bool,
@@ -62,6 +62,10 @@ class Str {
     extern def insert (self, index: Int, other: Str) Str,
     extern def remove (self, index: Int, count = 1) Str,
     extern def utf8_size (self) Int,
+}
+
+class Utf8Str {
+    extern def Str (self) Str,
 }
 
 class Time {
@@ -150,7 +154,7 @@ extern def println (msg: Str, line_end="\n");
 extern def panic (msg: Str);
 extern def errno () Int;
 
-// Functions which are declared externally in asm
+// Libc dependencies - declared externally in asm
 extern def malloc();
 extern def memset();
 extern def memcpy();
@@ -195,3 +199,8 @@ class Func;
 class Class;
 class Instance;
 class LibC;
+class Def;
+class Rc;
+class Mem;
+class Marker;
+class Test;

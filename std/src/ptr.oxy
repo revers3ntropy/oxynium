@@ -25,7 +25,8 @@ def Ptr.unwrap (self) T {
 
 def Ptr.allocate <A> (size: Int) Ptr<A> {
 	if size <= 0 {
-		panic("cannot allocate a block of memory of size 0 or less")
+		// FIXME if Int.Str triggers this, then will recurse infinitely
+		panic("cannot allocate a block of memory of size " + size.Str())
 	}
 	return Any.cast!<Void, Ptr<A>>(#asm "
 		xor rax, rax

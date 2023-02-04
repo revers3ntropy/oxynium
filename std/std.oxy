@@ -13,3 +13,4 @@
 #include "src/result.oxy";
 #include "src/str.oxy";
 #include "src/time.oxy";
+#include "src/utf8str.oxy";

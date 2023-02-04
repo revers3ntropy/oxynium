@@ -2,8 +2,14 @@ def File.open (path: Str, mode: Str) Option<File> {
 	let f = #asm "
 		; FILE* fopen(const char* path, const char* mode);
 
-		mov rdi, [rbp + 16]
-		mov rsi, [rbp + 24]
+		push qword [rbp + 16] ; path
+		call Str.Utf8Str
+
+		push qword [rbp + 24] ; mode
+		call Str.Utf8Str
+
+		pop rsi
+		pop rdi
 
 		push rbp
 		mov rbp, rsp
@@ -120,7 +126,7 @@ def File.read_to_str (self) Str {
 		mov byte [rdi + rsi], 0  ; string[fsize] = 0
 
 		push qword [rsp + 16]
-		call Str.from_utf8
+		call Utf8Str.Str
 
 		push rax
 	")

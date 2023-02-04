@@ -133,7 +133,7 @@ def Int.Str (self) Str {
 		mov rax, r15
 
 		push rax
-		call Str.from_utf8
+		call Utf8Str.Str
 		pop rdi
 		push rax
 	")
