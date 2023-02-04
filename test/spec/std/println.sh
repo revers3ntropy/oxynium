@@ -1,1 +1,1 @@
-describe 'def println'
+describe 'def print'

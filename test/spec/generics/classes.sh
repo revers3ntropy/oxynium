@@ -27,9 +27,9 @@ expect '1Hi1 | MyClass<Int> | MyClass<Str> | MyClass<MyClass<Int>>' '
         print(" | ");
         print(typeof (new MyClass<Int> {}));
         print(" | ");
-        println(typeof (new MyClass<Str> {}));
+        print(typeof (new MyClass<Str> {}));
         print(" | ");
-        println(typeof (new MyClass<MyClass<Int>> {}));
+        print(typeof (new MyClass<MyClass<Int>> {}));
     }
 '
 expect_err 'TypeError' '

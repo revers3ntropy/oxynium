@@ -7,7 +7,7 @@ expect 'hi' '
             push qword [rbp + 16]
         ")
     }
-    println(asm("hi"))
+    print(asm("hi"))
 '
 
 expect_err 'TypeError' '#asm(Void, "")'
