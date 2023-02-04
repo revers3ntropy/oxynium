@@ -2328,6 +2328,15 @@ impl Parser {
         let mut res = ParseResults::new();
 
         result_consume!(identifier = Identifier, self, res);
+
+        if !self.current_matches(TokenType::Colon, None) {
+            // `new C { a }` should be equivalent to `new C { a: a }`
+            return Ok((
+                identifier.clone().literal.unwrap(),
+                new_mut_rc(SymbolAccess { identifier }),
+            ));
+        }
+
         result_consume!(Colon, self, res);
 
         let value = res.register(self.expression());

@@ -1,6 +1,6 @@
 def Option.none <From> () Option<From> {
 	return new Option<From> {
-		value: new Ptr<From>
+		value: Any.cast!<Int, Ptr<From>>(0)
 	}
 }
 
@@ -25,7 +25,7 @@ def Option.is_none (self) Bool {
 	return self.value.is_null()
 }
 
-def Option.unwrap (self, err_message = "Unwrapping None Option") T {
+def Option.unwrap (self, err_message="Unwrapping None Option") T {
 	if self.is_none() {
 		panic(err_message)
 	}

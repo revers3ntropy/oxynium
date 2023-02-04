@@ -45,3 +45,13 @@ expect_err 'SyntaxError' 'new 1'
 expect_err 'SyntaxError' 'new ""'
 expect_err 'SyntaxError' 'new new C'
 expect_err 'SyntaxError' 'new C()'
+
+expect '1' '
+    class C {
+        a: Int
+    }
+    def main () {
+        let a = 1;
+        print(new C { a }.a.Str());
+    }
+'

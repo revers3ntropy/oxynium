@@ -31,8 +31,8 @@ def File.open (path: Str, mode: Str) Option<File> {
 	}
 
 	return Option.some!<File>(new File {
-		path: path,
-		mode: mode,
+		path,
+		mode,
 		handle: Any.cast!<Void, Ptr<Any>>(f)
 	});
 }

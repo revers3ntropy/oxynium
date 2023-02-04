@@ -26,11 +26,21 @@ impl AstNode for OptionalTypeNode {
         &self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        let option =
-            ctx.borrow().get_dec_from_id("Option").type_;
+        let mut root_ctx = ctx.clone();
+        while let Some(parent_ctx) =
+            root_ctx.clone().borrow().get_parent()
+        {
+            root_ctx = parent_ctx;
+        }
 
-        let generics_ctx =
-            Context::new(ctx.borrow().cli_args.clone());
+        let option = root_ctx
+            .borrow()
+            .get_dec_from_id("Option")
+            .type_;
+
+        let generics_ctx = Context::new(
+            root_ctx.borrow().cli_args.clone(),
+        );
 
         let generic_arg_name = option
             .clone()

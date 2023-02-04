@@ -314,7 +314,7 @@ impl Context {
             let idx = self
                 .declarations
                 .iter()
-                .filter(|d| !d.1.is_param)
+                .filter(|d| !d.1.is_param && !d.1.is_type)
                 .count();
             (1 + idx) * 8
         } else {

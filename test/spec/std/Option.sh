@@ -39,8 +39,8 @@ describe 'Option None Coalescing'
 expect '0,1,2,0,1,2' '
     def main () {
         let mut op: Option<Int> = Option.none!<Int>();
-        let mut op2: Option<Int> = Option.some!<Int>(1);
-        let mut op3: Option<Int> = Option.some!<Int>(2);
+        let mut op2: Int? = Option.some!<Int>(1);
+        let mut op3 = Option.some!<Int>(2);
 
         print(op.unwrap_or(0).Str());
         print(",");
@@ -54,5 +54,26 @@ expect '0,1,2,0,1,2' '
         print(",");
         print((op3 ?? 0).Str());
     }
+'
 
+
+describe '`?` Type Operator uses Global `Option` Class'
+
+expect '0,Option<C>' '
+    def f () Int? {
+        return Option.none!<Int>();
+    }
+
+    def main () {
+        class Option;
+        class C;
+
+        let op: Int? = f();
+        print((op ?? 0).Str());
+
+        print(",");
+
+        let mut c: C?;
+        print(typeof c);
+    }
 '

@@ -19,10 +19,15 @@ def print (msg="", line_end="\n") {
             mov rdi, 1
             syscall
 	";
+
+	// just to allow calls from asm without having to pass two pointers,
+	// the line_end can be null, which makes debugging asm easier,
+	// and has no effect what can normally be done by calling this function.
 	if Any.cast!<Str, Int>(line_end) == 0 {
 		print("\n", "");
 		return
 	}
+
 	if line_end != "" {
 		print(line_end, "");
 	}
