@@ -4,12 +4,16 @@ def File.open (path: Str, mode: Str) Option<File> {
 
 		push qword [rbp + 16] ; path
 		call Str.Utf8Str
+		add rsp, 8
+
+		push rax
 
 		push qword [rbp + 24] ; mode
 		call Str.Utf8Str
+		add rsp, 8
 
-		pop rsi
 		pop rdi
+		mov rsi, rax
 
 		push rbp
 		mov rbp, rsp
@@ -22,7 +26,7 @@ def File.open (path: Str, mode: Str) Option<File> {
 		push rax
 	";
 
-	if Any.from!<Void>(f).eq!<Int>(0) {
+	if Any.cast!<Void, Int>(f) == 0 {
 		return Option.none!<File>();
 	}
 
@@ -148,5 +152,35 @@ def File.close (self) {
 
 		mov rax, qword [rbp + 16]  ; rax = self
 		mov qword [rax], 0         ; self.handle = 0
+	"
+}
+
+def File.write (self, data: Str) {
+	let _ = self.handle;
+
+	#asm "
+		mov rdi, [rbp + 24] ; rdi = data
+
+		push rdi
+		call Str.utf8_size
+		pop rdi
+
+		push rax
+
+		push rdi
+		call Str.Utf8Str
+		add rsp, 8
+		mov rdi, rax       ; rdi = data.Utf8Str()
+		mov rsi, 1         ; rsi = 1
+		pop rdx            ; rdx = data.utf8_size()
+		mov rcx, [rbp - 8] ; rcx = self.handle
+
+		push rbp
+		mov rbp, rsp
+		sub rsp, 32
+		and rsp, -16
+		call fwrite WRT ..plt
+		mov rsp, rbp
+		pop rbp
 	"
 }

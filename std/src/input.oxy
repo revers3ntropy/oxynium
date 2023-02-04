@@ -1,9 +1,6 @@
 def input (prompt="", buffer_size=1000) Str {
+	print(prompt, "");
 	return Any.cast!<Void, Str>(#asm "
-		push qword [rbp + 16]
-		call print
-		pop rax
-
 		mov rdi, qword [rbp + 24] ; buffer_size
 		add rdi, 1                ; add space for null byte
 		push rdi

@@ -1,4 +1,4 @@
-def print (msg: Str) {
+def print (msg="", line_end="\n") {
 	#asm "
 	    mov rsi, qword [rbp+16] ; pop string
         mov rax, rsi            ; copy string pointer
@@ -18,10 +18,12 @@ def print (msg: Str) {
             mov rax, 1
             mov rdi, 1
             syscall
-	"
-}
-
-def println (msg: Str, line_end="\n") {
-    print(msg);
-    print(line_end);
+	";
+	if Any.cast!<Str, Int>(line_end) == 0 {
+		print("\n", "");
+		return
+	}
+	if line_end != "" {
+		print(line_end, "");
+	}
 }

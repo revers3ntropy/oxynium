@@ -17,14 +17,6 @@ def Any.__CAST_WRAPPER_DO_NOT_CALL () {
 	"
 }
 
-def Any.eq <Cmp> (self, other: Cmp) Bool {
-	return Any.cast!<Any, Int>(self) == Any.cast!<Cmp, Int>(other)
-}
-
-def Any.Str (self) Str {
-	return Any.cast!<Any, Int>(self).Str()
-}
-
 def Any.to<To>(self) To {
 	return Any.cast!<Any, To>(self)
 }

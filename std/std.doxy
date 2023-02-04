@@ -96,8 +96,6 @@ primitive Any {
 	extern def cast <From, To> (val: From) To,
 	extern def __CAST_WRAPPER_DO_NOT_CALL (),
 	extern def from <From> (val: From) Any,
-	extern def eq <Cmp> (self, other: Cmp) Bool,
-	extern def Str (self) Str,
 	extern def to <To> (self) To,
 }
 
@@ -149,9 +147,8 @@ class File {
 /// returns pointer to string in rax
 extern def input (prompt="", buffer_size=1000) Str;
 extern def exit (code=0);
-extern def print (msg: Str);
-extern def println (msg: Str, line_end="\n");
-extern def panic (msg: Str);
+extern def print (msg="", line_end="\n");
+extern def panic (msg="Panic!");
 extern def errno () Int;
 
 // Libc dependencies - declared externally in asm

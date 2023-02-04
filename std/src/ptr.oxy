@@ -1,6 +1,5 @@
 def Ptr.is_null (self) Bool {
-	return Any.from!<Ptr<T>>(self)
-			  .eq!<Int>(0)
+	return Any.cast!<Ptr<T>, Int>(self) == 0
 }
 
 def Ptr.make <From> (val: From) Ptr<From> {

@@ -24,6 +24,7 @@ out
 /*.ts
 /*.data
 /*.data.old
+/*.txt
 
 # OS
 .DS_Store
