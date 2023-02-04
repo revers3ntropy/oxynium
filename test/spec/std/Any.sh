@@ -1,6 +1,6 @@
 describe 'class Any'
 
-expect 'Hello,World,false,false,true,1,0,1,true,false,true' '
+expect 'Hello,World,1,0,1,true,false,true' '
 
     class C;
 
@@ -11,26 +11,20 @@ expect 'Hello,World,false,false,true,1,0,1,true,false,true' '
         let a2 = Any.cast!<Str, Any>("World");
         print(Any.cast!<Any, Str>(a2));
         print(",");
-        print(a1.eq!<Any>(a2).Str());
+        print(Any.cast!<Bool, Int>(true).Str());
         print(",");
-        print(a1.eq!<Str>("Hello").Str());
-        print(",");
-        print(a1.eq!<Any>(a1).Str());
-        print(",");
-        print(Any.from!<Bool>(true).Str());
-        print(",");
-        print(Any.from!<Bool>(false).Str());
+        print(Any.cast!<Bool, Int>(false).Str());
         print(",");
         print(Any.from!<Bool>(true).to!<Int>().Str());
         print(",");
-        print(Any.from!<Bool>(true).eq!<Bool>(true).Str());
+        print((Any.cast!<Bool, Int>(true) == 1).Str());
 
         let c1 = new C;
         let c2 = new C;
         print(",");
-        print(Any.from!<C>(c1).eq!<C>(c2).Str());
+        print((Any.cast!<C, Int>(c1) == Any.cast!<C, Int>(c2)).Str());
         print(",");
-        print(Any.from!<C>(c1).eq!<C>(c1).Str());
+        print((Any.cast!<C, Int>(c1) == Any.cast!<C, Int>(c1)).Str());
     }
 '
 
