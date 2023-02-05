@@ -102,7 +102,7 @@ impl AstNode for IfNode {
             ))
         } else {
             Ok(TypeCheckRes::from_ctx(
-                &ctx, "Void", unknowns,
+                &ctx, "Void", unknowns, true,
             ))
         }
     }

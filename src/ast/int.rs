@@ -15,7 +15,7 @@ impl AstNode for IntNode {
         &self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        Ok(TypeCheckRes::from_ctx(&ctx, "Int", 0))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Int", 0, true))
     }
 
     fn asm(

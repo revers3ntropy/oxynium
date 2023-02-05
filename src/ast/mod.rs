@@ -2,7 +2,7 @@ use crate::ast::str::StrNode;
 use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::type_expr::TypeNode;
 use crate::ast::type_expr_generic::GenericTypeNode;
-use crate::context::Context;
+use crate::context::{root_context, Context};
 use crate::error::Error;
 use crate::position::Interval;
 use crate::types::unknown::UnknownType;
@@ -98,9 +98,19 @@ impl TypeCheckRes {
         ctx: &MutRc<Context>,
         name: &str,
         mut unknowns: usize,
+        is_built_in: bool,
     ) -> Self {
         let t: MutRc<dyn Type>;
-        if !ctx.borrow().has_dec_with_id(name) {
+
+        if is_built_in {
+            let root = root_context(ctx.clone());
+            if !root.borrow().has_dec_with_id(name) {
+                unknowns += 1;
+                t = new_mut_rc(UnknownType {});
+            } else {
+                t = get_type!(root, name);
+            }
+        } else if !ctx.borrow().has_dec_with_id(name) {
             unknowns += 1;
             t = new_mut_rc(UnknownType {});
         } else {
@@ -148,7 +158,7 @@ pub trait AstNode: Debug {
         &self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        Ok(TypeCheckRes::from_ctx(&ctx, "Void", 0))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Void", 0, true))
     }
     fn asm(
         &mut self,

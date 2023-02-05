@@ -60,7 +60,7 @@ impl AstNode for GlobalConstNode<i64> {
             },
             self.identifier.interval(),
         )?;
-        Ok(TypeCheckRes::from_ctx(&ctx, "Int", 0))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Int", 0, true))
     }
 
     fn asm(
@@ -167,7 +167,7 @@ impl AstNode for GlobalConstNode<String> {
             },
             self.identifier.interval(),
         )?;
-        Ok(TypeCheckRes::from_ctx(&ctx, "Str", 0))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Str", 0, true))
     }
 
     fn pos(&self) -> Interval {

@@ -7,6 +7,14 @@ expect 'Hi' 'print("Hi")'
 expect_err 'SyntaxError' 'print("hi'
 expect_err 'SyntaxError' '"hi'
 
+expect 'hi' '
+    def main () {
+        class Str;
+        print("hi");
+    }
+'
+
+
 describe 'class Str UTF-8 Support'
 
 expect 'ݫݨݫ' 'print("ݫݨݫ")'

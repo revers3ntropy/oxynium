@@ -10,6 +10,14 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 
+pub fn root_context(ctx: MutRc<Context>) -> MutRc<Context> {
+    if let Some(ref parent) = ctx.borrow().parent {
+        root_context(parent.clone())
+    } else {
+        ctx.clone()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct CallStackFrame {
     pub name: String,

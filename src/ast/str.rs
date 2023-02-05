@@ -22,7 +22,7 @@ impl AstNode for StrNode {
         &self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        Ok(TypeCheckRes::from_ctx(&ctx, "Str", 0))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Str", 0, true))
     }
 
     fn asm(

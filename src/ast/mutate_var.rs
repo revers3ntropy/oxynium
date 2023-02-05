@@ -79,7 +79,9 @@ impl AstNode for MutateVar {
             )
             .set_interval(self.value.borrow_mut().pos()));
         }
-        Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))
+        Ok(TypeCheckRes::from_ctx(
+            &ctx, "Void", unknowns, true,
+        ))
     }
 
     fn asm(

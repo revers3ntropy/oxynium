@@ -15,7 +15,7 @@ impl AstNode for BoolNode {
         &self,
         ctx: MutRc<Context>,
     ) -> Result<TypeCheckRes, Error> {
-        Ok(TypeCheckRes::from_ctx(&ctx, "Bool", 0))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Bool", 0, true))
     }
 
     fn asm(

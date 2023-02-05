@@ -68,7 +68,9 @@ impl AstNode for StatementsNode {
             ));
         }
 
-        Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns))
+        Ok(TypeCheckRes::from_ctx(
+            &ctx, "Void", unknowns, true,
+        ))
     }
 
     fn asm(

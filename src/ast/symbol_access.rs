@@ -58,7 +58,12 @@ impl AstNode for SymbolAccess {
             ));
         }
 
-        Ok(TypeCheckRes::from_ctx(&ctx, &self.id(), 0))
+        Ok(TypeCheckRes::from_ctx(
+            &ctx,
+            &self.id(),
+            0,
+            false,
+        ))
     }
 
     fn asm(
