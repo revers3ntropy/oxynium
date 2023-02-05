@@ -8,7 +8,7 @@ perf_test_comp_cpp 50 '25164150' '
         while i <= 100 {
             sum_of_squares = sum_of_squares + i * i;
             square_of_sum = square_of_sum + i;
-            i = i + 1;
+            i += 1;
         };
         square_of_sum = square_of_sum * square_of_sum;
         print((square_of_sum - sum_of_squares).Str());
@@ -23,7 +23,7 @@ perf_test_comp_cpp 50 '25164150' '
         while (i <= 100) {
             sum_of_squares = sum_of_squares + i * i;
             square_of_sum = square_of_sum + i;
-            i = i + 1;
+            i += 1;
         }
         square_of_sum = square_of_sum * square_of_sum;
         std::cout << square_of_sum - sum_of_squares;

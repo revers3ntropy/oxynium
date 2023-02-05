@@ -7,7 +7,7 @@ perf_test_comp_cpp 50 '4613732' '
         let mut b = 2;
         while {
             if b % 2 == 0 {
-                sum = sum + b;
+                sum += b;
             };
             let c = a + b;
             a = b;
@@ -27,7 +27,7 @@ perf_test_comp_cpp 50 '4613732' '
         int b = 2;
         while (true) {
             if (b % 2 == 0) {
-                sum = sum + b;
+                sum += b;
             }
             int c = a + b;
             a = b;

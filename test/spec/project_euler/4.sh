@@ -14,9 +14,9 @@ perf_test_comp_cpp 1 '906609' '
                         max = prod;
                     }
                 }
-                j = j + 1;
+                j += 1;
             }
-            i = i + 1;
+            i += 1;
         }
         print(max.Str());
     }
@@ -39,9 +39,9 @@ perf_test_comp_cpp 1 '906609' '
                         max = prod;
                     }
                 }
-                j = j + 1;
+                j += 1;
             }
-            i = i + 1;
+            i += 1;
         }
         printf("%d", max);
         return 0;

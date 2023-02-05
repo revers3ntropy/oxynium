@@ -1236,6 +1236,31 @@ impl Parser {
         res
     }
 
+    fn op_assign(&mut self, id_tok: Token) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        let operator = self.current_tok().unwrap();
+        consume!(self, res);
+
+        consume!(Equals, self, res);
+
+        let value = res.register(self.expression());
+        ret_on_err!(res);
+
+        res.success(new_mut_rc(MutateVar {
+            identifier: id_tok.clone(),
+            value: new_mut_rc(BinOpNode {
+                lhs: new_mut_rc(SymbolAccess {
+                    identifier: id_tok,
+                }),
+                operator,
+                rhs: value.unwrap(),
+            }),
+        }));
+
+        res
+    }
+
     fn assign(&mut self, id_tok: Token) -> ParseResults {
         let mut res = ParseResults::new();
 
@@ -1354,6 +1379,18 @@ impl Parser {
                             vec![],
                         );
                     }
+
+                    if self.next_matches(
+                        TokenType::Equals,
+                        None,
+                    ) {
+                        if TokenType::op_assign_operators()
+                            .contains(&next.token_type)
+                        {
+                            return self.op_assign(tok);
+                        }
+                    }
+
                     if next.token_type == TokenType::Not {
                         return self.identifier_bang(
                             tok.start.clone(),

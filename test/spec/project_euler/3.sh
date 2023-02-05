@@ -10,10 +10,10 @@ perf_test_comp_cpp 50 '6857' '
                 break;
             };
             if n % i == 0 {
-                n = n / i;
+                n /= i;
                 max = i;
             } else {
-                i = i + 1;
+                i += 1;
             };
         };
         if n > max {
@@ -33,10 +33,10 @@ perf_test_comp_cpp 50 '6857' '
                 break;
             }
             if (n % i == 0) {
-                n = n / i;
+                n /= i;
                 max = i;
             } else {
-                i = i + 1;
+                i += 1;
             }
         }
         if (n > max) {

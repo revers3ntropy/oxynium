@@ -6,9 +6,9 @@ perf_test_comp_cpp 50 '233168' '
         let mut i = 0;
         while i < 1000 {
             if i % 3 == 0 || i % 5 == 0 {
-                sum = sum + i;
+                sum += i;
             };
-            i = i + 1;
+            i += 1;
         };
         print(sum.Str());
     }
@@ -20,9 +20,9 @@ perf_test_comp_cpp 50 '233168' '
         int i = 0;
         while (i < 1000) {
             if (i % 3 == 0 || i % 5 == 0) {
-                sum = sum + i;
+                sum += i;
             }
-            i = i + 1;
+            i += 1;
         }
         std::cout << sum;
     }

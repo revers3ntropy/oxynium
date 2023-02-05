@@ -30,12 +30,12 @@ const inp = "73167176531330624919225119674426574742355349194934\
             let mut j = 0;
             while j < 13 {
                 product = product * (inp.at(i + j).Int() - 48);
-                j = j + 1;
+                j += 1;
             };
             if product > max {
                 max = product;
             };
-            i = i + 1;
+            i += 1;
         };
         print(max.Str());
     }
@@ -71,12 +71,12 @@ const inp = "73167176531330624919225119674426574742355349194934\
             int j = 0;
             while (j < 13) {
                 product = product * (input[i + j] - 48);
-                j = j + 1;
+                j += 1;
             }
             if (product > max) {
                 max = product;
             }
-            i = i + 1;
+            i += 1;
         }
         std::cout << max;
         return 0;

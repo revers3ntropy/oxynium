@@ -35,6 +35,18 @@ pub enum TokenType {
     DblQM,        // ??
 }
 
+impl TokenType {
+    pub fn op_assign_operators() -> Vec<TokenType> {
+        vec![
+            TokenType::Plus,
+            TokenType::Sub,
+            TokenType::Astrix,
+            TokenType::FSlash,
+            TokenType::Percent,
+        ]
+    }
+}
+
 #[derive(Clone)]
 pub struct Token {
     pub token_type: TokenType,

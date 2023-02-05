@@ -228,3 +228,58 @@ expect_err 'TypeError' 'Str = 1'
 expect_err 'TypeError' 'class C; C = 1'
 expect_err 'TypeError' 'Int = 1'
 expect_err 'TypeError' 'print = 1'
+
+
+describe 'Bin Op Reassignment'
+
+expect '2,1,4,2,1' '
+    def main() {
+        let mut a = 1;
+        a += 1;
+        print(a.Str());
+        print(",");
+        a -= 1;
+        print(a.Str());
+        print(",");
+        a *= 4;
+        print(a.Str());
+        print(",");
+        a /= 2;
+        print(a.Str());
+        print(",");
+        a += 1;
+        a %= 2;
+        print(a.Str());
+    }
+'
+expect_err 'TypeError' '
+    def main() {
+        let mut a = 1;
+        a += "";
+    }
+'
+expect_err 'TypeError' '
+    def main() {
+        let mut a = 1;
+        a += "";
+    }
+'
+expect_err 'TypeError' '
+    const a = 1;
+    def main() {
+        a += "";
+    }
+'
+expect 'ab' '
+    def main() {
+        let mut a = "a";
+        a += "b";
+        print(a);
+    }
+'
+expect_err 'TypeError' '
+    def main() {
+        let mut a = "a";
+        a -= "b";
+    }
+'
