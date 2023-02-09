@@ -27,9 +27,9 @@ pub trait Type: Debug {
     fn contains(&self, other: MutRc<dyn Type>) -> bool;
     fn concrete(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<MutRc<dyn Type>, Error>;
-    fn cache_id(&self, ctx: MutRc<Context>) -> String;
+    fn cache_id(&self, ctx: MutRc<dyn Context>) -> String;
 
     fn as_fn(&self) -> Option<FnType> {
         None

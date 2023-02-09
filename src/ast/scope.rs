@@ -1,4 +1,5 @@
 use crate::ast::{AstNode, TypeCheckRes};
+use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::{Error, ErrorSource};
 use crate::position::Interval;
@@ -6,7 +7,7 @@ use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct ScopeNode {
-    pub ctx: MutRc<Context>,
+    pub ctx: Option<MutRc<dyn Context>>,
     pub body: MutRc<dyn AstNode>,
     pub position: Interval,
     pub err_source: Option<ErrorSource>,
@@ -30,31 +31,35 @@ impl ScopeNode {
 impl AstNode for ScopeNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
-        self.ctx.borrow_mut().set_parent(ctx.clone());
+        self.ctx = Some(Scope::new_local(ctx.clone()));
         self.try_add_source_to_res(
-            self.body.borrow_mut().setup(self.ctx.clone()),
+            self.body
+                .borrow_mut()
+                .setup(self.ctx.clone().unwrap()),
         )
     }
 
     fn type_check(
         &self,
-        _ctx: MutRc<Context>,
+        _ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         self.try_add_source_to_res(
             self.body
                 .borrow_mut()
-                .type_check(self.ctx.clone()),
+                .type_check(self.ctx.clone().unwrap()),
         )
     }
 
     fn asm(
         &mut self,
-        _ctx: MutRc<Context>,
+        _ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         self.try_add_source_to_res(
-            self.body.borrow_mut().asm(self.ctx.clone()),
+            self.body
+                .borrow_mut()
+                .asm(self.ctx.clone().unwrap()),
         )
     }
 

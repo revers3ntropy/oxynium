@@ -22,7 +22,7 @@ impl TypeNode {
 impl AstNode for TypeNode {
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         if !ctx.borrow_mut().has_dec_with_id(&self.id()) {
             if ctx.borrow().throw_on_unknowns() {

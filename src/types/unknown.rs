@@ -31,12 +31,12 @@ impl Type for UnknownType {
 
     fn concrete(
         &self,
-        _ctx: MutRc<Context>,
+        _ctx: MutRc<dyn Context>,
     ) -> Result<MutRc<dyn Type>, Error> {
         Ok(new_mut_rc(self.clone()))
     }
 
-    fn cache_id(&self, _ctx: MutRc<Context>) -> String {
+    fn cache_id(&self, _ctx: MutRc<dyn Context>) -> String {
         format!("?")
     }
 

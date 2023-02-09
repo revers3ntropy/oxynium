@@ -12,7 +12,7 @@ pub struct StatementsNode {
 impl AstNode for StatementsNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         for statement in self.statements.iter_mut() {
             statement.borrow_mut().setup(ctx.clone())?;
@@ -21,7 +21,7 @@ impl AstNode for StatementsNode {
     }
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let mut ret_type = None;
         let mut always_returns = false;
@@ -75,7 +75,7 @@ impl AstNode for StatementsNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let mut asm = String::new();
 

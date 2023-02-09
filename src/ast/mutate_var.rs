@@ -23,14 +23,14 @@ impl MutateVar {
 impl AstNode for MutateVar {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         self.value.borrow_mut().setup(ctx.clone())
     }
 
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.id())
             || !ctx.borrow_mut().has_dec_with_id(&self.id())
@@ -86,7 +86,7 @@ impl AstNode for MutateVar {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let id =
             ctx.borrow_mut().get_dec_from_id(&self.id()).id;

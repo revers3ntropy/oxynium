@@ -1,4 +1,3 @@
-use crate::args::Args;
 use crate::ast::bin_op::BinOpNode;
 use crate::ast::bool::BoolNode;
 use crate::ast::class_declaration::{
@@ -32,7 +31,6 @@ use crate::ast::type_expr_generic::GenericTypeNode;
 use crate::ast::type_expr_optional::OptionalTypeNode;
 use crate::ast::unary_op::UnaryOpNode;
 use crate::ast::AstNode;
-use crate::context::Context;
 use crate::error::{numeric_overflow, syntax_error, Error};
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
@@ -109,19 +107,11 @@ macro_rules! result_consume {
 pub struct Parser {
     tokens: Vec<Token>,
     tok_idx: usize,
-    cli_args: Args,
 }
 
 impl Parser {
-    pub fn new(
-        cli_args: Args,
-        tokens: Vec<Token>,
-    ) -> Parser {
-        Parser {
-            tokens,
-            tok_idx: 0,
-            cli_args,
-        }
+    pub fn new(tokens: Vec<Token>) -> Parser {
+        Parser { tokens, tok_idx: 0 }
     }
 
     pub fn parse(&mut self) -> ParseResults {
@@ -434,7 +424,7 @@ impl Parser {
 
         if make_scope_node {
             res.success(new_mut_rc(ScopeNode {
-                ctx: Context::new(self.cli_args.clone()),
+                ctx: None,
                 body: statements.unwrap(),
                 position: (start, end),
                 err_source: None,
@@ -2049,9 +2039,7 @@ impl Parser {
             }
             res.success(new_mut_rc(FnDeclarationNode {
                 identifier,
-                params_scope: Context::new(
-                    self.cli_args.clone(),
-                ),
+                params_scope: None,
                 ret_type,
                 is_external,
                 params,
@@ -2092,9 +2080,7 @@ impl Parser {
 
         res.success(new_mut_rc(FnDeclarationNode {
             identifier,
-            params_scope: Context::new(
-                self.cli_args.clone(),
-            ),
+            params_scope: None,
             ret_type,
             params,
             body: Some(body.unwrap()),
@@ -2213,9 +2199,7 @@ impl Parser {
                 ),
                 is_primitive,
                 generic_parameters,
-                generics_ctx: Context::new(
-                    self.cli_args.clone(),
-                ),
+                generics_ctx: None,
                 is_exported,
             }));
             return res;
@@ -2351,9 +2335,7 @@ impl Parser {
             ),
             is_primitive,
             generic_parameters,
-            generics_ctx: Context::new(
-                self.cli_args.clone(),
-            ),
+            generics_ctx: None,
             is_exported,
         }));
         res

@@ -2,6 +2,7 @@ use crate::ast::class_declaration::{
     method_id, operator_method_id,
 };
 use crate::ast::{AstNode, TypeCheckRes};
+use crate::context::scope::Scope;
 use crate::context::CallStackFrame;
 use crate::context::Context;
 use crate::error::{
@@ -37,7 +38,7 @@ pub struct FnDeclarationNode {
     pub params: Vec<Parameter>,
     pub body: Option<MutRc<dyn AstNode>>,
     pub generic_parameters: Vec<Token>,
-    pub params_scope: MutRc<Context>,
+    pub params_scope: Option<MutRc<dyn Context>>,
     pub is_external: bool,
     pub position: Interval,
     pub class_name: Option<String>,
@@ -68,7 +69,7 @@ impl FnDeclarationNode {
 
     fn get_generic_param_names(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
         //      (list of tokens which are the generic parameters, unknowns)
     ) -> Result<(Vec<Token>, usize), Error> {
         let mut generic_params =
@@ -139,7 +140,7 @@ impl FnDeclarationNode {
 impl AstNode for FnDeclarationNode {
     fn setup(
         &mut self,
-        _ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         if self.identifier.token_type
             == TokenType::Identifier
@@ -183,9 +184,8 @@ impl AstNode for FnDeclarationNode {
             }
         }
 
-        self.params_scope
-            .borrow_mut()
-            .allow_local_var_decls = true;
+        self.params_scope =
+            Some(Scope::new_fn_ctx(ctx.clone()));
 
         for param in &self.params {
             if param.default_value.is_some() {
@@ -194,24 +194,24 @@ impl AstNode for FnDeclarationNode {
                     .clone()
                     .unwrap()
                     .borrow_mut()
-                    .setup(self.params_scope.clone())?;
+                    .setup(
+                        self.params_scope.clone().unwrap(),
+                    )?;
             }
         }
         if self.body.is_some() {
-            self.body
-                .clone()
-                .unwrap()
-                .borrow_mut()
-                .setup(self.params_scope.clone())?;
+            self.body.clone().unwrap().borrow_mut().setup(
+                self.params_scope.clone().unwrap(),
+            )?;
         }
 
         self.ret_type
             .borrow_mut()
-            .setup(self.params_scope.clone())
+            .setup(self.params_scope.clone().unwrap())
     }
     fn type_check(
         &self,
-        mut ctx: MutRc<Context>,
+        mut ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         if self.is_exported {
             let parent = ctx.borrow().get_parent();
@@ -223,45 +223,59 @@ impl AstNode for FnDeclarationNode {
         let (generic_params, mut unknowns) =
             self.get_generic_param_names(ctx.clone())?;
 
-        for generic_param in generic_params.iter() {
-            if self.params_scope.borrow().has_dec_with_id(
-                &generic_param.literal.clone().unwrap(),
-            ) {
-                continue;
-            }
-            self.params_scope.borrow_mut().declare(
-                SymbolDec {
-                    name: generic_param
-                        .literal
-                        .clone()
-                        .unwrap(),
-                    id: generic_param
-                        .literal
-                        .clone()
-                        .unwrap(),
-                    is_constant: true,
-                    is_type: true,
-                    type_: new_mut_rc(GenericType {
-                        identifier: generic_param.clone(),
-                    }),
-                    require_init: false,
-                    is_defined: false,
-                    is_param: false,
-                    position: generic_param.interval(),
-                },
-                generic_param.interval(),
-            )?;
-        }
-
         // rather than set the parent in setup, set every
         // type checking iteration.
         // This is as we can't always get the full list of generic
         // parameters on the first try,
         // after which the context is frozen, and throws an error as
         // we are trying to declare a new symbol on the frozen ctx
-        self.params_scope
-            .borrow_mut()
-            .set_parent(ctx.clone());
+        let is_frozen = ctx.borrow().is_frozen();
+        ctx.borrow_mut().unfreeze();
+
+        for generic_param in generic_params.iter() {
+            if self
+                .params_scope
+                .clone()
+                .unwrap()
+                .borrow()
+                .has_dec_with_id(
+                    &generic_param.literal.clone().unwrap(),
+                )
+            {
+                continue;
+            }
+            self.params_scope
+                .clone()
+                .unwrap()
+                .borrow_mut()
+                .declare(
+                    SymbolDec {
+                        name: generic_param
+                            .literal
+                            .clone()
+                            .unwrap(),
+                        id: generic_param
+                            .literal
+                            .clone()
+                            .unwrap(),
+                        is_constant: true,
+                        is_type: true,
+                        type_: new_mut_rc(GenericType {
+                            identifier: generic_param
+                                .clone(),
+                        }),
+                        require_init: false,
+                        is_defined: false,
+                        is_param: false,
+                        position: generic_param.interval(),
+                    },
+                    generic_param.interval(),
+                )?;
+        }
+
+        if is_frozen {
+            ctx.borrow_mut().freeze();
+        }
 
         // don't use param_scope so that the function can have params
         // with the same name as the function
@@ -269,10 +283,9 @@ impl AstNode for FnDeclarationNode {
             t: ret_type,
             unknowns: type_check_res_unknowns,
             ..
-        } = self
-            .ret_type
-            .borrow()
-            .type_check(self.params_scope.clone())?;
+        } = self.ret_type.borrow().type_check(
+            self.params_scope.clone().unwrap(),
+        )?;
         unknowns += type_check_res_unknowns;
 
         let mut parameters: Vec<FnParamType> = Vec::new();
@@ -299,7 +312,7 @@ impl AstNode for FnDeclarationNode {
             if let Some(type_) = type_ {
                 let param_type_res =
                     type_.borrow_mut().type_check(
-                        self.params_scope.clone(),
+                        self.params_scope.clone().unwrap(),
                     )?;
                 param_type = Some(param_type_res.t);
                 unknowns += param_type_res.unknowns;
@@ -318,7 +331,7 @@ impl AstNode for FnDeclarationNode {
                 // TODO: type check on global scope
                 let default_value_type =
                     default_value.borrow_mut().type_check(
-                        self.params_scope.clone(),
+                        self.params_scope.clone().unwrap(),
                     )?;
                 unknowns += default_value_type.unknowns;
 
@@ -364,6 +377,8 @@ impl AstNode for FnDeclarationNode {
             let self_pos = self.pos();
             if ctx.borrow().is_frozen() {
                 self.params_scope
+                    .clone()
+                    .unwrap()
                     .borrow_mut()
                     .update_dec_type(
                         &identifier.clone(),
@@ -371,24 +386,31 @@ impl AstNode for FnDeclarationNode {
                         self_pos,
                     )?;
             } else {
-                self.params_scope.borrow_mut().declare(
-                    SymbolDec {
-                        name: identifier.clone(),
-                        id: format!(
-                            "qword [rbp + {}]",
-                            8 * ((num_params - (i + 1))
-                                + 2)
-                        ),
-                        is_constant: true,
-                        is_type: false,
-                        require_init: false,
-                        is_defined: true,
-                        is_param: true,
-                        type_: param_type.unwrap().clone(),
-                        position: self.position.clone(),
-                    },
-                    self_pos,
-                )?;
+                self.params_scope
+                    .clone()
+                    .unwrap()
+                    .borrow_mut()
+                    .declare(
+                        SymbolDec {
+                            name: identifier.clone(),
+                            id: format!(
+                                "qword [rbp + {}]",
+                                8 * ((num_params
+                                    - (i + 1))
+                                    + 2)
+                            ),
+                            is_constant: true,
+                            is_type: false,
+                            require_init: false,
+                            is_defined: true,
+                            is_param: true,
+                            type_: param_type
+                                .unwrap()
+                                .clone(),
+                            position: self.position.clone(),
+                        },
+                        self_pos,
+                    )?;
             }
         }
 
@@ -455,9 +477,9 @@ impl AstNode for FnDeclarationNode {
                 always_returns,
                 unknowns: body_unknowns,
                 ..
-            } = body
-                .borrow()
-                .type_check(self.params_scope.clone())?;
+            } = body.borrow().type_check(
+                self.params_scope.clone().unwrap(),
+            )?;
             unknowns += body_unknowns;
 
             if is_returned
@@ -492,16 +514,16 @@ impl AstNode for FnDeclarationNode {
             }
         }
 
-        self.params_scope.borrow_mut().remove_parent();
-
         Ok(TypeCheckRes::from(this_type, unknowns))
     }
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         self.params_scope
+            .clone()
+            .unwrap()
             .borrow_mut()
             .set_parent(ctx.clone());
 
@@ -539,13 +561,14 @@ impl AstNode for FnDeclarationNode {
             ret_lbl: end_label.clone(),
         });
 
-        let body = self
-            .body
-            .take()
-            .unwrap()
-            .borrow_mut()
-            .asm(self.params_scope.clone())?;
+        let body =
+            self.body
+                .take()
+                .unwrap()
+                .borrow_mut()
+                .asm(self.params_scope.clone().unwrap())?;
         let params_scope = self.params_scope.clone();
+        let params_scope = params_scope.unwrap();
         let params_scope = params_scope.borrow_mut();
         let (data_defs, text_defs) =
             params_scope.get_definitions();

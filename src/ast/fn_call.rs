@@ -1,5 +1,6 @@
 use crate::ast::class_declaration::method_id;
 use crate::ast::{AstNode, TypeCheckRes};
+use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::get_type;
@@ -21,7 +22,7 @@ pub struct FnCallNode {
 }
 
 impl FnCallNode {
-    fn class_id(&self, ctx: MutRc<Context>) -> String {
+    fn class_id(&self, ctx: MutRc<dyn Context>) -> String {
         let t = self
             .object
             .clone()
@@ -48,7 +49,7 @@ impl FnCallNode {
 
     fn get_callee_type(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<
         (
             Option<FnType>,
@@ -169,7 +170,7 @@ impl FnCallNode {
 impl AstNode for FnCallNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         if let Some(obj) = self.object.clone() {
             obj.borrow_mut().setup(ctx.clone())?;
@@ -181,7 +182,7 @@ impl AstNode for FnCallNode {
     }
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let mut args: Vec<FnParamType> = Vec::new();
 
@@ -244,8 +245,7 @@ impl AstNode for FnCallNode {
             )));
         }
 
-        let generics_ctx =
-            Context::new(ctx.borrow().cli_args.clone());
+        let generics_ctx = Scope::new_local(ctx.clone());
 
         let mut i = 0;
         for arg in self.generic_args.clone() {
@@ -367,7 +367,7 @@ impl AstNode for FnCallNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let mut asm = format!("");
 

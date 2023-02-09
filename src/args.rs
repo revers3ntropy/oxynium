@@ -1,4 +1,5 @@
 use crate::error::{arg_error, Error};
+use crate::util::string_to_static_str;
 use clap::parser::ValuesRef;
 use clap::{arg, ArgMatches, Command};
 use std::env;
@@ -24,7 +25,7 @@ pub struct Args {
     pub out: String,
     pub eval: String,
     pub exec_mode: ExecMode,
-    pub std_path: String,
+    pub std_path: &'static str,
     pub keep: bool,
     pub optimise: u8,
     pub enable: Vec<String>,
@@ -104,12 +105,15 @@ pub fn get_cli_args() -> Args {
             .get_one::<String>("eval")
             .unwrap_or(&String::from(""))
             .to_string(),
-        std_path: m
-            .get_one::<String>("std")
-            .unwrap_or(&String::from(
-                "/usr/local/bin/oxy-std.asm",
-            ))
-            .to_string(),
+        std_path: unsafe {
+            string_to_static_str(
+                m.get_one::<String>("std")
+                    .unwrap_or(&String::from(
+                        "/usr/local/bin/oxy-std.asm",
+                    ))
+                    .to_string(),
+            )
+        },
         exec_mode: exec_mode_from_int(get_int_cli_arg(
             &m,
             "exec_mode",

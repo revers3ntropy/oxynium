@@ -1,6 +1,7 @@
 use crate::ast::type_expr::TypeNode;
 use crate::ast::type_expr_generic::GenericTypeNode;
 use crate::ast::{AstNode, TypeCheckRes};
+use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::{Token, TokenType};
@@ -17,30 +18,24 @@ pub struct OptionalTypeNode {
 impl AstNode for OptionalTypeNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         self.value.borrow_mut().setup(ctx)
     }
 
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
-        let mut root_ctx = ctx.clone();
-        while let Some(parent_ctx) =
-            root_ctx.clone().borrow().get_parent()
-        {
-            root_ctx = parent_ctx;
-        }
+        let root_ctx =
+            ctx.clone().borrow().root(ctx.clone());
 
         let option = root_ctx
             .borrow()
             .get_dec_from_id("Option")
             .type_;
 
-        let generics_ctx = Context::new(
-            root_ctx.borrow().cli_args.clone(),
-        );
+        let generics_ctx = Scope::new_local(root_ctx);
 
         let generic_arg_name = option
             .clone()

@@ -17,13 +17,13 @@ pub struct ExecRootNode {
 impl AstNode for ExecRootNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         self.statements.borrow_mut().setup(ctx.clone())
     }
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         if ctx.borrow().is_frozen() {
             panic!("Cannot type check a frozen context");
@@ -68,7 +68,7 @@ impl AstNode for ExecRootNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let mut res = self
             .statements
@@ -109,7 +109,7 @@ impl AstNode for ExecRootNode {
             .collect::<Vec<String>>()
             .join("\n");
 
-        if ctx_ref.exec_mode == ExecMode::Lib {
+        if ctx_ref.exec_mode() == ExecMode::Lib {
             return Ok(format!(
                 "
                 section	.note.GNU-stack
@@ -185,7 +185,7 @@ impl AstNode for ExecRootNode {
                 push 0
                 call exit
         ",
-            ctx_ref.std_asm_path
+            ctx_ref.std_asm_path()
         ))
     }
 

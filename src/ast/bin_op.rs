@@ -20,7 +20,7 @@ pub struct BinOpNode {
 impl AstNode for BinOpNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         self.lhs.borrow_mut().setup(ctx.clone())?;
         self.rhs.borrow_mut().setup(ctx.clone())
@@ -28,7 +28,7 @@ impl AstNode for BinOpNode {
 
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let mut unknowns = 0;
 
@@ -85,7 +85,7 @@ impl AstNode for BinOpNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let lhs =
             self.lhs.borrow().type_check(ctx.clone())?;
@@ -143,7 +143,7 @@ impl AstNode for BinOpNode {
 }
 
 fn can_do_inline(
-    ctx: MutRc<Context>,
+    ctx: MutRc<dyn Context>,
     lhs_type: MutRc<dyn Type>,
     rhs_type: MutRc<dyn Type>,
     op: Token,
@@ -175,7 +175,7 @@ fn do_inline(
     lhs: String,
     op: Token,
     rhs: String,
-    ctx: MutRc<Context>,
+    ctx: MutRc<dyn Context>,
 ) -> Result<String, Error> {
     let push_0_regex =
         Regex::new(r"^mov rax, 0\n +push rax$").unwrap();
@@ -183,7 +183,7 @@ fn do_inline(
         Regex::new(r"^mov rax, 1\n +push rax$").unwrap();
     let o1_res = o1(
         "constant-folding",
-        &ctx.borrow().cli_args.clone(),
+        &ctx.borrow().get_cli_args(),
         &|| {
             if vec![TokenType::Plus, TokenType::Sub]
                 .contains(&op.token_type)

@@ -33,7 +33,7 @@ impl Type for TypeType {
 
     fn concrete(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<MutRc<dyn Type>, Error> {
         Ok(new_mut_rc(TypeType {
             instance_type: self
@@ -43,7 +43,7 @@ impl Type for TypeType {
         }))
     }
 
-    fn cache_id(&self, ctx: MutRc<Context>) -> String {
+    fn cache_id(&self, ctx: MutRc<dyn Context>) -> String {
         format!(
             "*{}",
             self.instance_type

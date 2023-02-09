@@ -1,4 +1,5 @@
 use crate::ast::{AstNode, TypeCheckRes};
+use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::position::Interval;
@@ -17,7 +18,7 @@ pub struct GenericTypeNode {
 impl AstNode for GenericTypeNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         for arg in &mut self.generic_args {
             arg.borrow_mut().setup(ctx.clone())?;
@@ -27,7 +28,7 @@ impl AstNode for GenericTypeNode {
 
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let mut unknowns = 0;
 
@@ -78,8 +79,7 @@ impl AstNode for GenericTypeNode {
         }
         let class_type = class_type.unwrap();
 
-        let generics_ctx =
-            Context::new(ctx.borrow().cli_args.clone());
+        let generics_ctx = Scope::new_local(ctx.clone());
 
         if self.generic_args.len()
             != class_type.generic_params_order.len()

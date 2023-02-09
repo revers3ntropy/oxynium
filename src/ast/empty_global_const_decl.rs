@@ -20,7 +20,7 @@ pub struct EmptyGlobalConstNode {
 impl AstNode for EmptyGlobalConstNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         if !is_valid_identifier(
             &self.identifier.clone().literal.unwrap(),
@@ -35,7 +35,7 @@ impl AstNode for EmptyGlobalConstNode {
     }
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let TypeCheckRes {
             t: type_, unknowns, ..
@@ -79,7 +79,7 @@ impl AstNode for EmptyGlobalConstNode {
     }
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(

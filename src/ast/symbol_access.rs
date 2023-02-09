@@ -23,7 +23,7 @@ impl SymbolAccess {
 impl AstNode for SymbolAccess {
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.id()) {
             return Err(syntax_error(format!(
@@ -68,7 +68,7 @@ impl AstNode for SymbolAccess {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let decl =
             ctx.borrow_mut().get_dec_from_id(&self.id());

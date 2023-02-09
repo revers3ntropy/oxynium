@@ -15,7 +15,7 @@ pub struct ReturnNode {
 impl AstNode for ReturnNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         if let Some(ref value) = self.value.clone() {
             value.borrow_mut().setup(ctx.clone())?;
@@ -24,7 +24,7 @@ impl AstNode for ReturnNode {
     }
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         if let Some(ref value) = self.value {
             let ret_tr =
@@ -45,7 +45,7 @@ impl AstNode for ReturnNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let frame = ctx.borrow_mut().stack_frame_peak();
         if frame.is_none() {

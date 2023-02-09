@@ -84,7 +84,9 @@ pub fn read_file(path: &str) -> Result<String, Error> {
     Ok(input)
 }
 
-pub fn string_to_static_str(s: String) -> &'static str {
+pub unsafe fn string_to_static_str(
+    s: String,
+) -> &'static str {
     Box::leak(s.into_boxed_str())
 }
 

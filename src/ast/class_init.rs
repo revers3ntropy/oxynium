@@ -1,4 +1,5 @@
 use crate::ast::{AstNode, TypeCheckRes};
+use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::parse::token::Token;
@@ -19,7 +20,7 @@ pub struct ClassInitNode {
 impl ClassInitNode {
     fn field_types_hashmap(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<
         (HashMap<String, MutRc<dyn Type>>, usize),
         Error,
@@ -37,7 +38,7 @@ impl ClassInitNode {
     }
     fn field_asm_hashmap(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<HashMap<String, String>, Error> {
         let mut instance_fields_hashmap = HashMap::new();
         for field in self.fields.clone() {
@@ -53,7 +54,7 @@ impl ClassInitNode {
 impl AstNode for ClassInitNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         for field in self.fields.clone() {
             field.1.borrow_mut().setup(ctx.clone())?;
@@ -66,7 +67,7 @@ impl AstNode for ClassInitNode {
 
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let mut unknowns = 0;
 
@@ -109,8 +110,7 @@ impl AstNode for ClassInitNode {
         }
         let mut class_type = class_type.unwrap();
 
-        let generics_ctx =
-            Context::new(ctx.borrow().cli_args.clone());
+        let generics_ctx = Scope::new_local(ctx.clone());
 
         if self.generic_args.len()
             != class_type.generic_params_order.len()
@@ -223,7 +223,7 @@ impl AstNode for ClassInitNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let mut asm = String::new();
 

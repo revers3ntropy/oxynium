@@ -131,7 +131,7 @@ impl Type for FnType {
 
     fn concrete(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<MutRc<dyn Type>, Error> {
         if let Some(cached) =
             ctx.borrow().concrete_type_cache_get(
@@ -192,7 +192,7 @@ impl Type for FnType {
         Ok(res)
     }
 
-    fn cache_id(&self, ctx: MutRc<Context>) -> String {
+    fn cache_id(&self, ctx: MutRc<dyn Context>) -> String {
         if self.generic_params_order.len() < 1 {
             return format!("({})", self.str());
         }

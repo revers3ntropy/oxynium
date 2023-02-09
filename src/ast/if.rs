@@ -17,7 +17,7 @@ pub struct IfNode {
 impl AstNode for IfNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         self.body.borrow_mut().setup(ctx.clone())?;
         if let Some(ref else_body) = self.else_body.clone()
@@ -28,7 +28,7 @@ impl AstNode for IfNode {
     }
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let TypeCheckRes {
             t: mut body_ret_type,
@@ -109,7 +109,7 @@ impl AstNode for IfNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let body =
             self.body.borrow_mut().asm(ctx.clone())?;

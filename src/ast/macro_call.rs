@@ -42,7 +42,7 @@ impl MacroCallNode {
 impl AstNode for MacroCallNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         let macro_ = self.get_macro();
         if macro_.is_none() {
@@ -66,7 +66,7 @@ impl AstNode for MacroCallNode {
 
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         self.resolved
             .clone()
@@ -77,7 +77,7 @@ impl AstNode for MacroCallNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         self.resolved
             .clone()

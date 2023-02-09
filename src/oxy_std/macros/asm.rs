@@ -17,7 +17,7 @@ pub struct AsmMacro {
 impl Macro for AsmMacro {
     fn resolve(
         &self,
-        _ctx: MutRc<Context>,
+        _ctx: MutRc<dyn Context>,
     ) -> Result<MutRc<dyn AstNode>, Error> {
         let mut args = self.args.clone();
 

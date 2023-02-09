@@ -9,6 +9,6 @@ use crate::util::MutRc;
 pub trait Macro {
     fn resolve(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<MutRc<dyn AstNode>, Error>;
 }

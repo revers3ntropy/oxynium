@@ -16,13 +16,13 @@ pub struct FieldAccessNode {
 impl AstNode for FieldAccessNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         self.base.borrow_mut().setup(ctx.clone())
     }
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let mut unknowns = 0;
 
@@ -84,7 +84,7 @@ impl AstNode for FieldAccessNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let offset = self
             .base

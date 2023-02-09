@@ -1,6 +1,8 @@
 use crate::args::{Args, ExecMode};
 use crate::ast::exec_root::ExecRootNode;
 use crate::ast::AstNode;
+use crate::context::root_ctx::RootContext;
+use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::{io_error, Error, ErrorSource};
 use crate::parse::lexer::Lexer;
@@ -8,7 +10,9 @@ use crate::parse::parser::Parser;
 use crate::perf;
 use crate::position::Position;
 use crate::post_process::format_asm::post_process;
-use crate::util::{string_to_static_str, MutRc};
+use crate::util::{
+    new_mut_rc, string_to_static_str, MutRc,
+};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -19,17 +23,17 @@ use std::{env, fs};
 const STD_DOXY: &str = include_str!("../std/std.doxy");
 
 fn setup_ctx_with_doxy(
-    ctx: MutRc<Context>,
-) -> Result<MutRc<Context>, Error> {
+    ctx: MutRc<dyn Context>,
+) -> Result<MutRc<dyn Context>, Error> {
     let start = Instant::now();
 
-    if ctx.borrow().cli_args.exec_mode == ExecMode::Lib {
+    if ctx.borrow().exec_mode() == ExecMode::Lib {
         ctx.borrow_mut().set_ignoring_definitions(true);
     }
 
     let mut node = ExecRootNode {
         statements: generate_ast(
-            &ctx.borrow().cli_args,
+            &ctx.borrow().get_cli_args(),
             STD_DOXY.to_owned(),
             "std.doxy".to_owned(),
         )?,
@@ -37,7 +41,11 @@ fn setup_ctx_with_doxy(
 
     node.setup(ctx.clone())?;
 
-    perf!(ctx.borrow().cli_args, start, "Setup STD AST");
+    perf!(
+        ctx.borrow().get_cli_args(),
+        start,
+        "Setup STD AST"
+    );
     let start = Instant::now();
 
     let type_check_res = node.type_check(ctx.clone());
@@ -45,7 +53,11 @@ fn setup_ctx_with_doxy(
         return Err(type_check_res.err().unwrap());
     }
 
-    perf!(ctx.borrow().cli_args, start, "Type-checked STD");
+    perf!(
+        ctx.borrow().get_cli_args(),
+        start,
+        "Type-checked STD"
+    );
     let start = Instant::now();
 
     let asm_error = node.asm(ctx.clone());
@@ -53,12 +65,20 @@ fn setup_ctx_with_doxy(
         return Err(asm_error.err().unwrap());
     }
 
-    perf!(ctx.borrow().cli_args, start, "Compiled STD");
+    perf!(
+        ctx.borrow().get_cli_args(),
+        start,
+        "Compiled STD"
+    );
     let start = Instant::now();
 
     ctx.borrow_mut().reset();
 
-    perf!(ctx.borrow().cli_args, start, "Reset context");
+    perf!(
+        ctx.borrow().get_cli_args(),
+        start,
+        "Reset context"
+    );
 
     Ok(ctx)
 }
@@ -77,7 +97,7 @@ pub fn generate_ast(
     perf!(args, start, "Lexed");
     let start = Instant::now();
 
-    let mut parser = Parser::new(args.clone(), tokens);
+    let mut parser = Parser::new(tokens);
     let ast = parser.parse();
     if ast.error.is_some() {
         return Err(ast.error.unwrap());
@@ -94,8 +114,14 @@ fn compile(
     input: String,
     file_name: String,
     args: &Args,
-) -> Result<(String, MutRc<Context>), Error> {
-    let ctx = Context::new(args.clone());
+) -> Result<(String, MutRc<dyn Context>), Error> {
+    let mut ctx = RootContext::new(args.clone());
+
+    ctx.std_asm_path = args.std_path.clone();
+    ctx.exec_mode = args.exec_mode;
+
+    let ctx = Scope::new_global(new_mut_rc(ctx));
+
     let setup_ctx_res = setup_ctx_with_doxy(ctx);
     if setup_ctx_res.is_err() {
         let mut err = setup_ctx_res.err().unwrap();
@@ -107,21 +133,19 @@ fn compile(
     }
     let ctx = setup_ctx_res.unwrap();
 
-    ctx.borrow_mut().std_asm_path = args.std_path.clone();
-    ctx.borrow_mut().exec_mode = args.exec_mode;
-
     // TODO: Hack to extend the lifetimes of the strings,
     //      so that they can be used in the context,
     //      which permanently leaks their memory.
     let current_dir = env::current_dir().unwrap();
     let current_dir =
         current_dir.to_str().unwrap().to_owned();
+
     let current_dir_leaked_str =
-        string_to_static_str(current_dir);
+        unsafe { string_to_static_str(current_dir) };
     let current_dir = Path::new(current_dir_leaked_str);
 
     let file_path_leaked_str =
-        string_to_static_str(file_name.clone());
+        unsafe { string_to_static_str(file_name.clone()) };
     let file_dir = Path::new(file_path_leaked_str)
         .parent()
         .unwrap_or(current_dir);
@@ -130,7 +154,7 @@ fn compile(
 
     let mut root_node = ExecRootNode {
         statements: generate_ast(
-            &ctx.borrow().cli_args,
+            &ctx.borrow().get_cli_args(),
             input,
             file_name.clone(),
         )?,
@@ -140,22 +164,30 @@ fn compile(
 
     root_node.setup(ctx.clone())?;
 
-    perf!(ctx.borrow().cli_args, start, "Setup AST");
+    perf!(ctx.borrow().get_cli_args(), start, "Setup AST");
     let start = Instant::now();
 
     root_node.type_check(ctx.clone())?;
 
-    perf!(ctx.borrow().cli_args, start, "Type-checked");
+    perf!(
+        ctx.borrow().get_cli_args(),
+        start,
+        "Type-checked"
+    );
     let start = Instant::now();
 
     let compile_res = root_node.asm(ctx.clone())?;
 
-    perf!(ctx.borrow().cli_args, start, "Compiled");
+    perf!(ctx.borrow().get_cli_args(), start, "Compiled");
     let start = Instant::now();
 
     let asm = post_process(compile_res, args);
 
-    perf!(ctx.borrow().cli_args, start, "Post Processed");
+    perf!(
+        ctx.borrow().get_cli_args(),
+        start,
+        "Post Processed"
+    );
 
     Ok((asm, ctx.clone()))
 }

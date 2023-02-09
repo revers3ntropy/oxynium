@@ -15,7 +15,7 @@ pub struct EmptyLocalVarNode {
 impl AstNode for EmptyLocalVarNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(syntax_error(format!(
@@ -29,7 +29,7 @@ impl AstNode for EmptyLocalVarNode {
 
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let TypeCheckRes {
             t: type_, unknowns, ..
@@ -56,7 +56,7 @@ impl AstNode for EmptyLocalVarNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_none() {
             return Err(syntax_error(format!(

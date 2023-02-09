@@ -1,6 +1,7 @@
 use crate::ast::scope::ScopeNode;
 use crate::ast::AstNode;
 use crate::compile::generate_ast;
+use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::{type_error, Error, ErrorSource};
 use crate::oxy_std::macros::Macro;
@@ -17,7 +18,7 @@ pub struct IncludeMacro {
 impl IncludeMacro {
     fn get_path(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let args = self.args.clone();
 
@@ -49,7 +50,7 @@ impl IncludeMacro {
 impl Macro for IncludeMacro {
     fn resolve(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<MutRc<dyn AstNode>, Error> {
         let path = self.get_path(ctx.clone())?;
 
@@ -61,7 +62,7 @@ impl Macro for IncludeMacro {
         };
 
         let ast_res = generate_ast(
-            &ctx.borrow().cli_args,
+            &ctx.borrow().get_cli_args(),
             read_result,
             path.clone(),
         );
@@ -72,11 +73,11 @@ impl Macro for IncludeMacro {
         }
         let ast = ast_res.unwrap();
 
-        let ctx =
-            Context::new(ctx.borrow().cli_args.clone());
+        let ctx = Scope::new_global(ctx.clone());
 
-        let file_path =
-            Path::new(string_to_static_str(path));
+        let file_path = unsafe {
+            Path::new(string_to_static_str(path))
+        };
         ctx.borrow_mut().set_current_dir_path(
             file_path.clone().parent().unwrap_or(file_path),
         );
@@ -84,7 +85,7 @@ impl Macro for IncludeMacro {
         return Ok(new_mut_rc(ScopeNode {
             position: self.position.clone(),
             body: ast,
-            ctx,
+            ctx: Some(ctx),
             err_source: Some(err_source),
         }));
     }

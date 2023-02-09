@@ -15,7 +15,7 @@ pub struct RawAsmNode {
 impl AstNode for RawAsmNode {
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let mut res =
             self.return_type.borrow().type_check(ctx)?;
@@ -34,7 +34,7 @@ impl AstNode for RawAsmNode {
 
     fn asm(
         &mut self,
-        _ctx: MutRc<Context>,
+        _ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         Ok(self.asm.clone().literal.unwrap())
     }

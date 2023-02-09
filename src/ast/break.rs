@@ -12,7 +12,7 @@ pub struct BreakNode {
 impl AstNode for BreakNode {
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let labels = ctx.borrow().loop_label_peak();
         if labels.is_none() {

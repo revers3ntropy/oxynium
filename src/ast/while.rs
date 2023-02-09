@@ -16,7 +16,7 @@ pub struct WhileLoopNode {
 impl AstNode for WhileLoopNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         if let Some(ref condition) = self.condition.clone()
         {
@@ -26,7 +26,7 @@ impl AstNode for WhileLoopNode {
     }
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let mut unknowns = 0;
         if let Some(condition) = &self.condition {
@@ -65,7 +65,7 @@ impl AstNode for WhileLoopNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let start_lbl = ctx.borrow_mut().get_anon_label();
         let end_lbl = ctx.borrow_mut().get_anon_label();

@@ -1,6 +1,7 @@
 use crate::ast::fn_declaration::FnDeclarationNode;
 use crate::ast::type_known::KnownTypeNode;
 use crate::ast::{AstNode, TypeCheckRes};
+use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::{invalid_symbol, type_error, Error};
 use crate::parse::token::Token;
@@ -48,14 +49,14 @@ pub struct ClassDeclarationNode {
     pub position: Interval,
     pub is_primitive: bool,
     pub generic_parameters: Vec<Token>,
-    pub generics_ctx: MutRc<Context>,
+    pub generics_ctx: Option<MutRc<dyn Context>>,
     pub is_exported: bool,
 }
 
 impl AstNode for ClassDeclarationNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         if !can_declare_with_identifier(
             &self.identifier.clone().literal.unwrap(),
@@ -66,15 +67,13 @@ impl AstNode for ClassDeclarationNode {
             .set_interval(self.identifier.interval()));
         }
 
-        self.generics_ctx
-            .borrow_mut()
-            .set_parent(ctx.clone());
+        self.generics_ctx =
+            Some(Scope::new_local(ctx.clone()));
 
         for field in &self.fields {
-            field
-                .type_
-                .borrow_mut()
-                .setup(self.generics_ctx.clone())?;
+            field.type_.borrow_mut().setup(
+                self.generics_ctx.clone().unwrap(),
+            )?;
         }
         for method in &self.methods {
             // use ctx here and not self.generics_ctx
@@ -88,7 +87,7 @@ impl AstNode for ClassDeclarationNode {
 
     fn type_check(
         &self,
-        mut ctx: MutRc<Context>,
+        mut ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         if self.is_exported {
             let parent = ctx.borrow().get_parent();
@@ -101,28 +100,33 @@ impl AstNode for ClassDeclarationNode {
 
         for generic_param in self.generic_parameters.iter()
         {
-            self.generics_ctx.borrow_mut().declare(
-                SymbolDec {
-                    name: generic_param
-                        .literal
-                        .clone()
-                        .unwrap(),
-                    id: generic_param
-                        .literal
-                        .clone()
-                        .unwrap(),
-                    is_constant: true,
-                    is_type: true,
-                    type_: new_mut_rc(GenericType {
-                        identifier: generic_param.clone(),
-                    }),
-                    require_init: false,
-                    is_defined: false,
-                    is_param: false,
-                    position: generic_param.interval(),
-                },
-                generic_param.interval(),
-            )?;
+            self.generics_ctx
+                .clone()
+                .unwrap()
+                .borrow_mut()
+                .declare(
+                    SymbolDec {
+                        name: generic_param
+                            .literal
+                            .clone()
+                            .unwrap(),
+                        id: generic_param
+                            .literal
+                            .clone()
+                            .unwrap(),
+                        is_constant: true,
+                        is_type: true,
+                        type_: new_mut_rc(GenericType {
+                            identifier: generic_param
+                                .clone(),
+                        }),
+                        require_init: false,
+                        is_defined: false,
+                        is_param: false,
+                        position: generic_param.interval(),
+                    },
+                    generic_param.interval(),
+                )?;
         }
 
         let this_type: MutRc<ClassType>;
@@ -175,10 +179,9 @@ impl AstNode for ClassDeclarationNode {
         }
 
         for field in self.fields.iter() {
-            let type_ = field
-                .type_
-                .borrow()
-                .type_check(self.generics_ctx.clone())?;
+            let type_ = field.type_.borrow().type_check(
+                self.generics_ctx.clone().unwrap(),
+            )?;
             unknowns += type_.unknowns;
             let mut stack_offset =
                 this_type.borrow().fields.len() * 8;
@@ -290,7 +293,7 @@ impl AstNode for ClassDeclarationNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         let mut asm = "".to_string();
         for method in self.methods.iter() {

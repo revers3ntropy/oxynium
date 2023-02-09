@@ -30,7 +30,7 @@ impl<T> GlobalConstNode<T> {
 impl AstNode for GlobalConstNode<i64> {
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         if !can_declare_with_identifier(
             &self.identifier.clone().literal.unwrap(),
@@ -65,7 +65,7 @@ impl AstNode for GlobalConstNode<i64> {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
@@ -92,7 +92,7 @@ impl AstNode for GlobalConstNode<i64> {
 impl AstNode for GlobalConstNode<String> {
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
@@ -138,7 +138,7 @@ impl AstNode for GlobalConstNode<String> {
 
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         if !can_declare_with_identifier(
             &self.identifier.clone().literal.unwrap(),

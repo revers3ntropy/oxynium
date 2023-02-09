@@ -39,7 +39,7 @@ impl Type for GenericType {
 
     fn concrete(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<MutRc<dyn Type>, Error> {
         let key = self
             .identifier
@@ -58,7 +58,7 @@ impl Type for GenericType {
         Ok(new_mut_rc(self.clone()))
     }
 
-    fn cache_id(&self, ctx: MutRc<Context>) -> String {
+    fn cache_id(&self, ctx: MutRc<dyn Context>) -> String {
         let self_id = &self
             .identifier
             .clone()

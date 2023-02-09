@@ -17,14 +17,14 @@ pub struct UnaryOpNode {
 impl AstNode for UnaryOpNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         self.rhs.borrow_mut().setup(ctx)
     }
 
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let TypeCheckRes {
             t: value_type,
@@ -57,7 +57,7 @@ impl AstNode for UnaryOpNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         Ok(match self.operator.token_type {
             TokenType::Sub => {

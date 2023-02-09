@@ -26,7 +26,7 @@ impl LocalVarNode {
 impl AstNode for LocalVarNode {
     fn setup(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
         if !can_declare_with_identifier(&self.id()) {
             return Err(syntax_error(format!(
@@ -46,7 +46,7 @@ impl AstNode for LocalVarNode {
     }
     fn type_check(
         &self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<TypeCheckRes, Error> {
         let TypeCheckRes {
             t: mut value_type,
@@ -114,7 +114,7 @@ impl AstNode for LocalVarNode {
 
     fn asm(
         &mut self,
-        ctx: MutRc<Context>,
+        ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_none() {
             return Err(syntax_error(format!(
