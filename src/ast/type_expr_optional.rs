@@ -57,7 +57,7 @@ impl AstNode for OptionalTypeNode {
                 name: generic_arg_name.clone(),
                 id: generic_arg_name,
                 is_constant: false,
-                is_type: false,
+                is_type: true,
                 type_: t,
                 require_init: false,
                 is_defined: false,
