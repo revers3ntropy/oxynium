@@ -64,9 +64,6 @@ impl Context for Scope {
     fn freeze(&mut self) {
         self.parent.borrow_mut().freeze();
     }
-    fn unfreeze(&mut self) {
-        self.parent.borrow_mut().unfreeze();
-    }
     fn is_frozen(&self) -> bool {
         self.parent.borrow().is_frozen()
     }
@@ -90,15 +87,23 @@ impl Context for Scope {
 
     fn root(
         &self,
-        self_: MutRc<dyn Context>,
+        _self: MutRc<dyn Context>,
     ) -> MutRc<dyn Context> {
-        if let Some(ref parent) =
-            self_.borrow().get_parent()
+        self.parent.clone()
+    }
+
+    fn global_scope(
+        &self,
+        mut self_: MutRc<dyn Context>,
+    ) -> MutRc<dyn Context> {
+        let mut last = self_.clone();
+        while let Some(parent) =
+            self_.clone().borrow().get_parent()
         {
-            parent.borrow().root(parent.clone())
-        } else {
-            self_.clone()
+            last = self_.clone();
+            self_ = parent;
         }
+        last
     }
 
     fn get_cli_args(&self) -> Args {
@@ -147,12 +152,16 @@ impl Context for Scope {
         trace_interval: Interval,
     ) -> Result<SymbolDec, Error> {
         if self.is_frozen() {
-            if self.has_dec_with_id(&symbol.name) {
+            if !symbol.is_type
+                && self.has_dec_with_id(&symbol.name)
+            {
                 return Ok(
                     self.get_dec_from_id(&symbol.name)
                 );
             }
-            panic!("(!?) Context is frozen and symbol '{}' doesn't exist yet!", symbol.name);
+            if !symbol.is_type {
+                panic!("(!?) Context is frozen and symbol '{}' doesn't exist yet!", symbol.name);
+            }
         }
 
         if !self.allow_local_var_decls && !symbol.is_type {
@@ -165,9 +174,9 @@ impl Context for Scope {
             .declarations
             .get(symbol.name.clone().as_str())
         {
-            if !self.allow_overrides() {
+            if !symbol.is_type && !self.allow_overrides() {
                 return Err(type_error(format!(
-                    "Symbol `{}` is already declared",
+                    "symbol `{}` is already declared",
                     symbol.name
                 ))
                 .set_interval(trace_interval));

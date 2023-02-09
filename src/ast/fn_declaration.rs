@@ -223,15 +223,6 @@ impl AstNode for FnDeclarationNode {
         let (generic_params, mut unknowns) =
             self.get_generic_param_names(ctx.clone())?;
 
-        // rather than set the parent in setup, set every
-        // type checking iteration.
-        // This is as we can't always get the full list of generic
-        // parameters on the first try,
-        // after which the context is frozen, and throws an error as
-        // we are trying to declare a new symbol on the frozen ctx
-        let is_frozen = ctx.borrow().is_frozen();
-        ctx.borrow_mut().unfreeze();
-
         for generic_param in generic_params.iter() {
             if self
                 .params_scope
@@ -271,10 +262,6 @@ impl AstNode for FnDeclarationNode {
                     },
                     generic_param.interval(),
                 )?;
-        }
-
-        if is_frozen {
-            ctx.borrow_mut().freeze();
         }
 
         // don't use param_scope so that the function can have params

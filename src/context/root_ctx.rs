@@ -37,7 +37,7 @@ impl RootContext {
             anon_symbol_count: 0,
             exec_mode: cli_args.exec_mode,
             std_asm_path: cli_args.std_path,
-            allow_overrides: false,
+            allow_overrides: cli_args.allow_overrides,
             frozen: false,
             err_on_unknowns: false,
             cli_args,
@@ -58,10 +58,6 @@ impl Context for RootContext {
         self.frozen = true;
     }
 
-    fn unfreeze(&mut self) {
-        self.frozen = false;
-    }
-
     fn is_frozen(&self) -> bool {
         self.frozen
     }
@@ -74,6 +70,7 @@ impl Context for RootContext {
         self.freeze();
         self.err_on_unknowns = true;
     }
+
     fn set_parent(
         &mut self,
         _parent: Rc<RefCell<dyn Context>>,
@@ -82,7 +79,7 @@ impl Context for RootContext {
     }
 
     fn get_parent(&self) -> Option<MutRc<dyn Context>> {
-        unreachable!()
+        None
     }
 
     fn root(
@@ -90,6 +87,13 @@ impl Context for RootContext {
         self_: MutRc<dyn Context>,
     ) -> MutRc<dyn Context> {
         self_
+    }
+
+    fn global_scope(
+        &self,
+        _self: MutRc<dyn Context>,
+    ) -> MutRc<dyn Context> {
+        unreachable!("RootContext::global_scope")
     }
 
     fn get_cli_args(&self) -> Args {

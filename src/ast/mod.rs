@@ -103,19 +103,23 @@ impl TypeCheckRes {
         let t: MutRc<dyn Type>;
 
         if is_built_in {
-            let root =
-                ctx.clone().borrow().root(ctx.clone());
+            let root = ctx
+                .clone()
+                .borrow()
+                .global_scope(ctx.clone());
             if !root.borrow().has_dec_with_id(name) {
                 unknowns += 1;
                 t = new_mut_rc(UnknownType {});
             } else {
                 t = get_type!(root, name);
             }
-        } else if !ctx.borrow().has_dec_with_id(name) {
-            unknowns += 1;
-            t = new_mut_rc(UnknownType {});
         } else {
-            t = get_type!(ctx, name);
+            if !ctx.borrow().has_dec_with_id(name) {
+                unknowns += 1;
+                t = new_mut_rc(UnknownType {});
+            } else {
+                t = get_type!(ctx, name);
+            }
         }
 
         if t.borrow().is_unknown() {

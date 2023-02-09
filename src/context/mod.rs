@@ -22,7 +22,6 @@ pub struct CallStackFrame {
 pub trait Context: Debug {
     fn reset(&mut self);
     fn freeze(&mut self);
-    fn unfreeze(&mut self);
     fn is_frozen(&self) -> bool;
     fn throw_on_unknowns(&self) -> bool;
     fn finished_resolving_types(&mut self);
@@ -32,6 +31,10 @@ pub trait Context: Debug {
     );
     fn get_parent(&self) -> Option<MutRc<dyn Context>>;
     fn root(
+        &self,
+        self_: MutRc<dyn Context>,
+    ) -> MutRc<dyn Context>;
+    fn global_scope(
         &self,
         self_: MutRc<dyn Context>,
     ) -> MutRc<dyn Context>;

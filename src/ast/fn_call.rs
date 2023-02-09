@@ -252,12 +252,14 @@ impl AstNode for FnCallNode {
             let arg_type_res =
                 arg.borrow().type_check(ctx.clone())?;
             unknowns += arg_type_res.unknowns;
-            let name =
-                fn_type.generic_params_order[i].clone();
+            let name = fn_type.generic_params_order[i]
+                .clone()
+                .literal
+                .unwrap();
             generics_ctx.borrow_mut().declare(
                 SymbolDec {
-                    name: name.clone().literal.unwrap(),
-                    id: name.clone().literal.unwrap(),
+                    name: name.clone(),
+                    id: name.clone(),
                     is_constant: true,
                     is_type: true,
                     type_: arg_type_res.t,
@@ -270,8 +272,6 @@ impl AstNode for FnCallNode {
             )?;
             i += 1;
         }
-
-        generics_ctx.borrow_mut().set_parent(ctx.clone());
 
         if is_method_call {
             args.push(FnParamType {
