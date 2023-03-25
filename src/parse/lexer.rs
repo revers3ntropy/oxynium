@@ -2,8 +2,10 @@ use crate::args::Args;
 use crate::error::{syntax_error, Error};
 use crate::parse::auto_end_stmt::insert_semi_colons;
 use crate::parse::token::{Token, TokenType};
+use crate::perf;
 use crate::position::Position;
 use phf::phf_map;
+use std::time::Instant;
 
 static IDENTIFIER_CHARS: &str =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$";
@@ -229,7 +231,15 @@ impl Lexer {
             )));
         }
 
-        Ok(insert_semi_colons(tokens))
+        let start = Instant::now();
+        tokens = insert_semi_colons(tokens);
+        perf!(
+            self.cli_args,
+            start,
+            "Insert End-Of-Statements"
+        );
+
+        Ok(tokens)
     }
 
     fn advance(&mut self) -> Option<char> {
