@@ -1,5 +1,6 @@
 use crate::args::Args;
 use crate::error::{syntax_error, Error};
+use crate::parse::auto_end_stmt::insert_semi_colons;
 use crate::parse::token::{Token, TokenType};
 use crate::position::Position;
 use phf::phf_map;
@@ -31,6 +32,9 @@ const SINGLE_CHAR_TOKENS: phf::Map<
     ":" => TokenType::Colon,
     "#" => TokenType::Hash,
     "?" => TokenType::QM,
+    // used as marker for auto-end-stmt insertion,
+    // never included in `Lexer.lex()` output
+    "\n" => TokenType::NL,
 };
 
 const DOUBLE_CHAR_TOKENS: phf::Map<
@@ -101,6 +105,24 @@ impl Lexer {
         id_chars_sorted.sort();
 
         while let Some(c) = self.current_char {
+            if c == '\n' {
+                let pos = self.position.clone();
+                while self.position.idx
+                    < self.input.len() as i64
+                    && self.input
+                        [self.position.idx as usize]
+                        == '\n'
+                {
+                    self.advance();
+                }
+                tokens.push(Token::new(
+                    SINGLE_CHAR_TOKENS[&c.to_string()],
+                    None,
+                    pos.clone(),
+                    pos,
+                ));
+                continue;
+            }
             if c.is_whitespace() {
                 self.advance();
                 continue;
@@ -207,7 +229,7 @@ impl Lexer {
             )));
         }
 
-        Ok(tokens)
+        Ok(insert_semi_colons(tokens))
     }
 
     fn advance(&mut self) -> Option<char> {

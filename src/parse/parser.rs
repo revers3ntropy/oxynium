@@ -878,6 +878,9 @@ impl Parser {
                 return res;
             }
 
+            self.add_end_statement(&mut res);
+            ret_on_err!(res);
+
             res.success(new_mut_rc(EmptyLocalVarNode {
                 identifier: name,
                 type_: type_annotation.unwrap(),
@@ -2037,6 +2040,14 @@ impl Parser {
                 );
                 return res;
             }
+            // edge case for end-of-statement insertion:
+            // extern fn a () Option<Int>
+            // this_is_the_same_line()
+            if is_external && class_name.is_none() {
+                self.add_end_statement(&mut res);
+                ret_on_err!(res);
+            }
+
             res.success(new_mut_rc(FnDeclarationNode {
                 identifier,
                 params_scope: None,

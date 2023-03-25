@@ -1,7 +1,7 @@
 def Time.- (self, other: Time) Time {
-	let self_micros = self.seconds * 1000000 + self.microseconds;
-	let other_micros = other.seconds * 1000000 + other.microseconds;
-	let diff_micros = self_micros - other_micros;
+	let self_micros = self.seconds * 1000000 + self.microseconds
+	let other_micros = other.seconds * 1000000 + other.microseconds
+	let diff_micros = self_micros - other_micros
 	return new Time {
 		seconds: diff_micros / 1000000,
 		microseconds: diff_micros % 1000000
@@ -9,9 +9,9 @@ def Time.- (self, other: Time) Time {
 }
 
 def Time.+ (self, other: Time) Time {
-	let self_micros = self.seconds * 1000000 + self.microseconds;
-	let other_micros = other.seconds * 1000000 + other.microseconds;
-	let sum_micros = self_micros + other_micros;
+	let self_micros = self.seconds * 1000000 + self.microseconds
+	let other_micros = other.seconds * 1000000 + other.microseconds
+	let sum_micros = self_micros + other_micros
 	return new Time {
 		seconds: sum_micros / 1000000,
 		microseconds: sum_micros % 1000000

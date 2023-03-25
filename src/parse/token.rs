@@ -33,6 +33,7 @@ pub enum TokenType {
     Hash,         // #
     QM,           // ?
     DblQM,        // ??
+    NL,           // \n
 }
 
 impl TokenType {
@@ -121,6 +122,7 @@ impl Token {
             TokenType::Hash => "#".to_string(),
             TokenType::QM => "?".to_string(),
             TokenType::DblQM => "??".to_string(),
+            TokenType::NL => "\\n".to_string(),
         }
     }
 

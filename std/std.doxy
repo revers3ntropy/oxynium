@@ -1,8 +1,8 @@
 // This file is included as a raw string in every Oxynium program
 // and contains the declarations for the Standard Library.
-// The implementations for these deftions can be found under std/src.
+// The implementations for these definitions can be found under std/src.
 
-primitive Void;
+primitive Void
 
 primitive Char {
     extern def == (self, other: Char) Bool,
@@ -31,10 +31,10 @@ primitive Int {
     extern def <= (self, n: Int) Bool,
     extern def >  (self, n: Int) Bool,
     extern def >= (self, n: Int) Bool,
+    extern def Str (self) Str,
     extern def max (self, other=9223372036854775807) Int,
     extern def min (self, other=-9223372036854775807-1) Int,
     extern def abs (self) Int,
-    extern def Str (self) Str,
 }
 
 class Str {
@@ -100,12 +100,12 @@ primitive Any {
 }
 
 primitive Ptr <T> {
+	extern def Str (self) Str,
 	extern def is_null (self) Bool,
 	extern def make <From> (val: From) Ptr<From>,
 	extern def unwrap (self) T,
 	/// Wrapper around `malloc`
 	extern def allocate <A> (size: Int) Ptr<A>,
-	extern def Str (self) Str,
 }
 
 class List <T> {
@@ -113,12 +113,12 @@ class List <T> {
 	head: Ptr<T>,
 	// number of bytes required to store list
     size: Int,
+    extern def Str (self) Str,
     extern def empty <E> () List<E>,
 	extern def len (self) Int,
     extern def at (self, i: Int) Option<T>,
     extern def at_raw (self, i: Int) T,
     extern def push (self, value: T),
-    extern def Str (self) Str,
 }
 
 class Result <T, E> {
@@ -145,61 +145,61 @@ class File {
 /// Reads from stdin until a newline is reached
 /// allocates string to heap to fit input
 /// returns pointer to string in rax
-extern def input (prompt="", buffer_size=1000) Str;
-extern def exit (code=0);
-extern def print (msg="", line_end="\n");
-extern def panic (msg="Panic!");
-extern def errno () Int;
+extern def input (prompt="", buffer_size=1000) Str
+extern def exit (code=0)
+extern def print (msg="", line_end="\n")
+extern def panic (msg="Panic!")
+extern def errno () Int
 
 // Libc dependencies - declared externally in asm
-extern def malloc();
-extern def memset();
-extern def memcpy();
-extern def free();
-extern def sprintf();
-extern def time();
-extern def fopen();
-extern def fseek();
-extern def fclose();
-extern def fread();
-extern def ftell();
-extern def __errno_location();
+extern def malloc()
+extern def memset()
+extern def memcpy()
+extern def free()
+extern def sprintf()
+extern def time()
+extern def fopen()
+extern def fseek()
+extern def fclose()
+extern def fread()
+extern def ftell()
+extern def __errno_location()
 
 // Classes that may become part of the standard library in the future
 
-class Instant;
-class Duration;
-class Map;
-class Filter;
-class Iter;
-class Range;
-class Slice;
-class Vec;
-class Set;
-class Tuple;
-class Path;
-class Thread;
-class Process;
-class Channel;
-class Collection;
-class Default;
-class Debug;
-class Display;
-class Error;
-class Hash;
-class Hint;
-class Net;
-class Ref;
-class Primitive;
-class Task;
-class Func;
-class Class;
-class Instance;
-class LibC;
-class Def;
-class Rc;
-class Mem;
-class Marker;
-class Test;
-class Dyn;
-class Unsafe;
+class Instant
+class Duration
+class Map
+class Filter
+class Iter
+class Range
+class Slice
+class Vec
+class Set
+class Tuple
+class Path
+class Thread
+class Process
+class Channel
+class Collection
+class Default
+class Debug
+class Display
+class Error
+class Hash
+class Hint
+class Net
+class Ref
+class Primitive
+class Task
+class Func
+class Class
+class Instance
+class LibC
+class Def
+class Rc
+class Mem
+class Marker
+class Test
+class Dyn
+class Unsafe

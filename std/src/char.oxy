@@ -24,8 +24,8 @@ def Char.Str (self) Str {
 }
 
 def Char.is_digit (self) Bool {
-	let as_int = self.Int();
-	return as_int >= 48 && as_int <= 57;
+	let as_int = self.Int()
+	return as_int >= 48 && as_int <= 57
 }
 
 def Char.Int (self) Int {

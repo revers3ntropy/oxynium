@@ -96,9 +96,9 @@ def Str.Str (self) Str {
 
 def Str.Utf8Str (self) Utf8Str {
 	if self.utf8_size() == 0 {
-		return Any.cast!<Str, Utf8Str>("");
+		return Any.cast!<Str, Utf8Str>("")
 	}
-	let res = Ptr.allocate!<Char>(self.utf8_size());
+	let res = Ptr.allocate!<Char>(self.utf8_size())
 	#asm "
 		mov r15, qword [rbp + 16] ; r15 = self
 
@@ -129,7 +129,7 @@ def Str.Utf8Str (self) Utf8Str {
 			jmp .loop
 
 		.end:
-	";
+	"
 	return Any.cast!<Ptr<Char>, Utf8Str>(res)
 }
 
@@ -205,18 +205,18 @@ def Str.find (self, other: Str) Int {
 	if other.len() == 0 {
 		return 0
 	}
-	let mut i = 0;
+	let mut i = 0
 	while i < self.len() {
 		if self.at(i) == other.at(0) {
-			let mut j = 1;
+			let mut j = 1
 			while j < other.len() && self.at(i + j) == other.at(j) {
-				j = j + 1;
+				j += 1
 			}
 			if j == other.len() {
 				return i
 			}
 		}
-		i = i + 1
+		i += 1
 	}
 	return -1
 }
@@ -265,14 +265,14 @@ def Str.substr (self, start = 0, end = 9223372036854775807) Str {
 	if start >= end {
 		return ""
 	}
-	let actual_end = Int.min(self.len(), end);
-	let mut i = Int.max(start, 0);
-	let mut s = "";
+	let actual_end = Int.min(self.len(), end)
+	let mut i = Int.max(start, 0)
+	let mut s = ""
 	while i < actual_end {
 		// use Str.at_raw here as bounds checking has already been done
 		// and we don't want to do it again every iteration
-		s = s + self.at_raw(i).Str();
-		i = i + 1
+		s += self.at_raw(i).Str()
+		i += 1
 	}
 	return s
 }
@@ -281,7 +281,7 @@ def Str.starts_with (self, other: Str) Bool {
 	if other.len() > self.len() {
 		return false
 	}
-	let mut i = 0;
+	let mut i = 0
 	while i < other.len() {
 		if self.at(i) != other.at(i) {
 			return false
@@ -295,22 +295,22 @@ def Str.ends_with (self, other: Str) Bool {
 	if other.len() > self.len() {
 		return false
 	}
-	let mut i = 0;
+	let mut i = 0
 	while i < other.len() {
 		if self.at(self.len() - i - 1) != other.at(other.len() - i - 1) {
 			return false
 		}
-		i = i + 1
+		i += 1
 	}
 	return true
 }
 
 def Str.reversed (self) Str {
-	let mut i = 0;
-	let mut s = "";
+	let mut i = 0
+	let mut s = ""
 	while i < self.len() {
-		s = self.at(i).Str() + s;
-		i = i + 1
+		s = self.at(i).Str() + s
+		i += 1
 	}
 	return s
 }
@@ -322,28 +322,28 @@ def Str.replace (self, search: Str, replace_with="", max=-1) Str {
 	if max == 0 {
 		return self
 	}
-	let mut i = 0;
-	let mut s = "";
-	let mut replacements = 0;
+	let mut i = 0
+	let mut s = ""
+	let mut replacements = 0
 	while i < self.len() {
 		if self.at(i) == search.at(0) {
-			let mut j = 1;
+			let mut j = 1
 			while j < search.len() && self.at(i + j) == search.at(j) {
-				j = j + 1;
+				j += 1
 			}
 			if j == search.len() {
-				s = s + replace_with;
-				i = i + j;
-				replacements = replacements + 1;
+				s += replace_with
+				i += j
+				replacements = replacements + 1
 				if max >= 0 && replacements >= max {
-					s = s + self.substr(i);
+					s += self.substr(i)
 					break
 				}
 				continue
 			}
 		}
-		s = s + self.at(i).Str();
-		i = i + 1
+		s += self.at(i).Str()
+		i += 1
 	}
 	return s
 }

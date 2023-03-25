@@ -2,7 +2,7 @@ def List.empty <E> () List<E> {
 	return new List<E> {
 		head: new Ptr<E>,
 		size: 0
-	};
+	}
 }
 
 def List.len (self) Int {
@@ -41,7 +41,7 @@ def List.push (self, value: T) {
 		add rcx, 8 				  ; rdx = self.size + 8
 		mov qword [rax + 8], rcx  ; self.size = self.size + 8
 		push rcx 		          ; push self.size + 8
-		call Ptr.allocate      ; rax = allocate((self.size + 1) * 8)
+		call Ptr.allocate         ; rax = allocate((self.size + 1) * 8)
 		add rsp, 8                ; pop self.size + 8
 
 

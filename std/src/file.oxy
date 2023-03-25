@@ -24,21 +24,21 @@ def File.open (path: Str, mode: Str) Option<File> {
 		pop rbp
 
 		push rax
-	";
+	"
 
 	if Any.cast!<Void, Int>(f) == 0 {
-		return Option.none!<File>();
+		return Option.none!<File>()
 	}
 
 	return Option.some!<File>(new File {
 		path,
 		mode,
 		handle: Any.cast!<Void, Ptr<Any>>(f)
-	});
+	})
 }
 
 def File.is_open (self) Bool {
-	return !self.handle.is_null();
+	return !self.handle.is_null()
 }
 
 def File.read_to_str (self) Str {
@@ -53,7 +53,7 @@ def File.read_to_str (self) Str {
 	//
 	// string[fsize] = 0;
 
-	let _f = self.handle;
+	let _f = self.handle
 
 	return Any.cast!<Void, Str>(#asm "
 		mov rdi, [rbp - 8] ; rdi = f
@@ -137,7 +137,7 @@ def File.read_to_str (self) Str {
 }
 
 def File.close (self) {
-	let _f = self.handle;
+	let _f = self.handle
 
 	#asm "
 		mov rdi, [rbp - 8] ; rdi = self.handle
@@ -156,7 +156,7 @@ def File.close (self) {
 }
 
 def File.write (self, data: Str) {
-	let _ = self.handle;
+	let _ = self.handle
 
 	#asm "
 		mov rdi, [rbp + 24] ; rdi = data

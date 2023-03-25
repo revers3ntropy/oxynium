@@ -1,5 +1,5 @@
 def input (prompt="", buffer_size=1000) Str {
-	print(prompt, "");
+	print(prompt, "")
 	return Any.cast!<Void, Str>(#asm "
 		mov rdi, qword [rbp + 24] ; buffer_size
 		add rdi, 1                ; add space for null byte
@@ -33,7 +33,7 @@ def input (prompt="", buffer_size=1000) Str {
 		.last_char_after_loop:
 
 		push r15
-		call Utf8Str.Str ; convert to string
+		call Utf8Str.Str   ; convert to string
 						   ; this is necessary because the string
 						   ; comes in as utf8, but the internal
 						   ; string representation is 'utf64'
