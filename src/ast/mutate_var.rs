@@ -88,8 +88,10 @@ impl AstNode for MutateVar {
         &mut self,
         ctx: MutRc<dyn Context>,
     ) -> Result<String, Error> {
-        let id =
-            ctx.borrow_mut().get_dec_from_id(&self.id()).id;
+        let id = ctx
+            .borrow_mut()
+            .get_dec_from_id(&self.id())
+            .label;
 
         // get value before setting variable as initialised
         // so that self-references are invalid until AFTER the variable is initialised

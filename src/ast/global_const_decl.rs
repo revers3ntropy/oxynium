@@ -49,7 +49,7 @@ impl AstNode for GlobalConstNode<i64> {
                     .clone()
                     .literal
                     .unwrap(),
-                id: format!("qword [{}]", self.asm_id()),
+                label: format!("qword [{}]", self.asm_id()),
                 is_constant: true,
                 is_type: false,
                 require_init: true,
@@ -156,7 +156,7 @@ impl AstNode for GlobalConstNode<String> {
                     .clone()
                     .literal
                     .unwrap(),
-                id: self.asm_id(),
+                label: self.asm_id(),
                 is_constant: true,
                 is_type: false,
                 require_init: true,

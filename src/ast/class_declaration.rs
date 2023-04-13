@@ -17,22 +17,8 @@ use crate::util::{new_mut_rc, MutRc};
 use std::any::Any;
 use std::collections::HashMap;
 
-pub fn method_id(
-    class_name: String,
-    method_name: String,
-) -> String {
-    format!("{}.{}", class_name, method_name)
-}
-
-pub fn operator_method_id(
-    class_name: String,
-    operator: Token,
-) -> String {
-    format!(
-        "{}._$_op_{}",
-        class_name,
-        operator.overload_op_id().unwrap()
-    )
+pub fn operator_method_id(operator: Token) -> String {
+    format!("_$_op_{}", operator.overload_op_id().unwrap())
 }
 
 #[derive(Debug)]
@@ -110,7 +96,7 @@ impl AstNode for ClassDeclarationNode {
                             .literal
                             .clone()
                             .unwrap(),
-                        id: generic_param
+                        label: generic_param
                             .literal
                             .clone()
                             .unwrap(),
@@ -268,7 +254,7 @@ impl AstNode for ClassDeclarationNode {
                         .clone()
                         .literal
                         .unwrap(),
-                    id: self
+                    label: self
                         .identifier
                         .clone()
                         .literal

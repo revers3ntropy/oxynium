@@ -1,3 +1,4 @@
+pub mod module;
 pub mod root_ctx;
 pub mod scope;
 
@@ -117,4 +118,6 @@ pub trait Context: Debug {
 
     fn set_ignoring_definitions(&mut self, value: bool);
     fn is_ignoring_definitions(&self) -> bool;
+
+    fn abs_module_path(&self) -> String;
 }

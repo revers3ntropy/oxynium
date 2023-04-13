@@ -34,11 +34,21 @@ impl AstNode for TypeNode {
             }
             return Ok(TypeCheckRes::unknown());
         }
+
         if !ctx.borrow().get_dec_from_id(&self.id()).is_type
         {
             return Err(type_error(format!(
                 "'{}' cannot be used as a type",
                 self.id()
+            ))
+            .hint(format!(
+                "'{}' is of type '{}'",
+                self.id(),
+                ctx.borrow()
+                    .get_dec_from_id(&self.id())
+                    .type_
+                    .borrow()
+                    .str()
             ))
             .set_interval(self.pos()));
         }

@@ -1,6 +1,4 @@
-use crate::ast::class_declaration::{
-    method_id, operator_method_id,
-};
+use crate::ast::class_declaration::operator_method_id;
 use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::scope::Scope;
 use crate::context::CallStackFrame;
@@ -44,27 +42,50 @@ pub struct FnDeclarationNode {
     pub class_name: Option<String>,
     pub has_usage: bool,
     pub is_exported: bool,
+    pub absolute_path: Option<String>,
 }
 
 impl FnDeclarationNode {
+    fn label(&self) -> String {
+        let mut module_path =
+            self.absolute_path.clone().unwrap();
+
+        if module_path != "" {
+            module_path += ".";
+        }
+
+        if let Some(cn) = self.class_name.clone() {
+            module_path += &*cn;
+            module_path += ".";
+        }
+
+        module_path + &*self.id()
+    }
+
     fn id(&self) -> String {
         if self.identifier.token_type
             == TokenType::Identifier
         {
-            let self_id =
-                self.identifier.literal.clone().unwrap();
-            match &self.class_name {
-                Some(class) => {
-                    method_id(class.clone(), self_id)
-                }
-                None => self_id,
-            }
+            self.identifier.literal.clone().unwrap()
         } else {
-            operator_method_id(
-                self.class_name.clone().unwrap(),
-                self.identifier.clone(),
-            )
+            operator_method_id(self.identifier.clone())
         }
+    }
+
+    fn get_generics_hashmap(
+        &self,
+        generic_params: Vec<Token>,
+    ) -> HashMap<String, MutRc<dyn Type>> {
+        let mut generic_args = HashMap::new();
+        for generic_param in generic_params.iter() {
+            generic_args.insert(
+                generic_param.literal.clone().unwrap(),
+                new_mut_rc(GenericType {
+                    identifier: generic_param.clone(),
+                }) as MutRc<dyn Type>,
+            );
+        }
+        generic_args
     }
 
     fn get_generic_param_names(
@@ -142,6 +163,9 @@ impl AstNode for FnDeclarationNode {
         &mut self,
         ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
+        self.absolute_path =
+            Some(ctx.borrow().abs_module_path());
+
         if self.identifier.token_type
             == TokenType::Identifier
         {
@@ -209,6 +233,7 @@ impl AstNode for FnDeclarationNode {
             .borrow_mut()
             .setup(self.params_scope.clone().unwrap())
     }
+
     fn type_check(
         &self,
         mut ctx: MutRc<dyn Context>,
@@ -245,7 +270,7 @@ impl AstNode for FnDeclarationNode {
                             .literal
                             .clone()
                             .unwrap(),
-                        id: generic_param
+                        label: generic_param
                             .literal
                             .clone()
                             .unwrap(),
@@ -380,7 +405,7 @@ impl AstNode for FnDeclarationNode {
                     .declare(
                         SymbolDec {
                             name: identifier.clone(),
-                            id: format!(
+                            label: format!(
                                 "qword [rbp + {}]",
                                 8 * ((num_params
                                     - (i + 1))
@@ -403,58 +428,82 @@ impl AstNode for FnDeclarationNode {
 
         let this_type: MutRc<FnType>;
         if ctx.borrow().is_frozen() {
-            let this_type_any = ctx
-                .borrow()
-                .get_dec_from_id(&self.id())
-                .type_;
-            unsafe {
-                // need reference to value in ctx,
-                // so can't use 'as_fn()'
-                this_type = (&*(&this_type_any
-                    as *const dyn Any
-                    as *const MutRc<FnType>))
-                    .clone();
-            }
-            // override with latest data
-            this_type.borrow_mut().parameters = parameters;
-            this_type.borrow_mut().ret_type =
-                ret_type.clone();
-        } else {
-            let mut generic_args = HashMap::new();
-            for generic_param in generic_params.iter() {
-                generic_args.insert(
-                    generic_param.literal.clone().unwrap(),
-                    new_mut_rc(GenericType {
-                        identifier: generic_param.clone(),
-                    })
-                        as MutRc<dyn Type>,
-                );
-            }
+            if ctx.borrow().has_dec_with_id(&self.id())
+                && self.class_name == None
+            {
+                let this_type_any = ctx
+                    .borrow()
+                    .get_dec_from_id(&self.id())
+                    .type_;
 
+                if let None = this_type_any.borrow().as_fn()
+                {
+                    return Err(type_error(format!(
+                        "Cannot redeclare '{}' as a function",
+                        self.id()
+                    ))
+                    .set_interval(self.position.clone()));
+                }
+                unsafe {
+                    // need reference to value in ctx,
+                    // so can't use 'as_fn()'
+                    this_type = (&*(&this_type_any
+                        as *const dyn Any
+                        as *const MutRc<FnType>))
+                        .clone();
+                }
+                // override with latest data
+                this_type.borrow_mut().parameters =
+                    parameters;
+                this_type.borrow_mut().ret_type =
+                    ret_type.clone();
+            } else {
+                let generic_args = self
+                    .get_generics_hashmap(
+                        generic_params.clone(),
+                    );
+                this_type = new_mut_rc(FnType {
+                    id: ctx.borrow_mut().get_id(),
+                    name: self.id(),
+                    label: self.label(),
+                    ret_type: ret_type.clone(),
+                    parameters,
+                    generic_args,
+                    generic_params_order: self
+                        .generic_parameters
+                        .clone(),
+                });
+            }
+        } else {
             this_type = new_mut_rc(FnType {
                 id: ctx.borrow_mut().get_id(),
                 name: self.id(),
+                label: self.label(),
                 ret_type: ret_type.clone(),
                 parameters,
-                generic_args,
+                generic_args: self.get_generics_hashmap(
+                    generic_params.clone(),
+                ),
                 generic_params_order: generic_params
                     .clone(),
             });
-            // declare in the parent context
-            ctx.borrow_mut().declare(
-                SymbolDec {
-                    name: self.id(),
-                    id: self.id(),
-                    is_constant: true,
-                    is_type: false,
-                    require_init: !self.is_external,
-                    is_defined: self.body.is_some(),
-                    is_param: false,
-                    type_: this_type.clone(),
-                    position: self.pos(),
-                },
-                self.pos(),
-            )?;
+            if self.class_name == None {
+                // declare in the parent context
+                ctx.borrow_mut().declare(
+                    SymbolDec {
+                        name: self.id(),
+                        label: self.label(),
+                        is_constant: true,
+                        is_type: false,
+                        require_init: !self.is_external,
+                        is_defined: self.body.is_some(),
+                        is_param: false,
+                        type_: this_type.clone(),
+                        position: self.pos(),
+                    },
+                    self.pos(),
+                )?;
+            }
         }
 
         if let Some(ref body) = self.body {
@@ -477,7 +526,7 @@ impl AstNode for FnDeclarationNode {
             {
                 return Err(type_error(format!(
                     "Function '{}' doesn't always return a value",
-                    self.id()
+                    self.label()
                 ))
                 .set_interval(self.identifier.interval()));
             }
@@ -539,7 +588,7 @@ impl AstNode for FnDeclarationNode {
 
         let end_label = ctx.borrow_mut().get_anon_label();
         ctx.borrow_mut().stack_frame_push(CallStackFrame {
-            name: self.id(),
+            name: self.label(),
             params: self
                 .params
                 .iter()
@@ -575,7 +624,7 @@ impl AstNode for FnDeclarationNode {
         let self_pos = self.pos();
         ctx.borrow_mut().define(
             SymbolDef {
-                name: self.id(),
+                name: self.label(),
                 data: None,
                 text: Some(format!(
                     "

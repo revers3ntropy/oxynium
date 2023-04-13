@@ -1,6 +1,4 @@
-use crate::ast::class_declaration::{
-    method_id, operator_method_id,
-};
+use crate::ast::class_declaration::operator_method_id;
 use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::Token;
@@ -40,12 +38,7 @@ impl ClassType {
         &self,
         method: &str,
     ) -> Option<MutRc<FnType>> {
-        self.methods
-            .get(&method_id(
-                self.name.clone(),
-                method.to_string(),
-            ))
-            .map(|f| f.clone())
+        self.methods.get(method).map(|f| f.clone())
     }
 
     pub fn field_offset(&self, field: String) -> usize {
@@ -87,7 +80,7 @@ impl Type for ClassType {
         op: Token,
     ) -> Option<MutRc<FnType>> {
         self.methods
-            .get(&operator_method_id(self.name.clone(), op))
+            .get(&operator_method_id(op))
             .map(|f| f.clone())
     }
 

@@ -61,7 +61,7 @@ impl AstNode for EmptyGlobalConstNode {
                     .clone()
                     .literal
                     .unwrap(),
-                id,
+                label: id,
                 is_constant: true,
                 is_type: false,
                 require_init: !self.is_external,

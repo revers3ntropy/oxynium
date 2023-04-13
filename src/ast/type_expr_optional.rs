@@ -55,7 +55,7 @@ impl AstNode for OptionalTypeNode {
         generics_ctx.borrow_mut().declare(
             SymbolDec {
                 name: generic_arg_name.clone(),
-                id: generic_arg_name,
+                label: generic_arg_name,
                 is_constant: false,
                 is_type: true,
                 type_: t,

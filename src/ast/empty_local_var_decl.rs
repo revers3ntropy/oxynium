@@ -40,7 +40,9 @@ impl AstNode for EmptyLocalVarNode {
         ctx.borrow_mut().declare(
             SymbolDec {
                 name: self.identifier.clone(),
-                id: format!("qword [rbp - {stack_offset}]"),
+                label: format!(
+                    "qword [rbp - {stack_offset}]"
+                ),
                 is_constant: false,
                 is_type: false,
                 require_init: true,

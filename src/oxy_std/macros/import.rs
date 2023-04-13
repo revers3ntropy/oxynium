@@ -10,12 +10,12 @@ use crate::util::{new_mut_rc, read_file};
 use crate::util::{string_to_static_str, MutRc};
 use std::path::Path;
 
-pub struct IncludeMacro {
+pub struct ImportMacro {
     pub position: Interval,
     pub args: Vec<MutRc<dyn AstNode>>,
 }
 
-impl IncludeMacro {
+impl ImportMacro {
     fn get_path(
         &self,
         ctx: MutRc<dyn Context>,
@@ -33,7 +33,7 @@ impl IncludeMacro {
 
         if path_node.is_none() {
             return Err(type_error(format!(
-                "First argument to macro `include` must be a string literal"
+                "First argument to macro `import` must be a string literal"
             )).set_interval(self.position.clone()));
         }
 
@@ -47,7 +47,7 @@ impl IncludeMacro {
     }
 }
 
-impl Macro for IncludeMacro {
+impl Macro for ImportMacro {
     fn resolve(
         &self,
         ctx: MutRc<dyn Context>,

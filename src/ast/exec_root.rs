@@ -21,6 +21,7 @@ impl AstNode for ExecRootNode {
     ) -> Result<(), Error> {
         self.statements.borrow_mut().setup(ctx.clone())
     }
+
     fn type_check(
         &self,
         ctx: MutRc<dyn Context>,
@@ -36,8 +37,7 @@ impl AstNode for ExecRootNode {
         // so that things aren't redeclared
         ctx.borrow_mut().freeze();
 
-        // println!("(Pass 0) Unknowns: {} ", unknowns);
-        #[allow(unused_variables)]
+        println!("[Pass 0] Unknowns: {} ", unknowns);
         let mut i = 0;
         while unknowns > 0 {
             i += 1;
@@ -48,10 +48,10 @@ impl AstNode for ExecRootNode {
                 .borrow()
                 .type_check(ctx.clone())?;
 
-            // println!(
-            //     "(Pass {}) Unknowns: {} ",
-            //     i, res.unknowns
-            // );
+            println!(
+                "[Pass {}] Unknowns: {} ",
+                i, res.unknowns
+            );
 
             if res.unknowns >= unknowns {
                 break;
@@ -142,6 +142,7 @@ impl AstNode for ExecRootNode {
             let main_signature = FnType {
                 id: ctx_ref.get_id(),
                 name: "main".to_string(),
+                label: "main".to_string(),
                 ret_type: ctx_ref
                     .get_dec_from_id("Void")
                     .type_,

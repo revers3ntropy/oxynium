@@ -43,7 +43,9 @@ impl AstNode for BinOpNode {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(type_error(format!(
                     "Unknown type on left hand side of binary operator"
-                )).set_interval(self.lhs.borrow().pos()));
+                ))
+                    .hint(format!("{:#?}", self.lhs.borrow()))
+                    .set_interval(self.lhs.borrow().pos()));
             }
             return Ok(TypeCheckRes::unknown_and(unknowns));
         }
@@ -54,12 +56,16 @@ impl AstNode for BinOpNode {
             .operator_signature(self.operator.clone());
 
         if fn_signature.is_none() {
-            return Err(type_error(format!(
-                "Cannot use operator `{}` on type `{}`",
-                self.operator.str(),
-                lhs_tr.t.borrow().str()
-            ))
-            .set_interval(self.pos()));
+            return if ctx.borrow().throw_on_unknowns() {
+                Err(type_error(format!(
+                    "Cannot use operator `{}` on type `{}`",
+                    self.operator.str(),
+                    lhs_tr.t.borrow().str()
+                ))
+                .set_interval(self.pos()))
+            } else {
+                Ok(TypeCheckRes::unknown_and(unknowns))
+            };
         }
 
         let fn_signature = fn_signature.unwrap();

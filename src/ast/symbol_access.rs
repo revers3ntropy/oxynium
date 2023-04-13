@@ -88,7 +88,9 @@ impl AstNode for SymbolAccess {
             "
             push {}
         ",
-            ctx.borrow_mut().get_dec_from_id(&self.id()).id
+            ctx.borrow_mut()
+                .get_dec_from_id(&self.id())
+                .label
         ))
     }
 

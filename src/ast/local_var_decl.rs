@@ -94,7 +94,9 @@ impl AstNode for LocalVarNode {
             ctx.borrow_mut().declare(
                 SymbolDec {
                     name: self.id(),
-                    id: format!("qword [rbp - {offset}]"),
+                    label: format!(
+                        "qword [rbp - {offset}]"
+                    ),
                     is_constant: !self.mutable,
                     is_type: false,
                     require_init: true,
@@ -133,8 +135,10 @@ impl AstNode for LocalVarNode {
             self.pos(),
         )?;
 
-        let id =
-            ctx.borrow_mut().get_dec_from_id(&self.id()).id;
+        let id = ctx
+            .borrow_mut()
+            .get_dec_from_id(&self.id())
+            .label;
 
         let value_asm =
             self.value.borrow_mut().asm(ctx.clone())?;

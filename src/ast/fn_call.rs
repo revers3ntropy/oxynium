@@ -1,4 +1,3 @@
-use crate::ast::class_declaration::method_id;
 use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::scope::Scope;
 use crate::context::Context;
@@ -259,7 +258,7 @@ impl AstNode for FnCallNode {
             generics_ctx.borrow_mut().declare(
                 SymbolDec {
                     name: name.clone(),
-                    id: name.clone(),
+                    label: name.clone(),
                     is_constant: true,
                     is_type: true,
                     type_: arg_type_res.t,
@@ -418,7 +417,7 @@ impl AstNode for FnCallNode {
 
         let returns_void = get_type!(ctx, "Void")
             .borrow()
-            .contains(fn_type.ret_type);
+            .contains(fn_type.ret_type.clone());
 
         asm.push_str(&format!(
             "
@@ -426,17 +425,7 @@ impl AstNode for FnCallNode {
             add rsp, {}
             {}
         ",
-            if self.object.is_some() {
-                method_id(
-                    self.class_id(ctx.clone()),
-                    self.identifier
-                        .clone()
-                        .literal
-                        .unwrap(),
-                )
-            } else {
-                self.identifier.clone().literal.unwrap()
-            },
+            fn_type.label(),
             num_params * 8,
             if returns_void {
                 "push 0"

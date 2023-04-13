@@ -79,7 +79,7 @@ pub fn can_declare_with_identifier(s: &str) -> bool {
 #[derive(Debug, Clone)]
 pub struct SymbolDec {
     pub name: String,
-    pub id: String,
+    pub label: String,
     pub is_constant: bool,
     pub is_type: bool,
     pub type_: MutRc<dyn Type>,

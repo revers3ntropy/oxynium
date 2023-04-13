@@ -1,0 +1,11 @@
+export def do_something_public() {
+	print("public")
+}
+
+def do_something_private() {
+	print("private")
+}
+
+export def call_private() {
+	do_something_private()
+}

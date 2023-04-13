@@ -5,109 +5,89 @@ use crate::error::Error;
 use crate::position::Interval;
 use crate::symbols::{SymbolDec, SymbolDef};
 use crate::types::Type;
-use crate::util::MutRc;
+use crate::util::{
+    new_mut_rc, string_to_static_str, MutRc,
+};
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 
 #[derive(Debug)]
-pub struct RootContext {
-    // Vec<(start of loop label, end of loop label)>
-    loop_label_stack: Vec<(String, String)>,
-    call_stack: Vec<CallStackFrame>,
-    anon_symbol_count: u64,
-    pub exec_mode: ExecMode,
-    pub std_asm_path: &'static str,
-    allow_overrides: bool,
-    // do not allow any more declarations
-    frozen: bool,
-    // throw error on unknown types
-    err_on_unknowns: bool,
-    cli_args: Args,
-    concrete_type_cache: HashMap<String, MutRc<dyn Type>>,
-    ignore_definitions: bool,
+pub struct ModuleContext {
+    parent: MutRc<dyn Context>,
+    file_path: String,
 }
 
-impl RootContext {
-    pub fn new(cli_args: Args) -> Self {
-        Self {
-            loop_label_stack: vec![],
-            call_stack: vec![],
-            anon_symbol_count: 0,
-            exec_mode: cli_args.exec_mode,
-            std_asm_path: cli_args.std_path,
-            allow_overrides: cli_args.allow_overrides,
-            frozen: false,
-            err_on_unknowns: false,
-            cli_args,
-            concrete_type_cache: HashMap::new(),
-            ignore_definitions: false,
-        }
+impl ModuleContext {
+    pub fn new(
+        parent: MutRc<dyn Context>,
+        file_path: String,
+    ) -> MutRc<Self> {
+        new_mut_rc(Self { parent, file_path })
     }
 }
 
-impl Context for RootContext {
+impl Context for ModuleContext {
     fn reset(&mut self) {
-        self.frozen = false;
-        self.err_on_unknowns = false;
-        self.set_ignoring_definitions(false);
+        self.parent.borrow_mut().reset();
     }
-
     fn freeze(&mut self) {
-        self.frozen = true;
+        self.parent.borrow_mut().freeze();
     }
-
     fn is_frozen(&self) -> bool {
-        self.frozen
+        self.parent.borrow().is_frozen()
     }
-
     fn throw_on_unknowns(&self) -> bool {
-        self.err_on_unknowns
+        self.parent.borrow().throw_on_unknowns()
     }
-
     fn finished_resolving_types(&mut self) {
-        self.freeze();
-        self.err_on_unknowns = true;
+        self.parent.borrow_mut().finished_resolving_types();
     }
 
     fn set_parent(
         &mut self,
-        _parent: Rc<RefCell<dyn Context>>,
+        parent: Rc<RefCell<dyn Context>>,
     ) {
-        unreachable!()
+        self.parent = parent;
     }
 
     fn get_parent(&self) -> Option<MutRc<dyn Context>> {
-        None
+        Some(self.parent.clone())
     }
 
     fn root(
         &self,
-        self_: MutRc<dyn Context>,
+        _self: MutRc<dyn Context>,
     ) -> MutRc<dyn Context> {
-        self_
+        self.parent.clone()
     }
 
     fn global_scope(
         &self,
-        _self: MutRc<dyn Context>,
+        mut self_: MutRc<dyn Context>,
     ) -> MutRc<dyn Context> {
-        unreachable!("RootContext::global_scope")
+        let mut last = self_.clone();
+        while let Some(parent) =
+            self_.clone().borrow().get_parent()
+        {
+            last = self_.clone();
+            self_ = parent;
+        }
+        last
     }
 
     fn get_cli_args(&self) -> Args {
-        self.cli_args.clone()
-    }
-    fn exec_mode(&self) -> ExecMode {
-        self.exec_mode
-    }
-    fn std_asm_path(&self) -> &'static str {
-        self.std_asm_path
+        self.parent.borrow().get_cli_args()
     }
 
+    fn exec_mode(&self) -> ExecMode {
+        self.parent.borrow().exec_mode()
+    }
+    fn std_asm_path(&self) -> &'static str {
+        self.parent.borrow().std_asm_path()
+    }
     fn allow_overrides(&self) -> bool {
-        self.allow_overrides
+        self.parent.borrow().allow_overrides()
     }
 
     fn set_current_dir_path(
@@ -118,21 +98,22 @@ impl Context for RootContext {
     }
 
     fn get_current_dir_path(&self) -> &'static Path {
-        unreachable!()
+        let file_path_leaked_str = unsafe {
+            string_to_static_str(self.file_path.clone())
+        };
+        Path::new(file_path_leaked_str).parent().unwrap()
     }
 
     fn get_id(&mut self) -> usize {
-        self.anon_symbol_count += 1;
-        self.anon_symbol_count as usize
+        self.parent.borrow_mut().get_id()
     }
+
     fn get_anon_label(&mut self) -> String {
         format!(".{}", self.get_global_anon_label())
     }
-
     fn get_global_anon_label(&mut self) -> String {
-        format!("{}L{}", ANON_PREFIX, self.get_id())
+        self.parent.borrow_mut().get_global_anon_label()
     }
-
     fn declare(
         &mut self,
         _symbol: SymbolDec,
@@ -197,36 +178,40 @@ impl Context for RootContext {
         start: String,
         end: String,
     ) {
-        self.loop_label_stack.push((start, end));
+        self.parent
+            .borrow_mut()
+            .loop_labels_push(start, end)
     }
 
     fn loop_labels_pop(
         &mut self,
     ) -> Option<(String, String)> {
-        self.loop_label_stack.pop()
+        self.parent.borrow_mut().loop_labels_pop()
     }
 
     fn loop_label_peak(&self) -> Option<(String, String)> {
-        self.loop_label_stack.last().cloned()
+        self.parent.borrow().loop_label_peak()
     }
 
+    // Stack Frames
+
     fn stack_frame_push(&mut self, frame: CallStackFrame) {
-        self.call_stack.push(frame);
+        self.parent.borrow_mut().stack_frame_push(frame)
     }
 
     fn stack_frame_pop(
         &mut self,
     ) -> Option<CallStackFrame> {
-        self.call_stack.pop()
+        self.parent.borrow_mut().stack_frame_pop()
     }
-
     fn stack_frame_peak(&self) -> Option<CallStackFrame> {
-        self.call_stack.last().cloned()
+        self.parent.borrow().stack_frame_peak()
     }
 
     fn str(&self) -> String {
         format!(
-            "--- Root Ctx {}{}{}---",
+            "--- Module '{}' {}{}{}---",
+            self.file_path,
             if self.is_frozen() { "(frozen) " } else { "" },
             if self.throw_on_unknowns() {
                 "(do err) "
@@ -245,7 +230,7 @@ impl Context for RootContext {
         &self,
         id: String,
     ) -> Option<MutRc<dyn Type>> {
-        self.concrete_type_cache.get(&id).map(|t| t.clone())
+        self.parent.borrow().concrete_type_cache_get(id)
     }
 
     fn concrete_type_cache_set(
@@ -253,29 +238,35 @@ impl Context for RootContext {
         id: String,
         t: MutRc<dyn Type>,
     ) {
-        if self.concrete_type_cache.contains_key(&id) {
-            panic!("Type {} already exists in cache", id);
-        }
-        self.concrete_type_cache.insert(id, t);
+        self.parent
+            .borrow_mut()
+            .concrete_type_cache_set(id, t)
     }
 
     fn clear_concrete_cache(&mut self) {
-        self.concrete_type_cache.clear();
+        self.parent.borrow_mut().clear_concrete_cache()
     }
 
     fn concrete_type_cache_remove(&mut self, id: &str) {
-        self.concrete_type_cache.remove(id);
+        self.parent
+            .borrow_mut()
+            .concrete_type_cache_remove(id)
     }
 
+    // ignoring definitions
     fn set_ignoring_definitions(&mut self, value: bool) {
-        self.ignore_definitions = value;
+        self.parent
+            .borrow_mut()
+            .set_ignoring_definitions(value)
     }
-
     fn is_ignoring_definitions(&self) -> bool {
-        self.ignore_definitions
+        self.parent.borrow().is_ignoring_definitions()
     }
 
     fn abs_module_path(&self) -> String {
-        "".to_string()
+        let file_name =
+            Path::new(&self.file_path).file_stem().unwrap();
+        self.parent.borrow().abs_module_path()
+            + file_name.to_str().unwrap()
     }
 }

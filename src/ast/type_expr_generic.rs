@@ -102,7 +102,7 @@ impl AstNode for GenericTypeNode {
             generics_ctx.borrow_mut().declare(
                 SymbolDec {
                     name: name.clone().literal.unwrap(),
-                    id: name.clone().literal.unwrap(),
+                    label: name.clone().literal.unwrap(),
                     is_constant: true,
                     is_type: true,
                     type_: arg_type_res.t,

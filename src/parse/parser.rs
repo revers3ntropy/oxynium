@@ -2063,6 +2063,7 @@ impl Parser {
                 class_name,
                 has_usage: false,
                 is_exported,
+                absolute_path: None,
             }));
             return res;
         }
@@ -2104,6 +2105,7 @@ impl Parser {
             class_name,
             has_usage: false,
             is_exported,
+            absolute_path: None,
         }));
         res
     }

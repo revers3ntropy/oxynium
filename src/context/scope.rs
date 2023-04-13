@@ -96,14 +96,17 @@ impl Context for Scope {
         &self,
         mut self_: MutRc<dyn Context>,
     ) -> MutRc<dyn Context> {
-        let mut last = self_.clone();
+        // root -> module -> scope -> scope, want last scope
+        let mut last_scope = self_.clone();
+        let mut module = self_.clone();
         while let Some(parent) =
             self_.clone().borrow().get_parent()
         {
-            last = self_.clone();
+            last_scope = module.clone();
+            module = self_.clone();
             self_ = parent;
         }
-        last
+        last_scope
     }
 
     fn get_cli_args(&self) -> Args {
@@ -205,8 +208,10 @@ impl Context for Scope {
     fn get_dec_from_id(&self, id: &str) -> SymbolDec {
         if let Some(dec) = self.declarations.get(id) {
             dec.clone()
-        } else {
+        } else if !self.is_global {
             self.parent.borrow().get_dec_from_id(id)
+        } else {
+            panic!("Symbol '{}' not found!", id);
         }
     }
     fn set_dec_as_defined(
@@ -422,5 +427,9 @@ impl Context for Scope {
     }
     fn is_ignoring_definitions(&self) -> bool {
         self.parent.borrow().is_ignoring_definitions()
+    }
+
+    fn abs_module_path(&self) -> String {
+        self.parent.borrow().abs_module_path()
     }
 }

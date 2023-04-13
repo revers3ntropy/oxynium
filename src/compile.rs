@@ -1,6 +1,7 @@
 use crate::args::{Args, ExecMode};
 use crate::ast::exec_root::ExecRootNode;
 use crate::ast::AstNode;
+use crate::context::module::ModuleContext;
 use crate::context::root_ctx::RootContext;
 use crate::context::scope::Scope;
 use crate::context::Context;
@@ -115,12 +116,16 @@ fn compile(
     file_name: String,
     args: &Args,
 ) -> Result<(String, MutRc<dyn Context>), Error> {
-    let mut ctx = RootContext::new(args.clone());
+    let mut root = RootContext::new(args.clone());
+    root.std_asm_path = args.std_path.clone();
+    root.exec_mode = args.exec_mode;
 
-    ctx.std_asm_path = args.std_path.clone();
-    ctx.exec_mode = args.exec_mode;
+    let ctx = ModuleContext::new(
+        new_mut_rc(root),
+        file_name.clone(),
+    );
 
-    let ctx = Scope::new_global(new_mut_rc(ctx));
+    let ctx = Scope::new_global(ctx);
 
     let setup_ctx_res = setup_ctx_with_doxy(ctx);
     if setup_ctx_res.is_err() {
@@ -150,7 +155,7 @@ fn compile(
         .parent()
         .unwrap_or(current_dir);
 
-    ctx.borrow_mut().set_current_dir_path(file_dir);
+    //ctx.borrow_mut().set_current_dir_path(file_dir);
 
     let mut root_node = ExecRootNode {
         statements: generate_ast(

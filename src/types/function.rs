@@ -16,6 +16,7 @@ pub struct FnParamType {
     pub default_value: Option<MutRc<dyn AstNode>>,
     pub position: Interval,
 }
+
 impl FnParamType {
     fn str(&self) -> String {
         if self.name == "" {
@@ -34,10 +35,17 @@ impl FnParamType {
 pub struct FnType {
     pub id: usize,
     pub name: String,
+    pub label: String,
     pub ret_type: MutRc<dyn Type>,
     pub parameters: Vec<FnParamType>,
     pub generic_args: HashMap<String, MutRc<dyn Type>>,
     pub generic_params_order: Vec<Token>,
+}
+
+impl FnType {
+    pub fn label(&self) -> String {
+        self.label.clone()
+    }
 }
 
 impl Type for FnType {
@@ -47,7 +55,7 @@ impl Type for FnType {
     fn str(&self) -> String {
         format!(
             "Func {}{}({}): {}",
-            self.name,
+            self.label,
             if self.generic_params_order.len() > 0 {
                 format!(
                     "<{}>",
@@ -144,6 +152,7 @@ impl Type for FnType {
         let res = new_mut_rc(FnType {
             id: self.id,
             name: self.name.clone(),
+            label: self.label.clone(),
             ret_type: new_mut_rc(UnknownType {}),
             parameters: Vec::new(),
             generic_args: HashMap::new(),
