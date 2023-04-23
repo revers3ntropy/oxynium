@@ -35,7 +35,13 @@ def List.at_raw (self, i: Int) T {
 	")
 }
 
-def List.push (self, value: T) {
+def List.push (self, value: T, n=1) {
+	if n < 0 {
+		return
+	}
+	if n > 1 {
+		self.push(value, n - 1)
+	}
 	#asm "
 		; #1: Allocate space for old list and new element
 

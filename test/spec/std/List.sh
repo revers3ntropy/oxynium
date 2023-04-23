@@ -25,6 +25,14 @@ expect '02' '
     	print(l.len().Str());
     }
 '
+expect '26' '
+    def main () {
+    	let l = List.empty!<Int>()
+    	l.push(2, 6)
+    	print(l.at(0).unwrap().Str())
+    	print(l.len().Str())
+    }
+'
 
 
 describe 'List.set_at'

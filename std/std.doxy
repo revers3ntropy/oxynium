@@ -120,7 +120,7 @@ class List <T> {
 	extern def len (self) Int,
     extern def at (self, i: Int) Option<T>,
     extern def at_raw (self, i: Int) T,
-    extern def push (self, value: T),
+    extern def push (self, value: T, n=1),
     extern def set_at (self, i: Int, value: T) Result<Void, Str>,
 }
 
