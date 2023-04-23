@@ -121,6 +121,7 @@ class List <T> {
     extern def at (self, i: Int) Option<T>,
     extern def at_raw (self, i: Int) T,
     extern def push (self, value: T),
+    extern def set_at (self, i: Int, value: T) Result<Void, Str>,
 }
 
 class Result <T, E> {
