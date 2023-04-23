@@ -401,3 +401,35 @@ def Str.utf8_size (self) Int {
 			push rax
 	")
 }
+
+def Str.Int (self) Result<Int, Str> {
+	let n = self.len()
+	if n == 0 {
+		return Result.err!<Int, Str>("empty string")
+	}
+
+	let mut i = 0
+	let mut sign = 1
+	if self.at(0).Str() == "-" {
+		sign = -1
+		i += 1
+	}
+
+	let zero = "0".at(0).Int()
+	let nine = "9".at(0).Int()
+
+	let mut result: Int = 0
+	while i < n {
+		let c = self.at(i).Int()
+		if c < zero || c > nine {
+			return Result.err!<Int, Str>("invalid character")
+		}
+		result = result * 10 + (c - zero)
+		i += 1
+		if result < 0 {
+			return Result.err!<Int, Str>("overflow")
+		}
+	}
+
+	return Result.ok!<Int, Str>(result * sign)
+}
