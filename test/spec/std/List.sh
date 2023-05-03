@@ -25,3 +25,43 @@ expect '02' '
     	print(l.len().Str());
     }
 '
+expect '26' '
+    def main () {
+    	let l = List.empty!<Int>()
+    	l.push(2, 6)
+    	print(l.at(0).unwrap().Str())
+    	print(l.len().Str())
+    }
+'
+
+
+describe 'List.set_at'
+
+expect 'false,false,false,2,true,1,false,true,3,false' '
+    def main () {
+    	let l = List.empty!<Int>()
+    	// cannot set anything in empty list
+    	print(l.set_at(0, 2).is_ok().Str())
+    	print(",")
+    	print(l.set_at(1, 2).is_ok().Str())
+    	print(",")
+    	print(l.set_at(-1, 2).is_ok().Str())
+
+    	l.push(2)
+
+    	print(",")
+    	print(l.at(0).unwrap().Str())
+    	print(",")
+    	print(l.set_at(0, 1).is_ok().Str())
+    	print(",")
+    	print(l.at(0).unwrap().Str())
+    	print(",")
+    	print(l.set_at(1, 1).is_ok().Str())
+    	print(",")
+    	print(l.set_at(-1, 3).is_ok().Str())
+        print(",")
+        print(l.at(0).unwrap().Str())
+    	print(",")
+    	print(l.set_at(10, 1).is_ok().Str())
+    }
+'

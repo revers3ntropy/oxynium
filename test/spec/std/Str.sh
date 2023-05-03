@@ -374,3 +374,45 @@ expect 'a'  'print("abc".remove(1, 5))'
 expect 'bcdef'  'print("abcdef".remove(-6, 1))'
 expect 'bcdef'  'print("abcdef".remove(-7, 2))'
 expect 'bcdef'  'print("abcdef".remove(-9, 4))'
+
+describe 'def Str.Int'
+
+expect '1,2,3,4,5,6,7,8,9,0,-1,90,-90,9,9223372036854775807,false,false,false,false' '
+    print("1".Int().unwrap().Str())
+    print(",")
+    print(Str.Int("2").unwrap().Str())
+    print(",")
+    print(Str.Int("3").unwrap().Str())
+    print(",")
+    print(Str.Int("4").unwrap().Str())
+    print(",")
+    print(Str.Int("5").unwrap().Str())
+    print(",")
+    print(Str.Int("6").unwrap().Str())
+    print(",")
+    print(Str.Int("7").unwrap().Str())
+    print(",")
+    print(Str.Int("8").unwrap().Str())
+    print(",")
+    print(Str.Int("9").unwrap().Str())
+    print(",")
+    print(Str.Int("0").unwrap().Str())
+    print(",")
+    print(Str.Int("-1").unwrap().Str())
+    print(",")
+    print(Str.Int("90").unwrap().Str())
+    print(",")
+    print(Str.Int("-90").unwrap().Str())
+    print(",")
+    print(Str.Int("009").unwrap().Str())
+    print(",")
+    print(Str.Int("9223372036854775807").unwrap().Str())
+    print(",")
+    print(Str.Int("not a number").is_ok().Str())
+    print(",")
+    print(Str.Int("").is_ok().Str())
+    print(",")
+    print(Str.Int("0.1").is_ok().Str())
+    print(",")
+    print(Str.Int("9223372036854775808").is_ok().Str())
+'

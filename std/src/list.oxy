@@ -13,13 +13,16 @@ def List.len (self) Int {
 }
 
 def List.at (self, i: Int) Option<T> {
+	if self.len() == 0 {
+		return Option.none!<T>()
+	}
 	if i < 0 {
 		return self.at(self.len() + i)
 	}
 	if i < 0 || i >= self.len() {
-		return Option!<T>.none!<T>()
+		return Option.none!<T>()
 	}
-	return Option!<T>.some!<T>(self.at_raw(i))
+	return Option.some!<T>(self.at_raw(i))
 }
 
 def List.at_raw (self, i: Int) T {
@@ -32,7 +35,13 @@ def List.at_raw (self, i: Int) T {
 	")
 }
 
-def List.push (self, value: T) {
+def List.push (self, value: T, n=1) {
+	if n < 0 {
+		return
+	}
+	if n > 1 {
+		self.push(value, n - 1)
+	}
 	#asm "
 		; #1: Allocate space for old list and new element
 
@@ -81,4 +90,25 @@ def List.push (self, value: T) {
 
 def List.Str (self) Str {
 	return "List[" + self.len().Str() + "]"
+}
+
+def List.set_at (self, idx: Int, val: T) Result<Void, Str> {
+	if self.len() == 0 {
+		return Result.err!<Void, Str>("Index out of bounds")
+	}
+	if idx < 0 {
+		return self.set_at(self.len() + idx, val)
+	}
+	if idx < 0 || idx >= self.len() {
+		return Result.err!<Void, Str>("Index out of bounds")
+	}
+	#asm "
+		mov rax, qword [rbp + 16]      ; rax = self
+		mov rcx, qword [rax + 8]       ; rcx = self.size
+		mov rax, qword [rax]           ; rax = self.head
+		mov rdx, qword [rbp + 24]      ; rdx = idx
+		mov rsi, qword [rbp + 32]      ; rsi = val
+		mov qword [rax + rdx * 8], rsi ; self.head[idx] = val
+	"
+	return Result.ok!<Void, Str>(Any.cast!<Int, Void>(0))
 }

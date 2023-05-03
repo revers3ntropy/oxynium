@@ -35,6 +35,7 @@ primitive Int {
     extern def max (self, other=9223372036854775807) Int,
     extern def min (self, other=-9223372036854775807-1) Int,
     extern def abs (self) Int,
+    extern def from_str (s: Str) Result<Int, Str>,
 }
 
 class Str {
@@ -44,6 +45,7 @@ class Str {
     /// returns a new string that is the concatenation of lhs and rhs
     extern def +  (self, other: Str) Str,
 	extern def Str (self) Str,
+	extern def Int (self) Result<Int, Str>,
 	extern def Utf8Str (self) Utf8Str,
     extern def at (self, i: Int) Char,
     /// Returns the character at the given index
@@ -118,7 +120,8 @@ class List <T> {
 	extern def len (self) Int,
     extern def at (self, i: Int) Option<T>,
     extern def at_raw (self, i: Int) T,
-    extern def push (self, value: T),
+    extern def push (self, value: T, n=1),
+    extern def set_at (self, i: Int, value: T) Result<Void, Str>,
 }
 
 class Result <T, E> {
