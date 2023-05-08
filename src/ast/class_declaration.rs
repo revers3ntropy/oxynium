@@ -6,6 +6,7 @@ use crate::context::Context;
 use crate::error::{invalid_symbol, type_error, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
+use crate::symbol_path::SymbolPath;
 use crate::symbols::{
     can_declare_with_identifier, SymbolDec,
 };
@@ -86,6 +87,10 @@ impl AstNode for ClassDeclarationNode {
 
         for generic_param in self.generic_parameters.iter()
         {
+            let mut generic_param_path = SymbolPath::new();
+            generic_param_path.push(
+                generic_param.literal.clone().unwrap(),
+            );
             self.generics_ctx
                 .clone()
                 .unwrap()
@@ -96,10 +101,7 @@ impl AstNode for ClassDeclarationNode {
                             .literal
                             .clone()
                             .unwrap(),
-                        label: generic_param
-                            .literal
-                            .clone()
-                            .unwrap(),
+                        label: generic_param_path,
                         is_constant: true,
                         is_type: true,
                         type_: new_mut_rc(GenericType {

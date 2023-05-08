@@ -16,6 +16,7 @@ mod oxy_std;
 mod parse;
 mod position;
 mod post_process;
+mod symbol_path;
 mod symbols;
 mod types;
 mod util;

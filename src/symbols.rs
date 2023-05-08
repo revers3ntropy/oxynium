@@ -1,4 +1,5 @@
 use crate::position::Interval;
+use crate::symbol_path::SymbolPath;
 use crate::types::Type;
 use crate::util::MutRc;
 use std::fmt::Debug;
@@ -79,7 +80,7 @@ pub fn can_declare_with_identifier(s: &str) -> bool {
 #[derive(Debug, Clone)]
 pub struct SymbolDec {
     pub name: String,
-    pub label: String,
+    pub label: SymbolPath,
     pub is_constant: bool,
     pub is_type: bool,
     pub type_: MutRc<dyn Type>,
