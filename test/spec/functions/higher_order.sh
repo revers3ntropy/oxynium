@@ -32,3 +32,12 @@ expect '4' '
         print(a(b(1)).Str())
     }
 '
+
+expect 'hi' '
+    def main() {
+        let a = def () Str {
+            return "hi"
+        }
+        print(a())
+    }
+'

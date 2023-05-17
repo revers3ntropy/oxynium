@@ -252,7 +252,11 @@ impl Context for Scope {
             let idx = self
                 .declarations
                 .iter()
-                .filter(|d| !d.1.is_param && !d.1.is_type)
+                .filter(|d| {
+                    !d.1.is_param
+                        && !d.1.is_type
+                        && !d.1.is_func
+                })
                 .count();
             (1 + idx) * 8
         } else {

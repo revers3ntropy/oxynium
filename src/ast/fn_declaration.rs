@@ -33,7 +33,7 @@ pub struct Parameter {
 
 #[derive(Debug)]
 pub struct FnDeclarationNode {
-    pub identifier: Token,
+    pub identifier: Option<Token>,
     pub ret_type: MutRc<dyn AstNode>,
     pub params: Vec<Parameter>,
     pub body: Option<MutRc<dyn AstNode>>,
@@ -48,23 +48,26 @@ pub struct FnDeclarationNode {
 
 impl FnDeclarationNode {
     fn id(&self) -> String {
-        if self.identifier.token_type
-            == TokenType::Identifier
-        {
-            let self_id =
-                self.identifier.literal.clone().unwrap();
-            match &self.class_name {
-                Some(class) => {
-                    method_id(class.clone(), self_id)
+        if let Some(identifier) = self.identifier.clone() {
+            return if identifier.token_type
+                == TokenType::Identifier
+            {
+                let self_id =
+                    identifier.literal.clone().unwrap();
+                match &self.class_name {
+                    Some(class) => {
+                        method_id(class.clone(), self_id)
+                    }
+                    None => self_id,
                 }
-                None => self_id,
-            }
-        } else {
-            operator_method_id(
-                self.class_name.clone().unwrap(),
-                self.identifier.clone(),
-            )
+            } else {
+                operator_method_id(
+                    self.class_name.clone().unwrap(),
+                    identifier.clone(),
+                )
+            };
         }
+        return "[anon]".to_string();
     }
 
     fn get_generic_param_names(
@@ -142,45 +145,52 @@ impl AstNode for FnDeclarationNode {
         &mut self,
         ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
-        if self.identifier.token_type
-            == TokenType::Identifier
-        {
-            if !can_declare_with_identifier(
-                &self.identifier.clone().literal.unwrap(),
-            ) {
-                return Err(invalid_symbol(
-                    self.identifier
-                        .clone()
-                        .literal
-                        .unwrap(),
-                )
-                .set_interval(self.identifier.interval()));
+        if let Some(identifier) = self.identifier.clone() {
+            if identifier.token_type
+                == TokenType::Identifier
+            {
+                if !can_declare_with_identifier(
+                    &identifier.clone().literal.unwrap(),
+                ) {
+                    return Err(invalid_symbol(
+                        identifier.clone().literal.unwrap(),
+                    )
+                    .set_interval(identifier.interval()));
+                }
+            } else {
+                // check the signature of the operator method
+                if self.class_name.is_none() {
+                    return Err(syntax_error(format!(
+                        "cannot declare operator method outside of class"
+                    ))
+                        .set_interval(identifier.interval()));
+                }
+
+                if self.params.len() != 2 {
+                    return Err(type_error(format!(
+                        "operator overloading methods must have exactly 2 parameters, found {}",
+                        self.params.len()
+                    ))
+                        .set_interval(identifier.interval()));
+                }
+
+                // check for no default values
+                for param in &self.params {
+                    if param.default_value.is_some() {
+                        return Err(type_error(format!(
+                            "Operator Overload methods cannot have default values"
+                        ))
+                            .set_interval(param.position.clone()));
+                    }
+                }
             }
         } else {
-            // check the signature of the operator method
-            if self.class_name.is_none() {
+            // anonymous function
+            if self.class_name.is_some() {
                 return Err(syntax_error(format!(
-                    "cannot declare operator method outside of class"
+                    "cannot declare anonymous function inside of class"
                 ))
-                    .set_interval(self.identifier.interval()));
-            }
-
-            if self.params.len() != 2 {
-                return Err(type_error(format!(
-                    "operator overloading methods must have exactly 2 parameters, found {}",
-                    self.params.len()
-                ))
-                    .set_interval(self.identifier.interval()));
-            }
-
-            // check for no default values
-            for param in &self.params {
-                if param.default_value.is_some() {
-                    return Err(type_error(format!(
-                        "Operator Overload methods cannot have default values"
-                    ))
-                        .set_interval(param.position.clone()));
-                }
+                    .set_interval(self.position.clone()));
             }
         }
 
@@ -251,6 +261,7 @@ impl AstNode for FnDeclarationNode {
                             .unwrap(),
                         is_constant: true,
                         is_type: true,
+                        is_func: false,
                         type_: new_mut_rc(GenericType {
                             identifier: generic_param
                                 .clone(),
@@ -388,6 +399,7 @@ impl AstNode for FnDeclarationNode {
                             ),
                             is_constant: true,
                             is_type: false,
+                            is_func: false,
                             require_init: false,
                             is_defined: true,
                             is_param: true,
@@ -447,6 +459,7 @@ impl AstNode for FnDeclarationNode {
                     id: self.id(),
                     is_constant: true,
                     is_type: false,
+                    is_func: true,
                     require_init: !self.is_external,
                     is_defined: self.body.is_some(),
                     is_param: false,
@@ -479,7 +492,7 @@ impl AstNode for FnDeclarationNode {
                     "Function '{}' doesn't always return a value",
                     self.id()
                 ))
-                .set_interval(self.identifier.interval()));
+                .set_interval(self.identifier.clone().unwrap().interval()));
             }
 
             let body_ret_type = if is_returned {
@@ -493,11 +506,13 @@ impl AstNode for FnDeclarationNode {
             {
                 return Err(type_error(format!(
                     "Function `{}` has return type `{}` but found `{}` being returned",
-                    self.identifier.str(),
+                    self.identifier.clone().map(|a|a.str())
+                        .unwrap_or("(anon)".to_string()),
                     ret_type.borrow().str(),
                     body_ret_type.borrow().str()
                 ))
-                .set_interval(self.identifier.interval()));
+                .set_interval(self.identifier.clone().map(|a|a.interval())
+                    .unwrap_or(self.position.clone())));
             }
         }
 
@@ -514,14 +529,6 @@ impl AstNode for FnDeclarationNode {
             .borrow_mut()
             .set_parent(ctx.clone());
 
-        if ctx.borrow_mut().stack_frame_peak().is_some() {
-            return Err(syntax_error(format!(
-                "Cannot declare function '{}' inside of another function.",
-                self.identifier.str()
-            ))
-            .set_interval((self.pos().0, self.identifier.end.clone())));
-        }
-
         if self.body.is_none() {
             return Ok("".to_string());
         }
@@ -535,6 +542,42 @@ impl AstNode for FnDeclarationNode {
             //       no callers anywhere, when what we want is to prune
             //       functions which can never be called from 'main'
             //return Ok("".to_string());
+        }
+
+        let is_anon_fn = self.identifier.is_none();
+
+        if is_anon_fn {
+            let fn_stack_frame =
+                ctx.borrow_mut().stack_frame_peak();
+            let id = format!(
+                "{}{}",
+                fn_stack_frame
+                    .map(|f| f.name)
+                    .unwrap_or("main".to_string()),
+                ctx.borrow_mut().get_anon_label()
+            );
+            self.identifier = Some(Token::new(
+                TokenType::Identifier,
+                Some(id.clone()),
+                self.position.0.clone(),
+                self.position.1.clone(),
+            ));
+        } else {
+            let stack_frame =
+                ctx.borrow_mut().stack_frame_peak();
+            if let Some(stack_frame) = stack_frame {
+                let name =
+                    self.identifier.clone().unwrap().str();
+                return Err(type_error(format!(
+                    "`{}` is declared inside another function",
+                    self.identifier.clone().unwrap().str()
+                ))
+                    .set_interval(self.identifier.clone().unwrap().interval())
+                    .hint(format!(
+                        "Move `{name}` outside of `{}` or make it anonymous with `let {name} = def () {{ ... }}`",
+                        stack_frame.name
+                    )));
+            }
         }
 
         let end_label = ctx.borrow_mut().get_anon_label();
@@ -559,11 +602,18 @@ impl AstNode for FnDeclarationNode {
         let params_scope = params_scope.borrow_mut();
         let (data_defs, text_defs) =
             params_scope.get_definitions();
-        if text_defs.len() > 0 {
-            return Err(type_error(
-                "Nested functions not allowed".to_string(),
-            ));
-        }
+
+        let text = text_defs
+            .iter()
+            .map(|k| {
+                format!(
+                    "{}: \n{}",
+                    k.name,
+                    k.text.as_ref().unwrap()
+                )
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
 
         let stack_space_for_local_vars = (
             data_defs.len()
@@ -581,19 +631,31 @@ impl AstNode for FnDeclarationNode {
                     "
                     push rbp
                     mov rbp, rsp
-                    sub rsp, {stack_space_for_local_vars}
+                    {}
                     {body}
                 {end_label}:
                     mov rsp, rbp
                     pop rbp
                     ret
-                 "
+                {text}
+                 ",
+                    if stack_space_for_local_vars > 0 {
+                        format!("sub rsp, {stack_space_for_local_vars}")
+                    } else {
+                        "".to_string()
+                    }
                 )),
             },
             self_pos,
         )?;
 
         ctx.borrow_mut().stack_frame_pop();
+        if is_anon_fn {
+            return Ok(format!(
+                "push {}",
+                self.identifier.clone().unwrap().str()
+            ));
+        }
         Ok("".to_string())
     }
 

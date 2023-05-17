@@ -42,7 +42,7 @@ while
 
     class B
     class C {
-        def a () {}
+        def a () {},
         extern def + (self, other: C) Option<Int>
     }
     class D

@@ -15,32 +15,34 @@ expect '' '
     def e (a: Int,) Str;
     def f (a: Int, b: Int,) Str;
     class C {
-        def g (a: Int,) {}
+        def g (a: Int,) {},
         def h (a: Int, b: Str,) {}
     }
 '
+
+expect '' 'def () {}'
+
 expect_err 'TypeError' 'def a (a) Str {}'
 expect_err 'TypeError' 'def a (a) {}'
-expect_err 'SyntaxError' 'def () {}'
 expect_err 'SyntaxError' 'def 0 () {}'
 expect_err 'SyntaxError' 'def f (,) {}'
 expect_err 'SyntaxError' 'def 0g () {}'
 expect_err 'TypeError' 'def g () {}; def g() {}'
 expect_err 'TypeError' 'def g (a: Int, a: Str) {}'
 expect_err 'TypeError' 'def g (a: Int, a: Int) {}'
-expect_err 'SyntaxError' '
+expect_err 'TypeError' '
     def g() {
         def f() {}
     }
 '
-expect_err 'SyntaxError' '
+expect_err 'TypeError' '
     def g() {
         def f() {
             def h () {}
         }
     };
 '
-expect_err 'SyntaxError' '
+expect_err 'TypeError' '
     class C {
         def f () {
             def h () {}

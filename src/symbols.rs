@@ -82,6 +82,10 @@ pub struct SymbolDec {
     pub id: String,
     pub is_constant: bool,
     pub is_type: bool,
+    // Only true for function declarations,
+    // both named and anonymous,
+    // to avoid making space for them on the stack
+    pub is_func: bool,
     pub type_: MutRc<dyn Type>,
     pub require_init: bool,
     pub is_defined: bool,

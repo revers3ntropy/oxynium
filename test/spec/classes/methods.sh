@@ -23,7 +23,7 @@ expect '' '
     class S {
         x: Int,
         extern def f1(self) S,
-        def f2(self) {}
+        def f2(self) {},
         extern def f3(self),
         y: Int,
         def f4(self) {},

@@ -48,7 +48,8 @@ expect_err 'SyntaxError' 'print(typeof new 1)'
 expect_err 'SyntaxError' 'print(typeof typeof)'
 expect_err 'SyntaxError' 'print(typeof while {})'
 expect_err 'SyntaxError' 'print(typeof if true {})'
-expect_err 'SyntaxError' 'print(typeof def a() {})'
+expect 'Func a(): Void' 'print(typeof def a() {})'
+expect 'Func [anon](): Void' 'print(typeof def () {})'
 
 expect 'T,Type,Int,Str' '
     def a <T> (a: T) T {

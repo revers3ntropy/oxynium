@@ -58,6 +58,7 @@ impl AstNode for OptionalTypeNode {
                 id: generic_arg_name,
                 is_constant: false,
                 is_type: true,
+                is_func: false,
                 type_: t,
                 require_init: false,
                 is_defined: false,

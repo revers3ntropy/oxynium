@@ -116,6 +116,7 @@ impl AstNode for ClassDeclarationNode {
                             .unwrap(),
                         is_constant: true,
                         is_type: true,
+                        is_func: false,
                         type_: new_mut_rc(GenericType {
                             identifier: generic_param
                                 .clone(),
@@ -242,7 +243,7 @@ impl AstNode for ClassDeclarationNode {
             {
                 return Err(type_error(format!(
                     "Non-external method '{}' requires a body",
-                    method.identifier.clone().literal.unwrap()
+                    method.identifier.clone().unwrap().literal.unwrap()
                 ))
                 .set_interval(self_pos));
             }
@@ -275,6 +276,7 @@ impl AstNode for ClassDeclarationNode {
                         .unwrap(),
                     is_constant: true,
                     is_type: true,
+                    is_func: false,
                     require_init: false,
                     is_defined: true,
                     is_param: false,

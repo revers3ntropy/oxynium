@@ -300,6 +300,7 @@ impl AstNode for FnCallNode {
                     id: name.clone(),
                     is_constant: true,
                     is_type: true,
+                    is_func: false,
                     type_: arg_type_res.t,
                     require_init: false,
                     is_defined: true,
@@ -465,10 +466,14 @@ impl AstNode for FnCallNode {
         asm.push_str(&format!(
             "
             call {dec_id}
-            add rsp, {}
+            {}
             {}
         ",
-            num_params * 8,
+            if num_params > 0 {
+                format!("add rsp, {}", num_params * 8)
+            } else {
+                "".to_string()
+            },
             if returns_void {
                 "push 0"
             } else {

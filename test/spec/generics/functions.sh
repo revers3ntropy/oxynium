@@ -96,7 +96,7 @@ expect_err 'UnknownSymbol' '
     class C <A> {
         def a <T> (self, a: A, t: T) T {
             return t
-        }
+        },
         def b (t: T) {}
     }
 '

@@ -43,6 +43,7 @@ impl AstNode for EmptyLocalVarNode {
                 id: format!("qword [rbp - {stack_offset}]"),
                 is_constant: false,
                 is_type: false,
+                is_func: false,
                 require_init: true,
                 is_defined: false,
                 is_param: false,

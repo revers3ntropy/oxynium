@@ -64,6 +64,7 @@ impl AstNode for EmptyGlobalConstNode {
                 id,
                 is_constant: true,
                 is_type: false,
+                is_func: false,
                 require_init: !self.is_external,
                 is_defined: false,
                 is_param: false,

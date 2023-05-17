@@ -193,7 +193,7 @@ impl Parser {
             }
             res.failure(
                 syntax_error(format!(
-                    "expected token of type `{:?}`, found `{}`",
+                    "expected `{:?}`, found `{}`",
                     tok_type,
                     tok.str()
                 )),
@@ -230,6 +230,24 @@ impl Parser {
         value: Option<String>,
     ) -> bool {
         if let Some(tok) = self.current_tok() {
+            if tok.token_type != tok_type {
+                return false;
+            }
+            if let Some(value) = value {
+                return tok.literal.is_some()
+                    && tok.literal.unwrap() == value;
+            }
+            return true;
+        }
+        false
+    }
+
+    fn last_matches(
+        &self,
+        tok_type: TokenType,
+        value: Option<String>,
+    ) -> bool {
+        if let Some(tok) = self.last_tok() {
             if tok.token_type != tok_type {
                 return false;
             }
@@ -354,7 +372,12 @@ impl Parser {
         statements.push(first_stmt.unwrap());
 
         loop {
-            if self.clear_end_statements(&mut res) == 0 {
+            if self.clear_end_statements(&mut res) == 0
+                && !self.last_matches(
+                    TokenType::CloseBrace,
+                    None,
+                )
+            {
                 break;
             }
 
@@ -1332,6 +1355,14 @@ impl Parser {
             }
             TokenType::Identifier => {
                 self.advance(&mut res);
+                if tok.clone().literal.unwrap() == "def" {
+                    res.node = res.register(
+                        self.function_declaration(
+                            false, false, None,
+                        ),
+                    );
+                    return res;
+                }
                 if tok.clone().literal.unwrap() == "new" {
                     return self.class_init();
                 }
@@ -1798,8 +1829,6 @@ impl Parser {
     ) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
-
-        let should_add_end_stmts = class_name.is_none();
         let mut is_external_method = false;
 
         // `class C { export fn f() {} }` not allowed
@@ -1853,9 +1882,11 @@ impl Parser {
             is_external_method = true;
         }
 
-        let identifier;
+        let mut identifier = None;
         if !self
             .current_matches(TokenType::Identifier, None)
+            && !self
+                .current_matches(TokenType::OpenParen, None)
         {
             if self
                 .current_tok()
@@ -1894,11 +1925,79 @@ impl Parser {
                 );
                 return res;
             }
-            identifier = self.current_tok().unwrap();
+            identifier = Some(self.current_tok().unwrap());
             self.advance(&mut res);
+        } else if self
+            .current_matches(TokenType::OpenParen, None)
+        {
+            if is_exported {
+                res.failure(
+                    syntax_error(
+                        "Exported functions must have a name"
+                            .to_owned(),
+                    ),
+                    Some(
+                        self.last_tok()
+                            .unwrap()
+                            .start
+                            .clone(),
+                    ),
+                    Some(
+                        self.last_tok()
+                            .unwrap()
+                            .end
+                            .clone(),
+                    ),
+                );
+                return res;
+            }
+
+            if class_name.is_some() {
+                res.failure(
+                    syntax_error(
+                        "Methods must have a name"
+                            .to_owned(),
+                    ),
+                    Some(
+                        self.last_tok()
+                            .unwrap()
+                            .start
+                            .clone(),
+                    ),
+                    Some(
+                        self.last_tok()
+                            .unwrap()
+                            .end
+                            .clone(),
+                    ),
+                );
+                return res;
+            }
+
+            if is_external || is_external_method {
+                res.failure(
+                    syntax_error(
+                        "External functions must have a name"
+                            .to_owned(),
+                    ),
+                    Some(
+                        self.last_tok()
+                            .unwrap()
+                            .start
+                            .clone(),
+                    ),
+                    Some(
+                        self.last_tok()
+                            .unwrap()
+                            .end
+                            .clone(),
+                    ),
+                );
+                return res;
+            }
         } else {
             consume!(id_tok = Identifier, self, res);
-            identifier = id_tok;
+            identifier = Some(id_tok);
         }
 
         let mut generic_parameters = vec![];
@@ -1941,7 +2040,7 @@ impl Parser {
                     ) {
                         res.failure(syntax_error(format!(
                             "Cannot give type annotation to parameter 'self' on method '{}'",
-                            identifier.str()
+                            identifier.unwrap().str()
                         )),
                                     Some(self.last_tok().unwrap().start),
                                     Some(self.current_tok().unwrap().end),
@@ -2033,7 +2132,7 @@ impl Parser {
                 res.failure(
                     syntax_error(format!(
                         "Expected method body for method '{}'",
-                        identifier.str()
+                        identifier.unwrap().str()
                     )),
                     Some(self.last_tok().unwrap().start),
                     Some(self.last_tok().unwrap().end),
@@ -2083,11 +2182,6 @@ impl Parser {
 
         let body = res.register(self.scope(false));
         ret_on_err!(res);
-
-        if should_add_end_stmts {
-            self.add_end_statement(&mut res);
-            ret_on_err!(res);
-        }
 
         res.success(new_mut_rc(FnDeclarationNode {
             identifier,

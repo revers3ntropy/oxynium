@@ -7,7 +7,7 @@ expect '341' '
             return new Foo {
                 x: self.x + other.x
             }
-        }
+        },
     }
     class Bar {
         x: Int,
@@ -15,19 +15,19 @@ expect '341' '
             return new Bar {
                 x: self.x + other
             }
-        }
+        },
         def - (self, other: Foo) Bar {
             return new Bar {
                 x: self.x - other.x
             }
-        }
+        },
     }
     def main() {
-        let a = new Foo { x: 1 };
-        let b = new Foo { x: 2 };
-        print((a + b).x.Str());
-        print((new Bar { x: 1 } + 3).x.Str());
-        print((new Bar { x: 2 } - a).x.Str());
+        let a = new Foo { x: 1 }
+        let b = new Foo { x: 2 }
+        print((a + b).x.Str())
+        print((new Bar { x: 1 } + 3).x.Str())
+        print((new Bar { x: 2 } - a).x.Str())
     }
 '
 

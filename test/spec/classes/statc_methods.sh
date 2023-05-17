@@ -24,7 +24,7 @@ expect 'Hello World!' '
             return new C {
                 msg: msg
             }
-        }
+        },
 
         def log(self) {
             print(self.msg)

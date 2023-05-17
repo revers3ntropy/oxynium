@@ -105,6 +105,7 @@ impl AstNode for GenericTypeNode {
                     id: name.clone().literal.unwrap(),
                     is_constant: true,
                     is_type: true,
+                    is_func: false,
                     type_: arg_type_res.t,
                     require_init: false,
                     is_defined: true,

@@ -97,6 +97,7 @@ impl AstNode for LocalVarNode {
                     id: format!("qword [rbp - {offset}]"),
                     is_constant: !self.mutable,
                     is_type: false,
+                    is_func: false,
                     require_init: true,
                     is_defined: false,
                     is_param: false,
