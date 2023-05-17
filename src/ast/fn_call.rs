@@ -12,6 +12,14 @@ use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 
+struct CalleeType {
+    fn_type: Option<FnType>,
+    calling_through_instance: bool,
+    base_type: Option<MutRc<dyn Type>>,
+    unknowns: usize,
+    dec_id: String,
+}
+
 #[derive(Debug)]
 pub struct FnCallNode {
     pub object: Option<MutRc<dyn AstNode>>,
@@ -47,18 +55,24 @@ impl FnCallNode {
         panic!("invalid type on class method call");
     }
 
+    fn declaration_id(
+        &self,
+        ctx: MutRc<dyn Context>,
+    ) -> String {
+        if self.object.is_some() {
+            method_id(
+                self.class_id(ctx.clone()),
+                self.identifier.clone().literal.unwrap(),
+            )
+        } else {
+            self.identifier.clone().literal.unwrap()
+        }
+    }
+
     fn get_callee_type(
         &self,
         ctx: MutRc<dyn Context>,
-    ) -> Result<
-        (
-            Option<FnType>,
-            bool,
-            Option<MutRc<dyn Type>>,
-            usize,
-        ),
-        Error,
-    > {
+    ) -> Result<CalleeType, Error> {
         if let Some(obj) = self.object.clone() {
             let mut calling_through_instance = true;
             // getting function type on method call
@@ -68,7 +82,13 @@ impl FnCallNode {
                 ..
             } = obj.borrow_mut().type_check(ctx.clone())?;
             if base_type_any.borrow().is_unknown() {
-                return Ok((None, false, None, unknowns));
+                return Ok(CalleeType {
+                    fn_type: None,
+                    calling_through_instance: false,
+                    base_type: None,
+                    unknowns,
+                    dec_id: "".to_string(),
+                });
             }
             let mut base_type =
                 base_type_any.borrow().as_class();
@@ -124,11 +144,16 @@ impl FnCallNode {
                     ))
                         .set_interval(self.position.clone()));
                 }
-                return Ok((None, false, None, unknowns));
+                return Ok(CalleeType {
+                    fn_type: None,
+                    calling_through_instance: false,
+                    base_type: None,
+                    unknowns,
+                    dec_id: "".to_string(),
+                });
             }
-
-            return Ok((
-                Some(
+            return Ok(CalleeType {
+                fn_type: Some(
                     method_type
                         .unwrap()
                         .borrow()
@@ -136,24 +161,30 @@ impl FnCallNode {
                         .unwrap(),
                 ),
                 calling_through_instance,
-                Some(base_type_any.clone()),
+                base_type: Some(base_type_any.clone()),
                 unknowns,
-            ));
+                dec_id: self.declaration_id(ctx.clone()),
+            });
         }
+
         // getting function type on normal function call
         if !ctx.borrow_mut().has_dec_with_id(
             &self.identifier.clone().literal.unwrap(),
         ) {
-            return Ok((None, false, None, 0));
+            return Ok(CalleeType {
+                fn_type: None,
+                calling_through_instance: false,
+                base_type: None,
+                unknowns: 0,
+                dec_id: "".to_string(),
+            });
         }
 
-        let fn_type_option = ctx
-            .borrow_mut()
-            .get_dec_from_id(
-                &self.identifier.clone().literal.unwrap(),
-            )
-            .type_
-            .clone();
+        let fn_dec = ctx.borrow_mut().get_dec_from_id(
+            &self.identifier.clone().literal.unwrap(),
+        );
+
+        let fn_type_option = fn_dec.type_.clone();
         let fn_type_option =
             fn_type_option.borrow().as_fn();
         if fn_type_option.is_none() {
@@ -163,7 +194,13 @@ impl FnCallNode {
             ))
             .set_interval(self.identifier.interval()));
         }
-        Ok((Some(fn_type_option.unwrap()), false, None, 0))
+        return Ok(CalleeType {
+            fn_type: Some(fn_type_option.unwrap()),
+            calling_through_instance: false,
+            base_type: None,
+            unknowns: 0,
+            dec_id: fn_dec.id,
+        });
     }
 }
 
@@ -186,12 +223,13 @@ impl AstNode for FnCallNode {
     ) -> Result<TypeCheckRes, Error> {
         let mut args: Vec<FnParamType> = Vec::new();
 
-        let (
+        let CalleeType {
             fn_type,
-            is_method_call,
+            calling_through_instance,
             base_type,
             mut unknowns,
-        ) = self.get_callee_type(ctx.clone())?;
+            ..
+        } = self.get_callee_type(ctx.clone())?;
 
         if fn_type.is_none() {
             if !ctx.borrow().throw_on_unknowns() {
@@ -273,7 +311,7 @@ impl AstNode for FnCallNode {
             i += 1;
         }
 
-        if is_method_call {
+        if calling_through_instance {
             args.push(FnParamType {
                 name: "self".to_string(),
                 type_: base_type.unwrap(),
@@ -371,8 +409,12 @@ impl AstNode for FnCallNode {
     ) -> Result<String, Error> {
         let mut asm = format!("");
 
-        let (fn_type, calling_through_instance, _, _) =
-            self.get_callee_type(ctx.clone())?;
+        let CalleeType {
+            fn_type,
+            calling_through_instance,
+            dec_id,
+            ..
+        } = self.get_callee_type(ctx.clone())?;
 
         // would require unresolved unknowns to be None
         let fn_type = fn_type.expect(
@@ -422,21 +464,10 @@ impl AstNode for FnCallNode {
 
         asm.push_str(&format!(
             "
-            call {}
+            call {dec_id}
             add rsp, {}
             {}
         ",
-            if self.object.is_some() {
-                method_id(
-                    self.class_id(ctx.clone()),
-                    self.identifier
-                        .clone()
-                        .literal
-                        .unwrap(),
-                )
-            } else {
-                self.identifier.clone().literal.unwrap()
-            },
             num_params * 8,
             if returns_void {
                 "push 0"
