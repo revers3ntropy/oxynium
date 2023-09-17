@@ -20,7 +20,8 @@ use std::process::Command;
 use std::time::Instant;
 use std::{env, fs};
 
-const STD_DOXY: &str = include_str!("../std/std.doxy");
+const STD_DOXY: &'static str =
+    include_str!("../std/std.doxy");
 
 fn setup_ctx_with_doxy(
     ctx: MutRc<dyn Context>,
