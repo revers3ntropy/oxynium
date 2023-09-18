@@ -1,40 +1,34 @@
 def Option.none <From> () Option<From> {
 	return new Option<From> {
-		value: Any.cast!<Int, Ptr<From>>(0)
+		value: 0,
+		is_some: false,
 	}
 }
 
 def Option.some <From> (value: From) Option<From> {
 	return new Option <From> {
-		value: Ptr!<From>.make!<From>(value)
+		value: Any.cast!<From, Int>(value),
+		is_some: true,
 	}
 }
 
 def Option.?? (self, value: T) T {
-	if self.is_none() {
-		return value
+	if self.is_some {
+	    return Any.cast!<Int, T>(self.value)
 	}
-	return self.unwrap()
-}
-
-def Option.is_some (self) Bool {
-	return !self.value.is_null()
-}
-
-def Option.is_none (self) Bool {
-	return self.value.is_null()
+	return value
 }
 
 def Option.unwrap (self, err_message="Unwrapping None Option") T {
-	if self.is_none() {
+	if !self.is_some {
 		panic(err_message)
 	}
-	return self.value.unwrap()
+	return Any.cast!<Int, T>(self.value)
 }
 
-def Option.unwrap_or (self, default_value: T) T {
-	if self.is_none() {
+def Option.or (self, default_value: T) T {
+	if !self.is_some {
 		return default_value
 	}
-	return self.value.unwrap()
+	return Any.cast!<Int, T>(self.value)
 }

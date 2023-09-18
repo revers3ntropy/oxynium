@@ -11,9 +11,9 @@ expect '732truefalsetrue' '
     	print(l.at(0).unwrap().Str());
     	print(l.at(2).unwrap().Str());
     	print(l.at(1).unwrap().Str());
-    	print(l.at(1).is_some().Str());
-    	print(l.at(3).is_some().Str());
-    	print(l.at(-1).is_some().Str());
+    	print(l.at(1).is_some.Str());
+    	print(l.at(3).is_some.Str());
+    	print(l.at(-1).is_some.Str());
     }
 '
 expect '02' '
@@ -41,27 +41,27 @@ expect 'false,false,false,2,true,1,false,true,3,false' '
     def main () {
     	let l = List.empty!<Int>()
     	// cannot set anything in empty list
-    	print(l.set_at(0, 2).is_ok().Str())
+    	print(l.set_at(0, 2).ok.Str())
     	print(",")
-    	print(l.set_at(1, 2).is_ok().Str())
+    	print(l.set_at(1, 2).ok.Str())
     	print(",")
-    	print(l.set_at(-1, 2).is_ok().Str())
+    	print(l.set_at(-1, 2).ok.Str())
 
     	l.push(2)
 
     	print(",")
     	print(l.at(0).unwrap().Str())
     	print(",")
-    	print(l.set_at(0, 1).is_ok().Str())
+    	print(l.set_at(0, 1).ok.Str())
     	print(",")
     	print(l.at(0).unwrap().Str())
     	print(",")
-    	print(l.set_at(1, 1).is_ok().Str())
+    	print(l.set_at(1, 1).ok.Str())
     	print(",")
-    	print(l.set_at(-1, 3).is_ok().Str())
-        print(",")
-        print(l.at(0).unwrap().Str())
+    	print(l.set_at(-1, 3).ok.Str())
+      print(",")
+      print(l.at(0).unwrap().Str())
     	print(",")
-    	print(l.set_at(10, 1).is_ok().Str())
+    	print(l.set_at(10, 1).ok.Str())
     }
 '

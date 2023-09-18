@@ -5,12 +5,13 @@
 primitive Void
 
 primitive Char {
+    extern def from_int (i: Int) Char,
+
     extern def == (self, other: Char) Bool,
     extern def != (self, other: Char) Bool,
     extern def Str (self) Str,
     extern def is_digit (self) Bool,
     extern def Int (self) Int,
-    extern def from_int (i: Int) Char,
 }
 
 primitive Bool {
@@ -20,6 +21,8 @@ primitive Bool {
 }
 
 primitive Int {
+    extern def from_str (s: Str) Result<Int, Str>,
+
     extern def +  (self, n: Int) Int,
     extern def -  (self, n: Int) Int,
     extern def *  (self, n: Int) Int,
@@ -32,10 +35,10 @@ primitive Int {
     extern def >  (self, n: Int) Bool,
     extern def >= (self, n: Int) Bool,
     extern def Str (self) Str,
+    extern def Bool (self) Bool,
     extern def max (self, other=9223372036854775807) Int,
     extern def min (self, other=-9223372036854775807-1) Int,
     extern def abs (self) Int,
-    extern def from_str (s: Str) Result<Int, Str>,
 }
 
 class Str {
@@ -73,25 +76,40 @@ class Utf8Str {
 class Time {
 	seconds: Int,
 	microseconds: Int,
+
+    /// returns the current time in seconds from the UNIX epoch
+    extern def current_seconds () Int,
+    extern def current_microseconds () Int,
+    extern def now () Time,
+    extern def epoch () Time,
+
 	extern def - (self, other: Time) Time,
 	extern def + (self, other: Time) Time,
 	extern def Str (self) Str,
-	/// returns the current time in seconds from the UNIX epoch
-	extern def current_seconds () Int,
-	extern def current_microseconds () Int,
-	extern def now () Time,
-	extern def epoch () Time,
 }
 
 class Option <T> {
-	value: Ptr<T>,
+	value: Int,
+	is_some: Bool,
+
+    extern def none <From> () Option<From>,
+    extern def some <From> (value: From) Option<From>,
+
 	extern def ?? (self, other: T) T,
-	extern def none <From> () Option<From>,
-	extern def some <From> (value: From) Option<From>,
-	extern def is_some (self) Bool,
-	extern def is_none (self) Bool,
 	extern def unwrap (self, err_message="Unwrapping None Option") T,
-	extern def unwrap_or (self, default: T) T,
+	extern def or (self, default: T) T,
+}
+
+class Result <T, E> {
+	value: Int,
+	ok: Bool,
+
+	extern def err <Val, Err> (err: Err) Result<Val, Err>,
+	extern def ok <Val, Err> (val: Val) Result<Val, Err>,
+
+	extern def unwrap (self) T,
+	extern def Option (self) Option<T>,
+	extern def error (self) Option<E>
 }
 
 primitive Any {
@@ -115,8 +133,10 @@ class List <T> {
 	head: Ptr<T>,
 	// number of bytes required to store list
     size: Int,
-    extern def Str (self) Str,
+
     extern def empty <E> () List<E>,
+
+    extern def Str (self) Str,
 	extern def len (self) Int,
     extern def at (self, i: Int) Option<T>,
     extern def at_raw (self, i: Int) T,
@@ -124,20 +144,11 @@ class List <T> {
     extern def set_at (self, i: Int, value: T) Result<Void, Str>,
 }
 
-class Result <T, E> {
-	value: Option<T>,
-	error: Option<E>,
-	extern def err <Val, Err> (err: Err) Result<Val, Err>,
-	extern def ok <Val, Err> (val: Val) Result<Val, Err>,
-	extern def is_ok (self) Bool,
-	extern def is_err (self) Bool,
-	extern def unwrap (self) T,
-}
-
 class File {
 	handle: Ptr<Any>,
 	path: Str,
 	mode: Str,
+
 	extern def open (path: Str, mode="r") Option<File>,
 	extern def read_to_str (self, buffer_size=1000) Str,
 	extern def write (self, data: Str),

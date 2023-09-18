@@ -14,19 +14,19 @@ expect 'Option<Str>,hello,hello,Option<Str>,world,false,true,true,false,Option<O
         print(",");
         print(some().unwrap());
         print(",");
-        print(some().unwrap_or("world"));
+        print(some().or("world"));
         print(",");
         print(typeof none());
         print(",");
-        print(none().unwrap_or("world"));
+        print(none().or("world"));
         print(",");
-        print(none().is_some().Str());
+        print(none().is_some.Str());
         print(",");
-        print(none().is_none().Str());
+        print((!none().is_some).Str());
         print(",");
-        print(some().is_some().Str());
+        print(some().is_some.Str());
         print(",");
-        print(some().is_none().Str());
+        print((!some().is_some).Str());
 
         let mut op_op: Result<Int?, Str>???;
         print(",");
@@ -36,23 +36,23 @@ expect 'Option<Str>,hello,hello,Option<Str>,world,false,true,true,false,Option<O
 
 describe 'Option None Coalescing'
 
-expect '0,1,2,0,1,2' '
+expect '5,1,0,5,1,0' '
     def main () {
-        let mut op: Option<Int> = Option.none!<Int>();
-        let mut op2: Int? = Option.some!<Int>(1);
-        let mut op3 = Option.some!<Int>(2);
+        let op: Option<Int> = Option.none!<Int>();
+        let op2: Int? = Option.some!<Int>(1);
+        let op3 = Option.some!<Int>(0);
 
-        print(op.unwrap_or(0).Str());
+        print(op.or(5).Str());
         print(",");
-        print(op2.unwrap_or(0).Str());
+        print(op2.or(5).Str());
         print(",");
-        print(op3.unwrap_or(0).Str());
+        print(op3.or(5).Str());
         print(",");
-        print((op ?? 0).Str());
+        print((op ?? 5).Str());
         print(",");
-        print((op2 ?? 0).Str());
+        print((op2 ?? 5).Str());
         print(",");
-        print((op3 ?? 0).Str());
+        print((op3 ?? 5).Str());
     }
 '
 

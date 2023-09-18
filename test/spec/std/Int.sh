@@ -128,6 +128,17 @@ expect '-106709' '
 '
 
 
+describe 'Int.Bool'
+
+expect 'true'  'print(1.Bool().Str())'
+expect 'true'  'print(123.Bool().Str())'
+expect 'true'  'print(1234567890.Bool().Str())'
+expect 'false' 'print(0.Bool().Str())'
+expect 'true'  'print((-1).Bool().Str())'
+expect 'true'  'print((-123).Bool().Str())'
+expect 'true'  'print((-1234567890).Bool().Str())'
+
+
 describe 'def Int.max'
 
 expect_expr_int '2'   '1.max(2)'
