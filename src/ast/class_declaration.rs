@@ -243,7 +243,7 @@ impl AstNode for ClassDeclarationNode {
             {
                 return Err(type_error(format!(
                     "Non-external method '{}' requires a body",
-                    method.identifier.clone().unwrap().literal.unwrap()
+                    method.identifier.literal.clone().unwrap()
                 ))
                 .set_interval(self_pos));
             }

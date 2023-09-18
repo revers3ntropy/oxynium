@@ -33,7 +33,7 @@ pub struct Parameter {
 
 #[derive(Debug)]
 pub struct FnDeclarationNode {
-    pub identifier: Option<Token>,
+    pub identifier: Token,
     pub ret_type: MutRc<dyn AstNode>,
     pub params: Vec<Parameter>,
     pub body: Option<MutRc<dyn AstNode>>,
@@ -44,30 +44,28 @@ pub struct FnDeclarationNode {
     pub class_name: Option<String>,
     pub has_usage: bool,
     pub is_exported: bool,
+    pub is_anon: bool,
 }
 
 impl FnDeclarationNode {
     fn id(&self) -> String {
-        if let Some(identifier) = self.identifier.clone() {
-            return if identifier.token_type
-                == TokenType::Identifier
-            {
-                let self_id =
-                    identifier.literal.clone().unwrap();
-                match &self.class_name {
-                    Some(class) => {
-                        method_id(class.clone(), self_id)
-                    }
-                    None => self_id,
+        return if self.identifier.token_type
+            == TokenType::Identifier
+        {
+            let self_id =
+                self.identifier.literal.clone().unwrap();
+            match &self.class_name {
+                Some(class) => {
+                    method_id(class.clone(), self_id)
                 }
-            } else {
-                operator_method_id(
-                    self.class_name.clone().unwrap(),
-                    identifier.clone(),
-                )
-            };
-        }
-        return "[anon]".to_string();
+                None => self_id,
+            }
+        } else {
+            operator_method_id(
+                self.class_name.clone().unwrap(),
+                self.identifier.clone(),
+            )
+        };
     }
 
     fn get_generic_param_names(
@@ -145,17 +143,26 @@ impl AstNode for FnDeclarationNode {
         &mut self,
         ctx: MutRc<dyn Context>,
     ) -> Result<(), Error> {
-        if let Some(identifier) = self.identifier.clone() {
-            if identifier.token_type
+        if !self.is_anon {
+            if self.identifier.token_type
                 == TokenType::Identifier
             {
                 if !can_declare_with_identifier(
-                    &identifier.clone().literal.unwrap(),
+                    &self
+                        .identifier
+                        .clone()
+                        .literal
+                        .unwrap(),
                 ) {
                     return Err(invalid_symbol(
-                        identifier.clone().literal.unwrap(),
+                        self.identifier
+                            .clone()
+                            .literal
+                            .unwrap(),
                     )
-                    .set_interval(identifier.interval()));
+                    .set_interval(
+                        self.identifier.interval(),
+                    ));
                 }
             } else {
                 // check the signature of the operator method
@@ -163,7 +170,7 @@ impl AstNode for FnDeclarationNode {
                     return Err(syntax_error(format!(
                         "cannot declare operator method outside of class"
                     ))
-                        .set_interval(identifier.interval()));
+                        .set_interval(self.identifier.interval()));
                 }
 
                 if self.params.len() != 2 {
@@ -171,7 +178,7 @@ impl AstNode for FnDeclarationNode {
                         "operator overloading methods must have exactly 2 parameters, found {}",
                         self.params.len()
                     ))
-                        .set_interval(identifier.interval()));
+                        .set_interval(self.identifier.interval()));
                 }
 
                 // check for no default values
@@ -194,8 +201,14 @@ impl AstNode for FnDeclarationNode {
             }
         }
 
-        self.params_scope =
-            Some(Scope::new_fn_ctx(ctx.clone()));
+        if self.is_anon {
+            self.params_scope = Some(Scope::new_fn_ctx(
+                ctx.borrow().global_scope(ctx.clone()),
+            ));
+        } else {
+            self.params_scope =
+                Some(Scope::new_fn_ctx(ctx.clone()));
+        }
 
         for param in &self.params {
             if param.default_value.is_some() {
@@ -492,7 +505,7 @@ impl AstNode for FnDeclarationNode {
                     "Function '{}' doesn't always return a value",
                     self.id()
                 ))
-                .set_interval(self.identifier.clone().unwrap().interval()));
+                .set_interval(self.identifier.interval()));
             }
 
             let body_ret_type = if is_returned {
@@ -506,13 +519,11 @@ impl AstNode for FnDeclarationNode {
             {
                 return Err(type_error(format!(
                     "Function `{}` has return type `{}` but found `{}` being returned",
-                    self.identifier.clone().map(|a|a.str())
-                        .unwrap_or("(anon)".to_string()),
+                    self.identifier.str(),
                     ret_type.borrow().str(),
                     body_ret_type.borrow().str()
                 ))
-                .set_interval(self.identifier.clone().map(|a|a.interval())
-                    .unwrap_or(self.position.clone())));
+                .set_interval(self.identifier.interval()));
             }
         }
 
@@ -544,35 +555,16 @@ impl AstNode for FnDeclarationNode {
             //return Ok("".to_string());
         }
 
-        let is_anon_fn = self.identifier.is_none();
-
-        if is_anon_fn {
-            let fn_stack_frame =
-                ctx.borrow_mut().stack_frame_peak();
-            let id = format!(
-                "{}{}",
-                fn_stack_frame
-                    .map(|f| f.name)
-                    .unwrap_or("main".to_string()),
-                ctx.borrow_mut().get_anon_label()
-            );
-            self.identifier = Some(Token::new(
-                TokenType::Identifier,
-                Some(id.clone()),
-                self.position.0.clone(),
-                self.position.1.clone(),
-            ));
-        } else {
+        if !self.is_anon {
             let stack_frame =
                 ctx.borrow_mut().stack_frame_peak();
             if let Some(stack_frame) = stack_frame {
-                let name =
-                    self.identifier.clone().unwrap().str();
+                let name = self.identifier.str();
                 return Err(type_error(format!(
                     "`{}` is declared inside another function",
-                    self.identifier.clone().unwrap().str()
+                    self.identifier.str()
                 ))
-                    .set_interval(self.identifier.clone().unwrap().interval())
+                    .set_interval(self.identifier.interval())
                     .hint(format!(
                         "Move `{name}` outside of `{}` or make it anonymous with `let {name} = def () {{ ... }}`",
                         stack_frame.name
@@ -650,10 +642,10 @@ impl AstNode for FnDeclarationNode {
         )?;
 
         ctx.borrow_mut().stack_frame_pop();
-        if is_anon_fn {
+        if self.is_anon {
             return Ok(format!(
                 "push {}",
-                self.identifier.clone().unwrap().str()
+                self.identifier.clone().str()
             ));
         }
         Ok("".to_string())

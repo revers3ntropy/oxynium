@@ -55,6 +55,14 @@ expect_err 'UnknownSymbol' '
       }
     }
 '
+expect_err 'UnknownSymbol' '
+    def main () {
+        let five = 5
+        def () Int {
+            return five
+        }
+    }
+'
 expect '' '
     def main () {
       def () {
@@ -63,9 +71,7 @@ expect '' '
     }
 '
 expect '' '
-
     def g () {}
-
     def main () {
       def () {
         g()

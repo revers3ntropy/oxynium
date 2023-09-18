@@ -1882,7 +1882,8 @@ impl Parser {
             is_external_method = true;
         }
 
-        let mut identifier = None;
+        let identifier: Token;
+        let is_anon: bool;
         if !self
             .current_matches(TokenType::Identifier, None)
             && !self
@@ -1925,7 +1926,8 @@ impl Parser {
                 );
                 return res;
             }
-            identifier = Some(self.current_tok().unwrap());
+            identifier = self.current_tok().unwrap();
+            is_anon = false;
             self.advance(&mut res);
         } else if self
             .current_matches(TokenType::OpenParen, None)
@@ -1995,9 +1997,24 @@ impl Parser {
                 );
                 return res;
             }
+
+            // FIXME generate better unique signature for anonymous functions
+            let id = format!(
+                "_$_anon_{}_idx_{}",
+                self.last_tok().unwrap().end.file,
+                self.last_tok().unwrap().end.idx
+            );
+            identifier = Token::new(
+                TokenType::Identifier,
+                Some(id),
+                self.last_tok().unwrap().start.clone(),
+                self.last_tok().unwrap().end.clone(),
+            );
+            is_anon = true;
         } else {
             consume!(id_tok = Identifier, self, res);
-            identifier = Some(id_tok);
+            identifier = id_tok;
+            is_anon = false;
         }
 
         let mut generic_parameters = vec![];
@@ -2040,7 +2057,7 @@ impl Parser {
                     ) {
                         res.failure(syntax_error(format!(
                             "Cannot give type annotation to parameter 'self' on method '{}'",
-                            identifier.unwrap().str()
+                            identifier.str()
                         )),
                                     Some(self.last_tok().unwrap().start),
                                     Some(self.current_tok().unwrap().end),
@@ -2132,7 +2149,7 @@ impl Parser {
                 res.failure(
                     syntax_error(format!(
                         "Expected method body for method '{}'",
-                        identifier.unwrap().str()
+                        identifier.str()
                     )),
                     Some(self.last_tok().unwrap().start),
                     Some(self.last_tok().unwrap().end),
@@ -2162,6 +2179,7 @@ impl Parser {
                 class_name,
                 has_usage: false,
                 is_exported,
+                is_anon,
             }));
             return res;
         }
@@ -2198,6 +2216,7 @@ impl Parser {
             class_name,
             has_usage: false,
             is_exported,
+            is_anon,
         }));
         res
     }
