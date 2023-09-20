@@ -29,7 +29,7 @@ expect 'Str Str Int Void Type Type Type Type C Bool Str Str'  '
     print(typeof typeof typeof new Void);
 '
 expect_err 'UnknownSymbol' 'print(typeof Type)'
-expect 'Func a(): Void,Void' '
+expect 'Fn a(): Void,Void' '
     def a() {}
     print(typeof a);
     print(",");
@@ -48,8 +48,8 @@ expect_err 'SyntaxError' 'print(typeof new 1)'
 expect_err 'SyntaxError' 'print(typeof typeof)'
 expect_err 'SyntaxError' 'print(typeof while {})'
 expect_err 'SyntaxError' 'print(typeof if true {})'
-expect 'Func a(): Void' 'print(typeof def a() {})'
-expect 'Func fn@in.oxy#14(): Void' 'print(typeof fn () {})'
+expect 'Fn a(): Void' 'print(typeof def a() {})'
+expect 'Fn fn@in.oxy#14(): Void' 'print(typeof fn () {})'
 
 expect 'T,Type,Int,Str' '
     def a <T> (a: T) T {
