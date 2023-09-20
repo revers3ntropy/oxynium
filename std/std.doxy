@@ -206,7 +206,7 @@ class Net
 class Ref
 class Primitive
 class Task
-class Func
+class Fn
 class Class
 class Instance
 class LibC

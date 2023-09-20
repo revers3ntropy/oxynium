@@ -116,3 +116,42 @@ expect '43' '
         }).Str())
     }
 '
+expect_err 'TypeError' '
+    def do_something(f: Fn (Int) Int) {
+        print(f(2).Str())
+    }
+    def main () {
+        do_something(fn <T>(x: T) T { return x })
+    }
+'
+expect_err 'SyntaxError' '
+    def do_something(f: Fn <T>(T) T) {}
+'
+expect '2' '
+    def apply<T>(t: T, f: Fn (T) T) T {
+        return f(t)
+    }
+    def main () {
+        let x = 1
+        let y = apply!<Int>(x, fn (x: Int) Int { return x + 1 })
+        print(y.Str())
+    }
+'
+
+expect '3' '
+    def apply<T, A>(t: T, applier: Fn (T) A) A {
+        return applier(t)
+    }
+    const x = 2
+    print(apply!<Int, Int>(x, fn (x: Int) Int { return x + 1 }).Str())
+'
+expect '4' '
+    def add_one (a: Int = 2) Int {
+        return a + 1
+    }
+    def apply<T, A>(t: T, applier: Fn (T) A) A {
+        return applier(t)
+    }
+    const x = 3
+    print(apply!<Int, Int>(x, add_one).Str())
+'

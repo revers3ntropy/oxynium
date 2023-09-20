@@ -26,16 +26,18 @@ impl AstNode for FnTypeNode {
 
         let mut parameters = vec![];
 
+        let mut i = 0;
         for param in self.parameters.iter() {
             let position = param.borrow().pos();
             let param_type_res = param.borrow().type_check(ctx.clone())?;
             unknowns += param_type_res.unknowns;
             parameters.push(FnParamType {
-                name: format!("[anon]"),
+                name: format!("#{}", i),
                 type_: param_type_res.t,
                 default_value: None,
                 position,
             });
+            i += 1;
         }
 
         let ret_type_res = self.ret_type.borrow().type_check(ctx.clone())?;
