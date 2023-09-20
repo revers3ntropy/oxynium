@@ -30,63 +30,51 @@ pub struct FnCallNode {
 }
 
 impl FnCallNode {
-    fn class_id(&self, ctx: MutRc<dyn Context>) -> String {
-        let t = self
-            .object
-            .clone()
-            .unwrap()
-            .borrow_mut()
-            .type_check(ctx.clone())
-            .unwrap()
-            .t;
+    fn class_id(&self, object_type_check_res: TypeCheckRes) -> Result<String, Error> {
+        let t = object_type_check_res.t;
         if let Some(class) = t.borrow().as_class() {
-            return class.name.clone();
+            return Ok(class.name.clone());
         }
         if let Some(type_type) = t.borrow().as_type_type() {
-            return type_type
+            return Ok(type_type
                 .instance_type
                 .borrow()
                 .as_class()
                 .unwrap()
                 .name
-                .clone();
+                .clone());
         }
 
-        panic!("invalid type on class method call");
+        Err(type_error(format!(
+            "Cannot access methods statically for type '{}'",
+            t.borrow().str()
+        )))
     }
 
-    fn declaration_id(&self, ctx: MutRc<dyn Context>) -> String {
-        if self.object.is_some() {
-            method_id(
-                self.class_id(ctx.clone()),
-                self.identifier.clone().literal.unwrap(),
-            )
-        } else {
-            self.identifier.clone().literal.unwrap()
-        }
+    fn declaration_id(&self, object_type_check_res: TypeCheckRes) -> Result<String, Error> {
+        Ok(method_id(
+            self.class_id(object_type_check_res)?,
+            self.identifier.clone().literal.unwrap(),
+        ))
     }
 
     fn get_callee_type(&self, ctx: MutRc<dyn Context>) -> Result<CalleeType, Error> {
         if let Some(obj) = self.object.clone() {
             let mut calling_through_instance = true;
             // getting function type on method call
-            let TypeCheckRes {
-                t: base_type_any,
-                unknowns,
-                ..
-            } = obj.borrow_mut().type_check(ctx.clone())?;
-            if base_type_any.borrow().is_unknown() {
+            let obj_tc_res = obj.borrow_mut().type_check(ctx.clone())?;
+            if obj_tc_res.t.borrow().is_unknown() {
                 return Ok(CalleeType {
                     fn_type: None,
                     calling_through_instance: false,
                     base_type: None,
-                    unknowns,
+                    unknowns: obj_tc_res.unknowns,
                     dec_id: "".to_string(),
                 });
             }
-            let mut base_type = base_type_any.borrow().as_class();
+            let mut base_type = obj_tc_res.t.borrow().as_class();
             if base_type.is_none() {
-                if let Some(type_type) = base_type_any.borrow().as_type_type() {
+                if let Some(type_type) = obj_tc_res.t.borrow().as_type_type() {
                     let class_type = type_type.instance_type.borrow().as_class();
 
                     if class_type.is_none() {
@@ -109,7 +97,7 @@ impl FnCallNode {
                 } else {
                     return Err(type_error(format!(
                         "Cannot access method of non-class type '{}'",
-                        base_type_any.borrow().str()
+                        obj_tc_res.t.borrow().str()
                     ))
                     .set_interval(self.position.clone()));
                 }
@@ -130,16 +118,16 @@ impl FnCallNode {
                     fn_type: None,
                     calling_through_instance: false,
                     base_type: None,
-                    unknowns,
+                    unknowns: obj_tc_res.unknowns,
                     dec_id: "".to_string(),
                 });
             }
             return Ok(CalleeType {
                 fn_type: Some(method_type.unwrap().borrow().as_fn().unwrap()),
                 calling_through_instance,
-                base_type: Some(base_type_any.clone()),
-                unknowns,
-                dec_id: self.declaration_id(ctx.clone()),
+                base_type: Some(obj_tc_res.t.clone()),
+                unknowns: obj_tc_res.unknowns,
+                dec_id: self.declaration_id(obj_tc_res)?,
             });
         }
 

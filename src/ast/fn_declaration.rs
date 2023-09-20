@@ -142,7 +142,8 @@ impl AstNode for FnDeclarationNode {
                 }
             }
         } else {
-            // anonymous function
+            // is anonymous function
+
             if self.class_name.is_some() {
                 return Err(syntax_error(format!(
                     "cannot declare anonymous function inside of class"
@@ -234,6 +235,7 @@ impl AstNode for FnDeclarationNode {
 
         let num_params = self.params.len();
         let mut seen_param_without_default = false;
+
         for i in 0..self.params.len() {
             let Parameter {
                 identifier,

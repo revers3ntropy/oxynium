@@ -23,6 +23,7 @@ use crate::ast::statements::StatementsNode;
 use crate::ast::str::StrNode;
 use crate::ast::symbol_access::SymbolAccess;
 use crate::ast::type_expr::TypeNode;
+use crate::ast::type_expr_fn::FnTypeNode;
 use crate::ast::type_expr_generic::GenericTypeNode;
 use crate::ast::type_expr_optional::OptionalTypeNode;
 use crate::ast::unary_op::UnaryOpNode;
@@ -30,7 +31,7 @@ use crate::ast::AstNode;
 use crate::error::{numeric_overflow, syntax_error, Error};
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
-use crate::position::Position;
+use crate::position::{Interval, Position};
 use crate::util::{new_mut_rc, MutRc};
 use std::any::Any;
 
@@ -1238,11 +1239,51 @@ impl Parser {
         res
     }
 
+    /// FunctionTypeExpr ::= '(' (TypeExpr (',' TypeExpr)*)? ')' TypeExpr
+    fn function_type_expr(&mut self, fn_tok_pos: Interval) -> ParseResults {
+        let mut res = ParseResults::new();
+
+        consume!(OpenParen, self, res);
+
+        let mut parameters = Vec::new();
+
+        if !self.current_matches(TokenType::CloseParen, None) {
+            loop {
+                let parameter = res.register(self.type_expr(None));
+                ret_on_err!(res);
+                parameters.push(parameter.unwrap());
+
+                if self.current_matches(TokenType::CloseParen, None) {
+                    break;
+                }
+                consume!(Comma, self, res);
+            }
+        }
+
+        consume!(CloseParen, self, res);
+
+        let return_type = res.register(self.type_expr(None));
+        ret_on_err!(res);
+
+        res.success(new_mut_rc(FnTypeNode {
+            parameters,
+            ret_type: return_type.unwrap(),
+            position: (fn_tok_pos.0.clone(), self.last_tok().unwrap().end),
+            fn_tok_pos,
+        }));
+
+        res
+    }
+
     /// SimpleTypeExpr ::= Identifier (LT TypeExpr (Comma TypeExpr)* GT)?
     fn simple_or_generic_type_expr(&mut self) -> ParseResults {
         let mut res = ParseResults::new();
 
         consume!(type_tok = Identifier, self, res);
+
+        if type_tok.literal.clone().unwrap() == "Fn" {
+            return self.function_type_expr(type_tok.interval());
+        }
 
         if !self.current_matches(TokenType::LT, None) {
             res.success(new_mut_rc(TypeNode {
@@ -1474,7 +1515,7 @@ impl Parser {
         if is_anon {
             // FIXME generate better unique signature for anonymous functions
             let id = format!(
-                "_$_anon_{}_idx_{}",
+                "fn@{}#{}",
                 self.last_tok().unwrap().end.file,
                 self.last_tok().unwrap().end.idx
             );

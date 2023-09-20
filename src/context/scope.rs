@@ -142,6 +142,7 @@ impl Context for Scope {
         if !self.allow_local_var_decls && !symbol.is_type {
             return self.parent.borrow_mut().declare(symbol, trace_interval);
         }
+
         if let Some(duplicate) = self.declarations.get(symbol.name.clone().as_str()) {
             if !symbol.is_type && !self.allow_overrides() {
                 return Err(

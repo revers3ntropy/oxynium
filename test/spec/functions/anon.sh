@@ -83,3 +83,36 @@ expect_err 'SyntaxError' '
         print("hi");
     })();
 '
+
+expect '13' '
+    def do_something(f: Fn () Int) {
+        print(f().Str())
+    }
+
+    def main () {
+        do_something(fn () Int { return 13 })
+    }
+'
+expect '43' '
+    def do_something(f: Fn (Int) Int) Int {
+        return f(42)
+    }
+
+    def main () {
+        let plus_one = fn (x: Int) Int {
+            return x + 1
+        }
+        print(do_something(plus_one).Str())
+    }
+'
+expect '43' '
+    def do_something(f: Fn (Int) Int) Int {
+        return f(42)
+    }
+
+    def main () {
+        print(do_something(fn (x: Int) Int {
+            return x + 1
+        }).Str())
+    }
+'

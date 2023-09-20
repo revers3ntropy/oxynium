@@ -37,6 +37,7 @@ pub mod statements;
 pub mod str;
 pub mod symbol_access;
 pub mod type_expr;
+pub mod type_expr_fn;
 pub mod type_expr_generic;
 pub mod type_expr_optional;
 pub mod type_known;
