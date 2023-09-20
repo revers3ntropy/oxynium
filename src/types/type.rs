@@ -31,25 +31,14 @@ impl Type for TypeType {
         }
     }
 
-    fn concrete(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<MutRc<dyn Type>, Error> {
+    fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
         Ok(new_mut_rc(TypeType {
-            instance_type: self
-                .instance_type
-                .borrow()
-                .concrete(ctx)?,
+            instance_type: self.instance_type.borrow().concrete(ctx)?,
         }))
     }
 
     fn cache_id(&self, ctx: MutRc<dyn Context>) -> String {
-        format!(
-            "*{}",
-            self.instance_type
-                .borrow()
-                .cache_id(ctx.clone())
-        )
+        format!("*{}", self.instance_type.borrow().cache_id(ctx.clone()))
     }
 
     fn as_type_type(&self) -> Option<TypeType> {
@@ -58,10 +47,7 @@ impl Type for TypeType {
 }
 
 impl fmt::Debug for TypeType {
-    fn fmt(
-        &self,
-        f: &mut fmt::Formatter<'_>,
-    ) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Type<{:?}>", self.instance_type)
     }
 }

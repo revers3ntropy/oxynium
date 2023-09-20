@@ -35,7 +35,7 @@ expect '4' '
 
 expect 'hi' '
     def main() {
-        let a = def () Str {
+        let a = fn () Str {
             return "hi"
         }
         print(a())

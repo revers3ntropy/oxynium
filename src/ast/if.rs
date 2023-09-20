@@ -15,21 +15,14 @@ pub struct IfNode {
 }
 
 impl AstNode for IfNode {
-    fn setup(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<(), Error> {
+    fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
         self.body.borrow_mut().setup(ctx.clone())?;
-        if let Some(ref else_body) = self.else_body.clone()
-        {
+        if let Some(ref else_body) = self.else_body.clone() {
             else_body.borrow_mut().setup(ctx.clone())?;
         }
         self.comparison.borrow_mut().setup(ctx.clone())
     }
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         let TypeCheckRes {
             t: mut body_ret_type,
             is_returned: mut body_is_returned,
@@ -42,20 +35,12 @@ impl AstNode for IfNode {
             t: comp_type,
             unknowns: comp_unknowns,
             ..
-        } = self
-            .comparison
-            .borrow()
-            .type_check(ctx.clone())?;
+        } = self.comparison.borrow().type_check(ctx.clone())?;
         unknowns += comp_unknowns;
 
-        if !get_type!(ctx, "Bool")
-            .borrow()
-            .contains(comp_type)
-        {
-            return Err(type_error(
-                "if condition must be a bool".to_string(),
-            )
-            .set_interval(self.comparison.borrow().pos()));
+        if !get_type!(ctx, "Bool").borrow().contains(comp_type) {
+            return Err(type_error("if condition must be a bool".to_string())
+                .set_interval(self.comparison.borrow().pos()));
         }
 
         if self.else_body.is_some() {
@@ -73,15 +58,11 @@ impl AstNode for IfNode {
                 .type_check(ctx.clone())?;
             unknowns += else_unknowns;
 
-            always_returns =
-                always_returns && else_always_returns;
+            always_returns = always_returns && else_always_returns;
 
             if body_is_returned {
                 if else_is_returned {
-                    if !body_ret_type
-                        .borrow()
-                        .contains(else_ret_type.clone())
-                    {
+                    if !body_ret_type.borrow().contains(else_ret_type.clone()) {
                         return Err(type_error(format!(
                             "if statement branches cannot return different types: {} and {}",
                             body_ret_type.borrow().str(),
@@ -101,22 +82,13 @@ impl AstNode for IfNode {
                 unknowns,
             ))
         } else {
-            Ok(TypeCheckRes::from_ctx(
-                &ctx, "Void", unknowns, true,
-            ))
+            Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns, true))
         }
     }
 
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
-        let body =
-            self.body.borrow_mut().asm(ctx.clone())?;
-        let comp = self
-            .comparison
-            .borrow_mut()
-            .asm(ctx.clone())?;
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
+        let body = self.body.borrow_mut().asm(ctx.clone())?;
+        let comp = self.comparison.borrow_mut().asm(ctx.clone())?;
         let after_lbl = ctx.borrow_mut().get_anon_label();
 
         if self.else_body.is_some() {
@@ -126,8 +98,7 @@ impl AstNode for IfNode {
                 .unwrap()
                 .borrow_mut()
                 .asm(ctx.clone())?;
-            let else_lbl =
-                ctx.borrow_mut().get_anon_label();
+            let else_lbl = ctx.borrow_mut().get_anon_label();
 
             Ok(format!(
                 "

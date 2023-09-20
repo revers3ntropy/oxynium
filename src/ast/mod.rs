@@ -45,17 +45,13 @@ pub mod r#while;
 
 pub const ANON_PREFIX: &str = "_$_";
 pub const STD_ASM: &str = include_str!("../../std/std.asm");
-pub const STD_DATA_ASM: &str =
-    include_str!("../../std/std-data.asm");
+pub const STD_DATA_ASM: &str = include_str!("../../std/std-data.asm");
 
 #[macro_export]
 macro_rules! get_type {
     ($ctx:expr, $name:expr) => {
         if $ctx.borrow().has_dec_with_id($name) {
-            $ctx.borrow_mut()
-                .get_dec_from_id($name)
-                .type_
-                .clone()
+            $ctx.borrow_mut().get_dec_from_id($name).type_.clone()
         } else {
             new_mut_rc(UnknownType {})
         }
@@ -81,11 +77,7 @@ impl TypeCheckRes {
         }
     }
 
-    fn returns(
-        always: bool,
-        t: MutRc<dyn Type>,
-        unknowns: usize,
-    ) -> Self {
+    fn returns(always: bool, t: MutRc<dyn Type>, unknowns: usize) -> Self {
         Self {
             t,
             is_returned: true,
@@ -103,10 +95,7 @@ impl TypeCheckRes {
         let t: MutRc<dyn Type>;
 
         if is_built_in {
-            let root = ctx
-                .clone()
-                .borrow()
-                .global_scope(ctx.clone());
+            let root = ctx.clone().borrow().global_scope(ctx.clone());
             if !root.borrow().has_dec_with_id(name) {
                 unknowns += 1;
                 t = new_mut_rc(UnknownType {});
@@ -153,22 +142,13 @@ impl TypeCheckRes {
 }
 
 pub trait AstNode: Debug {
-    fn setup(
-        &mut self,
-        _ctx: MutRc<dyn Context>,
-    ) -> Result<(), Error> {
+    fn setup(&mut self, _ctx: MutRc<dyn Context>) -> Result<(), Error> {
         Ok(())
     }
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         Ok(TypeCheckRes::from_ctx(&ctx, "Void", 0, true))
     }
-    fn asm(
-        &mut self,
-        _ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, _ctx: MutRc<dyn Context>) -> Result<String, Error> {
         Ok("".to_string())
     }
 
@@ -180,9 +160,7 @@ pub trait AstNode: Debug {
     fn as_type_expr(&self) -> Option<TypeNode> {
         None
     }
-    fn as_type_generic_expr(
-        &self,
-    ) -> Option<GenericTypeNode> {
+    fn as_type_generic_expr(&self) -> Option<GenericTypeNode> {
         None
     }
     fn as_symbol_access(&self) -> Option<SymbolAccess> {

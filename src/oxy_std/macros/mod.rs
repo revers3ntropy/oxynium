@@ -7,8 +7,5 @@ use crate::error::Error;
 use crate::util::MutRc;
 
 pub trait Macro {
-    fn resolve(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<MutRc<dyn AstNode>, Error>;
+    fn resolve(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn AstNode>, Error>;
 }

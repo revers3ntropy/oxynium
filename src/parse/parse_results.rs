@@ -29,12 +29,8 @@ impl ParseResults {
         self.last_registered_advance_count += 1;
     }
 
-    pub fn register(
-        &mut self,
-        res: ParseResults,
-    ) -> Option<MutRc<dyn AstNode>> {
-        self.last_registered_advance_count =
-            res.advance_count;
+    pub fn register(&mut self, res: ParseResults) -> Option<MutRc<dyn AstNode>> {
+        self.last_registered_advance_count = res.advance_count;
         self.advance_count += res.advance_count;
         if res.error.is_some() {
             self.error = res.error;
@@ -42,10 +38,7 @@ impl ParseResults {
         res.node
     }
 
-    pub fn register_result<T>(
-        &mut self,
-        res: Result<T, Error>,
-    ) -> Option<T> {
+    pub fn register_result<T>(&mut self, res: Result<T, Error>) -> Option<T> {
         match res {
             Ok(node) => Some(node),
             Err(err) => {
@@ -55,10 +48,7 @@ impl ParseResults {
         }
     }
 
-    pub fn success(
-        &mut self,
-        node: MutRc<dyn AstNode>,
-    ) -> &ParseResults {
+    pub fn success(&mut self, node: MutRc<dyn AstNode>) -> &ParseResults {
         self.node = Some(node);
         self
     }

@@ -21,11 +21,7 @@ impl FnParamType {
         if self.name == "" {
             self.type_.borrow().str()
         } else {
-            format!(
-                "{}: {}",
-                self.name,
-                self.type_.borrow().str()
-            )
+            format!("{}: {}", self.name, self.type_.borrow().str())
         }
     }
 }
@@ -55,11 +51,7 @@ impl Type for FnType {
                         .iter()
                         .map(|p| {
                             self.generic_args
-                                .get(
-                                    &p.clone()
-                                        .literal
-                                        .unwrap(),
-                                )
+                                .get(&p.clone().literal.unwrap())
                                 .unwrap()
                                 .borrow()
                                 .str()
@@ -84,15 +76,10 @@ impl Type for FnType {
             return true;
         }
         if let Some(fn_type) = t.borrow().as_fn() {
-            let required_args = self
-                .parameters
-                .iter()
-                .filter(|a| a.default_value.is_none());
+            let required_args = self.parameters.iter().filter(|a| a.default_value.is_none());
 
-            if fn_type.parameters.len()
-                < required_args.count()
-                || fn_type.parameters.len()
-                    > self.parameters.len()
+            if fn_type.parameters.len() < required_args.count()
+                || fn_type.parameters.len() > self.parameters.len()
             {
                 return false;
             }
@@ -100,9 +87,7 @@ impl Type for FnType {
                 if !self.parameters[i]
                     .type_
                     .borrow()
-                    .contains(
-                        fn_type.parameters[i].type_.clone(),
-                    )
+                    .contains(fn_type.parameters[i].type_.clone())
                 {
                     return false;
                 }
@@ -113,13 +98,7 @@ impl Type for FnType {
                     .get(name)
                     .unwrap()
                     .borrow()
-                    .contains(
-                        fn_type
-                            .generic_args
-                            .get(name)
-                            .unwrap()
-                            .clone(),
-                    )
+                    .contains(fn_type.generic_args.get(name).unwrap().clone())
                 {
                     return false;
                 }
@@ -129,14 +108,10 @@ impl Type for FnType {
         false
     }
 
-    fn concrete(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<MutRc<dyn Type>, Error> {
-        if let Some(cached) =
-            ctx.borrow().concrete_type_cache_get(
-                self.cache_id(ctx.clone()),
-            )
+    fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
+        if let Some(cached) = ctx
+            .borrow()
+            .concrete_type_cache_get(self.cache_id(ctx.clone()))
         {
             return Ok(cached);
         }
@@ -147,9 +122,7 @@ impl Type for FnType {
             ret_type: new_mut_rc(UnknownType {}),
             parameters: Vec::new(),
             generic_args: HashMap::new(),
-            generic_params_order: self
-                .generic_params_order
-                .clone(),
+            generic_params_order: self.generic_params_order.clone(),
         });
 
         // outside of the loop to avoid borrowing issues
@@ -168,15 +141,11 @@ impl Type for FnType {
             );
         }
 
-        let return_type =
-            self.ret_type.borrow().concrete(ctx.clone())?;
+        let return_type = self.ret_type.borrow().concrete(ctx.clone())?;
         res.borrow_mut().ret_type = return_type;
 
         for param in &self.parameters {
-            let type_ = param
-                .type_
-                .borrow()
-                .concrete(ctx.clone())?;
+            let type_ = param.type_.borrow().concrete(ctx.clone())?;
             res.borrow_mut().parameters.push(FnParamType {
                 name: param.name.clone(),
                 type_,
@@ -186,8 +155,7 @@ impl Type for FnType {
         }
 
         let cache_id = self.cache_id(ctx.clone());
-        ctx.borrow_mut()
-            .concrete_type_cache_remove(&cache_id);
+        ctx.borrow_mut().concrete_type_cache_remove(&cache_id);
 
         Ok(res)
     }
@@ -202,10 +170,8 @@ impl Type for FnType {
             self.generic_args
                 .iter()
                 .map(|(k, value)| {
-                    if value.borrow().as_generic().is_some()
-                    {
-                        if !ctx.borrow().has_dec_with_id(k)
-                        {
+                    if value.borrow().as_generic().is_some() {
+                        if !ctx.borrow().has_dec_with_id(k) {
                             return "?".to_string();
                         }
                         format!(
@@ -232,10 +198,7 @@ impl Type for FnType {
 }
 
 impl fmt::Debug for FnType {
-    fn fmt(
-        &self,
-        f: &mut fmt::Formatter<'_>,
-    ) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.str())
     }
 }

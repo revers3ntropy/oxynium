@@ -4,9 +4,7 @@ use crate::error::{syntax_error, Error};
 use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::Interval;
-use crate::symbols::{
-    can_declare_with_identifier, SymbolDec, SymbolDef,
-};
+use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
 use crate::types::unknown::UnknownType;
 use crate::util::{new_mut_rc, MutRc};
 
@@ -20,21 +18,13 @@ pub struct GlobalConstNode<T> {
 
 impl<T> GlobalConstNode<T> {
     fn asm_id(&self) -> String {
-        format!(
-            "_$_gc_{}",
-            self.identifier.clone().literal.unwrap()
-        )
+        format!("_$_gc_{}", self.identifier.clone().literal.unwrap())
     }
 }
 
 impl AstNode for GlobalConstNode<i64> {
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        if !can_declare_with_identifier(
-            &self.identifier.clone().literal.unwrap(),
-        ) {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
+        if !can_declare_with_identifier(&self.identifier.clone().literal.unwrap()) {
             return Err(syntax_error(format!(
                 "Invalid global variable '{}'",
                 self.identifier.clone().literal.unwrap()
@@ -44,11 +34,7 @@ impl AstNode for GlobalConstNode<i64> {
         let int = get_type!(ctx, "Int");
         ctx.borrow_mut().declare(
             SymbolDec {
-                name: self
-                    .identifier
-                    .clone()
-                    .literal
-                    .unwrap(),
+                name: self.identifier.clone().literal.unwrap(),
                 id: format!("qword [{}]", self.asm_id()),
                 is_constant: true,
                 is_type: false,
@@ -64,15 +50,13 @@ impl AstNode for GlobalConstNode<i64> {
         Ok(TypeCheckRes::from_ctx(&ctx, "Int", 0, true))
     }
 
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
                 self.identifier.clone().literal.unwrap()
-            )).set_interval((self.pos().0, self.identifier.end.clone())));
+            ))
+            .set_interval((self.pos().0, self.identifier.end.clone())));
         }
         ctx.borrow_mut().define(
             SymbolDef {
@@ -91,15 +75,13 @@ impl AstNode for GlobalConstNode<i64> {
 }
 
 impl AstNode for GlobalConstNode<String> {
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
                 self.identifier.clone().literal.unwrap()
-            )).set_interval((self.pos().0, self.identifier.end.clone())));
+            ))
+            .set_interval((self.pos().0, self.identifier.end.clone())));
         }
 
         let str = self.value.clone();
@@ -137,13 +119,8 @@ impl AstNode for GlobalConstNode<String> {
         Ok("".to_owned())
     }
 
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        if !can_declare_with_identifier(
-            &self.identifier.clone().literal.unwrap(),
-        ) {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
+        if !can_declare_with_identifier(&self.identifier.clone().literal.unwrap()) {
             return Err(syntax_error(format!(
                 "Invalid global variable '{}'",
                 self.identifier.clone().literal.unwrap()
@@ -152,11 +129,7 @@ impl AstNode for GlobalConstNode<String> {
         let str = get_type!(ctx, "Str");
         ctx.borrow_mut().declare(
             SymbolDec {
-                name: self
-                    .identifier
-                    .clone()
-                    .literal
-                    .unwrap(),
+                name: self.identifier.clone().literal.unwrap(),
                 id: self.asm_id(),
                 is_constant: true,
                 is_type: false,

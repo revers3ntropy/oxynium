@@ -10,9 +10,7 @@ use crate::parse::parser::Parser;
 use crate::perf;
 use crate::position::Position;
 use crate::post_process::format_asm::post_process;
-use crate::util::{
-    new_mut_rc, string_to_static_str, MutRc,
-};
+use crate::util::{new_mut_rc, string_to_static_str, MutRc};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -20,12 +18,9 @@ use std::process::Command;
 use std::time::Instant;
 use std::{env, fs};
 
-const STD_DOXY: &'static str =
-    include_str!("../std/std.doxy");
+const STD_DOXY: &'static str = include_str!("../std/std.doxy");
 
-fn setup_ctx_with_doxy(
-    ctx: MutRc<dyn Context>,
-) -> Result<MutRc<dyn Context>, Error> {
+fn setup_ctx_with_doxy(ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Context>, Error> {
     let start = Instant::now();
 
     if ctx.borrow().exec_mode() == ExecMode::Lib {
@@ -42,11 +37,7 @@ fn setup_ctx_with_doxy(
 
     node.setup(ctx.clone())?;
 
-    perf!(
-        ctx.borrow().get_cli_args(),
-        start,
-        "Setup STD AST"
-    );
+    perf!(ctx.borrow().get_cli_args(), start, "Setup STD AST");
     let start = Instant::now();
 
     let type_check_res = node.type_check(ctx.clone());
@@ -54,11 +45,7 @@ fn setup_ctx_with_doxy(
         return Err(type_check_res.err().unwrap());
     }
 
-    perf!(
-        ctx.borrow().get_cli_args(),
-        start,
-        "Type-checked STD"
-    );
+    perf!(ctx.borrow().get_cli_args(), start, "Type-checked STD");
     let start = Instant::now();
 
     let asm_error = node.asm(ctx.clone());
@@ -66,20 +53,12 @@ fn setup_ctx_with_doxy(
         return Err(asm_error.err().unwrap());
     }
 
-    perf!(
-        ctx.borrow().get_cli_args(),
-        start,
-        "Compiled STD"
-    );
+    perf!(ctx.borrow().get_cli_args(), start, "Compiled STD");
     let start = Instant::now();
 
     ctx.borrow_mut().reset();
 
-    perf!(
-        ctx.borrow().get_cli_args(),
-        start,
-        "Reset context"
-    );
+    perf!(ctx.borrow().get_cli_args(), start, "Reset context");
 
     Ok(ctx)
 }
@@ -91,8 +70,7 @@ pub fn generate_ast(
 ) -> Result<MutRc<dyn AstNode>, Error> {
     let start = Instant::now();
 
-    let mut lexer =
-        Lexer::new(input.clone(), file_name, args.clone());
+    let mut lexer = Lexer::new(input.clone(), file_name, args.clone());
     let tokens = lexer.lex()?;
 
     perf!(args, start, "Lexed");
@@ -138,15 +116,12 @@ fn compile(
     //      so that they can be used in the context,
     //      which permanently leaks their memory.
     let current_dir = env::current_dir().unwrap();
-    let current_dir =
-        current_dir.to_str().unwrap().to_owned();
+    let current_dir = current_dir.to_str().unwrap().to_owned();
 
-    let current_dir_leaked_str =
-        unsafe { string_to_static_str(current_dir) };
+    let current_dir_leaked_str = unsafe { string_to_static_str(current_dir) };
     let current_dir = Path::new(current_dir_leaked_str);
 
-    let file_path_leaked_str =
-        unsafe { string_to_static_str(file_name.clone()) };
+    let file_path_leaked_str = unsafe { string_to_static_str(file_name.clone()) };
     let file_dir = Path::new(file_path_leaked_str)
         .parent()
         .unwrap_or(current_dir);
@@ -154,11 +129,7 @@ fn compile(
     ctx.borrow_mut().set_current_dir_path(file_dir);
 
     let mut root_node = ExecRootNode {
-        statements: generate_ast(
-            &ctx.borrow().get_cli_args(),
-            input,
-            file_name.clone(),
-        )?,
+        statements: generate_ast(&ctx.borrow().get_cli_args(), input, file_name.clone())?,
     };
 
     let start = Instant::now();
@@ -170,11 +141,7 @@ fn compile(
 
     root_node.type_check(ctx.clone())?;
 
-    perf!(
-        ctx.borrow().get_cli_args(),
-        start,
-        "Type-checked"
-    );
+    perf!(ctx.borrow().get_cli_args(), start, "Type-checked");
     let start = Instant::now();
 
     let compile_res = root_node.asm(ctx.clone())?;
@@ -184,11 +151,7 @@ fn compile(
 
     let asm = post_process(compile_res, args);
 
-    perf!(
-        ctx.borrow().get_cli_args(),
-        start,
-        "Post Processed"
-    );
+    perf!(ctx.borrow().get_cli_args(), start, "Post Processed");
 
     Ok((asm, ctx.clone()))
 }
@@ -223,10 +186,8 @@ fn assemble(
     }
     let nasm_out = nasm_out.unwrap();
     if !nasm_out.status.success() {
-        return Err(io_error(
-            String::from_utf8(nasm_out.stderr).unwrap(),
-        )
-        .set_pos(start_pos.clone(), Position::unknown()));
+        return Err(io_error(String::from_utf8(nasm_out.stderr).unwrap())
+            .set_pos(start_pos.clone(), Position::unknown()));
     }
 
     perf!(args, start, "NASM");
@@ -245,13 +206,8 @@ fn assemble(
             .output()
             .expect("Could not assemble");
         if !ls_out.status.success() {
-            return Err(io_error(
-                String::from_utf8(ls_out.stderr).unwrap(),
-            )
-            .set_pos(
-                start_pos.clone(),
-                Position::unknown(),
-            ));
+            return Err(io_error(String::from_utf8(ls_out.stderr).unwrap())
+                .set_pos(start_pos.clone(), Position::unknown()));
         }
 
         perf!(args, start, "gcc");
@@ -260,10 +216,8 @@ fn assemble(
     let start = Instant::now();
 
     if !args.keep {
-        fs::remove_file(asm_out_file)
-            .expect("Could not remove assembly file");
-        fs::remove_file(o_out_file)
-            .expect("Could not remove object file");
+        fs::remove_file(asm_out_file).expect("Could not remove assembly file");
+        fs::remove_file(o_out_file).expect("Could not remove object file");
     }
 
     perf!(args, start, "Clean up files");
@@ -271,11 +225,7 @@ fn assemble(
     Ok(())
 }
 
-fn write_asm_to_file(
-    args: &Args,
-    asm: &[u8],
-    asm_out_file: String,
-) -> Result<(), Error> {
+fn write_asm_to_file(args: &Args, asm: &[u8], asm_out_file: String) -> Result<(), Error> {
     let start = Instant::now();
 
     let file = File::create(asm_out_file.clone());
@@ -296,31 +246,17 @@ fn write_asm_to_file(
     Ok(())
 }
 
-pub fn compile_and_assemble(
-    input: String,
-    file_name: String,
-    args: &Args,
-) -> Result<(), Error> {
+pub fn compile_and_assemble(input: String, file_name: String, args: &Args) -> Result<(), Error> {
     let start = Instant::now();
 
-    let compile_res =
-        compile(input, file_name.clone(), args)?;
+    let compile_res = compile(input, file_name.clone(), args)?;
     let asm_out_file = format!("{}.asm", args.out);
     let o_out_file = format!("{}.o", args.out);
 
-    write_asm_to_file(
-        args,
-        compile_res.0.as_bytes(),
-        asm_out_file.clone(),
-    )?;
+    write_asm_to_file(args, compile_res.0.as_bytes(), asm_out_file.clone())?;
 
     if !args.stop_after_asm {
-        assemble(
-            args,
-            file_name,
-            asm_out_file,
-            o_out_file,
-        )?;
+        assemble(args, file_name, asm_out_file, o_out_file)?;
     }
 
     perf!(args, start, "Compile and Assemble Total");

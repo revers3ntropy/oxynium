@@ -13,29 +13,16 @@ pub struct RawAsmNode {
 }
 
 impl AstNode for RawAsmNode {
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        let mut res =
-            self.return_type.borrow().type_check(ctx)?;
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
+        let mut res = self.return_type.borrow().type_check(ctx)?;
         if res.t.borrow().is_unknown() {
             return Ok(res);
         }
-        res.t = res
-            .t
-            .clone()
-            .borrow()
-            .as_type_type()
-            .unwrap()
-            .instance_type;
+        res.t = res.t.clone().borrow().as_type_type().unwrap().instance_type;
         Ok(res)
     }
 
-    fn asm(
-        &mut self,
-        _ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, _ctx: MutRc<dyn Context>) -> Result<String, Error> {
         Ok(self.asm.clone().literal.unwrap())
     }
 

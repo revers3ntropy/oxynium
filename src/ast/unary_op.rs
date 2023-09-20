@@ -15,17 +15,11 @@ pub struct UnaryOpNode {
 }
 
 impl AstNode for UnaryOpNode {
-    fn setup(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<(), Error> {
+    fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
         self.rhs.borrow_mut().setup(ctx)
     }
 
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         let TypeCheckRes {
             t: value_type,
             unknowns,
@@ -36,29 +30,20 @@ impl AstNode for UnaryOpNode {
             TokenType::Sub => get_type!(ctx, "Int"),
             TokenType::Identifier => match self.operator.clone().literal.unwrap().as_str() {
                 "typeof" => return Ok(TypeCheckRes::from_ctx(&ctx, "Str", unknowns, true)),
-                _ => panic!(
-                    "Invalid arithmetic unary operator: {:?}",
-                    self.operator
-                )
-            }
+                _ => panic!("Invalid arithmetic unary operator: {:?}", self.operator),
+            },
             _ => get_type!(ctx, "Bool"),
         };
 
         if !t.borrow().contains(value_type.clone()) {
-            return Err(mismatched_types(
-                t.clone(),
-                value_type.clone(),
-            )
-            .set_interval(self.rhs.borrow_mut().pos()));
+            return Err(mismatched_types(t.clone(), value_type.clone())
+                .set_interval(self.rhs.borrow_mut().pos()));
         }
 
         Ok(TypeCheckRes::from(t, unknowns))
     }
 
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         Ok(match self.operator.token_type {
             TokenType::Sub => {
                 format!(
@@ -66,9 +51,7 @@ impl AstNode for UnaryOpNode {
                     {}
                     neg qword [rsp]
                 ",
-                    self.rhs
-                        .borrow_mut()
-                        .asm(ctx.clone())?
+                    self.rhs.borrow_mut().asm(ctx.clone())?
                 )
             }
             TokenType::Not => {
@@ -81,52 +64,37 @@ impl AstNode for UnaryOpNode {
                     setle al
                     push rax
                 ",
-                    self.rhs
-                        .borrow_mut()
-                        .asm(ctx.clone())?
+                    self.rhs.borrow_mut().asm(ctx.clone())?
                 )
             }
-            TokenType::Identifier => {
-                match self.operator.clone().literal.unwrap().as_str() {
-                    "typeof" => {
-                        let rhs_type = self.rhs
-                            .borrow()
-                            .type_check(ctx.clone())?;
-                        let rhs_type = rhs_type.t;
-                        let rhs_type =
-                            if rhs_type.borrow().as_type_type().is_some() {
-                                "Type".to_string()
-                            } else {
-                                rhs_type.borrow().str()
-                            };
-                        StrNode {
-                            value: Token {
-                                token_type: TokenType::String,
-                                literal: Some(rhs_type),
-                                start: self.rhs.borrow().pos().0,
-                                end: self.rhs.borrow().pos().1,
-                            },
-                        }.asm(ctx.clone())?
+            TokenType::Identifier => match self.operator.clone().literal.unwrap().as_str() {
+                "typeof" => {
+                    let rhs_type = self.rhs.borrow().type_check(ctx.clone())?;
+                    let rhs_type = rhs_type.t;
+                    let rhs_type = if rhs_type.borrow().as_type_type().is_some() {
+                        "Type".to_string()
+                    } else {
+                        rhs_type.borrow().str()
+                    };
+                    StrNode {
+                        value: Token {
+                            token_type: TokenType::String,
+                            literal: Some(rhs_type),
+                            start: self.rhs.borrow().pos().0,
+                            end: self.rhs.borrow().pos().1,
+                        },
                     }
-                    _ => panic!(
-                        "Invalid arithmetic unary operator: {:?}",
-                        self.operator
-                    )
+                    .asm(ctx.clone())?
                 }
-            }
+                _ => panic!("Invalid arithmetic unary operator: {:?}", self.operator),
+            },
             _ => {
-                panic!(
-                    "Invalid arithmetic unary operator: {:?}",
-                    self.operator
-                )
+                panic!("Invalid arithmetic unary operator: {:?}", self.operator)
             }
         })
     }
 
     fn pos(&self) -> Interval {
-        (
-            self.operator.start.clone(),
-            self.rhs.borrow_mut().pos().1,
-        )
+        (self.operator.start.clone(), self.rhs.borrow_mut().pos().1)
     }
 }

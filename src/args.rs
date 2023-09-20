@@ -36,11 +36,7 @@ pub struct Args {
     pub version: bool,
 }
 
-pub fn get_int_cli_arg(
-    m: &ArgMatches,
-    name: &str,
-    default: u8,
-) -> u8 {
+pub fn get_int_cli_arg(m: &ArgMatches, name: &str, default: u8) -> u8 {
     let res = m
         .get_one::<String>(name)
         .unwrap_or(&String::from(default.to_string()))
@@ -84,10 +80,7 @@ pub fn get_cli_args() -> Args {
     let args: Vec<String> = env::args().collect();
     let matches = cmd.try_get_matches_from(args);
     if matches.is_err() {
-        let _ = e.write(
-            format!("{}", matches.err().unwrap())
-                .as_bytes(),
-        );
+        let _ = e.write(format!("{}", matches.err().unwrap()).as_bytes());
         std::process::exit(1);
     }
     let m = matches.expect("Failed to parse arguments");
@@ -108,18 +101,11 @@ pub fn get_cli_args() -> Args {
         std_path: unsafe {
             string_to_static_str(
                 m.get_one::<String>("std")
-                    .unwrap_or(&String::from(
-                        "/usr/local/bin/oxy-std.asm",
-                    ))
+                    .unwrap_or(&String::from("/usr/local/bin/oxy-std.asm"))
                     .to_string(),
             )
         },
-        exec_mode: exec_mode_from_int(get_int_cli_arg(
-            &m,
-            "exec_mode",
-            0,
-        ))
-        .unwrap_or(ExecMode::Bin),
+        exec_mode: exec_mode_from_int(get_int_cli_arg(&m, "exec_mode", 0)).unwrap_or(ExecMode::Bin),
         optimise: get_int_cli_arg(&m, "optimise", 1),
         keep: m.get_flag("keep"),
         enable: m
@@ -143,7 +129,9 @@ pub fn get_cli_args() -> Args {
 
 pub fn check_args(args: &Args) -> Result<(), Error> {
     if !args.input.is_empty() && !args.eval.is_empty() {
-        return Err(arg_error("Cannot specify both 'input' and 'eval' options\n"));
+        return Err(arg_error(
+            "Cannot specify both 'input' and 'eval' options\n",
+        ));
     }
     Ok(())
 }

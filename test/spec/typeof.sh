@@ -49,7 +49,7 @@ expect_err 'SyntaxError' 'print(typeof typeof)'
 expect_err 'SyntaxError' 'print(typeof while {})'
 expect_err 'SyntaxError' 'print(typeof if true {})'
 expect 'Func a(): Void' 'print(typeof def a() {})'
-expect 'Func _$_anon_in.oxy_idx_15(): Void' 'print(typeof def () {})'
+expect 'Func _$_anon_in.oxy_idx_14(): Void' 'print(typeof fn () {})'
 
 expect 'T,Type,Int,Str' '
     def a <T> (a: T) T {

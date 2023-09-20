@@ -12,8 +12,7 @@ fn parse_asm_lines(asm: String) -> Vec<String> {
         let mut line_split = new_line.clone().split(";");
         // detect comments which start with ';-' which should be kept
         if line_split.nth(1).is_some() {
-            new_line =
-                new_line.clone().split(";").nth(0).unwrap();
+            new_line = new_line.clone().split(";").nth(0).unwrap();
         }
         new_line = new_line.trim();
 
@@ -32,12 +31,10 @@ pub fn post_process(asm: String, args: &Args) -> String {
 
     let mut indent = 4;
 
-    let indent_re: Regex =
-        Regex::new(r#"^(section ?.+)|(.+:)$"#).unwrap();
+    let indent_re: Regex = Regex::new(r#"^(section ?.+)|(.+:)$"#).unwrap();
 
     for line in optimise(parse_asm_lines(asm), args) {
-        let should_unindent =
-            indent_re.is_match(line.as_str());
+        let should_unindent = indent_re.is_match(line.as_str());
 
         if should_unindent {
             indent -= 4;
@@ -45,9 +42,7 @@ pub fn post_process(asm: String, args: &Args) -> String {
             //output += "\n";
         }
 
-        output += &(" ".repeat(indent).to_owned()
-            + line.as_str()
-            + "\n");
+        output += &(" ".repeat(indent).to_owned() + line.as_str() + "\n");
 
         if should_unindent {
             indent += 4;

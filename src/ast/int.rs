@@ -11,17 +11,11 @@ pub struct IntNode {
 }
 
 impl AstNode for IntNode {
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         Ok(TypeCheckRes::from_ctx(&ctx, "Int", 0, true))
     }
 
-    fn asm(
-        &mut self,
-        _ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, _ctx: MutRc<dyn Context>) -> Result<String, Error> {
         Ok(format!(
             "
             mov rax, {}

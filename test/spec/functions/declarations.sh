@@ -20,13 +20,14 @@ expect '' '
     }
 '
 
-expect '' 'def () {}'
+expect '' 'fn () {}'
 
 expect_err 'TypeError' 'def a (a) Str {}'
 expect_err 'TypeError' 'def a (a) {}'
 expect_err 'SyntaxError' 'def 0 () {}'
 expect_err 'SyntaxError' 'def f (,) {}'
 expect_err 'SyntaxError' 'def 0g () {}'
+expect_err 'SyntaxError' 'extern function g (a: Int, a: Int) {}'
 expect_err 'TypeError' 'def g () {}; def g() {}'
 expect_err 'TypeError' 'def g (a: Int, a: Str) {}'
 expect_err 'TypeError' 'def g (a: Int, a: Int) {}'

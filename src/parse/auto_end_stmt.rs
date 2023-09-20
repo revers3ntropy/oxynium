@@ -1,19 +1,13 @@
 use crate::parse::token::{Token, TokenType};
 
-fn should_insert_between(
-    tok1: &Token,
-    tok2: &Token,
-) -> bool {
+fn should_insert_between(tok1: &Token, tok2: &Token) -> bool {
     match tok1.token_type {
         TokenType::Identifier
         | TokenType::Int
         | TokenType::CloseParen
         | TokenType::QM
         | TokenType::String => match tok2.token_type {
-            TokenType::Identifier
-            | TokenType::Int
-            | TokenType::Hash
-            | TokenType::String => true,
+            TokenType::Identifier | TokenType::Int | TokenType::Hash | TokenType::String => true,
             _ => false,
         },
         _ => false,
@@ -37,9 +31,7 @@ fn collapse_newlines(tokens: Vec<Token>) -> Vec<Token> {
     new_tokens
 }
 
-pub fn insert_semi_colons(
-    mut tokens: Vec<Token>,
-) -> Vec<Token> {
+pub fn insert_semi_colons(mut tokens: Vec<Token>) -> Vec<Token> {
     if tokens.len() == 0 {
         return tokens;
     }
@@ -57,9 +49,7 @@ pub fn insert_semi_colons(
             continue;
         }
 
-        if tokens[0].token_type == TokenType::NL
-            && should_insert_between(&first, &tokens[1])
-        {
+        if tokens[0].token_type == TokenType::NL && should_insert_between(&first, &tokens[1]) {
             new_tokens.push(Token::new(
                 TokenType::EndStatement,
                 None,

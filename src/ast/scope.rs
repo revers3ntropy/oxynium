@@ -14,10 +14,7 @@ pub struct ScopeNode {
 }
 
 impl ScopeNode {
-    fn try_add_source_to_res<T: Clone>(
-        &self,
-        res: Result<T, Error>,
-    ) -> Result<T, Error> {
+    fn try_add_source_to_res<T: Clone>(&self, res: Result<T, Error>) -> Result<T, Error> {
         if let Some(mut err) = res.clone().err() {
             if let Some(source) = &self.err_source {
                 err.try_set_source(source.clone());
@@ -29,38 +26,17 @@ impl ScopeNode {
 }
 
 impl AstNode for ScopeNode {
-    fn setup(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<(), Error> {
+    fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
         self.ctx = Some(Scope::new_local(ctx.clone()));
-        self.try_add_source_to_res(
-            self.body
-                .borrow_mut()
-                .setup(self.ctx.clone().unwrap()),
-        )
+        self.try_add_source_to_res(self.body.borrow_mut().setup(self.ctx.clone().unwrap()))
     }
 
-    fn type_check(
-        &self,
-        _ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        self.try_add_source_to_res(
-            self.body
-                .borrow_mut()
-                .type_check(self.ctx.clone().unwrap()),
-        )
+    fn type_check(&self, _ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
+        self.try_add_source_to_res(self.body.borrow_mut().type_check(self.ctx.clone().unwrap()))
     }
 
-    fn asm(
-        &mut self,
-        _ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
-        self.try_add_source_to_res(
-            self.body
-                .borrow_mut()
-                .asm(self.ctx.clone().unwrap()),
-        )
+    fn asm(&mut self, _ctx: MutRc<dyn Context>) -> Result<String, Error> {
+        self.try_add_source_to_res(self.body.borrow_mut().asm(self.ctx.clone().unwrap()))
     }
 
     fn pos(&self) -> Interval {

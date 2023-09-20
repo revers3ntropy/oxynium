@@ -109,7 +109,7 @@ class Result <T, E> {
 
 	extern def unwrap (self) T,
 	extern def Option (self) Option<T>,
-	extern def error (self) Option<E>
+	extern def error (self) Option<E>,
 }
 
 primitive Any {

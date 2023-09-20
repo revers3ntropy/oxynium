@@ -1,6 +1,4 @@
-use crate::ast::class_declaration::{
-    method_id, operator_method_id,
-};
+use crate::ast::class_declaration::{method_id, operator_method_id};
 use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::Token;
@@ -29,22 +27,13 @@ pub struct ClassType {
 }
 
 impl ClassType {
-    pub fn field_type(
-        &self,
-        field: &str,
-    ) -> Option<MutRc<dyn Type>> {
+    pub fn field_type(&self, field: &str) -> Option<MutRc<dyn Type>> {
         self.fields.get(field).map(|f| f.type_.clone())
     }
 
-    pub fn method_type(
-        &self,
-        method: &str,
-    ) -> Option<MutRc<FnType>> {
+    pub fn method_type(&self, method: &str) -> Option<MutRc<FnType>> {
         self.methods
-            .get(&method_id(
-                self.name.clone(),
-                method.to_string(),
-            ))
+            .get(&method_id(self.name.clone(), method.to_string()))
             .map(|f| f.clone())
     }
 
@@ -69,9 +58,7 @@ impl Type for ClassType {
                     .iter()
                     .map(|p| {
                         self.generic_args
-                            .get(
-                                &p.clone().literal.unwrap(),
-                            )
+                            .get(&p.clone().literal.unwrap())
                             .unwrap()
                             .borrow()
                             .str()
@@ -82,10 +69,7 @@ impl Type for ClassType {
         }
     }
 
-    fn operator_signature(
-        &self,
-        op: Token,
-    ) -> Option<MutRc<FnType>> {
+    fn operator_signature(&self, op: Token) -> Option<MutRc<FnType>> {
         self.methods
             .get(&operator_method_id(self.name.clone(), op))
             .map(|f| f.clone())
@@ -105,13 +89,7 @@ impl Type for ClassType {
                     .get(name)
                     .unwrap()
                     .borrow()
-                    .contains(
-                        other
-                            .generic_args
-                            .get(name)
-                            .unwrap()
-                            .clone(),
-                    )
+                    .contains(other.generic_args.get(name).unwrap().clone())
                 {
                     return false;
                 }
@@ -122,14 +100,10 @@ impl Type for ClassType {
         }
     }
 
-    fn concrete(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<MutRc<dyn Type>, Error> {
-        if let Some(cached) =
-            ctx.borrow().concrete_type_cache_get(
-                self.cache_id(ctx.clone()),
-            )
+    fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
+        if let Some(cached) = ctx
+            .borrow()
+            .concrete_type_cache_get(self.cache_id(ctx.clone()))
         {
             return Ok(cached);
         }
@@ -145,9 +119,7 @@ impl Type for ClassType {
             methods: HashMap::new(),
             is_primitive: self.is_primitive,
             generic_args: HashMap::new(),
-            generic_params_order: self
-                .generic_params_order
-                .clone(),
+            generic_params_order: self.generic_params_order.clone(),
         });
 
         // outside of the loop to avoid borrowing issues
@@ -171,10 +143,7 @@ impl Type for ClassType {
                 field.name.clone(),
                 ClassFieldType {
                     name: field.name.clone(),
-                    type_: field
-                        .type_
-                        .borrow()
-                        .concrete(ctx.clone())?,
+                    type_: field.type_.borrow().concrete(ctx.clone())?,
                     stack_offset: field.stack_offset,
                 },
             );
@@ -185,10 +154,7 @@ impl Type for ClassType {
         let method_names = methods.clone().into_keys();
         for name in method_names {
             let methods_clone = methods.clone();
-            let method = methods_clone
-                .get(name.as_str())
-                .clone()
-                .unwrap();
+            let method = methods_clone.get(name.as_str()).clone().unwrap();
 
             let new_method_type = method
                 .borrow()
@@ -197,15 +163,13 @@ impl Type for ClassType {
                 .as_fn()
                 .unwrap();
 
-            res.borrow_mut().methods.insert(
-                name.clone(),
-                new_mut_rc(new_method_type),
-            );
+            res.borrow_mut()
+                .methods
+                .insert(name.clone(), new_mut_rc(new_method_type));
         }
 
         let cache_id = self.cache_id(ctx.clone());
-        ctx.borrow_mut()
-            .concrete_type_cache_remove(&cache_id);
+        ctx.borrow_mut().concrete_type_cache_remove(&cache_id);
 
         Ok(res)
     }
@@ -220,11 +184,8 @@ impl Type for ClassType {
             self.generic_args
                 .iter()
                 .map(|(k, value)| {
-                    if value.borrow().as_generic().is_none()
-                    {
-                        return value
-                            .borrow()
-                            .cache_id(ctx.clone());
+                    if value.borrow().as_generic().is_none() {
+                        return value.borrow().cache_id(ctx.clone());
                     }
                     if !ctx.borrow().has_dec_with_id(k) {
                         return format!("{}:{}", k, k);
@@ -232,11 +193,7 @@ impl Type for ClassType {
                     if format!("{:p}", self)
                         == format!(
                             "{:p}",
-                            ctx.borrow()
-                                .get_dec_from_id(&k)
-                                .type_
-                                .borrow()
-                                .deref()
+                            ctx.borrow().get_dec_from_id(&k).type_.borrow().deref()
                         )
                     {
                         panic!()

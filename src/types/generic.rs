@@ -11,15 +11,8 @@ pub struct GenericType {
 }
 
 impl fmt::Debug for GenericType {
-    fn fmt(
-        &self,
-        f: &mut fmt::Formatter<'_>,
-    ) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            self.identifier.clone().literal.unwrap()
-        )
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.identifier.clone().literal.unwrap())
     }
 }
 
@@ -33,44 +26,24 @@ impl Type for GenericType {
     }
 
     fn contains(&self, other: MutRc<dyn Type>) -> bool {
-        other.borrow().is_unknown()
-            || other.borrow().as_generic().is_some()
+        other.borrow().is_unknown() || other.borrow().as_generic().is_some()
     }
 
-    fn concrete(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<MutRc<dyn Type>, Error> {
-        let key = self
-            .identifier
-            .clone()
-            .literal
-            .unwrap()
-            .to_string();
+    fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
+        let key = self.identifier.clone().literal.unwrap().to_string();
 
         if ctx.borrow().has_dec_with_id(&key.clone()) {
-            let t = ctx
-                .borrow()
-                .get_dec_from_id(&key.clone())
-                .type_;
+            let t = ctx.borrow().get_dec_from_id(&key.clone()).type_;
             return Ok(t);
         }
         Ok(new_mut_rc(self.clone()))
     }
 
     fn cache_id(&self, ctx: MutRc<dyn Context>) -> String {
-        let self_id = &self
-            .identifier
-            .clone()
-            .literal
-            .unwrap()
-            .to_string();
+        let self_id = &self.identifier.clone().literal.unwrap().to_string();
 
-        let concrete_type =
-            ctx.borrow().get_dec_from_id(self_id).type_;
-        if format!("{:p}", concrete_type.as_ptr())
-            == format!("{:p}", self)
-        {
+        let concrete_type = ctx.borrow().get_dec_from_id(self_id).type_;
+        if format!("{:p}", concrete_type.as_ptr()) == format!("{:p}", self) {
             // avoid circular loop when the generic is
             // the same as the concrete type (not yet concreted)
 
@@ -79,10 +52,7 @@ impl Type for GenericType {
             //     panic!("circular loop in generic type");
             // }
 
-            format!(
-                "{}",
-                self.identifier.clone().literal.unwrap()
-            )
+            format!("{}", self.identifier.clone().literal.unwrap())
         } else {
             let concrete_type = concrete_type.borrow();
             concrete_type.cache_id(ctx.clone())

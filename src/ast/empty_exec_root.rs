@@ -11,10 +11,7 @@ pub struct EmptyExecRootNode {
 }
 
 impl AstNode for EmptyExecRootNode {
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         if ctx.borrow_mut().exec_mode() == ExecMode::Lib {
             Ok(format!(
                 "

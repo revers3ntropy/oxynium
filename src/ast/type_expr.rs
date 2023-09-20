@@ -20,27 +20,20 @@ impl TypeNode {
 }
 
 impl AstNode for TypeNode {
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         if !ctx.borrow_mut().has_dec_with_id(&self.id()) {
             if ctx.borrow().throw_on_unknowns() {
-                return Err(unknown_symbol(format!(
-                    "Type '{}'",
-                    self.id()
-                ))
-                .set_interval(self.pos()));
+                return Err(
+                    unknown_symbol(format!("Type '{}'", self.id())).set_interval(self.pos())
+                );
             }
             return Ok(TypeCheckRes::unknown());
         }
-        if !ctx.borrow().get_dec_from_id(&self.id()).is_type
-        {
-            return Err(type_error(format!(
-                "'{}' cannot be used as a type",
-                self.id()
-            ))
-            .set_interval(self.pos()));
+        if !ctx.borrow().get_dec_from_id(&self.id()).is_type {
+            return Err(
+                type_error(format!("'{}' cannot be used as a type", self.id()))
+                    .set_interval(self.pos()),
+            );
         }
 
         let mut unknowns = 0;

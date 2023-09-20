@@ -10,12 +10,7 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn new(
-        file: String,
-        idx: i64,
-        line: i64,
-        col: i64,
-    ) -> Position {
+    pub fn new(file: String, idx: i64, line: i64, col: i64) -> Position {
         Position {
             file,
             idx,
@@ -32,16 +27,11 @@ impl Position {
         (Position::unknown(), Position::unknown())
     }
 
-    pub fn advance(
-        &mut self,
-        current_char: Option<char>,
-    ) -> Position {
+    pub fn advance(&mut self, current_char: Option<char>) -> Position {
         self.idx += 1;
         self.col += 1;
 
-        if current_char.is_some()
-            && current_char.unwrap() == '\n'
-        {
+        if current_char.is_some() && current_char.unwrap() == '\n' {
             self.line += 1;
             self.col = 0;
         }
@@ -49,16 +39,11 @@ impl Position {
         self.clone()
     }
 
-    pub fn reverse(
-        &mut self,
-        current_char: Option<char>,
-    ) -> Position {
+    pub fn reverse(&mut self, current_char: Option<char>) -> Position {
         self.idx -= 1;
         self.col -= 1;
 
-        if current_char.is_some()
-            && current_char.unwrap() == '\n'
-        {
+        if current_char.is_some() && current_char.unwrap() == '\n' {
             self.line -= 1;
             self.col = 0;
         }
@@ -70,12 +55,7 @@ impl Position {
         if self.idx == -2 {
             "<unknown>".to_string()
         } else {
-            format!(
-                "'{}' {}:{}",
-                self.file,
-                self.line + 1,
-                self.col + 1
-            )
+            format!("'{}' {}:{}", self.file, self.line + 1, self.col + 1)
         }
     }
 
@@ -85,10 +65,7 @@ impl Position {
 }
 
 impl Debug for Position {
-    fn fmt(
-        &self,
-        f: &mut Formatter<'_>,
-    ) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
             "{}:{}:{}(idx:{})",

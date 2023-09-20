@@ -10,15 +10,11 @@ pub struct ContinueNode {
 }
 
 impl AstNode for ContinueNode {
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         let labels = ctx.borrow_mut().loop_label_peak();
         if labels.is_none() {
             return Err(syntax_error(
-                "'continue' statement outside of loop"
-                    .to_string(),
+                "'continue' statement outside of loop".to_string(),
             ));
         }
         Ok(format!(

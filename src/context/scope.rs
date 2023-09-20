@@ -38,21 +38,15 @@ impl Scope {
             is_global,
         })
     }
-    pub fn new_local(
-        parent: MutRc<dyn Context>,
-    ) -> MutRc<dyn Context> {
+    pub fn new_local(parent: MutRc<dyn Context>) -> MutRc<dyn Context> {
         Scope::new(parent, false, false)
     }
 
-    pub fn new_fn_ctx(
-        parent: MutRc<dyn Context>,
-    ) -> MutRc<dyn Context> {
+    pub fn new_fn_ctx(parent: MutRc<dyn Context>) -> MutRc<dyn Context> {
         Scope::new(parent, true, false)
     }
 
-    pub fn new_global(
-        root: MutRc<dyn Context>,
-    ) -> MutRc<dyn Context> {
+    pub fn new_global(root: MutRc<dyn Context>) -> MutRc<dyn Context> {
         Scope::new(root, true, true)
     }
 }
@@ -74,10 +68,7 @@ impl Context for Scope {
         self.parent.borrow_mut().finished_resolving_types();
     }
 
-    fn set_parent(
-        &mut self,
-        parent: Rc<RefCell<dyn Context>>,
-    ) {
+    fn set_parent(&mut self, parent: Rc<RefCell<dyn Context>>) {
         self.parent = parent;
     }
 
@@ -85,21 +76,13 @@ impl Context for Scope {
         Some(self.parent.clone())
     }
 
-    fn root(
-        &self,
-        _self: MutRc<dyn Context>,
-    ) -> MutRc<dyn Context> {
+    fn root(&self, _self: MutRc<dyn Context>) -> MutRc<dyn Context> {
         self.parent.clone()
     }
 
-    fn global_scope(
-        &self,
-        mut self_: MutRc<dyn Context>,
-    ) -> MutRc<dyn Context> {
+    fn global_scope(&self, mut self_: MutRc<dyn Context>) -> MutRc<dyn Context> {
         let mut last = self_.clone();
-        while let Some(parent) =
-            self_.clone().borrow().get_parent()
-        {
+        while let Some(parent) = self_.clone().borrow().get_parent() {
             last = self_.clone();
             self_ = parent;
         }
@@ -120,10 +103,7 @@ impl Context for Scope {
         self.parent.borrow().allow_overrides()
     }
 
-    fn set_current_dir_path(
-        &mut self,
-        path: &'static Path,
-    ) {
+    fn set_current_dir_path(&mut self, path: &'static Path) {
         assert!(self.current_dir_path.is_none());
         self.current_dir_path = Some(path);
     }
@@ -146,40 +126,28 @@ impl Context for Scope {
         self.parent.borrow_mut().get_global_anon_label()
     }
 
-    fn declare(
-        &mut self,
-        symbol: SymbolDec,
-        trace_interval: Interval,
-    ) -> Result<SymbolDec, Error> {
+    fn declare(&mut self, symbol: SymbolDec, trace_interval: Interval) -> Result<SymbolDec, Error> {
         if self.is_frozen() {
-            if !symbol.is_type
-                && self.has_dec_with_id(&symbol.name)
-            {
-                return Ok(
-                    self.get_dec_from_id(&symbol.name)
-                );
+            if !symbol.is_type && self.has_dec_with_id(&symbol.name) {
+                return Ok(self.get_dec_from_id(&symbol.name));
             }
             if !symbol.is_type {
-                panic!("(!?) Context is frozen and symbol '{}' doesn't exist yet!", symbol.name);
+                panic!(
+                    "(!?) Context is frozen and symbol '{}' doesn't exist yet!",
+                    symbol.name
+                );
             }
         }
 
         if !self.allow_local_var_decls && !symbol.is_type {
-            return self
-                .parent
-                .borrow_mut()
-                .declare(symbol, trace_interval);
+            return self.parent.borrow_mut().declare(symbol, trace_interval);
         }
-        if let Some(duplicate) = self
-            .declarations
-            .get(symbol.name.clone().as_str())
-        {
+        if let Some(duplicate) = self.declarations.get(symbol.name.clone().as_str()) {
             if !symbol.is_type && !self.allow_overrides() {
-                return Err(type_error(format!(
-                    "symbol `{}` is already declared",
-                    symbol.name
-                ))
-                .set_interval(trace_interval));
+                return Err(
+                    type_error(format!("symbol `{}` is already declared", symbol.name))
+                        .set_interval(trace_interval),
+                );
             }
             if !duplicate.contains(&symbol) {
                 return Err(type_error(format!(
@@ -188,7 +156,7 @@ impl Context for Scope {
                     duplicate.type_.borrow().str(),
                     symbol.type_.borrow().str()
                 ))
-                    .set_interval(trace_interval));
+                .set_interval(trace_interval));
             }
         }
         self.declarations
@@ -209,14 +177,9 @@ impl Context for Scope {
             self.parent.borrow().get_dec_from_id(id)
         }
     }
-    fn set_dec_as_defined(
-        &mut self,
-        id: &str,
-        trace_interval: Interval,
-    ) -> Result<(), Error> {
+    fn set_dec_as_defined(&mut self, id: &str, trace_interval: Interval) -> Result<(), Error> {
         if self.declarations.get(id).is_some() {
-            let mut dec =
-                self.declarations.get(id).unwrap().clone();
+            let mut dec = self.declarations.get(id).unwrap().clone();
             dec.is_defined = true;
             self.declarations.insert(id.to_string(), dec);
             Ok(())
@@ -233,17 +196,14 @@ impl Context for Scope {
         trace_interval: Interval,
     ) -> Result<(), Error> {
         if self.declarations.get(id).is_some() {
-            let mut dec =
-                self.declarations.get(id).unwrap().clone();
+            let mut dec = self.declarations.get(id).unwrap().clone();
             dec.type_ = new_type;
             self.declarations.insert(id.to_string(), dec);
             Ok(())
         } else {
-            self.parent.borrow_mut().update_dec_type(
-                id,
-                new_type,
-                trace_interval,
-            )
+            self.parent
+                .borrow_mut()
+                .update_dec_type(id, new_type, trace_interval)
         }
     }
 
@@ -252,11 +212,7 @@ impl Context for Scope {
             let idx = self
                 .declarations
                 .iter()
-                .filter(|d| {
-                    !d.1.is_param
-                        && !d.1.is_type
-                        && !d.1.is_func
-                })
+                .filter(|d| !d.1.is_param && !d.1.is_type && !d.1.is_func)
                 .count();
             (1 + idx) * 8
         } else {
@@ -264,37 +220,25 @@ impl Context for Scope {
         }
     }
 
-    fn define(
-        &mut self,
-        symbol: SymbolDef,
-        trace_interval: Interval,
-    ) -> Result<(), Error> {
+    fn define(&mut self, symbol: SymbolDef, trace_interval: Interval) -> Result<(), Error> {
         if self.is_ignoring_definitions() {
             return Ok(());
         }
         if !self.allow_local_var_decls {
-            return self
-                .parent
-                .borrow_mut()
-                .define(symbol, trace_interval);
+            return self.parent.borrow_mut().define(symbol, trace_interval);
         }
         let name = symbol.name.clone();
         if self.definitions.get(&name.clone()).is_some() {
-            return Err(type_error(format!(
-                "Symbol {} is already defined",
-                symbol.name
-            ))
-            .set_interval(trace_interval));
+            return Err(
+                type_error(format!("Symbol {} is already defined", symbol.name))
+                    .set_interval(trace_interval),
+            );
         }
 
         self.definitions.insert(name.clone(), symbol);
         Ok(())
     }
-    fn define_global(
-        &mut self,
-        symbol: SymbolDef,
-        trace_interval: Interval,
-    ) -> Result<(), Error> {
+    fn define_global(&mut self, symbol: SymbolDef, trace_interval: Interval) -> Result<(), Error> {
         if self.is_ignoring_definitions() {
             return Ok(());
         }
@@ -304,25 +248,17 @@ impl Context for Scope {
                 .borrow_mut()
                 .define_global(symbol, trace_interval);
         }
-        if self
-            .definitions
-            .get(symbol.name.clone().as_str())
-            .is_some()
-        {
-            return Err(type_error(format!(
-                "Symbol {} is already defined",
-                symbol.name
-            ))
-            .set_interval(trace_interval));
+        if self.definitions.get(symbol.name.clone().as_str()).is_some() {
+            return Err(
+                type_error(format!("Symbol {} is already defined", symbol.name))
+                    .set_interval(trace_interval),
+            );
         }
-        self.definitions
-            .insert(symbol.name.clone(), symbol);
+        self.definitions.insert(symbol.name.clone(), symbol);
         Ok(())
     }
 
-    fn get_definitions(
-        &self,
-    ) -> (Vec<&SymbolDef>, Vec<&SymbolDef>) {
+    fn get_definitions(&self) -> (Vec<&SymbolDef>, Vec<&SymbolDef>) {
         let mut data = Vec::new();
         let mut text = Vec::new();
         for (_id, def) in self.definitions.iter() {
@@ -337,19 +273,11 @@ impl Context for Scope {
 
     // Loop labels
 
-    fn loop_labels_push(
-        &mut self,
-        start: String,
-        end: String,
-    ) {
-        self.parent
-            .borrow_mut()
-            .loop_labels_push(start, end)
+    fn loop_labels_push(&mut self, start: String, end: String) {
+        self.parent.borrow_mut().loop_labels_push(start, end)
     }
 
-    fn loop_labels_pop(
-        &mut self,
-    ) -> Option<(String, String)> {
+    fn loop_labels_pop(&mut self) -> Option<(String, String)> {
         self.parent.borrow_mut().loop_labels_pop()
     }
 
@@ -363,9 +291,7 @@ impl Context for Scope {
         self.parent.borrow_mut().stack_frame_push(frame)
     }
 
-    fn stack_frame_pop(
-        &mut self,
-    ) -> Option<CallStackFrame> {
+    fn stack_frame_pop(&mut self) -> Option<CallStackFrame> {
         self.parent.borrow_mut().stack_frame_pop()
     }
     fn stack_frame_peak(&self) -> Option<CallStackFrame> {
@@ -375,10 +301,7 @@ impl Context for Scope {
     // Utils
 
     fn str(&self) -> String {
-        let mut s = format!(
-            "--- Scope ---\n{}",
-            indent(self.parent.borrow().str(), 4)
-        );
+        let mut s = format!("--- Scope ---\n{}", indent(self.parent.borrow().str(), 4));
         for (_, dec) in self.declarations.iter() {
             s.push_str(&format!("\n  {}", dec.str()));
         }
@@ -391,21 +314,12 @@ impl Context for Scope {
 
     // Concrete Type Cache
 
-    fn concrete_type_cache_get(
-        &self,
-        id: String,
-    ) -> Option<MutRc<dyn Type>> {
+    fn concrete_type_cache_get(&self, id: String) -> Option<MutRc<dyn Type>> {
         self.parent.borrow().concrete_type_cache_get(id)
     }
 
-    fn concrete_type_cache_set(
-        &mut self,
-        id: String,
-        t: MutRc<dyn Type>,
-    ) {
-        self.parent
-            .borrow_mut()
-            .concrete_type_cache_set(id, t)
+    fn concrete_type_cache_set(&mut self, id: String, t: MutRc<dyn Type>) {
+        self.parent.borrow_mut().concrete_type_cache_set(id, t)
     }
 
     fn clear_concrete_cache(&mut self) {
@@ -413,16 +327,12 @@ impl Context for Scope {
     }
 
     fn concrete_type_cache_remove(&mut self, id: &str) {
-        self.parent
-            .borrow_mut()
-            .concrete_type_cache_remove(id)
+        self.parent.borrow_mut().concrete_type_cache_remove(id)
     }
 
     // ignoring definitions
     fn set_ignoring_definitions(&mut self, value: bool) {
-        self.parent
-            .borrow_mut()
-            .set_ignoring_definitions(value)
+        self.parent.borrow_mut().set_ignoring_definitions(value)
     }
     fn is_ignoring_definitions(&self) -> bool {
         self.parent.borrow().is_ignoring_definitions()

@@ -10,19 +10,13 @@ pub struct StatementsNode {
 }
 
 impl AstNode for StatementsNode {
-    fn setup(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<(), Error> {
+    fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
         for statement in self.statements.iter_mut() {
             statement.borrow_mut().setup(ctx.clone())?;
         }
         Ok(())
     }
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         let mut ret_type = None;
         let mut always_returns = false;
         let mut unknowns = 0;
@@ -31,9 +25,7 @@ impl AstNode for StatementsNode {
             if always_returns {
                 // TODO: warn about unreachable code
             }
-            let t = statement
-                .borrow()
-                .type_check(ctx.clone())?;
+            let t = statement.borrow().type_check(ctx.clone())?;
             unknowns += t.unknowns;
 
             if !t.is_returned {
@@ -45,12 +37,7 @@ impl AstNode for StatementsNode {
             if ret_type.is_none() {
                 ret_type = Some(t.t.clone());
             }
-            if !ret_type
-                .clone()
-                .unwrap()
-                .borrow()
-                .contains(t.t.clone())
-            {
+            if !ret_type.clone().unwrap().borrow().contains(t.t.clone()) {
                 return Err(type_error(format!(
                     "Cannot return different types, expected `{}` found `{}`",
                     ret_type.unwrap().borrow().str(),
@@ -61,27 +48,17 @@ impl AstNode for StatementsNode {
         }
 
         if let Some(ret_type) = ret_type {
-            return Ok(TypeCheckRes::returns(
-                always_returns,
-                ret_type,
-                unknowns,
-            ));
+            return Ok(TypeCheckRes::returns(always_returns, ret_type, unknowns));
         }
 
-        Ok(TypeCheckRes::from_ctx(
-            &ctx, "Void", unknowns, true,
-        ))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns, true))
     }
 
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         let mut asm = String::new();
 
         for statement in self.statements.iter_mut() {
-            let stmt =
-                statement.borrow_mut().asm(ctx.clone())?;
+            let stmt = statement.borrow_mut().asm(ctx.clone())?;
             if !stmt.is_empty() {
                 asm.push_str("\n");
                 asm.push_str(&stmt.clone());

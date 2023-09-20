@@ -94,17 +94,12 @@ impl Token {
             TokenType::CloseParen => ")".to_string(),
             TokenType::Ampersand => "&".to_string(),
             TokenType::Percent => "%".to_string(),
-            TokenType::Identifier | TokenType::Int => {
-                self.literal.as_ref().unwrap().clone()
-            }
+            TokenType::Identifier | TokenType::Int => self.literal.as_ref().unwrap().clone(),
             TokenType::Comma => ",".to_string(),
             TokenType::Dot => ".".to_string(),
             TokenType::EndStatement => ";".to_string(),
             TokenType::String => {
-                format!(
-                    "\"{}\"",
-                    self.literal.as_ref().unwrap().clone()
-                )
+                format!("\"{}\"", self.literal.as_ref().unwrap().clone())
             }
             TokenType::Equals => "=".to_string(),
             TokenType::DblEquals => "==".to_string(),
@@ -148,10 +143,7 @@ impl Token {
 }
 
 impl Debug for Token {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
             "Token<{:?}>{{ '{}' at {:?} to {:?} }}",

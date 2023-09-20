@@ -18,17 +18,11 @@ pub trait Type: Debug {
     fn is_ptr(&self) -> bool;
     fn str(&self) -> String;
 
-    fn operator_signature(
-        &self,
-        _op: Token,
-    ) -> Option<MutRc<FnType>> {
+    fn operator_signature(&self, _op: Token) -> Option<MutRc<FnType>> {
         None
     }
     fn contains(&self, other: MutRc<dyn Type>) -> bool;
-    fn concrete(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<MutRc<dyn Type>, Error>;
+    fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error>;
     fn cache_id(&self, ctx: MutRc<dyn Context>) -> String;
 
     fn as_fn(&self) -> Option<FnType> {

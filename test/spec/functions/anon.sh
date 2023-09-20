@@ -2,19 +2,19 @@ describe 'Anonymous Functions'
 
 expect '' '
     def main () {
-      let a = def () {}
+      let a = fn () {}
     }
 '
 expect '' '
     def main () {
-      let a = def () {
+      let a = fn () {
         print("hello")
       }
     }
 '
 expect 'hello' '
     def main () {
-      let a = def () {
+      let a = fn () {
         print("hello")
       }
       a()
@@ -24,14 +24,14 @@ expect_err 'UnknownSymbol' '
     def main () {
       let a = 1
 
-      let b = def () int {
+      let b = fn () int {
         return b
       }
     }
 '
 expect '4' '
     def main () {
-      let double = def (a: Int) Int {
+      let double = fn (a: Int) Int {
         return a * 2
       }
       print(double(2).Str())
@@ -39,7 +39,7 @@ expect '4' '
 '
 expect '5' '
     def main () {
-      let five = def () Int {
+      let five = fn () Int {
         return 5
       }
       print(five().Str())
@@ -47,10 +47,10 @@ expect '5' '
 '
 expect_err 'UnknownSymbol' '
     def main () {
-      let five = def () Int {
+      let five = fn () Int {
         return 5
       }
-      let num = def () Int {
+      let num = fn () Int {
         return five()
       }
     }
@@ -58,14 +58,14 @@ expect_err 'UnknownSymbol' '
 expect_err 'UnknownSymbol' '
     def main () {
         let five = 5
-        def () Int {
+        fn () Int {
             return five
         }
     }
 '
 expect '' '
     def main () {
-      def () {
+      fn () {
         return main()
       }
     }
@@ -73,13 +73,13 @@ expect '' '
 expect '' '
     def g () {}
     def main () {
-      def () {
+      fn () {
         g()
       }
     }
 '
 expect_err 'SyntaxError' '
-    (def () {
+    (fn () {
         print("hi");
     })();
 '

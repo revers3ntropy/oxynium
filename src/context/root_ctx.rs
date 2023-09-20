@@ -71,10 +71,7 @@ impl Context for RootContext {
         self.err_on_unknowns = true;
     }
 
-    fn set_parent(
-        &mut self,
-        _parent: Rc<RefCell<dyn Context>>,
-    ) {
+    fn set_parent(&mut self, _parent: Rc<RefCell<dyn Context>>) {
         unreachable!()
     }
 
@@ -82,17 +79,11 @@ impl Context for RootContext {
         None
     }
 
-    fn root(
-        &self,
-        self_: MutRc<dyn Context>,
-    ) -> MutRc<dyn Context> {
+    fn root(&self, self_: MutRc<dyn Context>) -> MutRc<dyn Context> {
         self_
     }
 
-    fn global_scope(
-        &self,
-        _self: MutRc<dyn Context>,
-    ) -> MutRc<dyn Context> {
+    fn global_scope(&self, _self: MutRc<dyn Context>) -> MutRc<dyn Context> {
         unreachable!("RootContext::global_scope")
     }
 
@@ -110,10 +101,7 @@ impl Context for RootContext {
         self.allow_overrides
     }
 
-    fn set_current_dir_path(
-        &mut self,
-        _path: &'static Path,
-    ) {
+    fn set_current_dir_path(&mut self, _path: &'static Path) {
         unreachable!()
     }
 
@@ -149,11 +137,7 @@ impl Context for RootContext {
         unreachable!()
     }
 
-    fn set_dec_as_defined(
-        &mut self,
-        _id: &str,
-        _trace_interval: Interval,
-    ) -> Result<(), Error> {
+    fn set_dec_as_defined(&mut self, _id: &str, _trace_interval: Interval) -> Result<(), Error> {
         unreachable!()
     }
 
@@ -170,11 +154,7 @@ impl Context for RootContext {
         unreachable!()
     }
 
-    fn define(
-        &mut self,
-        _symbol: SymbolDef,
-        _trace_interval: Interval,
-    ) -> Result<(), Error> {
+    fn define(&mut self, _symbol: SymbolDef, _trace_interval: Interval) -> Result<(), Error> {
         unreachable!()
     }
 
@@ -186,23 +166,15 @@ impl Context for RootContext {
         unreachable!()
     }
 
-    fn get_definitions(
-        &self,
-    ) -> (Vec<&SymbolDef>, Vec<&SymbolDef>) {
+    fn get_definitions(&self) -> (Vec<&SymbolDef>, Vec<&SymbolDef>) {
         unreachable!()
     }
 
-    fn loop_labels_push(
-        &mut self,
-        start: String,
-        end: String,
-    ) {
+    fn loop_labels_push(&mut self, start: String, end: String) {
         self.loop_label_stack.push((start, end));
     }
 
-    fn loop_labels_pop(
-        &mut self,
-    ) -> Option<(String, String)> {
+    fn loop_labels_pop(&mut self) -> Option<(String, String)> {
         self.loop_label_stack.pop()
     }
 
@@ -214,9 +186,7 @@ impl Context for RootContext {
         self.call_stack.push(frame);
     }
 
-    fn stack_frame_pop(
-        &mut self,
-    ) -> Option<CallStackFrame> {
+    fn stack_frame_pop(&mut self) -> Option<CallStackFrame> {
         self.call_stack.pop()
     }
 
@@ -241,18 +211,11 @@ impl Context for RootContext {
         )
     }
 
-    fn concrete_type_cache_get(
-        &self,
-        id: String,
-    ) -> Option<MutRc<dyn Type>> {
+    fn concrete_type_cache_get(&self, id: String) -> Option<MutRc<dyn Type>> {
         self.concrete_type_cache.get(&id).map(|t| t.clone())
     }
 
-    fn concrete_type_cache_set(
-        &mut self,
-        id: String,
-        t: MutRc<dyn Type>,
-    ) {
+    fn concrete_type_cache_set(&mut self, id: String, t: MutRc<dyn Type>) {
         if self.concrete_type_cache.contains_key(&id) {
             panic!("Type {} already exists in cache", id);
         }

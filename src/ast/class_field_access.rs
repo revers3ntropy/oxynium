@@ -14,16 +14,10 @@ pub struct FieldAccessNode {
 }
 
 impl AstNode for FieldAccessNode {
-    fn setup(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<(), Error> {
+    fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
         self.base.borrow_mut().setup(ctx.clone())
     }
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         let mut unknowns = 0;
 
         let TypeCheckRes {
@@ -39,9 +33,7 @@ impl AstNode for FieldAccessNode {
                 ))
                 .set_interval(self.pos()));
             }
-            return Ok(TypeCheckRes::unknown_and(
-                base_unknowns,
-            ));
+            return Ok(TypeCheckRes::unknown_and(base_unknowns));
         }
         unknowns += base_unknowns;
 
@@ -56,19 +48,14 @@ impl AstNode for FieldAccessNode {
         }
         let base_type = base_type.unwrap();
 
-        let field_type = base_type.field_type(
-            &self.field_name.clone().literal.unwrap(),
-        );
+        let field_type = base_type.field_type(&self.field_name.clone().literal.unwrap());
 
         if field_type.is_none() {
             return if ctx.borrow().throw_on_unknowns() {
                 return Err(type_error(format!(
                     "Class '{}' does not have field '{}'",
                     base_type.str(),
-                    self.field_name
-                        .clone()
-                        .literal
-                        .unwrap(),
+                    self.field_name.clone().literal.unwrap(),
                 ))
                 .set_interval(self.position.clone()));
             } else {
@@ -76,16 +63,10 @@ impl AstNode for FieldAccessNode {
             };
         }
 
-        Ok(TypeCheckRes::from(
-            field_type.unwrap(),
-            unknowns,
-        ))
+        Ok(TypeCheckRes::from(field_type.unwrap(), unknowns))
     }
 
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         let offset = self
             .base
             .borrow()
@@ -94,9 +75,7 @@ impl AstNode for FieldAccessNode {
             .borrow()
             .as_class()
             .unwrap()
-            .field_offset(
-                self.field_name.clone().literal.unwrap(),
-            );
+            .field_offset(self.field_name.clone().literal.unwrap());
 
         Ok(format!(
             "

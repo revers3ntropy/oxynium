@@ -19,13 +19,7 @@ pub struct MacroCallNode {
 
 impl MacroCallNode {
     pub fn get_macro(&self) -> Option<Rc<dyn Macro>> {
-        match self
-            .identifier
-            .literal
-            .as_ref()
-            .unwrap()
-            .as_str()
-        {
+        match self.identifier.literal.as_ref().unwrap().as_str() {
             "asm" => Some(Rc::new(AsmMacro {
                 position: self.position.clone(),
                 args: self.args.clone(),
@@ -40,10 +34,7 @@ impl MacroCallNode {
 }
 
 impl AstNode for MacroCallNode {
-    fn setup(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<(), Error> {
+    fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
         let macro_ = self.get_macro();
         if macro_.is_none() {
             return Err(unknown_symbol(format!(
@@ -52,22 +43,14 @@ impl AstNode for MacroCallNode {
             ))
             .set_interval(self.position.clone()));
         }
-        self.resolved =
-            Some(macro_.unwrap().resolve(ctx.clone())?);
+        self.resolved = Some(macro_.unwrap().resolve(ctx.clone())?);
 
-        self.resolved
-            .clone()
-            .unwrap()
-            .borrow_mut()
-            .setup(ctx)?;
+        self.resolved.clone().unwrap().borrow_mut().setup(ctx)?;
 
         Ok(())
     }
 
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         self.resolved
             .clone()
             .unwrap()
@@ -75,15 +58,8 @@ impl AstNode for MacroCallNode {
             .type_check(ctx.clone())
     }
 
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
-        self.resolved
-            .clone()
-            .unwrap()
-            .borrow_mut()
-            .asm(ctx.clone())
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
+        self.resolved.clone().unwrap().borrow_mut().asm(ctx.clone())
     }
 
     fn pos(&self) -> Interval {

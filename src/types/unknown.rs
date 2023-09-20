@@ -8,10 +8,7 @@ use std::fmt;
 pub struct UnknownType;
 
 impl fmt::Debug for UnknownType {
-    fn fmt(
-        &self,
-        f: &mut fmt::Formatter<'_>,
-    ) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "?")
     }
 }
@@ -29,10 +26,7 @@ impl Type for UnknownType {
         true
     }
 
-    fn concrete(
-        &self,
-        _ctx: MutRc<dyn Context>,
-    ) -> Result<MutRc<dyn Type>, Error> {
+    fn concrete(&self, _ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
         Ok(new_mut_rc(self.clone()))
     }
 

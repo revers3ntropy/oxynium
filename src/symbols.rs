@@ -58,22 +58,16 @@ const RESERVED_KEYWORDS: [&str; 50] = [
 
 pub fn is_valid_identifier(s: &str) -> bool {
     s.chars().next().map_or(false, |c| {
-        c.is_alphabetic()
-            || c == '_'
-            || c == '$'
-            || c == '.'
-    }) && s.chars().all(|c| {
-        c.is_alphanumeric()
-            || c == '_'
-            || c == '$'
-            || c == '.'
-    }) && !s.as_bytes()[0].is_ascii_digit()
+        c.is_alphabetic() || c == '_' || c == '$' || c == '.'
+    }) && s
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '_' || c == '$' || c == '.')
+        && !s.as_bytes()[0].is_ascii_digit()
         && !s.starts_with("_$")
 }
 
 pub fn can_declare_with_identifier(s: &str) -> bool {
-    is_valid_identifier(s)
-        && !RESERVED_KEYWORDS.contains(&s)
+    is_valid_identifier(s) && !RESERVED_KEYWORDS.contains(&s)
 }
 
 #[derive(Debug, Clone)]
@@ -102,11 +96,7 @@ impl SymbolDec {
     }
 
     pub fn str(&self) -> String {
-        format!(
-            "{}: {}",
-            self.name,
-            self.type_.borrow().str()
-        )
+        format!("{}: {}", self.name, self.type_.borrow().str())
     }
 }
 

@@ -10,17 +10,13 @@ pub struct BreakNode {
 }
 
 impl AstNode for BreakNode {
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         let labels = ctx.borrow().loop_label_peak();
         if labels.is_none() {
-            return Err(syntax_error(
-                "'break' statement outside of loop"
-                    .to_string(),
-            )
-            .set_interval(self.pos()));
+            return Err(
+                syntax_error("'break' statement outside of loop".to_string())
+                    .set_interval(self.pos()),
+            );
         }
         Ok(format!(
             "

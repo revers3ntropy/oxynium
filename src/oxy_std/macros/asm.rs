@@ -15,22 +15,15 @@ pub struct AsmMacro {
 }
 
 impl Macro for AsmMacro {
-    fn resolve(
-        &self,
-        _ctx: MutRc<dyn Context>,
-    ) -> Result<MutRc<dyn AstNode>, Error> {
+    fn resolve(&self, _ctx: MutRc<dyn Context>) -> Result<MutRc<dyn AstNode>, Error> {
         let mut args = self.args.clone();
 
         if args.len() != 1 {
-            return Err(type_error(format!(
-                "macro `asm` takes exactly 1 argument"
-            ))
-            .set_interval(self.position.clone()));
+            return Err(type_error(format!("macro `asm` takes exactly 1 argument"))
+                .set_interval(self.position.clone()));
         }
         let arg = args.remove(0);
-        if let Some(as_str_node) =
-            arg.borrow().as_str_node()
-        {
+        if let Some(as_str_node) = arg.borrow().as_str_node() {
             return Ok(new_mut_rc(RawAsmNode {
                 asm: as_str_node.value.clone(),
                 return_type: new_mut_rc(SymbolAccess {
@@ -43,8 +36,9 @@ impl Macro for AsmMacro {
                 }),
             }));
         }
-        return Err(type_error(format!(
-            "Argument to macro `asm` must be a string literal"
-        )).set_interval(self.position.clone()));
+        return Err(
+            type_error(format!("Argument to macro `asm` must be a string literal"))
+                .set_interval(self.position.clone()),
+        );
     }
 }

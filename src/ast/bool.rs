@@ -11,21 +11,12 @@ pub struct BoolNode {
 }
 
 impl AstNode for BoolNode {
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         Ok(TypeCheckRes::from_ctx(&ctx, "Bool", 0, true))
     }
 
-    fn asm(
-        &mut self,
-        _ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
-        Ok(format!(
-            "\n push {} \n",
-            if self.value { 1 } else { 0 }
-        ))
+    fn asm(&mut self, _ctx: MutRc<dyn Context>) -> Result<String, Error> {
+        Ok(format!("\n push {} \n", if self.value { 1 } else { 0 }))
     }
 
     fn pos(&self) -> Interval {

@@ -16,24 +16,14 @@ pub struct OptionalTypeNode {
 }
 
 impl AstNode for OptionalTypeNode {
-    fn setup(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<(), Error> {
+    fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
         self.value.borrow_mut().setup(ctx)
     }
 
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
-        let root_ctx =
-            ctx.clone().borrow().root(ctx.clone());
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
+        let root_ctx = ctx.clone().borrow().root(ctx.clone());
 
-        let option = root_ctx
-            .borrow()
-            .get_dec_from_id("Option")
-            .type_;
+        let option = root_ctx.borrow().get_dec_from_id("Option").type_;
 
         let generics_ctx = Scope::new_local(root_ctx);
 
@@ -49,8 +39,7 @@ impl AstNode for OptionalTypeNode {
             .literal
             .unwrap();
 
-        let TypeCheckRes { unknowns, t, .. } =
-            self.value.borrow().type_check(ctx.clone())?;
+        let TypeCheckRes { unknowns, t, .. } = self.value.borrow().type_check(ctx.clone())?;
 
         generics_ctx.borrow_mut().declare(
             SymbolDec {
@@ -68,8 +57,7 @@ impl AstNode for OptionalTypeNode {
             self.position.clone(),
         )?;
 
-        let type_res =
-            option.borrow().concrete(generics_ctx)?;
+        let type_res = option.borrow().concrete(generics_ctx)?;
 
         Ok(TypeCheckRes::from(type_res, unknowns))
     }
@@ -78,9 +66,7 @@ impl AstNode for OptionalTypeNode {
         self.position.clone()
     }
 
-    fn as_type_generic_expr(
-        &self,
-    ) -> Option<GenericTypeNode> {
+    fn as_type_generic_expr(&self) -> Option<GenericTypeNode> {
         Some(GenericTypeNode {
             base: new_mut_rc(TypeNode {
                 identifier: Token {

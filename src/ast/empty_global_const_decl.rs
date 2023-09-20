@@ -3,9 +3,7 @@ use crate::context::Context;
 use crate::error::{syntax_error, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
-use crate::symbols::{
-    is_valid_identifier, SymbolDec, SymbolDef,
-};
+use crate::symbols::{is_valid_identifier, SymbolDec, SymbolDef};
 use crate::util::MutRc;
 
 #[derive(Debug)]
@@ -18,13 +16,8 @@ pub struct EmptyGlobalConstNode {
 }
 
 impl AstNode for EmptyGlobalConstNode {
-    fn setup(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<(), Error> {
-        if !is_valid_identifier(
-            &self.identifier.clone().literal.unwrap(),
-        ) {
+    fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
+        if !is_valid_identifier(&self.identifier.clone().literal.unwrap()) {
             return Err(syntax_error(format!(
                 "Invalid global variable '{}'",
                 self.identifier.clone().literal.unwrap()
@@ -33,34 +26,21 @@ impl AstNode for EmptyGlobalConstNode {
         }
         self.type_.borrow_mut().setup(ctx.clone())
     }
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         let TypeCheckRes {
             t: type_, unknowns, ..
-        } = self
-            .type_
-            .borrow_mut()
-            .type_check(ctx.clone())?;
+        } = self.type_.borrow_mut().type_check(ctx.clone())?;
 
         let id = if !type_.borrow().is_ptr() {
             // deref if it shouldn't stay as a pointer
-            format!(
-                "qword [{}]",
-                self.identifier.clone().literal.unwrap()
-            )
+            format!("qword [{}]", self.identifier.clone().literal.unwrap())
         } else {
             self.identifier.clone().literal.unwrap()
         };
 
         ctx.borrow_mut().declare(
             SymbolDec {
-                name: self
-                    .identifier
-                    .clone()
-                    .literal
-                    .unwrap(),
+                name: self.identifier.clone().literal.unwrap(),
                 id,
                 is_constant: true,
                 is_type: false,
@@ -74,27 +54,19 @@ impl AstNode for EmptyGlobalConstNode {
             self.pos(),
         )?;
 
-        Ok(TypeCheckRes::from_ctx(
-            &ctx, "Void", unknowns, true,
-        ))
+        Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns, true))
     }
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
                 "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
                 self.identifier.clone().literal.unwrap()
-            )).set_interval((self.pos().0, self.identifier.end.clone())));
+            ))
+            .set_interval((self.pos().0, self.identifier.end.clone())));
         }
         ctx.borrow_mut().define(
             SymbolDef {
-                name: self
-                    .identifier
-                    .clone()
-                    .literal
-                    .unwrap(),
+                name: self.identifier.clone().literal.unwrap(),
                 data: Some(format!("dq 0")),
                 text: None,
             },

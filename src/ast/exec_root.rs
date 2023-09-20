@@ -15,23 +15,14 @@ pub struct ExecRootNode {
 }
 
 impl AstNode for ExecRootNode {
-    fn setup(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<(), Error> {
+    fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
         self.statements.borrow_mut().setup(ctx.clone())
     }
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         if ctx.borrow().is_frozen() {
             panic!("Cannot type check a frozen context");
         }
-        let TypeCheckRes { mut unknowns, .. } = self
-            .statements
-            .borrow()
-            .type_check(ctx.clone())?;
+        let TypeCheckRes { mut unknowns, .. } = self.statements.borrow().type_check(ctx.clone())?;
 
         // so that things aren't redeclared
         ctx.borrow_mut().freeze();
@@ -43,10 +34,7 @@ impl AstNode for ExecRootNode {
             i += 1;
 
             ctx.borrow_mut().clear_concrete_cache();
-            let res = self
-                .statements
-                .borrow()
-                .type_check(ctx.clone())?;
+            let res = self.statements.borrow().type_check(ctx.clone())?;
 
             // println!(
             //     "(Pass {}) Unknowns: {} ",
@@ -66,27 +54,14 @@ impl AstNode for ExecRootNode {
         self.statements.borrow().type_check(ctx.clone())
     }
 
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
-        let mut res = self
-            .statements
-            .borrow_mut()
-            .asm(ctx.clone())?;
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
+        let mut res = self.statements.borrow_mut().asm(ctx.clone())?;
         let mut ctx_ref = ctx.borrow_mut();
 
-        let (data_defs, text_defs) =
-            ctx_ref.get_definitions();
+        let (data_defs, text_defs) = ctx_ref.get_definitions();
         let data = data_defs
             .iter()
-            .map(|k| {
-                format!(
-                    "{} {}",
-                    k.name,
-                    k.data.as_ref().unwrap()
-                )
-            })
+            .map(|k| format!("{} {}", k.name, k.data.as_ref().unwrap()))
             .collect::<Vec<String>>()
             .join("\n");
 
@@ -94,16 +69,9 @@ impl AstNode for ExecRootNode {
             .iter()
             .map(|k| {
                 if k.name == "main" {
-                    format!(
-                        "_$_oxy_main: \n{}",
-                        k.text.as_ref().unwrap()
-                    )
+                    format!("_$_oxy_main: \n{}", k.text.as_ref().unwrap())
                 } else {
-                    format!(
-                        "{}: \n{}",
-                        k.name,
-                        k.text.as_ref().unwrap()
-                    )
+                    format!("{}: \n{}", k.name, k.text.as_ref().unwrap())
                 }
             })
             .collect::<Vec<String>>()
@@ -121,17 +89,14 @@ impl AstNode for ExecRootNode {
             ));
         }
 
-        let main_decl_option =
-            text_defs.iter().find(|k| k.name == "main");
+        let main_decl_option = text_defs.iter().find(|k| k.name == "main");
         let has_main = main_decl_option.is_some();
 
         if has_main && res != "" {
             return Err(syntax_error(format!(
                 "Cannot have top level statements and 'main' function"
             ))
-            .set_interval(
-                ctx_ref.get_dec_from_id("main").position.clone(),
-            ));
+            .set_interval(ctx_ref.get_dec_from_id("main").position.clone()));
         }
 
         if has_main {
@@ -142,9 +107,7 @@ impl AstNode for ExecRootNode {
             let main_signature = FnType {
                 id: ctx_ref.get_id(),
                 name: "main".to_string(),
-                ret_type: ctx_ref
-                    .get_dec_from_id("Void")
-                    .type_,
+                ret_type: ctx_ref.get_dec_from_id("Void").type_,
                 parameters: vec![],
                 generic_args: HashMap::new(),
                 generic_params_order: vec![],
@@ -163,9 +126,7 @@ impl AstNode for ExecRootNode {
                 return Err(syntax_error(format!(
                     "if main function is declared it must be defined"
                 ))
-                .set_interval(
-                    ctx_ref.get_dec_from_id("main").position.clone(),
-                ));
+                .set_interval(ctx_ref.get_dec_from_id("main").position.clone()));
             }
         }
 

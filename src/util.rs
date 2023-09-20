@@ -64,15 +64,11 @@ pub fn indent(s: String, indent: usize) -> String {
 pub fn read_file(path: &str) -> Result<String, Error> {
     let input_file = File::open(path);
     if input_file.is_err() {
-        return Err(io_error(format!(
-            "Failed to open file '{}'",
-            path
-        )));
+        return Err(io_error(format!("Failed to open file '{}'", path)));
     }
 
     let mut input = String::new();
-    let read_file_result =
-        input_file.unwrap().read_to_string(&mut input);
+    let read_file_result = input_file.unwrap().read_to_string(&mut input);
     if read_file_result.is_err() {
         return Err(io_error(format!(
             "Failed to read file '{}': {}",
@@ -84,9 +80,7 @@ pub fn read_file(path: &str) -> Result<String, Error> {
     Ok(input)
 }
 
-pub unsafe fn string_to_static_str(
-    s: String,
-) -> &'static str {
+pub unsafe fn string_to_static_str(s: String) -> &'static str {
     Box::leak(s.into_boxed_str())
 }
 
@@ -102,12 +96,9 @@ mod tests {
 
     #[test]
     fn intersection() {
-        let map1 =
-            HashMap::from([("a", 1), ("b", 2), ("c", 3)]);
-        let map2 =
-            HashMap::from([("a", 1), ("b", 2), ("d", 4)]);
-        let (in_first, mut in_both, in_second) =
-            super::intersection(&map1, &map2);
+        let map1 = HashMap::from([("a", 1), ("b", 2), ("c", 3)]);
+        let map2 = HashMap::from([("a", 1), ("b", 2), ("d", 4)]);
+        let (in_first, mut in_both, in_second) = super::intersection(&map1, &map2);
         assert_eq!(in_first, vec!["c"]);
         in_both.sort();
         assert_eq!(in_both, vec!["a", "b"]);

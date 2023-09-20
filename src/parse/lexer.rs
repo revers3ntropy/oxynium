@@ -7,13 +7,9 @@ use crate::position::Position;
 use phf::phf_map;
 use std::time::Instant;
 
-static IDENTIFIER_CHARS: &str =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$";
+static IDENTIFIER_CHARS: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$";
 
-const SINGLE_CHAR_TOKENS: phf::Map<
-    &'static str,
-    TokenType,
-> = phf_map! {
+const SINGLE_CHAR_TOKENS: phf::Map<&'static str, TokenType> = phf_map! {
     "+" => TokenType::Plus,
     "-" => TokenType::Sub,
     "*" => TokenType::Astrix,
@@ -39,10 +35,7 @@ const SINGLE_CHAR_TOKENS: phf::Map<
     "\n" => TokenType::NL,
 };
 
-const DOUBLE_CHAR_TOKENS: phf::Map<
-    &'static str,
-    TokenType,
-> = phf_map! {
+const DOUBLE_CHAR_TOKENS: phf::Map<&'static str, TokenType> = phf_map! {
     "||" => TokenType::Or,
     "&&" => TokenType::And,
     ">=" => TokenType::GTE,
@@ -61,11 +54,7 @@ pub struct Lexer {
 }
 
 impl Lexer {
-    pub fn new(
-        input: String,
-        file_name: String,
-        cli_args: Args,
-    ) -> Lexer {
+    pub fn new(input: String, file_name: String, cli_args: Args) -> Lexer {
         Lexer {
             input: input.chars().into_iter().collect(),
             position: Position::new(file_name, -1, 0, -1),
@@ -85,35 +74,29 @@ impl Lexer {
 
         // for performance
 
-        let mut double_char_keys: Vec<&str> =
-            DOUBLE_CHAR_TOKENS
-                .keys()
-                .into_iter()
-                .map(|c| c.clone())
-                .collect();
+        let mut double_char_keys: Vec<&str> = DOUBLE_CHAR_TOKENS
+            .keys()
+            .into_iter()
+            .map(|c| c.clone())
+            .collect();
         // sort so that it is binary-search-able
         double_char_keys.sort();
 
-        let mut single_char_keys: Vec<char> =
-            SINGLE_CHAR_TOKENS
-                .keys()
-                .into_iter()
-                .map(|c| c.chars().next().unwrap())
-                .collect();
+        let mut single_char_keys: Vec<char> = SINGLE_CHAR_TOKENS
+            .keys()
+            .into_iter()
+            .map(|c| c.chars().next().unwrap())
+            .collect();
         single_char_keys.sort();
 
-        let mut id_chars_sorted =
-            IDENTIFIER_CHARS.chars().collect::<Vec<char>>();
+        let mut id_chars_sorted = IDENTIFIER_CHARS.chars().collect::<Vec<char>>();
         id_chars_sorted.sort();
 
         while let Some(c) = self.current_char {
             if c == '\n' {
                 let pos = self.position.clone();
-                while self.position.idx
-                    < self.input.len() as i64
-                    && self.input
-                        [self.position.idx as usize]
-                        == '\n'
+                while self.position.idx < self.input.len() as i64
+                    && self.input[self.position.idx as usize] == '\n'
                 {
                     self.advance();
                 }
@@ -137,12 +120,7 @@ impl Lexer {
 
                 // build a number while we can
                 let mut number = String::new();
-                while self.current_char.is_some()
-                    && self
-                        .current_char
-                        .unwrap()
-                        .is_numeric()
-                {
+                while self.current_char.is_some() && self.current_char.unwrap().is_numeric() {
                     number.push(self.current_char.unwrap());
                     self.advance();
                 }
@@ -166,39 +144,27 @@ impl Lexer {
             }
 
             if c == '/'
-                && self.position.idx
-                    < (self.input.len() - 2) as i64
-                && self.input
-                    [(self.position.idx + 1) as usize]
-                    == '/'
+                && self.position.idx < (self.input.len() - 2) as i64
+                && self.input[(self.position.idx + 1) as usize] == '/'
             {
                 self.advance();
-                while self.current_char.is_some()
-                    && self.current_char.unwrap() != '\n'
-                {
+                while self.current_char.is_some() && self.current_char.unwrap() != '\n' {
                     self.advance();
                 }
                 continue;
             }
 
-            if self.position.idx
-                < (self.input.len() - 2) as i64
-            {
-                let current_and_next = c.to_string()
-                    + &self.input
-                        [(self.position.idx + 1) as usize]
-                        .to_string();
+            if self.position.idx < (self.input.len() - 2) as i64 {
+                let current_and_next =
+                    c.to_string() + &self.input[(self.position.idx + 1) as usize].to_string();
 
                 if double_char_keys
-                    .binary_search(
-                        &current_and_next.as_str(),
-                    )
+                    .binary_search(&current_and_next.as_str())
                     .is_ok()
                 {
                     let start = self.position.clone();
                     tokens.push(Token::new(
-                        DOUBLE_CHAR_TOKENS
-                            [current_and_next.as_str()],
+                        DOUBLE_CHAR_TOKENS[current_and_next.as_str()],
                         None,
                         start,
                         self.position.clone().advance(None),
@@ -221,23 +187,13 @@ impl Lexer {
                 continue;
             }
 
-            return Err(syntax_error(format!(
-                "Unexpected character '{}'",
-                c
-            ))
-            .set_interval((
-                self.position.clone(),
-                Position::unknown(),
-            )));
+            return Err(syntax_error(format!("Unexpected character '{}'", c))
+                .set_interval((self.position.clone(), Position::unknown())));
         }
 
         let start = Instant::now();
         tokens = insert_semi_colons(tokens);
-        perf!(
-            self.cli_args,
-            start,
-            "Insert End-Of-Statements"
-        );
+        perf!(self.cli_args, start, "Insert End-Of-Statements");
 
         Ok(tokens)
     }
@@ -250,9 +206,7 @@ impl Lexer {
             return None;
         }
 
-        let current_char = Some(
-            self.input[self.position.idx as usize] as char,
-        );
+        let current_char = Some(self.input[self.position.idx as usize] as char);
         self.current_char = current_char;
 
         current_char
@@ -262,10 +216,7 @@ impl Lexer {
         let mut identifier = String::new();
         let start = self.position.clone();
 
-        while self.current_char.is_some()
-            && IDENTIFIER_CHARS
-                .contains(self.current_char.unwrap())
-        {
+        while self.current_char.is_some() && IDENTIFIER_CHARS.contains(self.current_char.unwrap()) {
             identifier.push(self.current_char.unwrap());
             self.advance();
         }
@@ -281,9 +232,7 @@ impl Lexer {
         let mut string = String::new();
         let start = self.position.clone();
         self.advance();
-        while self.current_char.is_some()
-            && self.current_char.unwrap() != '"'
-        {
+        while self.current_char.is_some() && self.current_char.unwrap() != '"' {
             if self.current_char.unwrap() == '\\' {
                 self.advance();
                 match self.current_char.unwrap() {
@@ -314,10 +263,8 @@ impl Lexer {
             }
         }
         if self.current_char.is_none() {
-            return Err(syntax_error(
-                "Unterminated string".to_string(),
-            )
-            .set_interval((start, self.position.clone())));
+            return Err(syntax_error("Unterminated string".to_string())
+                .set_interval((start, self.position.clone())));
         }
         self.advance();
         Ok(Token::new(

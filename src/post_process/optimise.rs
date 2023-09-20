@@ -7,15 +7,10 @@ use regex::Regex;
 // ];
 
 const REGISTERS_NO_STACK: [&str; 14] = [
-    "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "r8", "r9",
-    "r10", "r11", "r12", "r13", "r14", "r15",
+    "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15",
 ];
 
-pub fn o1<T>(
-    name: &str,
-    args: &Args,
-    cb: &impl Fn() -> T,
-) -> Option<T> {
+pub fn o1<T>(name: &str, args: &Args, cb: &impl Fn() -> T) -> Option<T> {
     if args.enable.contains(&name.to_string()) {
         Some(cb())
     } else if args.disable.contains(&name.to_string()) {
@@ -28,11 +23,7 @@ pub fn o1<T>(
 }
 
 #[allow(dead_code)]
-pub fn o2<T>(
-    name: &str,
-    args: &Args,
-    cb: &impl Fn() -> T,
-) -> Option<T> {
+pub fn o2<T>(name: &str, args: &Args, cb: &impl Fn() -> T) -> Option<T> {
     if args.enable.contains(&name.to_string()) {
         Some(cb())
     } else if args.disable.contains(&name.to_string()) {
@@ -53,14 +44,10 @@ fn o1_asm(
     o1(name, args, &|| cb(asm.clone())).unwrap_or(asm)
 }
 
-pub fn optimise(
-    asm: Vec<String>,
-    args: &Args,
-) -> Vec<String> {
+pub fn optimise(asm: Vec<String>, args: &Args) -> Vec<String> {
     let mut asm = asm;
 
-    asm =
-        o1_asm("redundant-push", asm, args, redundant_push);
+    asm = o1_asm("redundant-push", asm, args, redundant_push);
     asm = o1_asm("redundant-mov", asm, args, redundant_mov);
     asm = o1_asm("redundant-jmp", asm, args, redundant_jmp);
 
@@ -72,27 +59,22 @@ fn redundant_push(ast: Vec<String>) -> Vec<String> {
 
     #[inline]
     fn valid_push_str(line: &String) -> (bool, String) {
-        let (push, register) =
-            line.split_once(" ").unwrap_or(("", ""));
+        let (push, register) = line.split_once(" ").unwrap_or(("", ""));
         (
             push == "push"
                 && (REGISTERS_NO_STACK.contains(&register)
                     || register.starts_with("qword [")
-                    || !register
-                        .chars()
-                        .any(|c| !c.is_digit(10))),
+                    || !register.chars().any(|c| !c.is_digit(10))),
             register.to_string(),
         )
     }
 
     #[inline]
     fn valid_pop_str(line: &String) -> (bool, String) {
-        let (push, register) =
-            line.split_once(" ").unwrap_or(("", ""));
+        let (push, register) = line.split_once(" ").unwrap_or(("", ""));
         (
             push == "pop"
-                && (REGISTERS_NO_STACK.contains(&register)
-                    || register.starts_with("qword [")),
+                && (REGISTERS_NO_STACK.contains(&register) || register.starts_with("qword [")),
             register.to_string(),
         )
     }
@@ -120,8 +102,7 @@ fn redundant_push(ast: Vec<String>) -> Vec<String> {
             }
             let line = ast[i].clone();
 
-            let (valid_push_line, push_register) =
-                valid_push_str(&line);
+            let (valid_push_line, push_register) = valid_push_str(&line);
             if valid_push_line {
                 pushes.push(push_register);
             } else {
@@ -137,8 +118,7 @@ fn redundant_push(ast: Vec<String>) -> Vec<String> {
             }
             let line = ast[i].clone();
 
-            let (valid_pop_line, pop_register) =
-                valid_pop_str(&line);
+            let (valid_pop_line, pop_register) = valid_pop_str(&line);
             if valid_pop_line {
                 pops.push(pop_register);
             } else {
@@ -168,10 +148,7 @@ fn redundant_push(ast: Vec<String>) -> Vec<String> {
 
                 // add in remaining pushes
                 for push in pushes.clone() {
-                    res.insert(
-                        past_last_push_idx,
-                        format!("push {push}"),
-                    );
+                    res.insert(past_last_push_idx, format!("push {push}"));
                     past_last_push_idx += 1;
                 }
                 for pop in pops.clone() {
@@ -182,17 +159,10 @@ fn redundant_push(ast: Vec<String>) -> Vec<String> {
             }
             used_registers.push(pop_reg.clone());
             if used_registers.contains(&push_reg) {
-                let index = used_registers
-                    .iter()
-                    .position(|x| *x == push_reg)
-                    .unwrap();
+                let index = used_registers.iter().position(|x| *x == push_reg).unwrap();
                 used_registers.remove(index);
             }
-            res.push(format!(
-                "mov {}, {}",
-                pop_reg.clone(),
-                push_reg.clone()
-            ));
+            res.push(format!("mov {}, {}", pop_reg.clone(), push_reg.clone()));
             pushes.pop();
             pops.remove(0);
         }
@@ -261,9 +231,7 @@ fn redundant_jmp(ast: Vec<String>) -> Vec<String> {
         }
         let next = ast[i as usize + 1].clone();
 
-        if !next.ends_with(":")
-            || !line.ends_with(&next[..next.len() - 1])
-        {
+        if !next.ends_with(":") || !line.ends_with(&next[..next.len() - 1]) {
             res.push(line);
         }
     }
@@ -278,31 +246,21 @@ mod tests {
     #[test]
     fn redundant_push() {
         assert_eq!(
-            super::redundant_push(strings_vec![
-                "push r11", "pop r12",
-            ]),
+            super::redundant_push(strings_vec!["push r11", "pop r12",]),
             strings_vec!["mov r12, r11",]
         );
         assert_eq!(
-            super::redundant_push(strings_vec![
-                "push qword [rax]",
-                "pop r12",
-            ]),
+            super::redundant_push(strings_vec!["push qword [rax]", "pop r12",]),
             strings_vec!["mov r12, qword [rax]",]
         );
 
         assert_eq!(
-            super::redundant_push(strings_vec![
-                "push r10", "push r11", "pop r12",
-                "pop r13",
-            ]),
+            super::redundant_push(strings_vec!["push r10", "push r11", "pop r12", "pop r13",]),
             strings_vec!["mov r12, r11", "mov r13, r10",]
         );
 
         assert_eq!(
-            super::redundant_push(strings_vec![
-                "push r10", "push r11", "pop r12",
-            ]),
+            super::redundant_push(strings_vec!["push r10", "push r11", "pop r12",]),
             strings_vec!["push r10", "mov r12, r11",]
         );
 
@@ -326,77 +284,44 @@ mod tests {
         );
 
         assert_eq!(
-            super::redundant_push(strings_vec![
-                "push rax", "push rbx", "pop rbx",
-                "pop rax",
-            ]),
+            super::redundant_push(strings_vec!["push rax", "push rbx", "pop rbx", "pop rax",]),
             strings_vec!["mov rbx, rbx", "mov rax, rax",]
         );
 
         assert_eq!(
-            super::redundant_push(strings_vec![
-                "push rbx", "push rax", "pop rbx",
-                "pop rax",
-            ]),
-            strings_vec![
-                "push rbx",
-                "mov rbx, rax",
-                "pop rax",
-            ]
+            super::redundant_push(strings_vec!["push rbx", "push rax", "pop rbx", "pop rax",]),
+            strings_vec!["push rbx", "mov rbx, rax", "pop rax",]
         );
 
         assert_eq!(
             super::redundant_push(strings_vec![
-                "push r12", "push rbx", "push rax",
-                "pop rbx", "pop rax", "pop r12",
+                "push r12", "push rbx", "push rax", "pop rbx", "pop rax", "pop r12",
             ]),
-            strings_vec![
-                "push r12",
-                "push rbx",
-                "mov rbx, rax",
-                "pop rax",
-                "pop r12",
-            ]
+            strings_vec!["push r12", "push rbx", "mov rbx, rax", "pop rax", "pop r12",]
         );
 
         assert_eq!(
-            super::redundant_push(strings_vec![
-                "push rbx", "push rax", "pop rbx",
-                "pop rcx",
-            ]),
-            strings_vec![
-                "push rbx",
-                "mov rbx, rax",
-                "pop rcx",
-            ]
+            super::redundant_push(strings_vec!["push rbx", "push rax", "pop rbx", "pop rcx",]),
+            strings_vec!["push rbx", "mov rbx, rax", "pop rcx",]
         );
     }
 
     #[test]
     fn redundant_mov() {
-        let mut res = super::redundant_mov(strings_vec![
-            "mov r11, r11",
-        ]);
+        let mut res = super::redundant_mov(strings_vec!["mov r11, r11",]);
         assert_eq!(res, Vec::<String>::new());
 
-        res = super::redundant_mov(strings_vec![
-            "mov r11, r12",
-        ]);
+        res = super::redundant_mov(strings_vec!["mov r11, r12",]);
         assert_eq!(res, strings_vec!["mov r11, r12",]);
 
-        res = super::redundant_mov(strings_vec![
-            "mov r11, r12",
-            "mov r11, r11",
-        ]);
+        res = super::redundant_mov(strings_vec!["mov r11, r12", "mov r11, r11",]);
         assert_eq!(res, strings_vec!["mov r11, r12",]);
     }
 
     #[test]
     fn redundant_jmp() {
         assert_eq!(
-            super::redundant_jmp(strings_vec![
-                "jmp L1", "L1:",
-            ]),
+            super::redundant_jmp(strings_vec!["jmp L1", "L1:",]),
             strings_vec!["L1:",]
         );
 
@@ -406,15 +331,11 @@ mod tests {
         );
 
         assert_eq!(
-            super::redundant_jmp(strings_vec![
-                "jmp L1", "jmp L2", "L1:", "L2:",
-            ]),
+            super::redundant_jmp(strings_vec!["jmp L1", "jmp L2", "L1:", "L2:",]),
             strings_vec!["jmp L1", "jmp L2", "L1:", "L2:"]
         );
         assert_eq!(
-            super::redundant_jmp(strings_vec![
-                "jmp L2", "jmp L1", "L1:", "L2:",
-            ]),
+            super::redundant_jmp(strings_vec!["jmp L2", "jmp L1", "L1:", "L2:",]),
             strings_vec!["jmp L2", "L1:", "L2:"]
         );
     }

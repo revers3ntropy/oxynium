@@ -18,17 +18,11 @@ impl StrNode {
 }
 
 impl AstNode for StrNode {
-    fn type_check(
-        &self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         Ok(TypeCheckRes::from_ctx(&ctx, "Str", 0, true))
     }
 
-    fn asm(
-        &mut self,
-        ctx: MutRc<dyn Context>,
-    ) -> Result<String, Error> {
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         let str = self.val().clone();
         let symbols = str.chars();
 
@@ -54,12 +48,9 @@ impl AstNode for StrNode {
             format!("db {} \ndq 0x0", asm)
         };
 
-        let mut symbol_name =
-            ctx.borrow_mut().get_anon_label();
-        if let Some(scope) = ctx.borrow().stack_frame_peak()
-        {
-            symbol_name =
-                format!("{}{}", scope.name, symbol_name);
+        let mut symbol_name = ctx.borrow_mut().get_anon_label();
+        if let Some(scope) = ctx.borrow().stack_frame_peak() {
+            symbol_name = format!("{}{}", scope.name, symbol_name);
         } else {
             symbol_name = format!("main{}", symbol_name);
         }

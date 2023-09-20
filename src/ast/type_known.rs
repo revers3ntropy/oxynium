@@ -12,10 +12,7 @@ pub struct KnownTypeNode {
 }
 
 impl AstNode for KnownTypeNode {
-    fn type_check(
-        &self,
-        _ctx: MutRc<dyn Context>,
-    ) -> Result<TypeCheckRes, Error> {
+    fn type_check(&self, _ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         Ok(TypeCheckRes::from(self.t.clone(), 0))
     }
 
