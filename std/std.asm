@@ -1,5 +1,5 @@
-    extern malloc, memset, memcpy, free
-    extern sprintf
-    extern time
-    extern fopen, fseek, fread, fclose, ftell, fwrite
+    extern _malloc, _memset, _memcpy, _free
+    extern _sprintf
+    extern _time
+    extern _fopen, _fseek, _fread, _fclose, _ftell, _fwrite
     extern __errno_location

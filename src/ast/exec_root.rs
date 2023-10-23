@@ -80,7 +80,6 @@ impl AstNode for ExecRootNode {
         if ctx_ref.exec_mode() == ExecMode::Lib {
             return Ok(format!(
                 "
-                section	.note.GNU-stack
                 section .data
                     {data}
                 section .text
@@ -132,20 +131,19 @@ impl AstNode for ExecRootNode {
 
         Ok(format!(
             "
-            %include \"{}\"
-            section	.note.GNU-stack
-            section .data
-                {STD_DATA_ASM}
-                {data}
-            section .text
-                global main
-            {STD_ASM}
-            {text}
-            main:
-                {res}
-                push 0
-                call exit
-        ",
+                %include \"{}\"
+                section .data
+                    {STD_DATA_ASM}
+                    {data}
+                section .text
+                    global _main
+                {STD_ASM}
+                {text}
+                _main:
+                    {res}
+                    push 0
+                    call exit
+            ",
             ctx_ref.std_asm_path()
         ))
     }

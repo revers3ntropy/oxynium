@@ -19,7 +19,7 @@ def File.open (path: Str, mode: Str) Option<File> {
 		mov rbp, rsp
 		sub rsp, 32
 		and rsp, -16
-		call fopen WRT ..plt
+		call _fopen
 		mov rsp, rbp
 		pop rbp
 
@@ -71,7 +71,7 @@ def File.read_to_str (self) Str {
 		mov rbp, rsp         ; for libc calls
 		sub rsp, 32
 		and rsp, -16
-		call fseek WRT ..plt
+		call _fseek
 		mov rsp, rbp        ; escape libc call alignment
 		pop rbp
 
@@ -84,7 +84,7 @@ def File.read_to_str (self) Str {
 		mov rbp, rsp
 		sub rsp, 32
 		and rsp, -16
-		call ftell WRT ..plt
+		call _ftell
 		mov rsp, rbp
 		pop rbp
 
@@ -98,7 +98,7 @@ def File.read_to_str (self) Str {
 		mov rbp, rsp
 		sub rsp, 32
 		and rsp, -16
-		call fseek WRT ..plt
+		call _fseek
 		mov rsp, rbp
 		pop rbp
 
@@ -120,7 +120,7 @@ def File.read_to_str (self) Str {
 		mov rbp, rsp
 		sub rsp, 32
 		and rsp, -16
-		call fread WRT ..plt
+		call _fread
 		mov rsp, rbp
 		pop rbp
 
@@ -146,7 +146,7 @@ def File.close (self) {
 		mov rbp, rsp
 		sub rsp, 32
 		and rsp, -16
-		call fclose WRT ..plt
+		call _fclose
 		mov rsp, rbp
 		pop rbp
 
@@ -179,7 +179,7 @@ def File.write (self, data: Str) {
 		mov rbp, rsp
 		sub rsp, 32
 		and rsp, -16
-		call fwrite WRT ..plt
+		call _fwrite
 		mov rsp, rbp
 		pop rbp
 	"

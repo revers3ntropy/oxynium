@@ -27,7 +27,7 @@ def Time.current_seconds () Int {
 		xor rdi, rdi
 		sub rsp, 32
 		and rsp, -16
-		call time WRT ..plt ; return time(NULL)
+		call _time ; return time(NULL)
 		push rax
 	")
 }

@@ -40,7 +40,7 @@ def Ptr.allocate <A> (size: Int) Ptr<A> {
 		mov rbp, rsp
 		sub rsp, 32
 		and rsp, -16
-		call malloc WRT ..plt
+		call _malloc
 		mov rsp, rbp
 		pop rbp
 
@@ -56,7 +56,7 @@ def Ptr.allocate <A> (size: Int) Ptr<A> {
 		mov rbp, rsp
 		sub rsp, 32
 		and rsp, -16
-		call memset WRT ..plt
+		call _memset
 		mov rsp, rbp
 		pop rbp
 
@@ -68,7 +68,8 @@ def Ptr.allocate <A> (size: Int) Ptr<A> {
 			ret
 
 		_$_allocate_error:
-			push _$_alloc_err_msg
+			mov rax, _$_alloc_err_msg
+			push rax
 			call panic
 	")
 }

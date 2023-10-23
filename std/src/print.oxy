@@ -1,9 +1,9 @@
-def print (msg="", line_end="\n") {
+def print (msg = "", line_end = "\n") {
 	#asm "
-	    mov rsi, qword [rbp+16] ; pop string
-        mov rax, rsi            ; copy string pointer
+	    mov rsi, qword [rbp + 16] ; pop string
+        mov rax, rsi              ; copy string pointer
 
-        xor rdx, rdx            ; string length
+        xor rdx, rdx              ; string length
 
         ; find length of string
         _$_print_find_length:
@@ -15,8 +15,9 @@ def print (msg="", line_end="\n") {
             jmp _$_print_find_length
 
         _$_print_end_length:
-            mov rax, 1
+            mov rax, 0x02000004
             mov rdi, 1
+            mov rdx, 100
             syscall
 	"
 

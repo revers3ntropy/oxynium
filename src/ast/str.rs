@@ -43,17 +43,18 @@ impl AstNode for StrNode {
 
         // null terminator
         let asm_str = if symbols.into_iter().count() < 1 {
-            format!("dq 0x0")
+            format!("default rel dq 0x0")
         } else {
-            format!("db {} \ndq 0x0", asm)
+            format!("default rel db {} \ndq 0x0", asm)
         };
 
-        let mut symbol_name = ctx.borrow_mut().get_anon_label();
-        if let Some(scope) = ctx.borrow().stack_frame_peak() {
-            symbol_name = format!("{}{}", scope.name, symbol_name);
+        let anon_label = ctx.borrow_mut().get_anon_label();
+        let symbol_name = if let Some(scope) = ctx.borrow().stack_frame_peak() {
+            format!("{}{}", scope.name, anon_label)
         } else {
-            symbol_name = format!("main{}", symbol_name);
-        }
+            // if not currently inside a function (ie, top level statement)
+            format!("_main{}", anon_label)
+        };
 
         ctx.borrow_mut().define_global(
             SymbolDef {
@@ -66,8 +67,9 @@ impl AstNode for StrNode {
 
         Ok(format!(
             "
-            push {symbol_name}
-        "
+                lea rax, {symbol_name}
+                push rax
+            "
         ))
     }
 

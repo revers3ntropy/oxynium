@@ -71,7 +71,7 @@ def List.push (self, value: T, n=1) {
 		mov rbp, rsp
 		sub rsp, 32
 		and rsp, -16
-		call memcpy WRT ..plt    ; memcpy(new list, old list, (old list size - 1) * 8)
+		call _memcpy    ; memcpy(new list, old list, (old list size - 1) * 8)
 		mov rsp, rbp
 		pop rbp
 

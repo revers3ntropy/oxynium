@@ -1,12 +1,12 @@
-def exit (code=0) {
+def exit (code = 0) {
 	#asm "
-		mov rax, 60
+		mov rax, 0x02000001
 		mov rdi, qword [rbp + 16]
 		syscall
 	"
 }
 
-def panic (msg="") {
-	print("PANIC: '" + msg + "'")
+def panic (msg = "") {
+	print(msg)
 	exit(1)
 }

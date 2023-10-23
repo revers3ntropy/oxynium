@@ -172,8 +172,7 @@ fn assemble(
     };
 
     let nasm_out = Command::new("nasm")
-        .arg("-f")
-        .arg("elf64")
+        .arg("-fmacho64")
         .arg(asm_out_file.clone().as_str())
         .arg("-o")
         .arg(o_out_file.clone().as_str())
@@ -197,10 +196,9 @@ fn assemble(
 
         let ls_out = Command::new("gcc")
             .arg("-Wall")
-            .arg("-no-pie")
             .arg(o_out_file.clone().as_str())
             .arg("-e")
-            .arg("main")
+            .arg("start")
             .arg("-o")
             .arg(args.out.clone().as_str())
             .output()

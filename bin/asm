@@ -1,6 +1,6 @@
 #!/bin/bash
 
-nasm -f elf64 "$1" -o "$1.o"
+nasm -f macho64 "$1" -o "$1.o"
 
 gcc -Wall -no-pie "$1.o" -e main -o out
 
