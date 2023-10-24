@@ -1,5 +1,7 @@
 use crate::parse::token::{Token, TokenType};
 
+const NEVER_BEFORE_KEYWORDS: &'static [&'static str] = &["else"];
+
 fn should_insert_between(tok1: &Token, tok2: &Token) -> bool {
     match tok1.token_type {
         TokenType::Identifier
@@ -7,7 +9,10 @@ fn should_insert_between(tok1: &Token, tok2: &Token) -> bool {
         | TokenType::CloseParen
         | TokenType::QM
         | TokenType::String => match tok2.token_type {
-            TokenType::Identifier | TokenType::Int | TokenType::Hash | TokenType::String => true,
+            TokenType::String | TokenType::Int | TokenType::Hash => true,
+            TokenType::Identifier => {
+                !NEVER_BEFORE_KEYWORDS.contains(&tok2.literal.as_ref().unwrap().as_str())
+            }
             _ => false,
         },
         _ => false,

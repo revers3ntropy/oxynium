@@ -14,6 +14,9 @@ expect_err 'TypeError' '
     }
 '
 expect_err 'TypeError' '
+    def main() -> "hi"
+'
+expect_err 'TypeError' '
     def main() {
         return 1;
     };

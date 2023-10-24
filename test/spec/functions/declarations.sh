@@ -9,8 +9,8 @@ expect '' '
     def f (a=1) {}
     def g (g: Str) {}
     def h (g: Str, a: Int) {}
-    def i () Int : 1
-    def j () Void : a()
+    def i () Int -> 1
+    def j () Void -> a()
 '
 expect '' '
     // trailing comma

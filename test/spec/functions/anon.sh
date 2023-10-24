@@ -7,7 +7,7 @@ expect '' '
 '
 expect '' '
     def main () {
-      let a = fn () Int : 1
+      let a = fn () Int -> 1
     }
 '
 expect '' '
@@ -127,6 +127,14 @@ expect_err 'TypeError' '
     }
     def main () {
         do_something(fn <T>(x: T) T { return x })
+    }
+'
+expect_err 'TypeError' '
+    def do_something(f: Fn (Int) Int) {
+        print(f(2).Str())
+    }
+    def main () {
+        do_something(fn (x: Int) -> "")
     }
 '
 expect_err 'SyntaxError' '

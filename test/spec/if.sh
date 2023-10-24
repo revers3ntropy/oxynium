@@ -8,10 +8,17 @@ expect '2' '
       print("2");
     }
 '
-expect '2' '
-    if false : print("1")
-    if true :
+expect '245' '
+    if false -> print("1")
+    if true ->
       print("2")
+
+    // might try to insert a ; before the else!
+    if false -> print("3")
+    else print("4")
+
+    if true -> print("5")
+    else -> print("6")
 '
 expect 'hi' '
     if true {

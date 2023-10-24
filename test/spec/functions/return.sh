@@ -41,6 +41,17 @@ expect_err 'TypeError' '
     };
 '
 expect_err 'TypeError' '
+    def f() Int -> ""
+'
+expect_err 'TypeError' '
+    def f() -> 1
+    print(f())
+'
+expect_err 'h' '
+    def f() -> "h"
+    print(f())
+'
+expect_err 'TypeError' '
     def f() Int {
         return "";
     };

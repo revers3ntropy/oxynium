@@ -78,6 +78,10 @@ impl Type for FnType {
         if let Some(fn_type) = t.borrow().as_fn() {
             let required_args = self.parameters.iter().filter(|a| a.default_value.is_none());
 
+            if !(self.ret_type.borrow().contains(fn_type.ret_type.clone())) {
+                return false;
+            }
+
             if fn_type.parameters.len() < required_args.count()
                 || fn_type.parameters.len() > self.parameters.len()
             {

@@ -38,6 +38,7 @@ pub struct FnDeclarationNode {
     pub has_usage: bool,
     pub is_exported: bool,
     pub is_anon: bool,
+    pub should_infer_return_type: bool,
 }
 
 impl FnDeclarationNode {
@@ -108,6 +109,10 @@ impl FnDeclarationNode {
 
 impl AstNode for FnDeclarationNode {
     fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
+        if self.should_infer_return_type && self.body.is_none() {
+            return Err(type_error(format!("must have a return type or body"))
+                .set_interval(self.identifier.interval()));
+        }
         if !self.is_anon {
             if self.identifier.token_type == TokenType::Identifier {
                 if !can_declare_with_identifier(&self.identifier.clone().literal.unwrap()) {
@@ -152,11 +157,7 @@ impl AstNode for FnDeclarationNode {
             }
         }
 
-        if self.is_anon {
-            self.params_scope = Some(Scope::new_fn_ctx(ctx.borrow().global_scope(ctx.clone())));
-        } else {
-            self.params_scope = Some(Scope::new_fn_ctx(ctx.clone()));
-        }
+        self.params_scope = Some(Scope::new_fn_ctx(ctx.clone()));
 
         for param in &self.params {
             if param.default_value.is_some() {
@@ -395,15 +396,26 @@ impl AstNode for FnDeclarationNode {
                 .type_check(self.params_scope.clone().unwrap())?;
             unknowns += body_unknowns;
 
+            let mut inferred_ret_type = ret_type;
+            if self.should_infer_return_type {
+                if !is_returned {
+                    return Err(
+                        type_error(format!("must return a value or specify return type"))
+                            .set_interval(self.identifier.interval()),
+                    );
+                }
+                this_type.borrow_mut().ret_type = body_ret_type.clone();
+                inferred_ret_type = body_ret_type.clone();
+            }
+
             if is_returned
                 && !always_returns
-                && !ret_type.borrow().contains(get_type!(&ctx, "Void"))
+                && !inferred_ret_type.borrow().contains(get_type!(&ctx, "Void"))
             {
-                return Err(type_error(format!(
-                    "Function '{}' doesn't always return a value",
-                    self.id()
-                ))
-                .set_interval(self.identifier.interval()));
+                return Err(
+                    type_error(format!("'{}' doesn't always return a value", self.id()))
+                        .set_interval(self.identifier.interval()),
+                );
             }
 
             let body_ret_type = if is_returned {
@@ -411,11 +423,11 @@ impl AstNode for FnDeclarationNode {
             } else {
                 get_type!(ctx, "Void")
             };
-            if !ret_type.borrow().contains(body_ret_type.clone()) {
+            if !inferred_ret_type.borrow().contains(body_ret_type.clone()) {
                 return Err(type_error(format!(
-                    "Function `{}` has return type `{}` but found `{}` being returned",
+                    "`{}` has return type `{}` but found `{}` being returned",
                     self.identifier.str(),
-                    ret_type.borrow().str(),
+                    inferred_ret_type.borrow().str(),
                     body_ret_type.borrow().str()
                 ))
                 .set_interval(self.identifier.interval()));

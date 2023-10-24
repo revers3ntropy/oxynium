@@ -345,12 +345,12 @@ impl Parser {
         res
     }
 
-    // Scope ::
+    /// Scope ::= ('{' Statements '}') | ('->' Statement)
     fn scope(&mut self, make_scope_node: bool) -> ParseResults {
         let mut res = ParseResults::new();
 
-        if self.current_matches(TokenType::Colon, None) {
-            consume!(Colon, self, res);
+        if self.current_matches(TokenType::Arrow, None) {
+            consume!(Arrow, self, res);
             let start = self.last_tok().unwrap().start.clone();
 
             let statements = res.register(self.statement());
@@ -1242,7 +1242,9 @@ impl Parser {
 
         if self.current_matches(TokenType::Identifier, Some("else".to_string())) {
             self.advance(&mut res);
-            if self.current_matches(TokenType::OpenBrace, None) {
+            if self.current_matches(TokenType::OpenBrace, None)
+                || self.current_matches(TokenType::Arrow, None)
+            {
                 else_body = res.register(self.scope(true));
                 ret_on_err!(res);
             } else {
@@ -1666,6 +1668,7 @@ impl Parser {
                 Position::unknown(),
             ),
         });
+        let mut has_empty_return_type = true;
 
         // needs updating when the possible values after a return type
         // change. For now:
@@ -1673,20 +1676,22 @@ impl Parser {
         // - Comma for undefined method
         // - EndStatement for undefined function
         // - OpenBrace for the function definition
-        // - Colon for single statement function definition
+        // - Arrow for single statement function definition
         if !self.current_matches(TokenType::OpenBrace, None)
             && !self.current_matches(TokenType::Comma, None)
-            && !self.current_matches(TokenType::Colon, None)
+            && !self.current_matches(TokenType::Arrow, None)
             && !self.current_matches(TokenType::EndStatement, None)
             && self.current_tok().is_some()
         {
             let ret_type_option = res.register(self.type_expr(None));
             ret_on_err!(res);
             ret_type = ret_type_option.unwrap();
+            has_empty_return_type = false;
         }
 
+        // check for no body case
         if !(self.current_matches(TokenType::OpenBrace, None)
-            || self.current_matches(TokenType::Colon, None))
+            || self.current_matches(TokenType::Arrow, None))
         {
             if is_external_method {
                 res.failure(
@@ -1720,6 +1725,7 @@ impl Parser {
                 has_usage: false,
                 is_exported,
                 is_anon,
+                should_infer_return_type: false,
             }));
             return res;
         }
@@ -1733,20 +1739,22 @@ impl Parser {
             return res;
         }
 
-        // TODO: check for colon and return value after if present, otherwise use normal scope
+        // TODO: check for '->'' and return value after if present, otherwise use normal scope
+        let mut should_infer_return_type = false;
         let body;
         if self.current_matches(TokenType::OpenBrace, None) {
             let scope = res.register(self.scope(false));
             ret_on_err!(res);
             body = Some(scope.unwrap());
         } else {
-            consume!(Colon, self, res);
+            consume!(Arrow, self, res);
             let start = self.last_tok().unwrap().start;
             body = Some(new_mut_rc(ReturnNode {
                 value: res.register(self.expression()),
                 position: (start, self.last_tok().unwrap().end.clone()),
             }));
             ret_on_err!(res);
+            should_infer_return_type = has_empty_return_type;
         }
 
         res.success(new_mut_rc(FnDeclarationNode {
@@ -1762,6 +1770,7 @@ impl Parser {
             has_usage: false,
             is_exported,
             is_anon,
+            should_infer_return_type,
         }));
         res
     }

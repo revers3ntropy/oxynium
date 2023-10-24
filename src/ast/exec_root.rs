@@ -80,12 +80,12 @@ impl AstNode for ExecRootNode {
         if ctx_ref.exec_mode() == ExecMode::Lib {
             return Ok(format!(
                 "
-                section	.note.GNU-stack
-                section .data
-                    {data}
-                section .text
-                    {text}
-            "
+                    section	.note.GNU-stack
+                    section .data
+                        {data}
+                    section .text
+                        {text}
+                "
             ));
         }
 
@@ -104,6 +104,7 @@ impl AstNode for ExecRootNode {
 
             let main_decl = ctx_ref.get_dec_from_id("main");
             let main_type = main_decl.type_.clone();
+            println!("main type: {}", main_type.borrow().str());
             let main_signature = FnType {
                 id: ctx_ref.get_id(),
                 name: "main".to_string(),

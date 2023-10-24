@@ -47,8 +47,18 @@ expect '' '
     class S {
         def f(self, a: Int) {}
     }
-    (new S{}).f(1);
-    new S.f(1);
+    class T {
+        def f(self, a: Int) -> a
+    }
+
+    def main () {
+        (new S{}).f(1);
+        new S.f(1);
+
+        new T{}.f(1);
+        (new T).f(1);
+        new T.f(1);
+    }
 '
 
 

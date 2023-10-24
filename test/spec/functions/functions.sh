@@ -18,7 +18,7 @@ expect '12345' '
 expect '3' '
     def g() {
         2; // just push a value to the stack
-        // Ensures the stack is cleared when the deftion returns
+        // Ensures the stack is cleared after returns
     };
     def f() {
         1;

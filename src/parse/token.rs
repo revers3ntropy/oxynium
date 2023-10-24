@@ -34,6 +34,7 @@ pub enum TokenType {
     QM,           // ?
     DblQM,        // ??
     NL,           // \n
+    Arrow,        // ->
 }
 
 impl TokenType {
@@ -68,15 +69,6 @@ impl Token {
             literal,
             start,
             end,
-        }
-    }
-
-    pub fn clone(&self) -> Token {
-        Token {
-            token_type: self.token_type.clone(),
-            literal: self.literal.clone(),
-            start: self.start.clone(),
-            end: self.end.clone(),
         }
     }
 
@@ -118,6 +110,7 @@ impl Token {
             TokenType::QM => "?".to_string(),
             TokenType::DblQM => "??".to_string(),
             TokenType::NL => "\\n".to_string(),
+            TokenType::Arrow => "->".to_string(),
         }
     }
 
