@@ -7,6 +7,11 @@ expect '' '
 '
 expect '' '
     def main () {
+      let a = fn () Int : 1
+    }
+'
+expect '' '
+    def main () {
       let a = fn () {
         print("hello")
       }
@@ -154,4 +159,15 @@ expect '4' '
     }
     const x = 3
     print(apply!<Int, Int>(x, add_one).Str())
+'
+
+expect '' '
+    def make_mapper<T>(a: T, pick_a = false) Fn(T) T {
+        return fn (b: T) T {
+            if pick_a {
+                return a
+            }
+            return b
+        }
+    }
 '

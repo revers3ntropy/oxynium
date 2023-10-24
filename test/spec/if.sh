@@ -8,6 +8,11 @@ expect '2' '
       print("2");
     }
 '
+expect '2' '
+    if false : print("1")
+    if true :
+      print("2")
+'
 expect 'hi' '
     if true {
       print("hi");

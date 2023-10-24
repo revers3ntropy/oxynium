@@ -32,7 +32,7 @@ impl AstNode for WhileLoopNode {
 
             if !get_type!(ctx, "Bool").borrow().contains(cond_type) {
                 return Err(
-                    type_error("while loop condition must be a bool".to_string())
+                    type_error("while loop condition must be of type Bool".to_string())
                         .set_interval(condition.borrow_mut().pos()),
                 );
             }
@@ -49,9 +49,13 @@ impl AstNode for WhileLoopNode {
 
         ctx.borrow_mut()
             .loop_labels_push(start_lbl.clone(), end_lbl.clone());
+
+        // loop label exists on loop label stack just inside loop body
         let body = self.statements.borrow_mut().asm(ctx.clone())?;
+
         ctx.borrow_mut().loop_labels_pop();
 
+        // `while {}` is forever loop
         if self.condition.is_none() {
             return Ok(format!(
                 "

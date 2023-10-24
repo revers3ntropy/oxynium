@@ -39,7 +39,7 @@ impl AstNode for IfNode {
         unknowns += comp_unknowns;
 
         if !get_type!(ctx, "Bool").borrow().contains(comp_type) {
-            return Err(type_error("if condition must be a bool".to_string())
+            return Err(type_error("if condition must be of type Bool".to_string())
                 .set_interval(self.comparison.borrow().pos()));
         }
 
@@ -102,27 +102,27 @@ impl AstNode for IfNode {
 
             Ok(format!(
                 "
-                {comp}
-                pop rax
-                test rax, rax     ; if evaluates to false, don't do body
-                je {else_lbl}
-                {body}
-                jmp {after_lbl}
-                {else_lbl}:
-                {else_body}
-                {after_lbl}:
-            "
+                    {comp}
+                    pop rax
+                    test rax, rax     ; if evaluates to false, don't do body
+                    je {else_lbl}
+                    {body}
+                    jmp {after_lbl}
+                    {else_lbl}:
+                    {else_body}
+                    {after_lbl}:
+                "
             ))
         } else {
             Ok(format!(
                 "
-                {comp}
-                pop rax
-                test rax, rax     ; if evaluates to false, don't do body
-                je {after_lbl}
-                {body}
-                {after_lbl}:
-            "
+                    {comp}
+                    pop rax
+                    test rax, rax     ; if evaluates to false, don't do body
+                    je {after_lbl}
+                    {body}
+                    {after_lbl}:
+                "
             ))
         }
     }

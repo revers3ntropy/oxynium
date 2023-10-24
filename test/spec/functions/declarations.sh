@@ -3,12 +3,14 @@ describe 'Function Declarations'
 expect '' '
     def a () {}
     def b (a: Int, b: Bool, c: Str) {}
-    def c () Void;
+    def c () Void
     def d (a: Int) Void {}
     def e (a=1,b=1) {}
     def f (a=1) {}
     def g (g: Str) {}
     def h (g: Str, a: Int) {}
+    def i () Int : 1
+    def j () Void : a()
 '
 expect '' '
     // trailing comma

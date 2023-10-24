@@ -345,8 +345,32 @@ impl Parser {
         res
     }
 
+    // Scope ::
     fn scope(&mut self, make_scope_node: bool) -> ParseResults {
         let mut res = ParseResults::new();
+
+        if self.current_matches(TokenType::Colon, None) {
+            consume!(Colon, self, res);
+            let start = self.last_tok().unwrap().start.clone();
+
+            let statements = res.register(self.statement());
+            ret_on_err!(res);
+
+            let end = self.last_tok().unwrap().end.clone();
+
+            if make_scope_node {
+                res.success(new_mut_rc(ScopeNode {
+                    ctx: None,
+                    body: statements.unwrap(),
+                    position: (start, end),
+                    err_source: None,
+                }));
+            } else {
+                res.success(statements.unwrap());
+            }
+            return res;
+        }
+
         consume!(OpenBrace, self, res);
 
         let start = self.last_tok().unwrap().start.clone();
@@ -360,13 +384,14 @@ impl Parser {
             return res;
         }
 
-        let mut statements: Option<MutRc<dyn AstNode>> = Some(new_mut_rc(PassNode {
-            position: (start.clone(), self.current_tok().unwrap().end.clone()),
-        }));
-
+        let statements: Option<MutRc<dyn AstNode>>;
         if !self.current_matches(TokenType::CloseBrace, None) {
             statements = res.register(self.statements());
             ret_on_err!(res);
+        } else {
+            statements = Some(new_mut_rc(PassNode {
+                position: (start.clone(), self.current_tok().unwrap().end.clone()),
+            }));
         }
 
         consume!(CloseBrace, self, res);
@@ -1461,7 +1486,8 @@ impl Parser {
         )
     }
 
-    /// FuncDef ::= (Identifier ('.' Identifier)?)? ('<' Identifier (',' Identifier)*'>')? '(' Parameters? ')' Type? '{' Scope '}'
+    /// FuncDef ::= (Identifier ('.' Identifier)?)? ('<' Identifier (',' Identifier)*'>')?
+    ///             '(' Parameters? ')' Type? '{' Scope '}'
     fn function_declaration(
         &mut self,
         is_external: bool,
@@ -1647,8 +1673,10 @@ impl Parser {
         // - Comma for undefined method
         // - EndStatement for undefined function
         // - OpenBrace for the function definition
+        // - Colon for single statement function definition
         if !self.current_matches(TokenType::OpenBrace, None)
             && !self.current_matches(TokenType::Comma, None)
+            && !self.current_matches(TokenType::Colon, None)
             && !self.current_matches(TokenType::EndStatement, None)
             && self.current_tok().is_some()
         {
@@ -1657,7 +1685,9 @@ impl Parser {
             ret_type = ret_type_option.unwrap();
         }
 
-        if !self.current_matches(TokenType::OpenBrace, None) {
+        if !(self.current_matches(TokenType::OpenBrace, None)
+            || self.current_matches(TokenType::Colon, None))
+        {
             if is_external_method {
                 res.failure(
                     syntax_error(format!(
@@ -1703,15 +1733,28 @@ impl Parser {
             return res;
         }
 
-        let body = res.register(self.scope(false));
-        ret_on_err!(res);
+        // TODO: check for colon and return value after if present, otherwise use normal scope
+        let body;
+        if self.current_matches(TokenType::OpenBrace, None) {
+            let scope = res.register(self.scope(false));
+            ret_on_err!(res);
+            body = Some(scope.unwrap());
+        } else {
+            consume!(Colon, self, res);
+            let start = self.last_tok().unwrap().start;
+            body = Some(new_mut_rc(ReturnNode {
+                value: res.register(self.expression()),
+                position: (start, self.last_tok().unwrap().end.clone()),
+            }));
+            ret_on_err!(res);
+        }
 
         res.success(new_mut_rc(FnDeclarationNode {
             identifier,
             params_scope: None,
             ret_type,
             params,
-            body: Some(body.unwrap()),
+            body,
             generic_parameters,
             is_external: false,
             position: (start, self.last_tok().unwrap().end.clone()),
