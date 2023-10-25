@@ -100,3 +100,17 @@ fn main() {
 
     print_usage()
 }
+
+// fn f(a: A) -> &'static A {
+//     a.b.c.a
+// }
+// struct A {
+//     b: &'static B,
+// }
+//
+// struct B {
+//     c: &'static C,
+// }
+// struct C {
+//     a: &'static A,
+// }

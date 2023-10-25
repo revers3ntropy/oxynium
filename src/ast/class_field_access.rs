@@ -28,7 +28,7 @@ impl AstNode for FieldAccessNode {
         if base_type_any.borrow().is_unknown() {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(type_error(format!(
-                    "Cannot access field '{}' of unknown type",
+                    "cannot access field '{}' of unknown type",
                     self.field_name.literal.as_ref().unwrap()
                 ))
                 .set_interval(self.pos()));
@@ -40,7 +40,7 @@ impl AstNode for FieldAccessNode {
         let base_type = base_type_any.borrow().as_class();
         if base_type.is_none() {
             return Err(type_error(format!(
-                "Cannot access field `{}` of non-class type '{}'",
+                "cannot access field `{}` of non-class type '{}'",
                 self.field_name.literal.as_ref().unwrap(),
                 base_type_any.borrow().str()
             ))

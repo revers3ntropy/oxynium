@@ -60,7 +60,7 @@ impl AstNode for ClassInitNode {
         {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(unknown_symbol(format!(
-                    "Class {}",
+                    "class '{}'",
                     self.identifier.clone().literal.unwrap(),
                 ))
                 .set_interval(self.identifier.interval()));
@@ -80,7 +80,7 @@ impl AstNode for ClassInitNode {
         let class_type = class_type_raw.borrow().as_class();
         if class_type.is_none() {
             return Err(type_error(format!(
-                "{} is not a class",
+                "`{}` is not a class",
                 self.identifier.clone().literal.unwrap()
             )));
         }
@@ -90,7 +90,7 @@ impl AstNode for ClassInitNode {
 
         if self.generic_args.len() != class_type.generic_params_order.len() {
             return Err(type_error(format!(
-                "Class {} takes {} generic arguments, but {} were given",
+                "class `{}` takes {} generic arguments, but {} were given",
                 self.identifier.clone().literal.unwrap(),
                 class_type.generic_params_order.len(),
                 self.generic_args.len()
@@ -141,7 +141,7 @@ impl AstNode for ClassInitNode {
 
         if extra.len() > 0 {
             return Err(type_error(format!(
-                "Unknown fields in class '{}' initialization: {}",
+                "unknown fields for class `{}`: {}",
                 class_type.str(),
                 extra
                     .iter()
@@ -154,7 +154,8 @@ impl AstNode for ClassInitNode {
 
         if missing.len() > 0 {
             return Err(type_error(format!(
-                "Missing fields in class initialization: {}",
+                "missing fields for class `{}`: {}",
+                class_type.str(),
                 missing
                     .iter()
                     .map(|s| s.clone())
@@ -172,7 +173,7 @@ impl AstNode for ClassInitNode {
                 .contains(instance_fields_hashmap.get(&field).unwrap().clone())
             {
                 return Err(type_error(format!(
-                    "Type mismatch in class initialization field '{field}': Expected {} but found {}",
+                    "type mismatch in class initialization field `{field}`, expected `{}` but found `{}`",
                     type_fields_hashmap.get(&field).unwrap().borrow().str(),
                     instance_fields_hashmap.get(&field).unwrap().borrow().str(),
                 )).set_interval(self.pos()));

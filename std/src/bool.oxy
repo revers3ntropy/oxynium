@@ -15,8 +15,6 @@ def Bool.&& (self, other: Bool) Bool {
 }
 
 def Bool.Str (self) Str {
-	if self {
-		return "true"
-	}
+	if self -> return "true"
 	return "false"
 }

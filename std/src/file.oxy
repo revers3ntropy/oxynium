@@ -37,9 +37,8 @@ def File.open (path: Str, mode: Str) Option<File> {
 	})
 }
 
-def File.is_open (self) Bool {
-	return !self.handle.is_null()
-}
+def File.is_open (self) Bool ->
+    !self.handle.is_null()
 
 def File.read_to_str (self) Str {
 	// src: https://stackoverflow.com/questions/14002954

@@ -133,7 +133,7 @@ impl Context for Scope {
             }
             if !symbol.is_type {
                 panic!(
-                    "(!?) Context is frozen and symbol '{}' doesn't exist yet!",
+                    "(!?) Context is frozen and symbol `{}` doesn't exist yet!",
                     symbol.name
                 );
             }
@@ -143,18 +143,18 @@ impl Context for Scope {
             return self.parent.borrow_mut().declare(symbol, trace_interval);
         }
 
-        if let Some(duplicate) = self.declarations.get(symbol.name.clone().as_str()) {
+        if let Some(original) = self.declarations.get(symbol.name.clone().as_str()) {
             if !symbol.is_type && !self.allow_overrides() {
                 return Err(
                     type_error(format!("symbol `{}` is already declared", symbol.name))
                         .set_interval(trace_interval),
                 );
             }
-            if !duplicate.contains(&symbol) {
+            if !original.contains(&symbol) {
                 return Err(type_error(format!(
-                    "Symbol `{}` redeclared with incompatible type: expected `{}` but found `{}`",
+                    "symbol `{}` redeclared with incompatible type: expected `{}` but found `{}`",
                     symbol.name,
-                    duplicate.type_.borrow().str(),
+                    original.type_.borrow().str(),
                     symbol.type_.borrow().str()
                 ))
                 .set_interval(trace_interval));
@@ -231,7 +231,7 @@ impl Context for Scope {
         let name = symbol.name.clone();
         if self.definitions.get(&name.clone()).is_some() {
             return Err(
-                type_error(format!("Symbol {} is already defined", symbol.name))
+                type_error(format!("symbol {} is already defined", symbol.name))
                     .set_interval(trace_interval),
             );
         }
@@ -251,7 +251,7 @@ impl Context for Scope {
         }
         if self.definitions.get(symbol.name.clone().as_str()).is_some() {
             return Err(
-                type_error(format!("Symbol {} is already defined", symbol.name))
+                type_error(format!("symbol {} is already defined", symbol.name))
                     .set_interval(trace_interval),
             );
         }

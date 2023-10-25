@@ -1,6 +1,6 @@
 // This file is included as a raw string in every Oxynium program
-// and contains the declarations for the Standard Library.
-// The implementations for these definitions can be found under std/src.
+// and contains the declarations for the Standard Library (STD).
+// The implementations for these definitions can be found under /std/src.
 
 primitive Void
 
@@ -10,8 +10,8 @@ primitive Char {
     extern def == (self, other: Char) Bool,
     extern def != (self, other: Char) Bool,
     extern def Str (self) Str,
-    extern def is_digit (self) Bool,
     extern def Int (self) Int,
+    extern def is_digit (self) Bool,
 }
 
 primitive Bool {
@@ -107,8 +107,8 @@ class Result <T, E> {
 	extern def err <Val, Err> (err: Err) Result<Val, Err>,
 	extern def ok <Val, Err> (val: Val) Result<Val, Err>,
 
-	extern def unwrap (self) T,
 	extern def Option (self) Option<T>,
+	extern def unwrap (self) T,
 	extern def error (self) Option<E>,
 }
 

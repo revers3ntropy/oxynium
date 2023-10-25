@@ -1,6 +1,5 @@
-def Ptr.is_null (self) Bool {
-	return Any.cast!<Ptr<T>, Int>(self) == 0
-}
+def Ptr.is_null (self) Bool ->
+	Any.cast!<Ptr<T>, Int>(self) == 0
 
 def Ptr.make <From> (val: From) Ptr<From> {
 	return Any.cast!<Void, Ptr<From>>(#asm "
@@ -73,6 +72,5 @@ def Ptr.allocate <A> (size: Int) Ptr<A> {
 	")
 }
 
-def Ptr.Str (self) Str {
-	return "Ptr@" + Any.cast!<Ptr<T>, Int>(self).Str()
-}
+def Ptr.Str (self) Str ->
+	"Ptr@" + Any.cast!<Ptr<T>, Int>(self).Str()

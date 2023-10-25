@@ -1,34 +1,29 @@
-def Result.err <Val, Err> (err: Err) Result<Val, Err> {
-	return new Result<Val, Err> {
-		value: Any.cast!<Err, Int>(err),
-		ok: false
-	}
-}
-def Result.ok <Val, Err> (val: Val) Result<Val, Err> {
-	return new Result<Val, Err> {
-		value: Any.cast!<Val, Int>(val),
-        ok: true
-	}
+def Result.err <Val, Err> (err: Err) -> new Result<Val, Err> {
+    value: Any.cast!<Err, Int>(err),
+    ok: false
 }
 
+def Result.ok <Val, Err> (val: Val) -> new Result<Val, Err> {
+    value: Any.cast!<Val, Int>(val),
+    ok: true
+}
+
+
 def Result.unwrap (self) T {
-	if self.ok {
+	if self.ok ->
 	    return Any.cast!<Int, T>(self.value)
-	}
 	panic("Tried to unwrap a Result that was an error")
 	return Any.cast!<Int, T>(0)
 }
 
 def Result.Option (self) Option<T> {
-    if self.ok {
+    if self.ok ->
         return Option.some!<T>(Any.cast!<Int, T>(self.value))
-    }
     return Option.none!<T>()
 }
 
 def Result.error (self) Option<E> {
-    if self.ok {
+    if self.ok ->
         return Option.none!<T>()
-    }
     return Option.some!<E>(Any.cast!<Int, E>(self.value))
 }

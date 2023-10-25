@@ -182,7 +182,7 @@ impl AstNode for ClassDeclarationNode {
 
             if !method.is_external && method.body.is_none() {
                 return Err(type_error(format!(
-                    "Non-external method '{}' requires a body",
+                    "non-external method '{}' requires a body",
                     method.identifier.literal.clone().unwrap()
                 ))
                 .set_interval(self_pos));

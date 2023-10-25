@@ -21,12 +21,12 @@ impl SymbolAccess {
 impl AstNode for SymbolAccess {
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.id()) {
-            return Err(syntax_error(format!("Invalid identifier '{}'", self.id())));
+            return Err(syntax_error(format!("invalid identifier '{}'", self.id())));
         }
         if !ctx.borrow_mut().has_dec_with_id(&self.id()) {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(
-                    unknown_symbol(format!("Symbol '{}' does not exist", self.id()))
+                    unknown_symbol(format!("symbol '{}' does not exist", self.id()))
                         .set_interval(self.pos()),
                 );
             }
@@ -48,7 +48,7 @@ impl AstNode for SymbolAccess {
         let decl = ctx.borrow_mut().get_dec_from_id(&self.id());
         if decl.require_init && !decl.is_defined {
             return Err(
-                type_error(format!("Cannot use uninitialized variable '{}'", self.id()))
+                type_error(format!("cannot use uninitialized variable '{}'", self.id()))
                     .set_interval(self.pos()),
             );
         }
@@ -59,8 +59,8 @@ impl AstNode for SymbolAccess {
 
         Ok(format!(
             "
-            push {}
-        ",
+                push {}
+            ",
             ctx.borrow_mut().get_dec_from_id(&self.id()).id
         ))
     }

@@ -46,7 +46,7 @@ impl FnCallNode {
         }
 
         Err(type_error(format!(
-            "Cannot access methods statically for type '{}'",
+            "cannot access methods statically for type '{}'",
             t.borrow().str()
         )))
     }
@@ -79,7 +79,7 @@ impl FnCallNode {
 
                     if class_type.is_none() {
                         return Err(type_error(format!(
-                            "Cannot access methods statically for type '{}'",
+                            "cannot access methods statically for type '{}'",
                             type_type.str()
                         ))
                         .set_interval(self.position.clone()));
@@ -96,7 +96,7 @@ impl FnCallNode {
                     calling_through_instance = false;
                 } else {
                     return Err(type_error(format!(
-                        "Cannot access method of non-class type '{}'",
+                        "cannot access method of non-class type '{}'",
                         obj_tc_res.t.borrow().str()
                     ))
                     .set_interval(self.position.clone()));
@@ -108,7 +108,7 @@ impl FnCallNode {
             if method_type.is_none() {
                 if ctx.borrow().throw_on_unknowns() {
                     return Err(type_error(format!(
-                        "Class '{}' does not have method '{}'",
+                        "class '{}' does not have method '{}'",
                         base_type.str(),
                         self.identifier.clone().literal.unwrap(),
                     ))
@@ -194,7 +194,7 @@ impl AstNode for FnCallNode {
                 return Ok(TypeCheckRes::unknown_and(unknowns));
             }
             return Err(unknown_symbol(format!(
-                "Can't find {} `{}`",
+                "can't find {} `{}`",
                 if base_type.is_some() {
                     format!("method on type `{}`", base_type.unwrap().borrow().str())
                 } else {
@@ -208,12 +208,12 @@ impl AstNode for FnCallNode {
 
         if self.generic_args.len() > fn_type.generic_params_order.len() {
             return Err(type_error(format!(
-                "Too many generic arguments for function `{}`",
+                "too many generic arguments for function `{}`",
                 fn_type.str()
             ))
             .set_interval(self.position.clone())
             .hint(format!(
-                "Function `{}` requires {} generic arguments",
+                "function `{}` requires {} generic arguments",
                 fn_type.str(),
                 fn_type.generic_params_order.len()
             )));
@@ -221,12 +221,12 @@ impl AstNode for FnCallNode {
 
         if self.generic_args.len() < fn_type.generic_params_order.len() {
             return Err(type_error(format!(
-                "Not enough generic arguments for function `{}`",
+                "not enough generic arguments for function `{}`",
                 fn_type.str()
             ))
             .set_interval(self.position.clone())
             .hint(format!(
-                "Function `{}` requires {} generic arguments",
+                "function `{}` requires {} generic arguments",
                 fn_type.str(),
                 fn_type.generic_params_order.len()
             )));

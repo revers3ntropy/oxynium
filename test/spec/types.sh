@@ -88,6 +88,34 @@ expect '' '
     class D
 '
 expect '' '
+    class C {
+        d: D
+    }
+    def f(a: A) D {
+        return a.b.c.d
+    }
+    class B {
+        c: C
+    }
+    class A {
+        b: B
+    }
+    class D
+'
+expect '' '
+    def f(a: A) -> a.b.a.b
+    class A { b: B }
+    def g(a: A) -> a.b.a
+    class B { a: A }
+    def h(a: A) -> a.b
+'
+expect '' '
+    def f(a: A) -> a.b.c.a
+    class A { b: B }
+    class B { c: C }
+    class C { a: A }
+'
+expect '' '
     f(new A { b: new B { c: new C }});
     def f(a: A) C {
         return a.b.c.get_a(a).b.c

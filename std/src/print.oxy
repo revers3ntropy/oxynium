@@ -28,7 +28,6 @@ def print (msg="", line_end="\n") {
 		return
 	}
 
-	if line_end != "" {
+	if line_end != "" ->
 		print(line_end, "")
-	}
 }

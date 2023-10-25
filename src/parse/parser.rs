@@ -1042,7 +1042,7 @@ impl Parser {
         let token_option = self.current_tok();
         if token_option.is_none() {
             res.failure(
-                syntax_error("Unexpected EOF".to_string()),
+                syntax_error("unexpected end of file".to_string()),
                 Some(self.last_tok().unwrap().end.clone().advance(None)),
                 None,
             );
@@ -1057,7 +1057,7 @@ impl Parser {
                 let int_res = int_str.parse::<i64>();
                 if int_res.is_err() {
                     res.failure(
-                        numeric_overflow(format!("Invalid integer literal: '{}'", int_str)),
+                        numeric_overflow(format!("invalid integer literal: `{}`", int_str)),
                         Some(tok.start),
                         Some(tok.end),
                     );
@@ -1526,7 +1526,7 @@ impl Parser {
         if self.next_matches(TokenType::Dot, None) {
             if class_name.is_some() {
                 res.failure(
-                    syntax_error("Unexpected '.'".to_owned()),
+                    syntax_error("Unexpected `.`".to_owned()),
                     Some(self.last_tok().unwrap().end.clone().advance(None)),
                     None,
                 );
@@ -1559,7 +1559,7 @@ impl Parser {
             if self.current_tok().unwrap().overload_op_id().is_none() {
                 res.failure(
                     syntax_error(format!(
-                        "'{}' is not an overloadable operator",
+                        "cannot overload `{}` operator",
                         self.current_tok().unwrap().str()
                     )),
                     Some(self.last_tok().unwrap().start.clone()),
@@ -1570,7 +1570,7 @@ impl Parser {
             if class_name.is_none() {
                 res.failure(
                     syntax_error(format!(
-                        "'{}' is not a valid function name",
+                        "`{}` is not a valid function name",
                         self.current_tok().unwrap().str()
                     )),
                     Some(self.last_tok().unwrap().start.clone()),
@@ -1614,7 +1614,7 @@ impl Parser {
                     if self.current_matches(TokenType::Colon, None) {
                         res.failure(
                             syntax_error(format!(
-                                "Cannot give type annotation to parameter 'self' on method '{}'",
+                                "cannot give type annotation to parameter `self` on method '{}'",
                                 identifier.str()
                             )),
                             Some(self.last_tok().unwrap().start),
@@ -1676,7 +1676,7 @@ impl Parser {
         // - Comma for undefined method
         // - EndStatement for undefined function
         // - OpenBrace for the function definition
-        // - Arrow for single statement function definition
+        // - Arrow for single-statement function body
         if !self.current_matches(TokenType::OpenBrace, None)
             && !self.current_matches(TokenType::Comma, None)
             && !self.current_matches(TokenType::Arrow, None)
@@ -1739,7 +1739,7 @@ impl Parser {
             return res;
         }
 
-        // TODO: check for '->'' and return value after if present, otherwise use normal scope
+        // check for '->' and return value after if present, otherwise use normal scope
         let mut should_infer_return_type = false;
         let body;
         if self.current_matches(TokenType::OpenBrace, None) {

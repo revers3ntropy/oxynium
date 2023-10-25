@@ -16,7 +16,7 @@ impl AstNode for EmptyLocalVarNode {
     fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
         if !is_valid_identifier(&self.identifier) {
             return Err(syntax_error(format!(
-                "Invalid local variable '{}'",
+                "invalid local variable '{}'",
                 self.identifier.clone()
             ))
             .set_interval(self.position.clone()));

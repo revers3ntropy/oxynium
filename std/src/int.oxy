@@ -50,9 +50,8 @@ def Int.== (self, n: Int) Bool {
 	")
 }
 
-def Int.!= (self, n: Int) Bool {
-	return !(self == n)
-}
+def Int.!= (self, n: Int) Bool ->
+	!(self == n)
 
 def Int.< (self, n: Int) Bool {
 	return Any.cast!<Void, Bool>(#asm "
@@ -64,9 +63,8 @@ def Int.< (self, n: Int) Bool {
 	")
 }
 
-def Int.<= (self, n: Int) Bool {
-	return self < n || self == n
-}
+def Int.<= (self, n: Int) Bool ->
+	self < n || self == n
 
 def Int.> (self, n: Int) Bool {
 	return Any.cast!<Void, Bool>(#asm "
@@ -78,28 +76,21 @@ def Int.> (self, n: Int) Bool {
 	")
 }
 
-def Int.>= (self, n: Int) Bool {
-	return self > n || self == n
-}
+def Int.>= (self, n: Int) Bool ->
+	self > n || self == n
 
 def Int.max (self, other = 9223372036854775807) Int {
-	if self > other {
-		return self
-	}
+	if self > other -> return self
 	return other
 }
 
 def Int.min (self, other = -9223372036854775807 - 1) Int {
-	if self < other {
-		return self
-	}
+	if self < other -> return self
 	return other
 }
 
 def Int.abs (self) Int {
-	if self < 0 {
-		return -self
-	}
+	if self < 0 -> return -self
 	return self
 }
 
@@ -139,6 +130,6 @@ def Int.Str (self) Str {
 	")
 }
 
-def Int.Bool (self) Bool {
-    return self != 0
-}
+def Int.Bool (self) Bool ->
+    self != 0
+

@@ -92,7 +92,7 @@ impl FnDeclarationNode {
                         > 0
                     {
                         return Err(type_error(format!(
-                            "Generic parameter `{}` is already defined in class `{}`",
+                            "generic parameter `{}` is already defined in class `{}`",
                             generic.literal.clone().unwrap(),
                             class_name
                         ))
@@ -222,15 +222,17 @@ impl AstNode for FnDeclarationNode {
 
         // don't use param_scope so that the function can have params
         // with the same name as the function
-        let TypeCheckRes {
-            t: ret_type,
-            unknowns: type_check_res_unknowns,
-            ..
-        } = self
+        let ret_type_result = self
             .ret_type
             .borrow()
             .type_check(self.params_scope.clone().unwrap())?;
-        unknowns += type_check_res_unknowns;
+        unknowns += ret_type_result.unknowns;
+
+        let ret_type = if self.should_infer_return_type {
+            new_mut_rc(UnknownType {})
+        } else {
+            ret_type_result.t
+        };
 
         let mut parameters: Vec<FnParamType> = Vec::new();
 
@@ -469,7 +471,7 @@ impl AstNode for FnDeclarationNode {
                 ))
                     .set_interval(self.identifier.interval())
                     .hint(format!(
-                        "Move `{name}` outside of `{}` or make it anonymous with `let {name} = fn () {{ ... }}`",
+                        "move `{name}` outside of `{}` or make it anonymous with `let {name} = fn () {{ ... }}`",
                         stack_frame.name
                     )));
             }
@@ -513,16 +515,16 @@ impl AstNode for FnDeclarationNode {
                 data: None,
                 text: Some(format!(
                     "
-                    push rbp
-                    mov rbp, rsp
-                    {}
-                    {body}
-                {end_label}:
-                    mov rsp, rbp
-                    pop rbp
-                    ret
-                {text}
-                 ",
+                        push rbp
+                        mov rbp, rsp
+                        {}
+                        {body}
+                    {end_label}:
+                        mov rsp, rbp
+                        pop rbp
+                        ret
+                    {text}
+                    ",
                     if stack_space_for_local_vars > 0 {
                         format!("sub rsp, {stack_space_for_local_vars}")
                     } else {

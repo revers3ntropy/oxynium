@@ -1,27 +1,24 @@
-def List.empty <E> () List<E> {
-	return new List<E> {
-		head: new Ptr<E>,
-		size: 0
-	}
+def List.empty <E> () -> new List<E> {
+    head: new Ptr<E>,
+    size: 0
 }
 
-def List.len (self) Int {
+def List.len (self) Int ->
 	// number of elements in list is size of list
 	// divided by size of each element,
 	// which is always 8 bytes
-	return self.size / 8
-}
+	self.size / 8
 
 def List.at (self, i: Int) Option<T> {
-	if self.len() == 0 {
+	if self.len() == 0 ->
 		return Option.none!<T>()
-	}
-	if i < 0 {
+
+	if i < 0 ->
 		return self.at(self.len() + i)
-	}
-	if i < 0 || i >= self.len() {
+
+	if i < 0 || i >= self.len() ->
 		return Option.none!<T>()
-	}
+
 	return Option.some!<T>(self.at_raw(i))
 }
 
@@ -36,12 +33,10 @@ def List.at_raw (self, i: Int) T {
 }
 
 def List.push (self, value: T, n=1) {
-	if n < 0 {
-		return
-	}
-	if n > 1 {
+	if n < 0 -> return
+	if n > 1 ->
 		self.push(value, n - 1)
-	}
+
 	#asm "
 		; #1: Allocate space for old list and new element
 
@@ -88,20 +83,19 @@ def List.push (self, value: T, n=1) {
 	"
 }
 
-def List.Str (self) Str {
-	return "List[" + self.len().Str() + "]"
-}
+def List.Str (self) ->
+	"List[" + self.len().Str() + "]"
 
 def List.set_at (self, idx: Int, val: T) Result<Void, Str> {
-	if self.len() == 0 {
+	if self.len() == 0 ->
 		return Result.err!<Void, Str>("Index out of bounds")
-	}
-	if idx < 0 {
+
+	if idx < 0 ->
 		return self.set_at(self.len() + idx, val)
-	}
-	if idx < 0 || idx >= self.len() {
+
+	if idx < 0 || idx >= self.len() ->
 		return Result.err!<Void, Str>("Index out of bounds")
-	}
+
 	#asm "
 		mov rax, qword [rbp + 16]      ; rax = self
 		mov rcx, qword [rax + 8]       ; rcx = self.size

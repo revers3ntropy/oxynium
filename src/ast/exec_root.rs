@@ -20,7 +20,7 @@ impl AstNode for ExecRootNode {
     }
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         if ctx.borrow().is_frozen() {
-            panic!("Cannot type check a frozen context");
+            panic!("cannot type check a frozen context");
         }
         let TypeCheckRes { mut unknowns, .. } = self.statements.borrow().type_check(ctx.clone())?;
 
@@ -94,7 +94,7 @@ impl AstNode for ExecRootNode {
 
         if has_main && res != "" {
             return Err(syntax_error(format!(
-                "Cannot have top level statements and 'main' function"
+                "cannot have top level statements and 'main' function"
             ))
             .set_interval(ctx_ref.get_dec_from_id("main").position.clone()));
         }

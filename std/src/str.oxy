@@ -29,9 +29,9 @@ def Str.== (self, other: Str) Bool {
 			push rax
 	")
 }
-def Str.!= (self, other: Str) Bool {
-	return !(self == other)
-}
+
+def Str.!= (self, other: Str) Bool ->
+    !(self == other)
 
 /// returns a new string that is the concatenation of lhs and rhs
 def Str.+ (self, other: Str) Str {
@@ -90,9 +90,7 @@ def Str.+ (self, other: Str) Str {
 	")
 }
 
-def Str.Str (self) Str {
-	return self
-}
+def Str.Str (self) -> self
 
 def Str.Utf8Str (self) Utf8Str {
 	if self.utf8_size() == 0 {
@@ -193,28 +191,25 @@ def Str.at_raw (self, i: Int) Char {
 	")
 }
 
-def Str.concat (self, other: Str) Str {
-	return self + other
-}
+def Str.concat (self, other: Str) Str ->
+    self + other
 
-def Str.contains (self, other: Str) Bool {
-	return self.find(other) >= 0
-}
+def Str.contains (self, other: Str) Bool ->
+    self.find(other) >= 0
 
 def Str.find (self, other: Str) Int {
-	if other.len() == 0 {
-		return 0
-	}
+	if other.len() == 0 ->
+	    return 0
+
 	let mut i = 0
 	while i < self.len() {
 		if self.at(i) == other.at(0) {
 			let mut j = 1
 			while j < other.len() && self.at(i + j) == other.at(j) {
-				j += 1
-			}
-			if j == other.len() {
-				return i
-			}
+			    j += 1
+            }
+			if j == other.len() ->
+			    return i
 		}
 		i += 1
 	}
@@ -242,9 +237,7 @@ def Str.len (self) Int {
 }
 
 def Str.repeat (self, n: Int) Str {
-	if n < 1 {
-		return ""
-	}
+	if n < 1 -> return ""
 	// TODO: implement in assembly to make fast
 	return self + self.repeat(n - 1)
 }
@@ -253,18 +246,18 @@ def Str.substr (self, start = 0, end = 9223372036854775807) Str {
 		// TODO: give the end a proper default value.
 		// This will work in all cases (end = 2^63-1 = max Int),
 		// but it's not pretty.
-	if self.len() < 1 {
+	if self.len() < 1 ->
 		return ""
-	}
-	if end < 0 {
+
+	if end < 0 ->
 		return self.substr(start, Int.max(self.len() + end, 0))
-	}
-	if start < 0 {
+
+	if start < 0 ->
 		return self.substr(Int.max(self.len() + start, 0), end)
-	}
-	if start >= end {
+
+	if start >= end ->
 		return ""
-	}
+
 	let actual_end = Int.min(self.len(), end)
 	let mut i = Int.max(start, 0)
 	let mut s = ""
@@ -278,23 +271,23 @@ def Str.substr (self, start = 0, end = 9223372036854775807) Str {
 }
 
 def Str.starts_with (self, other: Str) Bool {
-	if other.len() > self.len() {
+	if other.len() > self.len() ->
 		return false
-	}
+
 	let mut i = 0
 	while i < other.len() {
-		if self.at(i) != other.at(i) {
+		if self.at(i) != other.at(i) ->
 			return false
-		}
+
 		i = i + 1
 	}
 	return true
 }
 
 def Str.ends_with (self, other: Str) Bool {
-	if other.len() > self.len() {
+	if other.len() > self.len() ->
 		return false
-	}
+
 	let mut i = 0
 	while i < other.len() {
 		if self.at(self.len() - i - 1) != other.at(other.len() - i - 1) {
@@ -316,12 +309,9 @@ def Str.reversed (self) Str {
 }
 
 def Str.replace (self, search: Str, replace_with="", max=-1) Str {
-	if search.len() == 0 {
+	if search.len() == 0 || max == 0 ->
 		return self
-	}
-	if max == 0 {
-		return self
-	}
+
 	let mut i = 0
 	let mut s = ""
 	let mut replacements = 0
@@ -349,28 +339,23 @@ def Str.replace (self, search: Str, replace_with="", max=-1) Str {
 }
 
 def Str.insert (self, index: Int, other: Str) Str {
-	if index < 0 {
+	if index < 0 ->
 		return self.insert(self.len() + index + 1, other)
-	}
-	if index >= self.len() {
+
+	if index >= self.len() ->
 		return self + other
-	}
+
 	return self.substr(0, index) + other + self.substr(index)
 }
 
 def Str.remove (self, index: Int, count=1) Str {
 	if index < 0 {
-		if self.len() + index < 0 {
+		if self.len() + index < 0 ->
 			return self.substr(self.len() + index + count)
-		}
 		return self.remove(self.len() + index, count)
 	}
-	if index >= self.len() {
+	if index >= self.len() || count < 1 ->
 		return self
-	}
-	if count < 1 {
-		return self
-	}
 	return self.substr(0, index) + self.substr(index + count)
 }
 

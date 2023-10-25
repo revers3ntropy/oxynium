@@ -34,7 +34,7 @@ impl AstNode for BinOpNode {
         if lhs_tr.t.borrow().is_unknown() {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(type_error(format!(
-                    "Unknown type on left hand side of binary operator"
+                    "unknown type on left hand side of binary operator"
                 ))
                 .set_interval(self.lhs.borrow().pos()));
             }
@@ -45,7 +45,7 @@ impl AstNode for BinOpNode {
 
         if fn_signature.is_none() {
             return Err(type_error(format!(
-                "Cannot use operator `{}` on type `{}`",
+                "cannot use operator `{}` on type `{}`",
                 self.operator.str(),
                 lhs_tr.t.borrow().str()
             ))

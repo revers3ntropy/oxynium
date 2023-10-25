@@ -1,7 +1,3 @@
-def Any.from<From>(val: From) Any {
-	return Any.cast!<From, Any>(val)
-}
-
 // This is a nasty way to get around the strict type system.
 // This is the single point of failure of the reliability
 // of the type system: allowing unsafe, unchecked casts.
@@ -17,6 +13,8 @@ def Any.__CAST_WRAPPER_DO_NOT_CALL () {
 	"
 }
 
-def Any.to<To>(self) To {
-	return Any.cast!<Any, To>(self)
-}
+def Any.to<To>(self) To ->
+	Any.cast!<Any, To>(self)
+
+def Any.from<From>(val: From) Any ->
+	Any.cast!<From, Any>(val)

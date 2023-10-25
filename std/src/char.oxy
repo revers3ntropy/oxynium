@@ -7,9 +7,8 @@ def Char.== (self, other: Char) Bool {
 	")
 }
 
-def Char.!= (self, other: Char) Bool {
-	return !(self == other)
-}
+def Char.!= (self, other: Char) Bool ->
+	!(self == other)
 
 def Char.Str (self) Str {
 	return Any.cast!<Void, Str>(#asm "
@@ -28,10 +27,8 @@ def Char.is_digit (self) Bool {
 	return as_int >= 48 && as_int <= 57
 }
 
-def Char.Int (self) Int {
-	return Any.cast!<Char, Int>(self)
-}
+def Char.Int (self) Int ->
+	Any.cast!<Char, Int>(self)
 
-def Char.from_int (i: Int) Char {
-	return Any.cast!<Int, Char>(i)
-}
+def Char.from_int (i: Int) Char ->
+	Any.cast!<Int, Char>(i)

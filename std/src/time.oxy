@@ -18,9 +18,8 @@ def Time.+ (self, other: Time) Time {
 	}
 }
 
-def Time.Str (self) Str {
-	return self.seconds.Str() + "." + self.microseconds.Str()
-}
+def Time.Str (self) ->
+	self.seconds.Str() + "." + self.microseconds.Str()
 
 def Time.current_seconds () Int {
 	return Any.cast!<Void, Int>(#asm "
@@ -43,16 +42,12 @@ def Time.current_microseconds () Int {
 	")
 }
 
-def Time.now () Time {
-	return new Time {
-		seconds: Time.current_seconds(),
-		microseconds: Time.current_microseconds()
-	}
+def Time.now () -> new Time {
+    seconds: Time.current_seconds(),
+    microseconds: Time.current_microseconds()
 }
 
-def Time.epoch () Time {
-	return new Time {
-		seconds: 0,
-		microseconds: 0
-	}
+def Time.epoch () -> new Time {
+    seconds: 0,
+    microseconds: 0
 }
