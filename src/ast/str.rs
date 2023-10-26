@@ -67,7 +67,7 @@ impl AstNode for StrNode {
 
         Ok(format!(
             "
-                lea rax, {symbol_name}
+                lea rax, [{symbol_name}]
                 push rax
             "
         ))
