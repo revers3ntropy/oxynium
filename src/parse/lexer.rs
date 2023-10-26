@@ -188,7 +188,7 @@ impl Lexer {
                 continue;
             }
 
-            return Err(syntax_error(format!("Unexpected character '{}'", c))
+            return Err(syntax_error(format!("unexpected character '{}'", c))
                 .set_interval((self.position.clone(), Position::unknown())));
         }
 
@@ -248,7 +248,7 @@ impl Lexer {
                     }
                     _ => {
                         return Err(syntax_error(format!(
-                            "Invalid escape character '\\{}'",
+                            "invalid escape character '\\{}'",
                             self.current_char.unwrap()
                         ))
                         .set_interval((
@@ -264,7 +264,7 @@ impl Lexer {
             }
         }
         if self.current_char.is_none() {
-            return Err(syntax_error("Unterminated string".to_string())
+            return Err(syntax_error("unterminated string".to_string())
                 .set_interval((start, self.position.clone())));
         }
         self.advance();

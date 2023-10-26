@@ -64,14 +64,14 @@ pub fn indent(s: String, indent: usize) -> String {
 pub fn read_file(path: &str) -> Result<String, Error> {
     let input_file = File::open(path);
     if input_file.is_err() {
-        return Err(io_error(format!("Failed to open file '{}'", path)));
+        return Err(io_error(format!("failed to open file `{}`", path)));
     }
 
     let mut input = String::new();
     let read_file_result = input_file.unwrap().read_to_string(&mut input);
     if read_file_result.is_err() {
         return Err(io_error(format!(
-            "Failed to read file '{}': {}",
+            "failed to read file `{}`: {}",
             path,
             read_file_result.err().unwrap()
         )));

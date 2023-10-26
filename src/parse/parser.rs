@@ -58,7 +58,7 @@ macro_rules! consume {
         }
         if $self.tok_idx >= $self.tokens.len() {
             $res.failure(
-                syntax_error("Unexpected end of file".to_string()),
+                syntax_error("unexpected end of file".to_string()),
                 Some(
                     $self.tokens[$self.tokens.len() - 1]
                         .start
@@ -125,7 +125,7 @@ impl Parser {
         if self.tok_idx < self.tokens.len() {
             let current = self.current_tok().unwrap();
             res.failure(
-                syntax_error(format!("Unexpected token {:?}", current.str())),
+                syntax_error(format!("unexpected token {:?}", current.str())),
                 Some(current.start.clone()),
                 Some(current.end.clone()),
             );
@@ -416,7 +416,7 @@ impl Parser {
         let mut res = ParseResults::new();
         if self.current_tok().is_none() {
             res.failure(
-                syntax_error(format!("Expected statement")),
+                syntax_error(format!("statement expected")),
                 Some(self.last_tok().unwrap().start.clone()),
                 Some(self.last_tok().unwrap().end.clone()),
             );
@@ -623,7 +623,7 @@ impl Parser {
 
         if self.current_tok().is_none() {
             res.failure(
-                syntax_error("Unexpected EOF".to_string()),
+                syntax_error("unexpected end of file".to_string()),
                 Some(self.last_tok().unwrap().end.clone().advance(None)),
                 None,
             );
@@ -637,7 +637,7 @@ impl Parser {
             let value = tok.literal.unwrap().parse::<i64>();
             if value.is_err() {
                 res.failure(
-                    numeric_overflow("Invalid integer literal".to_string()),
+                    numeric_overflow("invalid integer literal".to_string()),
                     Some(tok.start.clone()),
                     Some(tok.end.clone()),
                 );
@@ -663,7 +663,7 @@ impl Parser {
         }
         res.failure(
             syntax_error(format!(
-                "Can only have integers or strings as global constants"
+                "can only have integers or strings as global constants"
             )),
             Some(self.current_tok().unwrap().start.clone()),
             Some(self.current_tok().unwrap().end.clone()),
@@ -698,7 +698,7 @@ impl Parser {
         if !self.current_matches(TokenType::Equals, None) {
             if !mutable {
                 res.failure(
-                    syntax_error("Cannot declare uninitialized local constant".to_string()),
+                    syntax_error("cannot declare uninitialized local constant".to_string()),
                     Some(self.last_tok().unwrap().end.clone()),
                     None,
                 );

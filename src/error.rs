@@ -94,7 +94,7 @@ impl Error {
 
         if end.is_unknown() {
             if start.is_unknown() {
-                out.push_str("Unknown error location!");
+                out.push_str("unknown error location!");
                 return out;
             }
             end = start.clone();
