@@ -67,7 +67,7 @@ impl Macro for IncludeMacro {
 
         let file_path = unsafe { Path::new(string_to_static_str(path)) };
         ctx.borrow_mut()
-            .set_current_dir_path(file_path.clone().parent().unwrap_or(file_path));
+            .set_current_dir_path(file_path.parent().unwrap_or(file_path));
 
         return Ok(new_mut_rc(ScopeNode {
             position: self.position.clone(),

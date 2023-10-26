@@ -96,7 +96,7 @@ fn compile(
 ) -> Result<(String, MutRc<dyn Context>), Error> {
     let mut ctx = RootContext::new(args.clone());
 
-    ctx.std_asm_path = args.std_path.clone();
+    ctx.std_asm_path = args.std_path;
     ctx.exec_mode = args.exec_mode;
 
     let ctx = Scope::new_global(new_mut_rc(ctx));

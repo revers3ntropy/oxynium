@@ -7,12 +7,12 @@ fn parse_asm_lines(asm: String) -> Vec<String> {
 
     for line in asm.lines() {
         // remove whitespace and comments
-        let mut new_line = line.clone();
+        let mut new_line = line;
 
-        let mut line_split = new_line.clone().split(";");
+        let mut line_split = new_line.split(";");
         // detect comments which start with ';-' which should be kept
         if line_split.nth(1).is_some() {
-            new_line = new_line.clone().split(";").nth(0).unwrap();
+            new_line = new_line.split(";").nth(0).unwrap();
         }
         new_line = new_line.trim();
 

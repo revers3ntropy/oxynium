@@ -135,22 +135,22 @@ impl Error {
             out.push_str(pre_line.as_str());
             out.push_str(line);
             out.push('\n');
-            if line_idx as i64 == start.line {
+            if line_idx == start.line {
                 // first line of error
                 out.push_str(&" ".repeat((start.col as usize) + pre_line.len()));
-                if end.line == line_idx as i64 {
+                if end.line == line_idx {
                     // single-line error
                     out.push_str(&"^".repeat((end.col + 1 - start.col) as usize));
                 } else {
                     out.push_str(&"^".repeat(line.len() - start.col as usize));
                 }
                 out.push('\n');
-            } else if line_idx as i64 == end.line {
+            } else if line_idx == end.line {
                 // last line of error
                 out.push_str(&" ".repeat(pre_line.len()));
                 out.push_str(&"^".repeat((end.col + 1) as usize));
                 out.push('\n');
-            } else if line_idx as i64 > start.line && (line_idx as i64) < end.line {
+            } else if line_idx > start.line && (line_idx) < end.line {
                 // middle line
                 out.push_str(&" ".repeat(pre_line.len()));
                 out.push_str(&"^".repeat(line.len()));

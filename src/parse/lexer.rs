@@ -75,11 +75,8 @@ impl Lexer {
 
         // for performance
 
-        let mut double_char_keys: Vec<&str> = DOUBLE_CHAR_TOKENS
-            .keys()
-            .into_iter()
-            .map(|c| c.clone())
-            .collect();
+        let mut double_char_keys: Vec<&str> =
+            DOUBLE_CHAR_TOKENS.keys().into_iter().map(|c| *c).collect();
         // sort so that it is binary-search-able
         double_char_keys.sort();
 
