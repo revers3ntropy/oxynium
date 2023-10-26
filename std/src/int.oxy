@@ -115,7 +115,7 @@ def Int.Str (self) Str {
 		; write string to allocated memory using
 		; `sprintf(buf, \"%lld\", n)`
 		mov rdi, rax
-		mov rsi, _$_sprintf_Int_str
+		lea rsi, [rel _$_sprintf_Int_str]
 		mov rdx, qword [rbp + 16]
 		mov rax, 0
 		mov rcx, rsi

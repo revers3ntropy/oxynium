@@ -81,7 +81,6 @@ impl AstNode for ExecRootNode {
             return Ok(format!(
                 "
                     bits 64
-                    default rel
                     section .data
                         {data}
                     section .text
@@ -134,7 +133,6 @@ impl AstNode for ExecRootNode {
         Ok(format!(
             "
                 bits 64
-                default rel
                 %include \"{}\"
                 section .data
                     {STD_DATA_ASM}

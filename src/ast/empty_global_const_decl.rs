@@ -33,7 +33,7 @@ impl AstNode for EmptyGlobalConstNode {
 
         let id = if !type_.borrow().is_ptr() {
             // deref if it shouldn't stay as a pointer
-            format!("qword [{}]", self.identifier.clone().literal.unwrap())
+            format!("qword [rel {}]", self.identifier.clone().literal.unwrap())
         } else {
             self.identifier.clone().literal.unwrap()
         };

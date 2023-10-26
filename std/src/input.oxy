@@ -8,7 +8,7 @@ def input (prompt="", buffer_size=1000) Str {
 		add rsp, 8
 		mov r15, rax              ; r15 = string pointer
 
-		mov rax, 0
+		mov rax, 0x02000003
 		mov rdi, 0
 		mov rsi, r15
 		mov rdx, qword [rbp + 24]

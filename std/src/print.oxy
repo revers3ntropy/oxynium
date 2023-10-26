@@ -1,25 +1,10 @@
 def print (msg: Str) {
+	let len = msg.len() * 8
 	#asm "
-	    push qword [rbp + 16]
-	    call Str.Utf8Str
-	    add rsp, 8
-	    mov rsi, rax
-
-        xor rdx, rdx              ; string length
-
-        ; find length of string
-        _$_print_find_length:
-            mov cl, byte [rax]
-            test cl, cl
-            je _$_print_end_length
-            inc rdx
-            inc rax
-            jmp _$_print_find_length
-
-        _$_print_end_length:
-            mov rax, 0x02000004
-            mov rdi, 1
-            mov rdx, 100
-            syscall
+	    mov rsi, qword [rbp + 16]
+        mov rdx, qword [rbp - 8] ; string length
+		mov rax, 0x02000004
+		mov rdi, 1
+		syscall
 	"
 }
