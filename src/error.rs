@@ -131,13 +131,17 @@ impl Error {
                 line_idx + 1,
                 " ".repeat(max_digits_in_line_number - num_digits(line_idx + 1))
             );
+            let pre_line_no_num = format!("  {} | ", " ".repeat(max_digits_in_line_number));
 
             out.push_str(pre_line.as_str());
             out.push_str(line);
             out.push('\n');
             if line_idx == start.line {
+                out.push_str(pre_line_no_num.as_str());
                 // first line of error
-                out.push_str(&" ".repeat((start.col as usize) + pre_line.len()));
+                out.push_str(
+                    &" ".repeat((start.col as usize) + pre_line.len() - pre_line_no_num.len()),
+                );
                 if end.line == line_idx {
                     // single-line error
                     out.push_str(&"^".repeat((end.col + 1 - start.col) as usize));
@@ -147,12 +151,14 @@ impl Error {
                 out.push('\n');
             } else if line_idx == end.line {
                 // last line of error
-                out.push_str(&" ".repeat(pre_line.len()));
+                out.push_str(pre_line_no_num.as_str());
+                out.push_str(&" ".repeat(pre_line.len() - pre_line_no_num.len()));
                 out.push_str(&"^".repeat((end.col + 1) as usize));
                 out.push('\n');
             } else if line_idx > start.line && (line_idx) < end.line {
+                out.push_str(pre_line_no_num.as_str());
                 // middle line
-                out.push_str(&" ".repeat(pre_line.len()));
+                out.push_str(&" ".repeat(pre_line.len() - pre_line_no_num.len()));
                 out.push_str(&"^".repeat(line.len()));
                 out.push('\n');
             }
