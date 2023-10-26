@@ -161,7 +161,7 @@ class File {
 /// returns pointer to string in rax
 extern def input (prompt="", buffer_size=1000) Str
 extern def exit (code=0)
-extern def print (msg="", line_end="\n")
+extern def print (msg: Str)
 extern def panic (msg="Panic!")
 extern def errno () Int
 

@@ -80,11 +80,13 @@ impl AstNode for ExecRootNode {
         if ctx_ref.exec_mode() == ExecMode::Lib {
             return Ok(format!(
                 "
-                section .data
-                    {data}
-                section .text
-                    {text}
-            "
+                    bits 64
+                    default rel
+                    section .data
+                        {data}
+                    section .text
+                        {text}
+                "
             ));
         }
 
@@ -114,7 +116,7 @@ impl AstNode for ExecRootNode {
 
             if !main_signature.contains(main_type) {
                 return Err(type_error(format!(
-                    "main function must have signature 'main(): Void'"
+                    "main function must have signature `Fn main() Void`"
                 ))
                 .set_interval(main_decl.position.clone()));
             }
@@ -131,6 +133,8 @@ impl AstNode for ExecRootNode {
 
         Ok(format!(
             "
+                bits 64
+                default rel
                 %include \"{}\"
                 section .data
                     {STD_DATA_ASM}

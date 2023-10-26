@@ -43,9 +43,9 @@ impl AstNode for StrNode {
 
         // null terminator
         let asm_str = if symbols.into_iter().count() < 1 {
-            format!("default rel dq 0x0")
+            format!("dq 0x0")
         } else {
-            format!("default rel db {} \ndq 0x0", asm)
+            format!("db {} \ndq 0x0", asm)
         };
 
         let anon_label = ctx.borrow_mut().get_anon_label();
@@ -67,7 +67,7 @@ impl AstNode for StrNode {
 
         Ok(format!(
             "
-                lea rax, [{symbol_name}]
+                lea rax, [rel {symbol_name}]
                 push rax
             "
         ))

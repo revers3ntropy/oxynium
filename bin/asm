@@ -1,7 +1,7 @@
 #!/bin/bash
 
-nasm -f macho64 "$1" -o "$1.o"
+nasm -fmacho64 "$1" -o "$1.o"
 
-gcc -Wall -no-pie "$1.o" -e main -o out
+gcc -Wall "$1.o" -e _main -o out
 
 ./out
