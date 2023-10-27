@@ -42,7 +42,7 @@ impl Type for FnType {
     }
     fn str(&self) -> String {
         format!(
-            "Fn {}{}({}): {}",
+            "Fn {}{}({}) {}",
             self.name,
             if self.generic_params_order.len() > 0 {
                 format!(

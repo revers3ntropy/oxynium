@@ -52,3 +52,53 @@ expect_err 'TypeError' '
         }
     }
 '
+
+
+describe 'Throws when return types cannot be inferred'
+
+expect_err 'UnknownSymbol' '
+    def foo () -> bar()
+    def bar () -> foo()
+'
+expect_err 'UnknownSymbol' '
+    def foo () -> bar()
+    def bar () -> biz()
+    def biz () -> foo()
+'
+expect '' '
+    def foo () Int -> bar()
+    def bar () -> foo()
+'
+expect '' '
+    def foo () -> bar()
+    def bar () -> biz()
+    def biz () Str -> foo()
+'
+expect '' '
+    def foo () Str-> bar()
+    def bar () -> biz()
+    def biz () Str -> foo()
+'
+expect '' '
+    def foo () -> bar()
+    def bar () Str -> biz()
+    def biz () -> foo()
+'
+expect '' '
+    def foo () -> bar()
+    def bar () Int -> foo()
+'
+expect_err 'TypeError' '
+    def foo () Int -> bar()
+    def bar () Str -> foo()
+'
+expect_err 'UnknownSymbol' '
+    class A <T> {
+        b: B,
+        def foo (self) -> self.b.bar()
+    }
+    class B {
+        a: A,
+        def bar (self) -> self.a.foo()
+    }
+'
