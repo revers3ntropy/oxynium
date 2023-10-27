@@ -11,7 +11,12 @@ Linux support only so far.
 
 # Installation
 
-`curl https://raw.githubusercontent.com/revers3ntropy/oxynium/master/scripts/install | /bin/bash`
+`curl -sSL https://oxynium.org/scripts/install | bash`
+
+### Unstable
+*Can also install from development branch, which will include the latest features*
+
+`curl -sSL https://oxynium.org/scripts/install | bash -s -- "latest"`
 
 ## Dev Requirements
 

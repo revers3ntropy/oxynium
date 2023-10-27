@@ -1,6 +1,0 @@
-#!/bin/bash
-
-sudo rm /usr/local/bin/oxy
-sudo rm /usr/local/bin/oxy-std.asm
-
-echo "oxynium has been uninstalled successfully"
