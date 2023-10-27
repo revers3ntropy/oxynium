@@ -1,4 +1,4 @@
-def print (msg: Str) {
+def print (msg = "", line_end="\n") {
 	let len = msg.len() * 8
 	#asm "
 	    mov rsi, qword [rbp + 16]
@@ -7,4 +7,12 @@ def print (msg: Str) {
 		mov rdi, 1
 		syscall
 	"
+
+	if !Any.cast!<Str, Bool>(line_end) {
+		print("\n", "")
+		return;
+	}
+	if line_end != "" {
+		print(line_end, "")
+	}
 }

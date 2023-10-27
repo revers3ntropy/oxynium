@@ -53,9 +53,9 @@ impl AstNode for GlobalConstNode<i64> {
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
-                "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
+                "cannot declare global constant '{}' inside function",
                 self.identifier.clone().literal.unwrap()
-            ))
+            )).hint("try using `let` instead".to_string())
             .set_interval((self.pos().0, self.identifier.end.clone())));
         }
         ctx.borrow_mut().define(
@@ -78,7 +78,7 @@ impl AstNode for GlobalConstNode<String> {
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
-                "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
+                "cannot declare global constant '{}' inside function. Try using 'let' instead.",
                 self.identifier.clone().literal.unwrap()
             ))
             .set_interval((self.pos().0, self.identifier.end.clone())));
@@ -122,7 +122,7 @@ impl AstNode for GlobalConstNode<String> {
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         if !can_declare_with_identifier(&self.identifier.clone().literal.unwrap()) {
             return Err(syntax_error(format!(
-                "Invalid global variable '{}'",
+                "invalid global variable '{}'",
                 self.identifier.clone().literal.unwrap()
             )));
         }
@@ -130,7 +130,8 @@ impl AstNode for GlobalConstNode<String> {
         ctx.borrow_mut().declare(
             SymbolDec {
                 name: self.identifier.clone().literal.unwrap(),
-                id: self.asm_id(),
+                //id: self.asm_id(),
+                id: format!("rel {}", self.asm_id()),
                 is_constant: true,
                 is_type: false,
                 is_func: false,
