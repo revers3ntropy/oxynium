@@ -296,7 +296,7 @@ impl AstNode for FnCallNode {
 
         if args.len() < required_params {
             return Err(type_error(format!(
-                "Too few arguments to function '{}', expected {} but found only {}",
+                "too few arguments to function `{}`, expected {} but found only {}",
                 self.identifier.clone().literal.unwrap(),
                 required_params,
                 args.len()
@@ -305,7 +305,7 @@ impl AstNode for FnCallNode {
         }
         if args.len() > fn_type.parameters.len() {
             return Err(type_error(format!(
-                "Too many arguments to function '{}', expected only {} but found {}",
+                "too many arguments to function `{}`, expected only {} but found {}",
                 self.identifier.clone().literal.unwrap(),
                 fn_type.parameters.len(),
                 args.len()

@@ -26,7 +26,7 @@ impl AstNode for GlobalConstNode<i64> {
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         if !can_declare_with_identifier(&self.identifier.clone().literal.unwrap()) {
             return Err(syntax_error(format!(
-                "Invalid global variable '{}'",
+                "invalid global variable `{}`",
                 self.identifier.clone().literal.unwrap()
             ))
             .set_interval(self.identifier.interval()));
@@ -122,7 +122,7 @@ impl AstNode for GlobalConstNode<String> {
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         if !can_declare_with_identifier(&self.identifier.clone().literal.unwrap()) {
             return Err(syntax_error(format!(
-                "Invalid global variable '{}'",
+                "invalid global variable `{}`",
                 self.identifier.clone().literal.unwrap()
             )));
         }

@@ -51,7 +51,7 @@ impl AstNode for EmptyLocalVarNode {
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_none() {
             return Err(syntax_error(format!(
-                "Cannot declare local variable '{}' outside of function. Try using 'var' or 'const' instead.",
+                "cannot declare local variable `{}` outside of function. Try using 'var' or 'const' instead.",
                 self.identifier
             )));
         }

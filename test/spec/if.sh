@@ -17,8 +17,7 @@ expect '245' '
     if false -> print("3")
     else print("4")
 
-    if true -> print("5")
-    else -> print("6")
+    if true -> print("5") else -> print("6")
 '
 expect 'hi' '
     if true {

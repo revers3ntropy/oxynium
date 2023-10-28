@@ -59,7 +59,7 @@ impl AstNode for EmptyGlobalConstNode {
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
-                "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
+                "cannot declare global constant `{}` inside function. Try using 'let' instead.",
                 self.identifier.clone().literal.unwrap()
             ))
             .set_interval((self.pos().0, self.identifier.end.clone())));

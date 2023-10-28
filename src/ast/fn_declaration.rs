@@ -140,7 +140,7 @@ impl AstNode for FnDeclarationNode {
                 for param in &self.params {
                     if param.default_value.is_some() {
                         return Err(type_error(format!(
-                            "Operator Overload methods cannot have default values"
+                            "operator overload methods cannot have default values"
                         ))
                         .set_interval(param.position.clone()));
                     }
@@ -263,7 +263,7 @@ impl AstNode for FnDeclarationNode {
             if let Some(default_value) = default_value.clone() {
                 if seen_param_without_default {
                     return Err(type_error(format!(
-                        "Parameters after '{}' must have default values",
+                        "parameters after `{}` must have default values",
                         identifier
                     ))
                     .set_interval(self.position.clone()));
@@ -285,7 +285,7 @@ impl AstNode for FnDeclarationNode {
                     .contains(default_value_type.t.clone())
                 {
                     return Err(type_error(format!(
-                        "Default value for parameter '{}' is not of type {}",
+                        "default value for parameter `{}` is not of type `{}`",
                         identifier,
                         param_type.unwrap().borrow().str()
                     ))
@@ -297,7 +297,7 @@ impl AstNode for FnDeclarationNode {
 
             if param_type.is_none() {
                 return Err(
-                    type_error(format!("Parameter '{}' must have a type", identifier))
+                    type_error(format!("parameter `{}` must have a type", identifier))
                         .set_interval(position),
                 );
             }
