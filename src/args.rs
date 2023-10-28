@@ -101,7 +101,7 @@ pub fn get_cli_args() -> Args {
         std_path: unsafe {
             string_to_static_str(
                 m.get_one::<String>("std")
-                    .unwrap_or(&String::from("/usr/local/bin/oxy-std.asm"))
+                    .unwrap_or(&String::from("~/.oxynium/std.asm"))
                     .to_string(),
             )
         },
