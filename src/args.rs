@@ -4,6 +4,7 @@ use clap::parser::ValuesRef;
 use clap::{arg, ArgMatches, Command};
 use std::env;
 use std::io::Write;
+extern crate shellexpand;
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum ExecMode {
@@ -101,7 +102,7 @@ pub fn get_cli_args() -> Args {
         std_path: unsafe {
             string_to_static_str(
                 m.get_one::<String>("std")
-                    .unwrap_or(&String::from("~/.oxynium/std.asm"))
+                    .unwrap_or(&shellexpand::tilde(&String::from("~/.oxynium/std.asm")).to_string())
                     .to_string(),
             )
         },
