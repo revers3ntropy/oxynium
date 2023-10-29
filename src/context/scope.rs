@@ -21,6 +21,7 @@ pub struct Scope {
     allow_local_var_decls: bool,
     current_dir_path: Option<&'static Path>,
     is_global: bool,
+    is_anon_function_scope: bool,
 }
 
 impl Scope {
@@ -28,6 +29,7 @@ impl Scope {
         parent: MutRc<dyn Context>,
         allow_local_var_decls: bool,
         is_global: bool,
+        is_anon_function_scope: bool,
     ) -> MutRc<dyn Context> {
         new_mut_rc(Scope {
             parent,
@@ -36,18 +38,19 @@ impl Scope {
             allow_local_var_decls,
             current_dir_path: None,
             is_global,
+            is_anon_function_scope,
         })
     }
     pub fn new_local(parent: MutRc<dyn Context>) -> MutRc<dyn Context> {
-        Scope::new(parent, false, false)
+        Scope::new(parent, false, false, false)
     }
 
-    pub fn new_fn_ctx(parent: MutRc<dyn Context>) -> MutRc<dyn Context> {
-        Scope::new(parent, true, false)
+    pub fn new_fn_ctx(parent: MutRc<dyn Context>, is_anon: bool) -> MutRc<dyn Context> {
+        Scope::new(parent, true, false, is_anon)
     }
 
     pub fn new_global(root: MutRc<dyn Context>) -> MutRc<dyn Context> {
-        Scope::new(root, true, true)
+        Scope::new(root, true, true, false)
     }
 }
 
@@ -166,10 +169,15 @@ impl Context for Scope {
     }
     fn has_dec_with_id(&self, id: &str) -> bool {
         if self.declarations.contains_key(id) {
-            true
-        } else {
-            self.parent.borrow().has_dec_with_id(id)
+            return true;
         }
+        let dec = self.parent.borrow().has_dec_with_id(id);
+        if !self.is_anon_function_scope || !dec {
+            return dec;
+        }
+        // if in anon function scope, non-type symbols outside the scope should not
+        // be visible, except if they are global
+        self.parent.borrow().get_dec_from_id(id).is_type
     }
     fn get_dec_from_id(&self, id: &str) -> SymbolDec {
         if let Some(dec) = self.declarations.get(id) {

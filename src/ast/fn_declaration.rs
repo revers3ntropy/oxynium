@@ -157,7 +157,7 @@ impl AstNode for FnDeclarationNode {
             }
         }
 
-        self.params_scope = Some(Scope::new_fn_ctx(ctx.clone()));
+        self.params_scope = Some(Scope::new_fn_ctx(ctx.clone(), self.is_anon));
 
         for param in &self.params {
             if param.default_value.is_some() {

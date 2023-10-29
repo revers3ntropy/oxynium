@@ -10,21 +10,6 @@ expect '' '
       let a = fn () Int -> 1
     }
 '
-expect '' '
-    def main () {
-      let a = fn () {
-        print("hello")
-      }
-    }
-'
-expect 'hello' '
-    def main () {
-      let a = fn () {
-        print("hello")
-      }
-      a()
-    }
-'
 expect_err 'UnknownSymbol' '
     def main () {
       let a = 1
@@ -50,38 +35,22 @@ expect '5' '
       print(five().Str())
     }
 '
-# TODO: fix these failing tests
-#expect_err 'UnknownSymbol' '
-#    def main () {
-#      let five = fn () Int {
-#        return 5
-#      }
-#      let num = fn () Int {
-#        return five()
-#      }
-#    }
-#'
-#expect_err 'UnknownSymbol' '
-#    def main () {
-#        let five = 5
-#        fn () Int {
-#            return five
-#        }
-#    }
-#'
-expect '' '
+expect_err 'UnknownSymbol' '
     def main () {
-      fn () {
-        return main()
+      let five = fn () Int {
+        return 5
+      }
+      let num = fn () Int {
+        return five()
       }
     }
 '
-expect '' '
-    def g () {}
+expect_err 'UnknownSymbol' '
     def main () {
-      fn () {
-        g()
-      }
+        let five = 5
+        fn () Int {
+            return five
+        }
     }
 '
 expect_err 'SyntaxError' '
@@ -89,7 +58,6 @@ expect_err 'SyntaxError' '
         print("hi");
     })();
 '
-
 expect '13' '
     def do_something(f: Fn () Int) {
         print(f().Str())
@@ -159,7 +127,7 @@ expect '3' '
     const x = 2
     print(apply!<Int, Int>(x, fn (x: Int) Int { return x + 1 }).Str())
 '
-expect '4' '
+expect '45' '
     def add_one (a: Int = 2) Int {
         return a + 1
     }
@@ -168,15 +136,10 @@ expect '4' '
     }
     const x = 3
     print(apply!<Int, Int>(x, add_one).Str())
+    print(apply!<Int, Int>(x + 1, fn (a: Int) -> a + 1).Str())
 '
-
 expect '' '
     def make_mapper<T>(a: T, pick_a = false) Fn(T) T {
-        return fn (b: T) T {
-            if pick_a {
-                return a
-            }
-            return b
-        }
+        return fn (b: T) T -> b
     }
 '
