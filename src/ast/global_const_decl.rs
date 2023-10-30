@@ -131,7 +131,7 @@ impl AstNode for GlobalConstNode<String> {
             SymbolDec {
                 name: self.identifier.clone().literal.unwrap(),
                 //id: self.asm_id(),
-                id: format!("rel {}", self.asm_id()),
+                id: format!("{}", self.asm_id()),
                 is_constant: true,
                 is_type: false,
                 is_func: false,
