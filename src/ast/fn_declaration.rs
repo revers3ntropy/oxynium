@@ -524,7 +524,7 @@ impl AstNode for FnDeclarationNode {
         ctx.borrow_mut().stack_frame_pop();
         if self.is_anon {
             return Ok(format!("
-                lea rax, [{}]
+                lea rax, [rel {}]
                 push rax
             ", self.identifier.clone().str()));
         }
