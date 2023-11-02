@@ -45,6 +45,7 @@ impl AstNode for OptionalTypeNode {
             SymbolDec {
                 name: generic_arg_name.clone(),
                 id: generic_arg_name,
+                is_ptr: false,
                 is_constant: false,
                 is_type: true,
                 is_func: false,

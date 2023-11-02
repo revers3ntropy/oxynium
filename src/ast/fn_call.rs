@@ -243,6 +243,7 @@ impl AstNode for FnCallNode {
                 SymbolDec {
                     name: name.clone(),
                     id: name.clone(),
+                    is_ptr: false,
                     is_constant: true,
                     is_type: true,
                     is_func: false,

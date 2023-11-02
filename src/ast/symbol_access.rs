@@ -57,12 +57,24 @@ impl AstNode for SymbolAccess {
             return Ok("".to_string());
         }
 
-        Ok(format!(
-            "
-            push {}
-        ",
-            ctx.borrow_mut().get_dec_from_id(&self.id()).id
-        ))
+        let dec = ctx.borrow_mut().get_dec_from_id(&self.id());
+
+        Ok(if dec.is_ptr {
+            format!(
+                "
+                    lea rax, [rel {}]
+                    push rax
+                ",
+                dec.id
+            )
+        } else {
+            format!(
+                "
+                    push {}
+                ",
+                dec.id
+            )
+        })
     }
 
     fn pos(&self) -> Interval {

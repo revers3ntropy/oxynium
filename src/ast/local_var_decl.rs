@@ -76,6 +76,7 @@ impl AstNode for LocalVarNode {
                 SymbolDec {
                     name: self.id(),
                     id: format!("qword [rbp - {offset}]"),
+                    is_ptr: false,
                     is_constant: !self.mutable,
                     is_type: false,
                     is_func: false,

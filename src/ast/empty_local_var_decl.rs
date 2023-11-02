@@ -34,6 +34,7 @@ impl AstNode for EmptyLocalVarNode {
             SymbolDec {
                 name: self.identifier.clone(),
                 id: format!("qword [rbp - {stack_offset}]"),
+                is_ptr: false,
                 is_constant: false,
                 is_type: false,
                 is_func: false,

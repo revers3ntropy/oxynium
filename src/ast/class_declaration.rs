@@ -85,6 +85,7 @@ impl AstNode for ClassDeclarationNode {
                 SymbolDec {
                     name: generic_param.literal.clone().unwrap(),
                     id: generic_param.literal.clone().unwrap(),
+                    is_ptr: false,
                     is_constant: true,
                     is_type: true,
                     is_func: false,
@@ -205,6 +206,7 @@ impl AstNode for ClassDeclarationNode {
                 SymbolDec {
                     name: self.identifier.clone().literal.unwrap(),
                     id: self.identifier.clone().literal.unwrap(),
+                    is_ptr: false,
                     is_constant: true,
                     is_type: true,
                     is_func: false,

@@ -42,6 +42,7 @@ impl AstNode for EmptyGlobalConstNode {
             SymbolDec {
                 name: self.identifier.clone().literal.unwrap(),
                 id,
+                is_ptr: false,
                 is_constant: true,
                 is_type: false,
                 is_func: false,

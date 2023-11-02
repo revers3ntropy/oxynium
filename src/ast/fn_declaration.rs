@@ -204,6 +204,7 @@ impl AstNode for FnDeclarationNode {
                 SymbolDec {
                     name: generic_param.literal.clone().unwrap(),
                     id: generic_param.literal.clone().unwrap(),
+                    is_ptr: false,
                     is_constant: true,
                     is_type: true,
                     is_func: false,
@@ -321,6 +322,7 @@ impl AstNode for FnDeclarationNode {
                     SymbolDec {
                         name: identifier.clone(),
                         id: format!("qword [rbp + {}]", 8 * ((num_params - (i + 1)) + 2)),
+                        is_ptr: false,
                         is_constant: true,
                         is_type: false,
                         is_func: false,
@@ -370,6 +372,7 @@ impl AstNode for FnDeclarationNode {
                 SymbolDec {
                     name: self.id(),
                     id: self.id(),
+                    is_ptr: false,
                     is_constant: true,
                     is_type: false,
                     is_func: true,

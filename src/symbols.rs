@@ -76,6 +76,8 @@ pub struct SymbolDec {
     pub id: String,
     pub is_constant: bool,
     pub is_type: bool,
+    // only ever true for string global constants
+    pub is_ptr: bool,
     // Only true for function declarations,
     // both named and anonymous,
     // to avoid making space for them on the stack

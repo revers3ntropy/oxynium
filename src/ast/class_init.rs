@@ -107,6 +107,7 @@ impl AstNode for ClassInitNode {
                 SymbolDec {
                     name: name.clone().literal.unwrap(),
                     id: name.clone().literal.unwrap(),
+                    is_ptr: false,
                     is_constant: true,
                     is_type: true,
                     is_func: false,

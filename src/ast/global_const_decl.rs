@@ -36,6 +36,7 @@ impl AstNode for GlobalConstNode<i64> {
             SymbolDec {
                 name: self.identifier.clone().literal.unwrap(),
                 id: format!("qword [rel {}]", self.asm_id()),
+                is_ptr: false,
                 is_constant: true,
                 is_type: false,
                 is_func: false,
@@ -130,8 +131,8 @@ impl AstNode for GlobalConstNode<String> {
         ctx.borrow_mut().declare(
             SymbolDec {
                 name: self.identifier.clone().literal.unwrap(),
-                //id: self.asm_id(),
-                id: format!("{}", self.asm_id()),
+                id: self.asm_id(),
+                is_ptr: true,
                 is_constant: true,
                 is_type: false,
                 is_func: false,
