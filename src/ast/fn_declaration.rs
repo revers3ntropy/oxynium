@@ -372,7 +372,7 @@ impl AstNode for FnDeclarationNode {
                 SymbolDec {
                     name: self.id(),
                     id: self.id(),
-                    is_ptr: false,
+                    is_ptr: true,
                     is_constant: true,
                     is_type: false,
                     is_func: true,
