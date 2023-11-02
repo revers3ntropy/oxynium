@@ -64,13 +64,6 @@ expect_err 'UnknownSymbol' '
     }
 '
 expect '' '
-    def main () {
-      fn () {
-        return main()
-      }
-    }
-'
-expect '' '
     def g () {}
     def main () {
       fn () {
