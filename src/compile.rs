@@ -10,7 +10,7 @@ use crate::parse::parser::Parser;
 use crate::perf;
 use crate::position::Position;
 use crate::post_process::format_asm::post_process;
-use crate::util::{new_mut_rc, string_to_static_str, MutRc};
+use crate::util::{string_to_static_str, MutRc};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -94,12 +94,12 @@ fn compile(
     file_name: String,
     args: &Args,
 ) -> Result<(String, MutRc<dyn Context>), Error> {
-    let mut ctx = RootContext::new(args.clone());
+    let ctx = RootContext::new(args.clone());
 
-    ctx.std_asm_path = args.std_path;
-    ctx.exec_mode = args.exec_mode;
+    ctx.borrow_mut().std_asm_path = args.std_path;
+    ctx.borrow_mut().exec_mode = args.exec_mode;
 
-    let ctx = Scope::new_global(new_mut_rc(ctx));
+    let ctx = Scope::new_global(ctx);
 
     let setup_ctx_res = setup_ctx_with_doxy(ctx);
     if setup_ctx_res.is_err() {

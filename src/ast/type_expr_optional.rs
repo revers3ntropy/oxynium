@@ -21,7 +21,7 @@ impl AstNode for OptionalTypeNode {
     }
 
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
-        let root_ctx = ctx.clone().borrow().root(ctx.clone());
+        let root_ctx = ctx.clone().borrow().global_scope();
 
         let option = root_ctx.borrow().get_dec_from_id("Option").type_;
 
@@ -76,7 +76,7 @@ impl AstNode for OptionalTypeNode {
                     end: self.position.1.clone(),
                 },
             }),
-            position: self.position.clone(),
+            position: self.pos(),
             generic_args: vec![self.value.clone()],
         })
     }
