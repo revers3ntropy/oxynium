@@ -2,4 +2,3 @@
     extern _sprintf
     extern _time
     extern _fopen, _fseek, _fread, _fclose, _ftell, _fwrite
-    extern ___error

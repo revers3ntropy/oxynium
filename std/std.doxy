@@ -163,7 +163,6 @@ extern def input (prompt="", buffer_size=1000) Str
 extern def exit (code=0)
 extern def print (msg="", line_end="\n")
 extern def panic (msg="Panic!")
-extern def errno () Int
 
 // Libc dependencies - declared externally in asm
 extern def malloc()
@@ -177,7 +176,6 @@ extern def fseek()
 extern def fclose()
 extern def fread()
 extern def ftell()
-extern def __errno_location()
 
 // Classes that may become part of the standard library in the future
 
