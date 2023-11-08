@@ -15,6 +15,7 @@ use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 use std::any::Any;
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 #[derive(Debug, Clone)]
 pub struct Parameter {
@@ -24,7 +25,6 @@ pub struct Parameter {
     pub position: Interval,
 }
 
-#[derive(Debug)]
 pub struct FnDeclarationNode {
     pub identifier: Token,
     pub ret_type: MutRc<dyn AstNode>,
@@ -544,5 +544,11 @@ impl AstNode for FnDeclarationNode {
 
     fn pos(&self) -> Interval {
         self.position.clone()
+    }
+}
+
+impl Debug for FnDeclarationNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(FnDeclarationNode {:?})", self.position)
     }
 }

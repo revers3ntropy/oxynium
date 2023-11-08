@@ -10,8 +10,8 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 
-#[derive(Debug)]
 pub struct Scope {
+    self_: Option<MutRc<dyn Context>>,
     parent: MutRc<dyn Context>,
     // Declarations are analysed at compile time, and are used to type check
     declarations: HashMap<String, SymbolDec>,
@@ -31,7 +31,8 @@ impl Scope {
         is_global: bool,
         is_anon_function_scope: bool,
     ) -> MutRc<dyn Context> {
-        new_mut_rc(Scope {
+        let self_ = new_mut_rc(Scope {
+            self_: None,
             parent,
             declarations: HashMap::new(),
             definitions: HashMap::new(),
@@ -39,7 +40,9 @@ impl Scope {
             current_dir_path: None,
             is_global,
             is_anon_function_scope,
-        })
+        });
+        self_.borrow_mut().self_ = Some(self_.clone());
+        self_
     }
     pub fn new_local(parent: MutRc<dyn Context>) -> MutRc<dyn Context> {
         Scope::new(parent, false, false, false)
@@ -79,17 +82,12 @@ impl Context for Scope {
         Some(self.parent.clone())
     }
 
-    fn root(&self, _self: MutRc<dyn Context>) -> MutRc<dyn Context> {
-        self.parent.clone()
-    }
-
-    fn global_scope(&self, mut self_: MutRc<dyn Context>) -> MutRc<dyn Context> {
-        let mut last = self_.clone();
-        while let Some(parent) = self_.clone().borrow().get_parent() {
-            last = self_.clone();
-            self_ = parent;
+    fn global_scope(&self) -> MutRc<dyn Context> {
+        if self.is_global {
+            self.self_.clone().unwrap()
+        } else {
+            self.parent.borrow().global_scope()
         }
-        last
     }
 
     fn get_cli_args(&self) -> Args {
@@ -171,9 +169,12 @@ impl Context for Scope {
         if self.declarations.contains_key(id) {
             return true;
         }
-        let dec = self.parent.borrow().has_dec_with_id(id);
-        if !self.is_anon_function_scope || !dec {
-            return dec;
+        let exists_in_parent = self.parent.borrow().has_dec_with_id(id);
+        if !self.is_anon_function_scope {
+            return exists_in_parent;
+        }
+        if !exists_in_parent {
+            return false;
         }
         // if in anon function scope, non-type symbols outside the scope should not
         // be visible, except if they are global

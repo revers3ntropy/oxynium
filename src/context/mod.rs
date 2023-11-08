@@ -19,7 +19,7 @@ pub struct CallStackFrame {
     pub ret_lbl: String,
 }
 
-pub trait Context: Debug {
+pub trait Context {
     fn reset(&mut self);
     fn freeze(&mut self);
     fn is_frozen(&self) -> bool;
@@ -27,8 +27,7 @@ pub trait Context: Debug {
     fn finished_resolving_types(&mut self);
     fn set_parent(&mut self, parent: Rc<RefCell<dyn Context>>);
     fn get_parent(&self) -> Option<MutRc<dyn Context>>;
-    fn root(&self, self_: MutRc<dyn Context>) -> MutRc<dyn Context>;
-    fn global_scope(&self, self_: MutRc<dyn Context>) -> MutRc<dyn Context>;
+    fn global_scope(&self) -> MutRc<dyn Context>;
 
     fn get_cli_args(&self) -> Args;
     fn exec_mode(&self) -> ExecMode;

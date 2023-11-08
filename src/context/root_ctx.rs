@@ -5,14 +5,14 @@ use crate::error::Error;
 use crate::position::Interval;
 use crate::symbols::{SymbolDec, SymbolDef};
 use crate::types::Type;
-use crate::util::MutRc;
+use crate::util::{new_mut_rc, MutRc};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 
-#[derive(Debug)]
 pub struct RootContext {
+    self_: Option<MutRc<dyn Context>>,
     // Vec<(start of loop label, end of loop label)>
     loop_label_stack: Vec<(String, String)>,
     call_stack: Vec<CallStackFrame>,
@@ -30,8 +30,9 @@ pub struct RootContext {
 }
 
 impl RootContext {
-    pub fn new(cli_args: Args) -> Self {
-        Self {
+    pub fn new(cli_args: Args) -> MutRc<Self> {
+        let self_ = new_mut_rc(Self {
+            self_: None,
             loop_label_stack: vec![],
             call_stack: vec![],
             anon_symbol_count: 0,
@@ -43,7 +44,9 @@ impl RootContext {
             cli_args,
             concrete_type_cache: HashMap::new(),
             ignore_definitions: false,
-        }
+        });
+        self_.borrow_mut().self_ = Some(self_.clone());
+        self_
     }
 }
 
@@ -79,11 +82,7 @@ impl Context for RootContext {
         None
     }
 
-    fn root(&self, self_: MutRc<dyn Context>) -> MutRc<dyn Context> {
-        self_
-    }
-
-    fn global_scope(&self, _self: MutRc<dyn Context>) -> MutRc<dyn Context> {
+    fn global_scope(&self) -> MutRc<dyn Context> {
         unreachable!("RootContext::global_scope")
     }
 
