@@ -10,7 +10,6 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 
-#[derive(Debug)]
 pub struct Scope {
     self_: Option<MutRc<dyn Context>>,
     parent: MutRc<dyn Context>,

@@ -11,7 +11,6 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 
-#[derive(Debug)]
 pub struct RootContext {
     self_: Option<MutRc<dyn Context>>,
     // Vec<(start of loop label, end of loop label)>

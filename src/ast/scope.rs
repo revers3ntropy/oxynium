@@ -4,8 +4,8 @@ use crate::context::Context;
 use crate::error::{Error, ErrorSource};
 use crate::position::Interval;
 use crate::util::MutRc;
+use std::fmt::Debug;
 
-#[derive(Debug)]
 pub struct ScopeNode {
     pub ctx: Option<MutRc<dyn Context>>,
     pub body: MutRc<dyn AstNode>,
@@ -41,5 +41,11 @@ impl AstNode for ScopeNode {
 
     fn pos(&self) -> Interval {
         self.position.clone()
+    }
+}
+
+impl Debug for ScopeNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(ScopeNode {:?})", self.position)
     }
 }

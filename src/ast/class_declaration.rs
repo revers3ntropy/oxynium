@@ -14,6 +14,7 @@ use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 use std::any::Any;
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 pub fn method_id(class_name: String, method_name: String) -> String {
     format!("{}.{}", class_name, method_name)
@@ -33,7 +34,6 @@ pub struct ClassField {
     pub type_: MutRc<dyn AstNode>,
 }
 
-#[derive(Debug)]
 pub struct ClassDeclarationNode {
     pub identifier: Token,
     pub fields: Vec<ClassField>,
@@ -233,5 +233,25 @@ impl AstNode for ClassDeclarationNode {
 
     fn pos(&self) -> Interval {
         self.position.clone()
+    }
+}
+
+impl Debug for ClassDeclarationNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut fields = "".to_string();
+        for field in self.fields.iter() {
+            fields.push_str(format!("{:?}, ", field).as_str());
+        }
+        let mut methods = "".to_string();
+        for method in self.methods.iter() {
+            methods.push_str(format!("{:?}, ", method).as_str());
+        }
+        write!(
+            f,
+            "ClassDeclarationNode {{ identifier: {:?}, fields: [{}], methods: [{}] }}",
+            self.identifier.literal.clone().unwrap(),
+            fields,
+            methods
+        )
     }
 }

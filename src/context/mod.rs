@@ -19,7 +19,7 @@ pub struct CallStackFrame {
     pub ret_lbl: String,
 }
 
-pub trait Context: Debug {
+pub trait Context {
     fn reset(&mut self);
     fn freeze(&mut self);
     fn is_frozen(&self) -> bool;
