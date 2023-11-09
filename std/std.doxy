@@ -169,7 +169,7 @@ extern def errno () Int
 extern def malloc()
 extern def memset()
 extern def memcpy()
-extern def free()
+extern def free<T>(a: T)
 extern def sprintf()
 extern def time()
 extern def fopen()

@@ -1,18 +1,27 @@
 #!/bin/bash
 
-sudo rm -r /var/lib/apport/coredump/*
+coredump_dir="/var/lib/apport/coredump"
+case $(bin/current_env) in
+    mac) coredump_dir="/cores" ;;
+esac
+
+sudo rm -r "$coredump_dir"/*
 
 ({
     ulimit -c unlimited
     bin/run "$1"
 } 2>&1) | echo -e "$(cat)"
 
-ls /var/lib/apport/coredump/
+ls "$coredump_dir"/
 
-for file in /var/lib/apport/coredump/*; do
+for file in "$coredump_dir"/*; do
     if [ -f "$file" ]; then
         echo "Core dump found: $file"
         echo "Running gdb..."
-        gdb ./res-out "$file"
+        case $(bin/current_env) in
+            mac) lldb ./res-out -c "$file" ;;
+            linux) gdb ./res-out "$file" ;;
+            *) echo "Unknown platform" ;;
+        esac
     fi
 done

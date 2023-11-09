@@ -8,7 +8,7 @@ case "${unameOut}" in
     Darwin*)    machine=Mac;;
     CYGWIN*)    machine=Cygwin;;
     MINGW*)     machine=MinGw;;
-    *)          machine="UNKNOWN:${unameOut}"
+    *)          machine="UNKNOWN"
 esac
 
 if [ "$machine" == "Mac" ]; then

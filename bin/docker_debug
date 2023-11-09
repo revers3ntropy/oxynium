@@ -1,6 +1,7 @@
 #!/bin/bash
 
 dockerfile="
+
 FROM ubuntu:latest
 
 WORKDIR /app
@@ -30,16 +31,13 @@ sudo docker run \
               oxy-testing:latest \
               bash
 
-# NEXT:
+# THEN RUN
 # On host:
-
-# echo '/tmp/core.%e.%p' | sudo tee /proc/sys/kernel/core_pattern
-
+# $ echo '/tmp/core.%e.%p' | sudo tee /proc/sys/kernel/core_pattern
 
 # In container:
-
-# ulimit -c unlimited
-# bin/run test.oxy
-# ls /tmp/core.*
-# gdb res-out /tmp/core.res-out.<n>
-# bt
+# $ ulimit -c unlimited
+# $ bin/run test.oxy
+# $ ls /tmp/core.*
+# $ gdb res-out /tmp/core.res-out.<n>
+# $ bt
