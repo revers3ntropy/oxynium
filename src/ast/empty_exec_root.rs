@@ -15,20 +15,19 @@ impl AstNode for EmptyExecRootNode {
         if ctx.borrow_mut().exec_mode() == ExecMode::Lib {
             Ok(format!(
                 "
-                section	.note.GNU-stack
-            "
+                    section	.text
+                "
             ))
         } else {
             Ok(format!(
                 "
-                section	.note.GNU-stack#            
-                section .text
-                    global main
-                    main:
-                        mov rax, 60
-                        mov rdi, 0
-                        syscall
-            "
+                    section .text
+                        global main
+                        main:
+                            mov rax, 60
+                            mov rdi, 0
+                            syscall
+                "
             ))
         }
     }
