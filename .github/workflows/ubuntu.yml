@@ -1,0 +1,21 @@
+name: Tests
+
+on:
+  push:
+    branches: [ "master", "stable" ]
+  pull_request:
+    branches: [ "master", "stable" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Ubuntu E2E
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Dependencies
+      run: sudo apt-get -y install nasm
+    - name: Run tests
+      run: bin/test
