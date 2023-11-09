@@ -11,6 +11,7 @@ use std::cell::RefCell;
 use std::fmt::Debug;
 use std::path::Path;
 use std::rc::Rc;
+use crate::target::Target;
 
 #[derive(Debug, Clone)]
 pub struct CallStackFrame {
@@ -75,4 +76,6 @@ pub trait Context {
 
     fn set_ignoring_definitions(&mut self, value: bool);
     fn is_ignoring_definitions(&self) -> bool;
+    
+    fn target(&self) -> Target;
 }

@@ -4,6 +4,7 @@ use crate::context::{CallStackFrame, Context};
 use crate::error::Error;
 use crate::position::Interval;
 use crate::symbols::{SymbolDec, SymbolDef};
+use crate::target::Target;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 use std::cell::RefCell;
@@ -235,5 +236,9 @@ impl Context for RootContext {
 
     fn is_ignoring_definitions(&self) -> bool {
         self.ignore_definitions
+    }
+
+    fn target(&self) -> Target {
+        self.cli_args.target.clone()
     }
 }
