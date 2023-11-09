@@ -8,15 +8,8 @@ expect '' '
 expect '' '
     def main () {
       let a = fn () Int -> 1
-    }
-'
-expect_err 'UnknownSymbol' '
-    def main () {
-      let a = 1
-
-      let b = fn () Int {
-        return b
-      }
+      // inferred return type
+      let b = fn () -> 1
     }
 '
 expect '4' '
@@ -33,24 +26,6 @@ expect '5' '
         return 5
       }
       print(five().Str())
-    }
-'
-expect_err 'UnknownSymbol' '
-    def main () {
-      let five = fn () Int {
-        return 5
-      }
-      let num = fn () Int {
-        return five()
-      }
-    }
-'
-expect_err 'UnknownSymbol' '
-    def main () {
-        let five = 5
-        fn () Int {
-            return five
-        }
     }
 '
 expect_err 'SyntaxError' '
@@ -119,7 +94,6 @@ expect '2' '
         print(y.Str())
     }
 '
-
 expect '3' '
     def apply<T, A>(t: T, applier: Fn (T) A) A {
         return applier(t)
@@ -141,5 +115,43 @@ expect '45' '
 expect '' '
     def make_mapper<T>(a: T, pick_a = false) Fn(T) T {
         return fn (b: T) T -> b
+    }
+'
+
+
+describe 'Anonymous Functions can Access Global Variables'
+
+expect 'hi' '
+    def main () {
+        let a = fn () -> print("hi")
+        a()
+    }
+'
+expect_err 'UnknownSymbol' '
+    def main () {
+      let a = 1
+
+      let b = fn () Int {
+        return b
+      }
+    }
+'
+
+expect_err 'UnknownSymbol' '
+    def main () {
+      let five = fn () Int {
+        return 5
+      }
+      let num = fn () Int {
+        return five()
+      }
+    }
+'
+expect_err 'UnknownSymbol' '
+    def main () {
+        let five = 5
+        fn () Int {
+            return five
+        }
     }
 '

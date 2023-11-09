@@ -178,7 +178,14 @@ impl Context for Scope {
         }
         // if in anon function scope, non-type symbols outside the scope should not
         // be visible, except if they are global
-        self.parent.borrow().get_dec_from_id(id).is_type
+        if self.parent.borrow().get_dec_from_id(id).is_type {
+            return true;
+        }
+
+        // cannot be global anon function scope
+        assert!(!(self.is_anon_function_scope && self.is_global));
+
+        self.global_scope().borrow().has_dec_with_id(id)
     }
     fn get_dec_from_id(&self, id: &str) -> SymbolDec {
         if let Some(dec) = self.declarations.get(id) {
