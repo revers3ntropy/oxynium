@@ -15,9 +15,9 @@ mod parse;
 mod position;
 mod post_process;
 mod symbols;
+mod target;
 mod types;
 mod util;
-mod target;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 

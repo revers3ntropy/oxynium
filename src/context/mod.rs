@@ -5,13 +5,13 @@ use crate::args::{Args, ExecMode};
 use crate::error::Error;
 use crate::position::Interval;
 use crate::symbols::{SymbolDec, SymbolDef};
+use crate::target::Target;
 use crate::types::Type;
 use crate::util::MutRc;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::path::Path;
 use std::rc::Rc;
-use crate::target::Target;
 
 #[derive(Debug, Clone)]
 pub struct CallStackFrame {
@@ -76,6 +76,6 @@ pub trait Context {
 
     fn set_ignoring_definitions(&mut self, value: bool);
     fn is_ignoring_definitions(&self) -> bool;
-    
+
     fn target(&self) -> Target;
 }
