@@ -5,10 +5,9 @@ WORKDIR /app
 SHELL ["/bin/bash", "-c"]
 
 # https://brew.sh/
-RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-RUN echo '# Set PATH, MANPATH, etc., for Homebrew.' >> /home/arch/.profile
-RUN echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/arch/.profile
-RUN eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+RUN eval "$(/usr/local/bin/brew shellenv)"
+ENV PATH="/usr/local/brew:${PATH}"
 
 RUN brew install -y nasm curl bc gcc
 

@@ -5,14 +5,13 @@ import subprocess
 def run_test(data: tuple[str]) -> tuple[bool, str, str]:
     name = data[0]
     print(f"Running '{name}'...")
+    cmd = ["sudo", "docker", "run", f"oxy-spec-{name}"]
     try:
-        return True, subprocess.run(
-            [
-                "sudo", "docker", "run", f"oxy-spec-{name}"
-            ],
-            check=True,
-            capture_output=True
-        ).stdout.decode(), name
+        return (
+            True,
+            subprocess.run(cmd, check=True, capture_output=True).stdout.decode(),
+            name
+        )
     except subprocess.CalledProcessError as e:
         return False, str(e.output), name
 
@@ -25,7 +24,7 @@ def main():
             ("arch",),
             ("alpine",),
             ("debian",),
-            #("macos",),
+            ("macos",),
         ])
         for success, output, name in result:
             out = (u'' + output)\
