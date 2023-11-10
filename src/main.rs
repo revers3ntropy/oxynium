@@ -18,6 +18,7 @@ mod symbols;
 mod target;
 mod types;
 mod util;
+mod backend;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 

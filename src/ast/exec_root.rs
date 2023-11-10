@@ -1,6 +1,7 @@
 use crate::args::ExecMode;
 use crate::ast::{AstNode, TypeCheckRes};
 use crate::ast::{STD_ASM, STD_DATA_ASM};
+use crate::backend::main_fn_id;
 use crate::context::Context;
 use crate::error::{syntax_error, type_error, Error};
 use crate::position::Interval;
@@ -8,6 +9,8 @@ use crate::types::function::FnType;
 use crate::types::Type;
 use crate::util::MutRc;
 use std::collections::HashMap;
+
+const LOG_TYPE_CHECK_PASSES: bool = false;
 
 #[derive(Debug)]
 pub struct ExecRootNode {
@@ -27,7 +30,9 @@ impl AstNode for ExecRootNode {
         // so that things aren't redeclared
         ctx.borrow_mut().freeze();
 
-        // println!("(Pass 0) Unknowns: {} ", unknowns);
+        if LOG_TYPE_CHECK_PASSES {
+            println!("(Pass 0) Unknowns: {} ", unknowns);
+        }
         #[allow(unused_variables)]
         let mut i = 0;
         while unknowns > 0 {
@@ -35,11 +40,9 @@ impl AstNode for ExecRootNode {
 
             ctx.borrow_mut().clear_concrete_cache();
             let res = self.statements.borrow().type_check(ctx.clone())?;
-
-            // println!(
-            //     "(Pass {}) Unknowns: {} ",
-            //     i, res.unknowns
-            // );
+            if LOG_TYPE_CHECK_PASSES {
+                println!("(Pass {}) Unknowns: {} ", i, res.unknowns);
+            }
 
             if res.unknowns >= unknowns {
                 break;
@@ -80,7 +83,6 @@ impl AstNode for ExecRootNode {
         if ctx_ref.exec_mode() == ExecMode::Lib {
             return Ok(format!(
                 "
-                    section	.note.GNU-stack
                     section .data
                         {data}
                     section .text
@@ -115,7 +117,7 @@ impl AstNode for ExecRootNode {
 
             if !main_signature.contains(main_type) {
                 return Err(type_error(format!(
-                    "main function must have signature 'main(): Void'"
+                    "`main` function must have signature `Fn main() Void`"
                 ))
                 .set_interval(main_decl.position.clone()));
             }
@@ -124,7 +126,7 @@ impl AstNode for ExecRootNode {
         if ctx_ref.has_dec_with_id("main") {
             if !has_main {
                 return Err(syntax_error(format!(
-                    "if main function is declared it must be defined"
+                    "if `main` function is declared it must be defined"
                 ))
                 .set_interval(ctx_ref.get_dec_from_id("main").position.clone()));
             }
@@ -132,21 +134,23 @@ impl AstNode for ExecRootNode {
 
         Ok(format!(
             "
-            %include \"{}\"
-            section	.note.GNU-stack
-            section .data
-                {STD_DATA_ASM}
-                {data}
-            section .text
-                global main
-            {STD_ASM}
-            {text}
-            main:
-                {res}
-                push 0
-                call exit
-        ",
-            ctx_ref.std_asm_path()
+                bits 64
+                %include \"{}\"
+                section .data
+                    {STD_DATA_ASM}
+                    {data}
+                section .text
+                    global {}
+                {STD_ASM}
+                {text}
+                {}:
+                    {res}
+                    push 0
+                    call exit
+            ",
+            ctx_ref.std_asm_path(),
+            main_fn_id(ctx_ref.target()),
+            main_fn_id(ctx_ref.target())
         ))
     }
 
