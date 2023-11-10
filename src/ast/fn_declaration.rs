@@ -537,7 +537,13 @@ impl AstNode for FnDeclarationNode {
 
         ctx.borrow_mut().stack_frame_pop();
         if self.is_anon {
-            return Ok(format!("push {}", self.identifier.clone().str()));
+            return Ok(format!(
+                "
+                    lea rax, [rel {}]
+                    push rax
+                ",
+                self.identifier.clone().str()
+            ));
         }
         Ok("".to_string())
     }

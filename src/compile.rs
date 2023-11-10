@@ -10,6 +10,7 @@ use crate::parse::parser::Parser;
 use crate::perf;
 use crate::position::Position;
 use crate::post_process::format_asm::post_process;
+use crate::target::Target;
 use crate::util::{string_to_static_str, MutRc};
 use std::fs::File;
 use std::io::Write;
@@ -172,8 +173,10 @@ fn assemble(
     };
 
     let nasm_out = Command::new("nasm")
-        .arg("-f")
-        .arg("elf64")
+        .arg(match args.target {
+            Target::MACOS => "-fmacho64",
+            Target::X86_64Linux => "-felf64",
+        })
         .arg(asm_out_file.clone().as_str())
         .arg("-o")
         .arg(o_out_file.clone().as_str())
@@ -197,10 +200,16 @@ fn assemble(
 
         let ls_out = Command::new("gcc")
             .arg("-Wall")
-            .arg("-no-pie")
+            .arg(match args.target {
+                Target::MACOS => "",
+                Target::X86_64Linux => "-no-pie",
+            })
             .arg(o_out_file.clone().as_str())
             .arg("-e")
-            .arg("main")
+            .arg(match args.target {
+                Target::MACOS => "start",
+                Target::X86_64Linux => "main",
+            })
             .arg("-o")
             .arg(args.out.clone().as_str())
             .output()
