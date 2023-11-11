@@ -67,7 +67,8 @@ def Ptr.allocate <A> (size: Int) Ptr<A> {
 			ret
 
 		_$_allocate_error:
-			push _$_alloc_err_msg
+		    lea rax, [rel _$_alloc_err_msg]
+			push rax
 			call panic
 	")
 }
