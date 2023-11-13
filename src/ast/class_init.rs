@@ -225,47 +225,39 @@ impl AstNode for ClassInitNode {
             } else {
                 format!(
                     "
-                push 8
-                call Ptr.allocate
-                add rsp, 8
-                mov qword [rax], 0
-                push rax
-            "
+                        mov rdi, 8
+                        mov rsi, 1
+                        call _LibC.calloc
+                        mov qword [rax], 0
+                        push rax
+                    "
                 )
             });
         }
 
         asm.push_str(&format!(
             "
-            push {}
-            call Ptr.allocate
-            add rsp, 8
-        ",
-            fields.len() * 8
+                mov rdi, {}
+                mov rsi, 8
+                call _LibC.calloc
+            ",
+            fields.len()
         ));
 
         for i in 0..fields.len() {
             asm.push_str(&format!(
                 "
-            pop rdx
-            mov qword [rax + {}], rdx
-        ",
+                    pop rdx
+                    mov qword [rax + {}], rdx
+                ",
                 class_type.field_offset(fields[i].0.clone())
             ));
         }
 
         if is_primitive {
-            asm.push_str(&format!(
-                "
-                push qword [rax]
-            "
-            ));
+            asm.push_str(&format!("push qword [rax]\n"));
         } else {
-            asm.push_str(&format!(
-                "
-                push rax
-            "
-            ));
+            asm.push_str(&format!("push rax\n"));
         }
 
         Ok(asm)

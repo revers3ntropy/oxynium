@@ -3,9 +3,9 @@ def Ptr.is_null (self) Bool ->
 
 def Ptr.make <From> (val: From) Ptr<From> {
 	return Any.cast!<Void, Ptr<From>>(#asm "
-		push 8
-		call Ptr.allocate
-		add rsp, 8
+		mov rdi, 8
+		mov rsi, 1
+		call _LibC.calloc
 
 		mov rdx, qword [rbp + 16]
 		mov qword [rax], rdx
@@ -18,58 +18,6 @@ def Ptr.unwrap (self) T {
 		mov rax, qword [rbp + 16]
 		mov rax, qword [rax]
 		push rax
-	")
-}
-
-def Ptr.allocate <A> (size: Int) Ptr<A> {
-	if size <= 0 {
-		// FIXME if Int.Str triggers this, then will recurse infinitely
-		panic("cannot allocate a block of memory of size " + size.Str())
-	}
-	return Any.cast!<Void, Ptr<A>>(#asm "
-		xor rax, rax
-
-		mov rdi, qword [rbp + 16]
-		cmp rdi, 0
-		jle _$_allocate_end
-
-		; https://stackoverflow.com/questions/74932257
-		; stack alignment around call to malloc
-		push rbp
-		mov rbp, rsp
-		sub rsp, 32
-		and rsp, -16
-		call malloc WRT ..plt
-		mov rsp, rbp
-		pop rbp
-
-		cmp rax, 0 ; if rax is NULL, fail
-		je _$_allocate_error
-
-		push rax
-		mov rdi, rax
-		mov rsi, 0
-		mov rdx, qword [rbp + 16]
-
-		push rbp
-		mov rbp, rsp
-		sub rsp, 32
-		and rsp, -16
-		call memset WRT ..plt
-		mov rsp, rbp
-		pop rbp
-
-		pop rax
-
-		_$_allocate_end:
-			mov rsp, rbp
-			pop rbp
-			ret
-
-		_$_allocate_error:
-		    lea rax, [rel _$_alloc_err_msg]
-			push rax
-			call panic
 	")
 }
 

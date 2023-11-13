@@ -34,8 +34,7 @@ def List.at_raw (self, i: Int) T {
 
 def List.push (self, value: T, n=1) {
 	if n < 0 -> return
-	if n > 1 ->
-		self.push(value, n - 1)
+	if n > 1 -> self.push(value, n - 1)
 
 	#asm "
 		; #1: Allocate space for old list and new element
@@ -44,10 +43,9 @@ def List.push (self, value: T, n=1) {
 		mov rcx, qword [rax + 8]  ; rdx = self.size
 		add rcx, 8 				  ; rdx = self.size + 8
 		mov qword [rax + 8], rcx  ; self.size = self.size + 8
-		push rcx 		          ; push self.size + 8
-		call Ptr.allocate         ; rax = allocate((self.size + 1) * 8)
-		add rsp, 8                ; pop self.size + 8
-
+		mov rdi, rcx 		      ; self.size + 8
+		mov rsi, 1
+		call _LibC.calloc         ; rax = allocate((self.size + 1) * 8)
 
 		; #2: Copy old list to new list
 

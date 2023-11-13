@@ -98,9 +98,9 @@ def Int.Str (self) Str {
 	// https://stackoverflow.com/questions/8257714
 	return Any.cast!<Void, Str>(#asm "
 		; allocate string
-		push 64 ; much larger than needed
-		call Ptr.allocate
-		add rsp, 8
+		mov rdi, 8 ; 64 bytes, much larger than needed
+		mov rsi, 8
+		call _LibC.calloc
 
 		mov r15, rax ; save char*
 		; write string to allocated memory using

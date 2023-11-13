@@ -51,9 +51,10 @@ def Str.+ (self, other: Str) Str {
 		add rax, qword [rbp - 8]   ; rax = other.len() + self.len()
 		inc rax                    ; rax = lhs.len() + rhs.len() + 1 (for null terminator)
 		imul rax, 8                ; rax = (lhs.len() + rhs.len() + 1) * 8
-		push rax
-		call Ptr.allocate       ; rax = malloc((lhs.len() + rhs.len() + 1) * 8)
-		add rsp, 8
+		mov rdi, rax
+		mov rsi, 1
+		call _LibC.calloc          ; rax = calloc((lhs.len() + rhs.len() + 1) * 8, 1)
+
 		mov qword [rbp - 24], rax  ; [rbp - 24] = new string
 
 		mov rdx, qword [rbp - 8]   ; rcx = self.len()
@@ -96,7 +97,7 @@ def Str.Utf8Str (self) Utf8Str {
 	if self.utf8_size() == 0 {
 		return Any.cast!<Str, Utf8Str>("")
 	}
-	let res = Ptr.allocate!<Char>(self.utf8_size())
+	let res = Any.cast!<Ptr<Any>, Ptr<Char>>(LibC.calloc(self.utf8_size(), 1))
 	#asm "
 		mov r15, qword [rbp + 16] ; r15 = self
 
@@ -120,6 +121,7 @@ def Str.Utf8Str (self) Utf8Str {
 			je .loop
 
 			mov cl, byte [r15]
+
 			mov byte [r14 + rax], cl
 
 			inc rax

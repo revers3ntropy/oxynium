@@ -124,8 +124,6 @@ primitive Ptr <T> {
 	extern def is_null (self) Bool,
 	extern def make <From> (val: From) Ptr<From>,
 	extern def unwrap (self) T,
-	/// Wrapper around `malloc`
-	extern def allocate <A> (size: Int) Ptr<A>,
 }
 
 class List <T> {
@@ -156,6 +154,18 @@ class File {
 	extern def is_open (self) Bool,
 }
 
+/// Lightweight wrappers around LibC function for faster
+/// calling from inline assembly - caller sets registers
+class _LibC {
+    extern def calloc (),
+}
+
+/// More ergonomic wrapper around LibC
+class LibC {
+    extern def calloc (num: Int, size: Int) Ptr<Any>,
+    extern def free <T> (ptr: Ptr<T>),
+}
+
 /// Reads from stdin until a newline is reached
 /// allocates string to heap to fit input
 /// returns pointer to string in rax
@@ -165,17 +175,17 @@ extern def print (msg="", line_end="\n")
 extern def panic (msg="Panic!")
 
 // Libc dependencies - declared externally in asm
-extern def malloc()
-extern def memset()
-extern def memcpy()
-extern def free<T>(a: T)
-extern def sprintf()
-extern def time()
-extern def fopen()
-extern def fseek()
-extern def fclose()
-extern def fread()
-extern def ftell()
+extern def malloc ()
+extern def memset ()
+extern def memcpy ()
+extern def free ()
+extern def sprintf ()
+extern def time ()
+extern def fopen ()
+extern def fseek ()
+extern def fclose ()
+extern def fread ()
+extern def ftell ()
 
 // Classes that may become part of the standard library in the future
 
@@ -207,7 +217,6 @@ class Task
 class Fn
 class Class
 class Instance
-class LibC
 class Def
 class Rc
 class Mem

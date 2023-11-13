@@ -11,18 +11,3 @@ expect '1,hi,2,3' '
         Ptr.make!<Int>(3)
     ).unwrap().unwrap().Str());
 '
-
-
-describe 'Ptr.allocate'
-
-expect "PANIC: 'cannot allocate a block of memory of size 0'" '
-    Ptr.allocate!<Int>(0)
-'
-expect "PANIC: 'cannot allocate a block of memory of size -99'" '
-    Ptr.allocate!<Int>(-99)
-'
-expect '0' '
-    def main () {
-        print(Ptr.allocate!<Int>(1).unwrap().Str())
-    }
-'

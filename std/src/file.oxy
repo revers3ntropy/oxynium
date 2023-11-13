@@ -102,11 +102,9 @@ def File.read_to_str (self) Str {
 		pop rbp
 
 		mov rdi, [rsp]       ; rdi = fsize
-		add rdi, 1
-		push rdi
-
-		call Ptr.allocate
-		add rsp, 8
+		add rdi, 8
+		mov rsi, 1
+		call _LibC.calloc
 
 		mov [rsp + 16], rax ; save string
 

@@ -12,9 +12,9 @@ def Char.!= (self, other: Char) Bool ->
 
 def Char.Str (self) Str {
 	return Any.cast!<Void, Str>(#asm "
-		push 16
-		call Ptr.allocate
-		add rsp, 8
+		mov rdi, 16
+		mov rsi, 1
+		call _LibC.calloc
 
 		mov rdi, qword [rbp + 16]
 		mov qword [rax], rdi

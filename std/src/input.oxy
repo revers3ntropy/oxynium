@@ -4,9 +4,8 @@ def input (prompt="", buffer_size=1000) Str {
 	return Any.cast!<Void, Str>(#asm "
 		mov rdi, qword [rbp + 24] ; buffer_size
 		add rdi, 1                ; add space for null byte
-		push rdi
-		call Ptr.allocate
-		add rsp, 8
+        mov rsi, 1
+		call _LibC.calloc
 		mov r15, rax              ; r15 = string pointer
 
 		mov rax, 0

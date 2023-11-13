@@ -76,13 +76,10 @@ def Utf8Str.Str (self) Str {
 
 			mov rdi, r13
 			add rdi, 64 ; add space for null terminator
-			imul rdi, 8
-			push rdi
-			call Ptr.allocate
-			add rsp, 8
-			; rax = return value (pointer to heap allocated char*)
+			mov rsi, 8
+			call _LibC.calloc
 
-			pop r13 ; restore r13
+			pop r13
 
 		._$_move_loop:
 			cmp r13, 0

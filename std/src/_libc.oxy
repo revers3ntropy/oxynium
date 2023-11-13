@@ -1,0 +1,7 @@
+def _LibC.calloc () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call calloc
+    "
+}

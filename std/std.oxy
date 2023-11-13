@@ -13,3 +13,5 @@
 #include "src/str.oxy"
 #include "src/time.oxy"
 #include "src/utf8str.oxy"
+#include "src/_libc.oxy"
+#include "src/libc.oxy"
