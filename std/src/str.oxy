@@ -66,7 +66,7 @@ def Str.+ (self, other: Str) Str {
 		mov rbp, rsp               ; stack is 16-byte aligned
 		sub rsp, 32
 		and rsp, -16
-		call memcpy WRT ..plt      ; memcpy(new string, self, self.len() * 8)
+		call memcpy      ; memcpy(new string, self, self.len() * 8)
 		mov rsp, rbp
 		pop rbp
 
@@ -82,7 +82,7 @@ def Str.+ (self, other: Str) Str {
 		mov rbp, rsp               ; stack is 16-byte aligned
 		sub rsp, 32
 		and rsp, -16
-		call memcpy WRT ..plt      ; memcpy(new string, other, other.len() * 8)
+		call memcpy      ; memcpy(new string, other, other.len() * 8)
 		mov rsp, rbp
 		pop rbp
 

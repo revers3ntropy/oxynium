@@ -117,7 +117,7 @@ def Int.Str (self) Str {
 		mov rbp, rsp
 		sub rsp, 32
 		and rsp, -16
-		call sprintf WRT ..plt
+		call sprintf
 		mov rsp, rbp
 		pop rbp
 
