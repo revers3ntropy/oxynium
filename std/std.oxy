@@ -13,5 +13,7 @@
 #include "src/str.oxy"
 #include "src/time.oxy"
 #include "src/utf8str.oxy"
-#include "src/_libc.linux.oxy"
-#include "src/libc.linux.oxy"
+#include("x86_64-linux", "src/_libc.linux.oxy")
+#include("macos", "src/_libc.macos.oxy")
+#include("x86_64-linux", "src/libc.linux.oxy")
+#include("macos", "src/libc.macos.oxy")

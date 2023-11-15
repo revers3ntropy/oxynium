@@ -1,0 +1,87 @@
+def _LibC.calloc () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call _calloc
+    "
+}
+
+def _LibC.memcpy () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call _memcpy
+    "
+}
+
+def _LibC.free () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call _free
+    "
+}
+
+def _LibC.sprintf () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call _sprintf
+    "
+}
+
+def _LibC.time () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call _time
+    "
+}
+
+def _LibC.fopen () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call _fopen
+    "
+}
+
+def _LibC.fseek () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call _fseek
+    "
+}
+
+def _LibC.fread () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call _fread
+    "
+}
+
+def _LibC.ftell () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call _ftell
+    "
+}
+
+def _LibC.fclose () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call _fclose
+    "
+}
+
+def _LibC.fwrite () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call _fwrite
+    "
+}

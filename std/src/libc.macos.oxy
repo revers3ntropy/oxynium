@@ -1,0 +1,19 @@
+def LibC.calloc (num: Int, size: Int) Ptr<Any> {
+    return Any.cast!<Void, Ptr<Any>>(#asm "
+        mov rdi, qword [rbp + 16]
+        mov rsi, qword [rbp + 24]
+        sub rsp, 32
+        and rsp, -16
+        call _calloc
+        push rax
+    ")
+}
+
+def LibC.free <T> (ptr: Ptr<T>) Void {
+    #asm "
+        mov rdi, qword [rbp + 16]
+        sub rsp, 32
+        and rsp, -16
+        call _free
+    "
+}
