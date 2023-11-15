@@ -8,3 +8,12 @@ def LibC.calloc (num: Int, size: Int) Ptr<Any> {
         push rax
     ")
 }
+
+def LibC.free <T> (ptr: Ptr<T>) Void {
+    #asm "
+        mov rdi, qword [rbp + 16]
+        sub rsp, 32
+        and rsp, -16
+        call free
+    "
+}

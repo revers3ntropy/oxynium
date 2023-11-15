@@ -14,15 +14,7 @@ def File.open (path: Str, mode: Str) Option<File> {
 
 		pop rdi
 		mov rsi, rax
-
-		push rbp
-		mov rbp, rsp
-		sub rsp, 32
-		and rsp, -16
-		call fopen
-		mov rsp, rbp
-		pop rbp
-
+		call _LibC.fopen
 		push rax
 	"
 
@@ -65,41 +57,20 @@ def File.read_to_str (self) Str {
 		mov rsi, 0
 		mov rdx, 2
 		mov rax, rdi
-
-		push rbp             ; align stack for 16 byte boundary
-		mov rbp, rsp         ; for libc calls
-		sub rsp, 32
-		and rsp, -16
-		call fseek
-		mov rsp, rbp        ; escape libc call alignment
-		pop rbp
+		call _LibC.fseek
 
 		mov rdi, [rsp + 8]   ; rdi = f
 		mov rsi, 0
 		mov rdx, 0
 		mov rax, rdi
-
-		push rbp
-		mov rbp, rsp
-		sub rsp, 32
-		and rsp, -16
-		call ftell
-		mov rsp, rbp
-		pop rbp
+		call _LibC.ftell
 
 		mov [rsp], rax       ; save fsize
 
 		mov rdi, [rsp + 8]   ; rdi = f
 		mov rsi, 0
 		mov rdx, 0
-
-		push rbp
-		mov rbp, rsp
-		sub rsp, 32
-		and rsp, -16
-		call fseek
-		mov rsp, rbp
-		pop rbp
+		call _LibC.fseek
 
 		mov rdi, [rsp]       ; rdi = fsize
 		add rdi, 8
@@ -112,14 +83,7 @@ def File.read_to_str (self) Str {
 		mov rsi, [rsp]      ; rsi = fsize
 		mov rdx, 1
 		mov rcx, [rsp + 8]  ; rcx = f
-
-		push rbp
-		mov rbp, rsp
-		sub rsp, 32
-		and rsp, -16
-		call fread
-		mov rsp, rbp
-		pop rbp
+		call _LibC.fread
 
 		mov rdi, [rsp + 16] ; rdi = string
 		mov rsi, [rsp]      ; rsi = fsize
@@ -139,13 +103,7 @@ def File.close (self) {
 	#asm "
 		mov rdi, [rbp - 8] ; rdi = self.handle
 
-		push rbp
-		mov rbp, rsp
-		sub rsp, 32
-		and rsp, -16
-		call fclose
-		mov rsp, rbp
-		pop rbp
+		call _LibC.fclose
 
 		mov rax, qword [rbp + 16]  ; rax = self
 		mov qword [rax], 0         ; self.handle = 0
@@ -171,13 +129,6 @@ def File.write (self, data: Str) {
 		mov rsi, 1         ; rsi = 1
 		pop rdx            ; rdx = data.utf8_size()
 		mov rcx, [rbp - 8] ; rcx = self.handle
-
-		push rbp
-		mov rbp, rsp
-		sub rsp, 32
-		and rsp, -16
-		call fwrite
-		mov rsp, rbp
-		pop rbp
+		call _LibC.fwrite
 	"
 }

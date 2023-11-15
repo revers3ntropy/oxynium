@@ -162,9 +162,15 @@ class _LibC {
     extern def free (),
     extern def sprintf (),
     extern def time (),
+    extern def fopen (),
+    extern def fseek (),
+    extern def fread (),
+    extern def ftell (),
+    extern def fclose (),
+    extern def fwrite (),
 }
 
-/// More ergonomic wrapper around LibC
+/// Wrappers around some LibC functions
 class LibC {
     extern def calloc (num: Int, size: Int) Ptr<Any>,
     extern def free <T> (ptr: Ptr<T>),

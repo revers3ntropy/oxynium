@@ -37,3 +37,51 @@ def _LibC.time () {
         call time
     "
 }
+
+def _LibC.fopen () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call fopen
+    "
+}
+
+def _LibC.fseek () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call fseek
+    "
+}
+
+def _LibC.fread () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call fread
+    "
+}
+
+def _LibC.ftell () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call ftell
+    "
+}
+
+def _LibC.fclose () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call fclose
+    "
+}
+
+def _LibC.fwrite () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call fwrite
+    "
+}
