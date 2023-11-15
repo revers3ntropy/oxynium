@@ -1,4 +1,5 @@
 use crate::ast::{AstNode, TypeCheckRes};
+use crate::backend::main_fn_id;
 use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::Token;
@@ -52,7 +53,7 @@ impl AstNode for StrNode {
         if let Some(scope) = ctx.borrow().stack_frame_peak() {
             symbol_name = format!("{}{}", scope.name, symbol_name);
         } else {
-            symbol_name = format!("main{}", symbol_name);
+            symbol_name = format!("{}{}", main_fn_id(ctx.borrow().target()), symbol_name);
         }
 
         ctx.borrow_mut().define_global(
