@@ -5,6 +5,7 @@ use crate::ast::type_expr_generic::GenericTypeNode;
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
+use crate::target::Target;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
@@ -45,8 +46,18 @@ pub mod unary_op;
 pub mod r#while;
 
 pub const ANON_PREFIX: &str = "_$_";
-pub const STD_ASM: &str = include_str!("../../std/std.asm");
+
 pub const STD_DATA_ASM: &str = include_str!("../../std/std-data.asm");
+
+pub const STD_ASM_MACOS: &str = include_str!("../../std/std.macos.asm");
+pub const STD_ASM_LINUX: &str = include_str!("../../std/std.linux.asm");
+
+pub fn std_asm(target: Target) -> &'static str {
+    match target {
+        Target::X86_64Linux => STD_ASM_LINUX,
+        Target::MACOS => STD_ASM_MACOS,
+    }
+}
 
 #[macro_export]
 macro_rules! get_type {

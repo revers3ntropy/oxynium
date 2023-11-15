@@ -1,6 +1,6 @@
 use crate::args::ExecMode;
-use crate::ast::{AstNode, TypeCheckRes};
-use crate::ast::{STD_ASM, STD_DATA_ASM};
+use crate::ast::STD_DATA_ASM;
+use crate::ast::{std_asm, AstNode, TypeCheckRes};
 use crate::backend::main_fn_id;
 use crate::context::Context;
 use crate::error::{syntax_error, type_error, Error};
@@ -132,6 +132,7 @@ impl AstNode for ExecRootNode {
             }
         }
 
+        let std_asm = std_asm(ctx_ref.target());
         Ok(format!(
             "
                 bits 64
@@ -141,7 +142,7 @@ impl AstNode for ExecRootNode {
                     {data}
                 section .text
                     global {}
-                {STD_ASM}
+                {std_asm}
                 {text}
                 {}:
                     {res}
