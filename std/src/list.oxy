@@ -60,14 +60,7 @@ def List.push (self, value: T, n=1) {
 		mov rcx, qword [rbp + 16] ; rcx = self
 		mov qword [rcx], rax      ; self.head = new_list
 
-		push rbp
-		mov rbp, rsp
-		sub rsp, 32
-		and rsp, -16
-		call memcpy    ; memcpy(new list, old list, (old list size - 1) * 8)
-		mov rsp, rbp
-		pop rbp
-
+		call _LibC.memcpy    ; memcpy(new list, old list, (old list size - 1) * 8)
 
 		; #3: Add new element to new list
 

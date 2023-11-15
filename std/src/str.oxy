@@ -62,13 +62,7 @@ def Str.+ (self, other: Str) Str {
 		mov rsi, qword [rbp + 16]  ; rsi = self
 		mov rdi, qword [rbp - 24]  ; rdx = new string
 
-		push rbp
-		mov rbp, rsp               ; stack is 16-byte aligned
-		sub rsp, 32
-		and rsp, -16
-		call memcpy      ; memcpy(new string, self, self.len() * 8)
-		mov rsp, rbp
-		pop rbp
+		call _LibC.memcpy      ; memcpy(new string, self, self.len() * 8)
 
 		mov rdx, qword [rbp - 16]  ; rcx = other.len()
 		imul rdx, 8                ; rcx = other.len() * 8
@@ -78,13 +72,7 @@ def Str.+ (self, other: Str) Str {
 		imul rax, 8                ; rax = other.len() * 8
 		add rdi, rax               ; rdx = new string + other.len() * 8
 
-		push rbp
-		mov rbp, rsp               ; stack is 16-byte aligned
-		sub rsp, 32
-		and rsp, -16
-		call memcpy      ; memcpy(new string, other, other.len() * 8)
-		mov rsp, rbp
-		pop rbp
+		call _LibC.memcpy      ; memcpy(new string, other, other.len() * 8)
 
 		mov rax, qword [rbp - 24]  ; rax = new string
 		push rax

@@ -112,14 +112,7 @@ def Int.Str (self) Str {
 		mov rcx, rsi
 		mov r8, 0
 		mov r9, 0
-
-		push rbp
-		mov rbp, rsp
-		sub rsp, 32
-		and rsp, -16
-		call sprintf
-		mov rsp, rbp
-		pop rbp
+		call _LibC.sprintf
 
 		mov rax, r15
 

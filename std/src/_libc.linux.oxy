@@ -5,3 +5,35 @@ def _LibC.calloc () {
         call calloc
     "
 }
+
+def _LibC.memcpy () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call memcpy
+    "
+}
+
+def _LibC.free () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call free
+    "
+}
+
+def _LibC.sprintf () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call sprintf
+    "
+}
+
+def _LibC.time () {
+    #asm "
+        sub rsp, 32
+        and rsp, -16
+        call time
+    "
+}

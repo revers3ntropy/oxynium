@@ -158,6 +158,10 @@ class File {
 /// calling from inline assembly - caller sets registers
 class _LibC {
     extern def calloc (),
+    extern def memcpy (),
+    extern def free (),
+    extern def sprintf (),
+    extern def time (),
 }
 
 /// More ergonomic wrapper around LibC
