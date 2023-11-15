@@ -35,7 +35,7 @@ impl AstNode for GlobalConstNode<i64> {
         ctx.borrow_mut().declare(
             SymbolDec {
                 name: self.identifier.clone().literal.unwrap(),
-                id: format!("qword [{}]", self.asm_id()),
+                id: format!("qword [rel {}]", self.asm_id()),
                 is_constant: true,
                 is_type: false,
                 is_func: false,
@@ -53,9 +53,10 @@ impl AstNode for GlobalConstNode<i64> {
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
-                "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
+                "cannot declare global constant '{}' inside function",
                 self.identifier.clone().literal.unwrap()
             ))
+            .hint("try using `let` instead".to_string())
             .set_interval((self.pos().0, self.identifier.end.clone())));
         }
         ctx.borrow_mut().define(
@@ -78,9 +79,10 @@ impl AstNode for GlobalConstNode<String> {
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {
             return Err(syntax_error(format!(
-                "Cannot declare global constant '{}' inside function. Try using 'let' instead.",
+                "cannot declare global constant '{}' inside function",
                 self.identifier.clone().literal.unwrap()
             ))
+            .hint("try using `let` instead".to_string())
             .set_interval((self.pos().0, self.identifier.end.clone())));
         }
 
