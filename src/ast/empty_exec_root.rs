@@ -1,5 +1,6 @@
 use crate::args::ExecMode;
 use crate::ast::AstNode;
+use crate::backend::main_fn_id;
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
@@ -19,11 +20,12 @@ impl AstNode for EmptyExecRootNode {
                 "
             ))
         } else {
+            let main_id = main_fn_id(ctx.borrow().target());
             Ok(format!(
                 "
                     section .text
-                        global main
-                        main:
+                        global {main_id}
+                        {main_id}:
                             mov rax, 60
                             mov rdi, 0
                             syscall
