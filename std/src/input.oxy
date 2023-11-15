@@ -8,11 +8,10 @@ def input (prompt="", buffer_size=1000) Str {
 		call _LibC.calloc
 		mov r15, rax              ; r15 = string pointer
 
-		mov rax, 0
 		mov rdi, 0
 		mov rsi, r15
 		mov rdx, qword [rbp + 24]
-		syscall
+		call _Syscall.input
 
 		; remove trailing new line, and null terminate
 		mov rax, r15

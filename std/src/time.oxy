@@ -31,10 +31,9 @@ def Time.current_seconds () Int {
 
 def Time.current_microseconds () Int {
 	return Any.cast!<Void, Int>(#asm "
-		mov rax, 96
 		lea rdi, [rsp - 16]
 		xor esi, esi
-		syscall
+		call _Syscall.microseconds
 		mov rax, [rdi + 8]
 		push rax
 	")

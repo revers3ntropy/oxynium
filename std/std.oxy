@@ -17,3 +17,5 @@
 #include("macos", "src/_libc.macos.oxy")
 #include("x86_64-linux", "src/libc.linux.oxy")
 #include("macos", "src/libc.macos.oxy")
+#include("x86_64-linux", "src/_syscall.linux.oxy")
+#include("macos", "src/_syscall.macos.oxy")

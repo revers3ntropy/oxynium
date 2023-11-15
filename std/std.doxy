@@ -154,6 +154,13 @@ class File {
 	extern def is_open (self) Bool,
 }
 
+class _Syscall {
+    extern def out (),
+    extern def input (),
+    extern def exit (),
+    extern def microseconds (),
+}
+
 /// Lightweight wrappers around LibC function for faster
 /// calling from inline assembly - caller sets registers
 class _LibC {

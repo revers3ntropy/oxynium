@@ -1,29 +1,13 @@
-def print (msg="", line_end="\n") {
+def print (msg = "", line_end="\n") {
+	let len = msg.len() * 8
 	#asm "
-	    mov rsi, qword [rbp+16] ; pop string
-        mov rax, rsi            ; copy string pointer
-
-        xor rdx, rdx            ; string length
-
-        ; find length of string
-        _$_print_find_length:
-            mov rcx, qword [rax]
-            test rcx, rcx
-            je _$_print_end_length
-            inc rdx
-            inc rax
-            jmp _$_print_find_length
-
-        _$_print_end_length:
-            mov rax, 1
-            mov rdi, 1
-            syscall
+	    mov rsi, qword [rbp + 16]
+        mov rdx, qword [rbp - 8] ; string length
+		mov rdi, 1
+		call _Syscall.out
 	"
 
-	// just to allow calls from asm without having to pass two pointers,
-	// the line_end can be null, which makes debugging asm easier,
-	// and has no effect what can normally be done by calling this function.
-	if Any.cast!<Str, Int>(line_end) == 0 {
+	if !Any.cast!<Str, Bool>(line_end) {
 		print("\n", "")
 		return
 	}
