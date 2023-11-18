@@ -106,9 +106,7 @@ pub fn get_cli_args() -> Args {
         std_path: unsafe {
             string_to_static_str(
                 m.get_one::<String>("std")
-                    .unwrap_or(
-                        &shellexpand::tilde(&String::from("~/.oxynium/std.macos.asm")).to_string(),
-                    )
+                    .unwrap_or(&shellexpand::tilde(&String::from("~/.oxynium/std.asm")).to_string())
                     .to_string(),
             )
         },
