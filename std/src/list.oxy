@@ -89,11 +89,20 @@ def List.set_at (self, idx: Int, val: T) Result<Void, Str> {
 
 	#asm "
 		mov rax, qword [rbp + 16]      ; rax = self
-		mov rcx, qword [rax + 8]       ; rcx = self.size
 		mov rax, qword [rax]           ; rax = self.head
 		mov rdx, qword [rbp + 24]      ; rdx = idx
 		mov rsi, qword [rbp + 32]      ; rsi = val
 		mov qword [rax + rdx * 8], rsi ; self.head[idx] = val
 	"
 	return Result.ok!<Void, Str>(Any.cast!<Int, Void>(0))
+}
+
+def List.map <To> (self, f: Fn (T, Int) To) List<To> {
+	let new_list = List.empty!<To>()
+	let mut i = 0;
+	while i < self.len() {
+		new_list.push(f(self.at_raw(i), i))
+		i = i + 1
+	}
+	return new_list
 }

@@ -408,3 +408,23 @@ def Str.Int (self) Result<Int, Str> {
 
 	return Result.ok!<Int, Str>(result * sign)
 }
+
+// eg: "1,2,3".split(",") -> ["1", "2", "3"]
+//     "1,2,3".split(",2") -> ["1,", ",3"]
+def Str.split (self, separator: Str) List<Str> {
+	let mut i = 0
+	let s = List.empty!<Str>()
+	let mut me = self
+	while i < me.len() - separator.len() {
+		let j = me.find(separator)
+		if j < 0 {
+			s.push(me)
+			break
+		}
+		s.push(me.substr(0, j))
+		// TODO make this fast without pointer arithmetic
+		me = Any.cast!<Int, Str>(Any.cast!<Str, Int>(me) + (j + separator.len()) * 8)
+		i = 0
+	}
+	return s
+}

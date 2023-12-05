@@ -67,6 +67,7 @@ class Str {
     extern def insert (self, index: Int, other: Str) Str,
     extern def remove (self, index: Int, count = 1) Str,
     extern def utf8_size (self) Int,
+    extern def split (self, delimiter: Str) List<Str>,
 }
 
 class Utf8Str {
@@ -140,6 +141,7 @@ class List <T> {
     extern def at_raw (self, i: Int) T,
     extern def push (self, value: T, n=1),
     extern def set_at (self, i: Int, value: T) Result<Void, Str>,
+	extern def map <To> (self, f: Fn(T, Int) To) List<To>,
 }
 
 class File {
