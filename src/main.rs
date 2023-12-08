@@ -6,6 +6,7 @@ use std::path::Path;
 
 mod args;
 mod ast;
+mod backend;
 mod compile;
 mod context;
 mod error;
@@ -18,7 +19,6 @@ mod symbols;
 mod target;
 mod types;
 mod util;
-mod backend;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -102,17 +102,3 @@ fn main() {
 
     print_usage()
 }
-
-// fn f(a: A) -> &'static A {
-//     a.b.c.a
-// }
-// struct A {
-//     b: &'static B,
-// }
-//
-// struct B {
-//     c: &'static C,
-// }
-// struct C {
-//     a: &'static A,
-// }
