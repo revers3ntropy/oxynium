@@ -33,7 +33,6 @@ impl AstNode for ExecRootNode {
         if LOG_TYPE_CHECK_PASSES {
             println!("(Pass 0) Unknowns: {} ", unknowns);
         }
-        #[allow(unused_variables)]
         let mut i = 0;
         while unknowns > 0 {
             i += 1;
@@ -116,10 +115,10 @@ impl AstNode for ExecRootNode {
             };
 
             if !main_signature.contains(main_type) {
-                return Err(type_error(format!(
-                    "`main` function must have signature `Fn main() Void`"
-                ))
-                .set_interval(main_decl.position.clone()));
+                return Err(
+                    type_error(format!("`main` function must have type `Fn () Void`"))
+                        .set_interval(main_decl.position.clone()),
+                );
             }
         }
 
