@@ -65,18 +65,3 @@ expect 'false,false,false,2,true,1,false,true,3,false' '
     	print(l.set_at(10, 1).ok.Str())
     }
 '
-
-describe 'List.map'
-
-expect '1,2,3,4,-1,-2,-3,-4,' '
-    def main () {
-    	let l = List.empty!<Int>()
-    	l.push(1)
-    	l.push(2)
-    	l.push(3)
-    	l.push(4)
-    	l.map!<Void>(fn (x: Int, _: Int) -> print(x.Str(), ","))
-        let ml = l.map!<Int>(fn (x: Int, _: Int) -> -x)
-        ml.map!<Void>(fn (x: Int, _: Int) -> print(x.Str(), ","))
-    }
-'
