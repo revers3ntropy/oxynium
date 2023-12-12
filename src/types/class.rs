@@ -1,8 +1,12 @@
 use crate::ast::class_declaration::{method_id, operator_method_id};
+use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::Error;
-use crate::parse::token::Token;
+use crate::parse::token::{Token, TokenType};
+use crate::position::Position;
+use crate::symbols::SymbolDec;
 use crate::types::function::FnType;
+use crate::types::generic::GenericType;
 use crate::types::Type;
 use crate::util::{new_mut_rc, MutRc};
 use std::collections::HashMap;
@@ -101,10 +105,17 @@ impl Type for ClassType {
     }
 
     fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
+        // println!(
+        //     "making class concrete [[{}]]: {}",
+        //     self.cache_id(ctx.clone()),
+        //     self.str()
+        // );
+
         if let Some(cached) = ctx
             .borrow()
             .concrete_type_cache_get(self.cache_id(ctx.clone()))
         {
+            //println!("[class from cache] {}", cached.borrow().str());
             return Ok(cached);
         }
 
@@ -156,9 +167,41 @@ impl Type for ClassType {
             let methods_clone = methods.clone();
             let method = methods_clone.get(name.as_str()).clone().unwrap();
 
+            // methods can't tell if a generic T is from their own
+            // generic args or from the class's generic args,
+            // so create a new scope with the methods generic args
+            // for them so that references to T are resolved correctly
+
+            let method_ctx = Scope::new_local(ctx.clone());
+
+            for (generic_identifier, _type) in method.borrow().generic_args.clone() {
+                method_ctx.borrow_mut().declare(
+                    SymbolDec {
+                        name: generic_identifier.clone(),
+                        id: generic_identifier.clone(),
+                        is_constant: true,
+                        is_type: true,
+                        is_func: false,
+                        type_: new_mut_rc(GenericType {
+                            identifier: Token {
+                                token_type: TokenType::Identifier,
+                                literal: Some(generic_identifier.clone()),
+                                start: Position::unknown(),
+                                end: Position::unknown(),
+                            },
+                        }),
+                        require_init: false,
+                        is_defined: true,
+                        is_param: true,
+                        position: Position::unknown_interval(),
+                    },
+                    Position::unknown_interval(),
+                )?;
+            }
+
             let new_method_type = method
                 .borrow()
-                .concrete(ctx.clone())?
+                .concrete(method_ctx.clone())?
                 .borrow()
                 .as_fn()
                 .unwrap();
@@ -178,17 +221,17 @@ impl Type for ClassType {
         if self.generic_params_order.len() < 1 {
             return self.id.to_string();
         }
-        format!(
+        let res = format!(
             "{}<{}>",
             self.id,
             self.generic_args
                 .iter()
                 .map(|(k, value)| {
                     if value.borrow().as_generic().is_none() {
-                        return value.borrow().cache_id(ctx.clone());
+                        return format!("{k}::{}", value.borrow().cache_id(ctx.clone()));
                     }
                     if !ctx.borrow().has_dec_with_id(k) {
-                        return format!("{}:{}", k, k);
+                        return format!("{k}:{k}");
                     }
                     if format!("{:p}", self)
                         == format!(
@@ -199,8 +242,7 @@ impl Type for ClassType {
                         panic!()
                     }
                     format!(
-                        "{}:{}",
-                        k,
+                        "{k}:::{}",
                         ctx.borrow()
                             .get_dec_from_id(&k)
                             .type_
@@ -210,7 +252,9 @@ impl Type for ClassType {
                 })
                 .collect::<Vec<String>>()
                 .join(",")
-        )
+        );
+        println!("[[ {} ]] {res}", self.str());
+        res
     }
 
     fn as_class(&self) -> Option<ClassType> {

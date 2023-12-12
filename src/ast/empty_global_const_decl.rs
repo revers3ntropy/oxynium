@@ -32,6 +32,7 @@ impl AstNode for EmptyGlobalConstNode {
         } = self.type_.borrow_mut().type_check(ctx.clone())?;
 
         let id = if !type_.borrow().is_ptr() {
+            panic!("NOT A POINTER!!!");
             // deref if it shouldn't stay as a pointer
             format!("qword [rel {}]", self.identifier.clone().literal.unwrap())
         } else {

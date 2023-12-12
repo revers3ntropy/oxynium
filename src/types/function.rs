@@ -46,7 +46,7 @@ impl Type for FnType {
             self.name,
             if self.generic_params_order.len() > 0 {
                 format!(
-                    "<{}>",
+                    "!<{}>",
                     self.generic_params_order
                         .iter()
                         .map(|p| {
@@ -76,15 +76,11 @@ impl Type for FnType {
             return true;
         }
         if let Some(fn_type) = t.borrow().as_fn() {
-            let required_args = self.parameters.iter().filter(|a| a.default_value.is_none());
-
-            if !(self.ret_type.borrow().contains(fn_type.ret_type.clone())) {
+            if !self.ret_type.borrow().contains(fn_type.ret_type.clone()) {
                 return false;
             }
 
-            if fn_type.parameters.len() < required_args.count()
-                || fn_type.parameters.len() > self.parameters.len()
-            {
+            if fn_type.parameters.len() > self.parameters.len() {
                 return false;
             }
             for i in 0..fn_type.parameters.len() {
@@ -113,10 +109,13 @@ impl Type for FnType {
     }
 
     fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
+        //println!("making concrete: {}", self.str());
+
         if let Some(cached) = ctx
             .borrow()
             .concrete_type_cache_get(self.cache_id(ctx.clone()))
         {
+            //print!("[cached] {}", cached.borrow().str());
             return Ok(cached);
         }
 
@@ -134,6 +133,15 @@ impl Type for FnType {
         ctx.borrow_mut()
             .concrete_type_cache_set(cache_id, res.clone());
 
+        // println!(
+        //     "making {} generic args concrete: {}",
+        //     self.str(),
+        //     self.generic_args
+        //         .iter()
+        //         .map(|(k, v)| format!("{}: {}", k, v.borrow().str()))
+        //         .collect::<Vec<String>>()
+        //         .join(", ")
+        // );
         for p in self.generic_params_order.iter() {
             res.borrow_mut().generic_args.insert(
                 p.clone().literal.unwrap(),
@@ -145,10 +153,17 @@ impl Type for FnType {
             );
         }
 
-        let return_type = self.ret_type.borrow().concrete(ctx.clone())?;
-        res.borrow_mut().ret_type = return_type;
-
+        // println!(
+        //     "making {} parameters concrete: {}",
+        //     self.str(),
+        //     self.parameters
+        //         .iter()
+        //         .map(|p| p.str())
+        //         .collect::<Vec<String>>()
+        //         .join(", ")
+        // );
         for param in &self.parameters {
+            // keep outside of the loop to avoid borrowing issues
             let type_ = param.type_.borrow().concrete(ctx.clone())?;
             res.borrow_mut().parameters.push(FnParamType {
                 name: param.name.clone(),
@@ -157,6 +172,12 @@ impl Type for FnType {
                 position: param.position.clone(),
             });
         }
+
+        //println!("making {} return type concrete", self.str(),);
+        let return_type = self.ret_type.borrow().concrete(ctx.clone())?;
+        res.borrow_mut().ret_type = return_type;
+
+        //println!("{} -> {}", self.str(), res.borrow().str());
 
         let cache_id = self.cache_id(ctx.clone());
         ctx.borrow_mut().concrete_type_cache_remove(&cache_id);
@@ -169,8 +190,9 @@ impl Type for FnType {
             return format!("({})", self.str());
         }
         format!(
-            "({}<{}>)",
+            "(({})Fn {}<{}>)",
             self.id,
+            self.name,
             self.generic_args
                 .iter()
                 .map(|(k, value)| {

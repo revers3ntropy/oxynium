@@ -5,7 +5,7 @@ use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::get_type;
 use crate::parse::token::Token;
-use crate::position::{Interval, Position};
+use crate::position::Interval;
 use crate::symbols::SymbolDec;
 use crate::types::function::{FnParamType, FnType};
 use crate::types::unknown::UnknownType;
@@ -158,6 +158,7 @@ impl FnCallNode {
             ))
             .set_interval(self.identifier.interval()));
         }
+
         return Ok(CalleeType {
             fn_type: Some(fn_type_option.unwrap()),
             calling_through_instance: false,
@@ -190,19 +191,25 @@ impl AstNode for FnCallNode {
         } = self.get_callee_type(ctx.clone())?;
 
         if fn_type.is_none() {
-            if !ctx.borrow().throw_on_unknowns() {
-                return Ok(TypeCheckRes::unknown_and(unknowns));
+            if ctx.borrow().throw_on_unknowns() {
+                return Err(unknown_symbol(format!(
+                    "can't find {} `{}`",
+                    if base_type.is_some() {
+                        format!("method on type `{}`", base_type.unwrap().borrow().str())
+                    } else {
+                        "function".to_string()
+                    },
+                    self.identifier.clone().literal.unwrap()
+                ))
+                .set_interval(self.identifier.interval()));
             }
-            return Err(unknown_symbol(format!(
-                "can't find {} `{}`",
-                if base_type.is_some() {
-                    format!("method on type `{}`", base_type.unwrap().borrow().str())
-                } else {
-                    "function".to_string()
-                },
-                self.identifier.clone().literal.unwrap()
-            ))
-            .set_interval(self.identifier.interval()));
+            for arg in self.generic_args.clone() {
+                unknowns += arg.borrow().type_check(ctx.clone())?.unknowns;
+            }
+            for arg in self.args.iter() {
+                unknowns += arg.borrow().type_check(ctx.clone())?.unknowns;
+            }
+            return Ok(TypeCheckRes::unknown_and(unknowns));
         }
         let mut fn_type = fn_type.unwrap();
 
@@ -226,8 +233,8 @@ impl AstNode for FnCallNode {
             ))
             .set_interval(self.position.clone())
             .hint(format!(
-                "function `{}` requires {} generic arguments",
-                fn_type.str(),
+                "found {} but requires {}",
+                self.generic_args.len(),
                 fn_type.generic_params_order.len()
             )));
         }
@@ -262,7 +269,7 @@ impl AstNode for FnCallNode {
                 name: "self".to_string(),
                 type_: base_type.unwrap(),
                 default_value: None,
-                position: Position::unknown_interval(),
+                position: self.identifier.interval(),
             });
         }
 
@@ -339,6 +346,7 @@ impl AstNode for FnCallNode {
             }
             unknowns += 1;
         }
+
         Ok(TypeCheckRes::from(fn_type.ret_type.clone(), unknowns))
     }
 

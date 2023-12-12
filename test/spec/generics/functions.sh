@@ -163,3 +163,37 @@ expect_err 'TypeError' '
     }
     print(new C<Int>.a!<Str>(1).Str());
 '
+
+
+describe 'Generic Methods with Generic Classes'
+
+expect 'List<Int>' '
+    print(typeof List.empty!<Str>()
+        .map!<Int>(fn (a: Str, i: Int) -> 1))
+'
+expect 'List<Int>' '
+    print(typeof List.empty!<Str>()
+        .map!<Int>(fn (a: Str) -> a)
+        .map!<Int>(fn (a: Int) -> 1))
+'
+expect 'List<Str>' '
+    print(typeof List.empty!<Str>()
+        .map!<Int>(fn (a: Str) -> 1)
+        .map!<Str>(fn (a: Int) -> ""))
+'
+expect 'List<Str>' '
+    print(typeof List.empty!<Int>()
+        .map!<Int>(fn (a: Int) -> 1)
+        .map!<Str>(fn () -> "")
+        .map!<Int>(fn (a: Str) -> 1)
+        .map!<Str>(fn (b: Int) -> ""))
+'
+expect_err 'TypeError' '
+    print(typeof List.empty!<Str>()
+        .map!<Int>(fn () -> ""))
+'
+expect_err 'TypeError' '
+    print(typeof List.empty!<Str>()
+        .map!<Int>(fn () -> 1)
+        .map!<Str>(fn () -> 2))
+'

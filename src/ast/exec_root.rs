@@ -10,7 +10,7 @@ use crate::types::Type;
 use crate::util::MutRc;
 use std::collections::HashMap;
 
-const LOG_TYPE_CHECK_PASSES: bool = false;
+const LOG_TYPE_CHECK_PASSES: bool = true;
 
 #[derive(Debug)]
 pub struct ExecRootNode {
