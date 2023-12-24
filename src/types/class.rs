@@ -105,17 +105,10 @@ impl Type for ClassType {
     }
 
     fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
-        // println!(
-        //     "making class concrete [[{}]]: {}",
-        //     self.cache_id(ctx.clone()),
-        //     self.str()
-        // );
-
         if let Some(cached) = ctx
             .borrow()
             .concrete_type_cache_get(self.cache_id(ctx.clone()))
         {
-            //println!("[class from cache] {}", cached.borrow().str());
             return Ok(cached);
         }
 
@@ -253,7 +246,6 @@ impl Type for ClassType {
                 .collect::<Vec<String>>()
                 .join(",")
         );
-        println!("[[ {} ]] {res}", self.str());
         res
     }
 
