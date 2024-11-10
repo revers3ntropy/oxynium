@@ -126,12 +126,25 @@ impl Type for FnType {
             generic_params_order: self.generic_params_order.clone(),
         });
 
-        // outside of the loop to avoid borrowing issues
+        // outside the loop to avoid borrowing issues
         let cache_id = self.cache_id(ctx.clone());
         ctx.borrow_mut()
             .concrete_type_cache_set(cache_id, res.clone());
 
         for p in self.generic_params_order.iter() {
+            println!(
+                "Making generic param concrete {}: {:?} => {:?}",
+                p.clone().literal.unwrap(),
+                self.generic_args
+                    .get(&p.clone().literal.unwrap())
+                    .unwrap()
+                    .borrow(),
+                self.generic_args
+                    .get(&p.clone().literal.unwrap())
+                    .unwrap()
+                    .borrow()
+                    .concrete(ctx.clone())?
+            );
             res.borrow_mut().generic_args.insert(
                 p.clone().literal.unwrap(),
                 self.generic_args
@@ -143,6 +156,7 @@ impl Type for FnType {
         }
 
         for param in &self.parameters {
+            println!("Making param concrete: {:?}", param);
             // keep outside of the loop to avoid borrowing issues
             let type_ = param.type_.borrow().concrete(ctx.clone())?;
             res.borrow_mut().parameters.push(FnParamType {
@@ -153,8 +167,11 @@ impl Type for FnType {
             });
         }
 
+        println!("Making return type concrete: {:?}", self.ret_type.borrow());
+        println!("...: {:?}", self.ret_type.borrow().cache_id(ctx.clone()));
         let return_type = self.ret_type.borrow().concrete(ctx.clone())?;
         res.borrow_mut().ret_type = return_type;
+        println!("Return type concrete: {:?}", res.borrow().ret_type.borrow());
 
         let cache_id = self.cache_id(ctx.clone());
         ctx.borrow_mut().concrete_type_cache_remove(&cache_id);

@@ -2,7 +2,7 @@ use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::Token;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::MutRc;
 use std::fmt;
 
 #[derive(Clone)]
@@ -31,12 +31,17 @@ impl Type for GenericType {
 
     fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
         let key = self.identifier.clone().literal.unwrap().to_string();
-
-        if ctx.borrow().has_dec_with_id(&key.clone()) {
-            let t = ctx.borrow().get_dec_from_id(&key.clone()).type_;
-            return Ok(t);
+        // all generics should be defined in a context, be it the concrete type,
+        // or a generic placeholder.
+        if !ctx.borrow().has_dec_with_id(&key.clone()) {
+            println!("{}", ctx.borrow().str());
+            println!("Failed to get dec with id: {}", key.clone());
         }
-        Ok(new_mut_rc(self.clone()))
+        let t = ctx.borrow().get_dec_from_id(&key.clone()).type_;
+        if self.str() == "Q" {
+            println!("{} >>> {:?}", self.str(), t.borrow().str());
+        }
+        Ok(t)
     }
 
     fn cache_id(&self, ctx: MutRc<dyn Context>) -> String {
@@ -44,27 +49,20 @@ impl Type for GenericType {
 
         let concrete_type = ctx.borrow().get_dec_from_id(self_id).type_;
         if format!("{:p}", concrete_type.as_ptr()) == format!("{:p}", self) {
-            // avoid circular loop when the generic is
-            // the same as the concrete type (not yet concreted)
-
-            // TODO: Why does this throw on valid code?
-            // if ctx.borrow().throw_on_unknowns() {
-            //     panic!("circular loop in generic type");
-            // }
-
-            format!("{}", self.identifier.clone().literal.unwrap())
-        } else {
-            let concrete_type = concrete_type.borrow();
-            concrete_type.cache_id(ctx.clone())
+            // avoid circular loop when the generic resolves to itself
+            return format!("{}", self_id);
         }
+
+        let concrete_type = concrete_type.borrow();
+        concrete_type.cache_id(ctx.clone())
     }
 
-    fn is_unknown(&self) -> bool {
-        false
-    }
     fn as_generic(&self) -> Option<GenericType> {
         Some(GenericType {
             identifier: self.identifier.clone(),
         })
+    }
+    fn is_unknown(&self) -> bool {
+        false
     }
 }

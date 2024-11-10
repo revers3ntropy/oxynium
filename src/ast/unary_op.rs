@@ -74,7 +74,7 @@ impl AstNode for UnaryOpNode {
                     let rhs_type = if rhs_type.borrow().as_type_type().is_some() {
                         "Type".to_string()
                     } else {
-                        rhs_type.borrow().str()
+                        format!("{:?}", rhs_type)
                     };
                     StrNode {
                         value: Token {

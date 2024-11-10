@@ -109,7 +109,11 @@ impl Type for ClassType {
             .borrow()
             .concrete_type_cache_get(self.cache_id(ctx.clone()))
         {
+            println!("cached {}", self.cache_id(ctx.clone()));
             return Ok(cached);
+        }
+        if self.str().starts_with("A") {
+            println!("{} ==> ???", self.str());
         }
 
         if self.generic_params_order.len() < 1 {
@@ -126,20 +130,35 @@ impl Type for ClassType {
             generic_params_order: self.generic_params_order.clone(),
         });
 
-        // outside of the loop to avoid borrowing issues
+        // outside the loop to avoid borrowing issues
         let cache_id = self.cache_id(ctx.clone());
         ctx.borrow_mut()
             .concrete_type_cache_set(cache_id, res.clone());
 
+        let mut generic_args = vec![];
         for p in self.generic_params_order.iter() {
-            res.borrow_mut().generic_args.insert(
-                p.clone().literal.unwrap(),
-                self.generic_args
-                    .get(&p.clone().literal.unwrap())
-                    .unwrap()
-                    .borrow()
-                    .concrete(ctx.clone())?,
-            );
+            let arg_value_concrete = self
+                .generic_args
+                .get(&p.clone().literal.unwrap())
+                .unwrap()
+                .borrow()
+                .concrete(ctx.clone())?;
+
+            // to stop generics overriding each other
+            if arg_value_concrete.borrow().as_generic().is_some() {
+                generic_args.push(
+                    arg_value_concrete
+                        .borrow()
+                        .as_generic()
+                        .unwrap()
+                        .identifier
+                        .literal
+                        .unwrap(),
+                );
+            }
+            res.borrow_mut()
+                .generic_args
+                .insert(p.clone().literal.unwrap(), arg_value_concrete);
         }
 
         for field in self.fields.values() {
@@ -168,6 +187,18 @@ impl Type for ClassType {
             let method_ctx = Scope::new_local(ctx.clone());
 
             for (generic_identifier, _type) in method.borrow().generic_args.clone() {
+                println!("{:?} contains {} ?", generic_args, generic_identifier);
+                let identifier = if generic_args.contains(&generic_identifier) {
+                    println!(
+                        "{} already exists, using {name}.{generic_identifier}",
+                        generic_identifier
+                    );
+                    // if the generic already exists, we have to rename it to avoid conflicts
+                    format!("{name}.{generic_identifier}")
+                } else {
+                    generic_identifier.clone()
+                };
+
                 method_ctx.borrow_mut().declare(
                     SymbolDec {
                         name: generic_identifier.clone(),
@@ -178,7 +209,7 @@ impl Type for ClassType {
                         type_: new_mut_rc(GenericType {
                             identifier: Token {
                                 token_type: TokenType::Identifier,
-                                literal: Some(generic_identifier.clone()),
+                                literal: Some(identifier.clone()),
                                 start: Position::unknown(),
                                 end: Position::unknown(),
                             },
@@ -190,7 +221,34 @@ impl Type for ClassType {
                     },
                     Position::unknown_interval(),
                 )?;
+
+                if generic_identifier != identifier {
+                    method_ctx.borrow_mut().declare(
+                        SymbolDec {
+                            name: identifier.clone(),
+                            id: identifier.clone(),
+                            is_constant: true,
+                            is_type: true,
+                            is_func: false,
+                            type_: new_mut_rc(GenericType {
+                                identifier: Token {
+                                    token_type: TokenType::Identifier,
+                                    literal: Some(identifier.clone()),
+                                    start: Position::unknown(),
+                                    end: Position::unknown(),
+                                },
+                            }),
+                            require_init: false,
+                            is_defined: true,
+                            is_param: true,
+                            position: Position::unknown_interval(),
+                        },
+                        Position::unknown_interval(),
+                    )?;
+                }
             }
+
+            println!("Going to make {:?} concrete", method.borrow());
 
             let new_method_type = method
                 .borrow()
@@ -199,6 +257,8 @@ impl Type for ClassType {
                 .as_fn()
                 .unwrap();
 
+            println!("Concrete method: {} ==> {:?}", name, new_method_type);
+
             res.borrow_mut()
                 .methods
                 .insert(name.clone(), new_mut_rc(new_method_type));
@@ -206,7 +266,13 @@ impl Type for ClassType {
 
         let cache_id = self.cache_id(ctx.clone());
         ctx.borrow_mut().concrete_type_cache_remove(&cache_id);
-
+        if self.str().starts_with("A") {
+            println!(
+                "{} ==> {:?}",
+                self.str(),
+                res.borrow().methods.get("A.map").unwrap().borrow()
+            );
+        }
         Ok(res)
     }
 
