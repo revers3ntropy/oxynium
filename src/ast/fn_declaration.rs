@@ -515,6 +515,7 @@ impl AstNode for FnDeclarationNode {
                 data: None,
                 text: Some(format!(
                     "
+                        endbr64
                         push rbp
                         mov rbp, rsp
                         {}
