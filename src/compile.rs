@@ -200,6 +200,7 @@ fn assemble(
 
         let ls_out = Command::new("gcc")
             .arg("-Wall")
+            .arg("-g")
             .arg(match args.target {
                 Target::MACOS => "",
                 Target::X86_64Linux => "-no-pie",
