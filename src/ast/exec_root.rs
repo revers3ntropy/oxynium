@@ -71,9 +71,9 @@ impl AstNode for ExecRootNode {
             .iter()
             .map(|k| {
                 if k.name == "main" {
-                    format!("_$_oxy_main: \nendbr64\n{}", k.text.as_ref().unwrap())
+                    format!("_$_oxy_main: \n{}", k.text.as_ref().unwrap())
                 } else {
-                    format!("{}: \nendbr64\n{}", k.name, k.text.as_ref().unwrap())
+                    format!("{}: \n{}", k.name, k.text.as_ref().unwrap())
                 }
             })
             .collect::<Vec<String>>()
