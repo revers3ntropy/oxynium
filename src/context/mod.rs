@@ -78,4 +78,7 @@ pub trait Context {
     fn is_ignoring_definitions(&self) -> bool;
 
     fn target(&self) -> Target;
+
+    fn include_asm(&mut self, asm_path: String);
+    fn get_included_asm_paths(&self) -> Vec<String>;
 }

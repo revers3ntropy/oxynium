@@ -79,9 +79,17 @@ impl AstNode for ExecRootNode {
             .collect::<Vec<String>>()
             .join("\n");
 
+        let asm_include_directives = ctx_ref
+            .get_included_asm_paths()
+            .iter()
+            .map(|path| format!("%include \"{}\"", path))
+            .collect::<Vec<String>>()
+            .join("\n");
+
         if ctx_ref.exec_mode() == ExecMode::Lib {
             return Ok(format!(
                 "
+                    {asm_include_directives}
                     section .data
                         {data}
                     section .text
@@ -132,25 +140,26 @@ impl AstNode for ExecRootNode {
         }
 
         let std_asm = std_asm(ctx_ref.target());
+        let main_fn_id = main_fn_id(ctx_ref.target());
         Ok(format!(
             "
                 bits 64
                 %include \"{}\"
+                {asm_include_directives}
                 section .data
                     {STD_DATA_ASM}
                     {data}
                 section .text
-                    global {}
+                    global {main_fn_id}
                 {std_asm}
                 {text}
-                {}:
+                {main_fn_id}:
+                    endbr64                
                     {res}
                     push 0
                     call exit
             ",
-            ctx_ref.std_asm_path(),
-            main_fn_id(ctx_ref.target()),
-            main_fn_id(ctx_ref.target())
+            ctx_ref.std_asm_path()
         ))
     }
 

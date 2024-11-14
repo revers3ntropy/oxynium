@@ -359,4 +359,12 @@ impl Context for Scope {
     fn target(&self) -> Target {
         self.parent.borrow().target()
     }
+
+    fn include_asm(&mut self, asm_path: String) {
+        self.parent.borrow_mut().include_asm(asm_path)
+    }
+
+    fn get_included_asm_paths(&self) -> Vec<String> {
+        self.parent.borrow().get_included_asm_paths()
+    }
 }

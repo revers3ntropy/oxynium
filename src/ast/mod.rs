@@ -26,6 +26,7 @@ pub mod fn_call;
 pub mod fn_declaration;
 pub mod global_const_decl;
 pub mod r#if;
+pub mod include_asm_file;
 pub mod int;
 pub mod local_var_decl;
 pub mod macro_call;

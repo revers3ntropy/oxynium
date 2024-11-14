@@ -107,11 +107,11 @@ impl Macro for IncludeMacro {
         ctx.borrow_mut()
             .set_current_dir_path(file_path.parent().unwrap_or(file_path));
 
-        return Ok(new_mut_rc(ScopeNode {
+        Ok(new_mut_rc(ScopeNode {
             position: self.position.clone(),
             body: ast,
             ctx: Some(ctx),
             err_source: Some(err_source),
-        }));
+        }))
     }
 }

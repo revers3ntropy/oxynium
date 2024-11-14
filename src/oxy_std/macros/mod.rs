@@ -1,5 +1,6 @@
 pub mod asm;
 pub mod include;
+pub mod include_asm_file;
 
 use crate::ast::AstNode;
 use crate::context::Context;

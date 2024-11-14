@@ -28,6 +28,7 @@ pub struct RootContext {
     cli_args: Args,
     concrete_type_cache: HashMap<String, MutRc<dyn Type>>,
     ignore_definitions: bool,
+    include_asm_paths: Vec<String>,
 }
 
 impl RootContext {
@@ -45,6 +46,7 @@ impl RootContext {
             cli_args,
             concrete_type_cache: HashMap::new(),
             ignore_definitions: false,
+            include_asm_paths: vec![],
         });
         self_.borrow_mut().self_ = Some(self_.clone());
         self_
@@ -240,5 +242,13 @@ impl Context for RootContext {
 
     fn target(&self) -> Target {
         self.cli_args.target.clone()
+    }
+
+    fn include_asm(&mut self, asm_path: String) {
+        self.include_asm_paths.push(asm_path);
+    }
+
+    fn get_included_asm_paths(&self) -> Vec<String> {
+        self.include_asm_paths.clone()
     }
 }
