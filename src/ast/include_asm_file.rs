@@ -1,5 +1,4 @@
-use crate::ast::symbol_access::SymbolAccess;
-use crate::ast::{AstNode, TypeCheckRes};
+use crate::ast::AstNode;
 use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::Token;

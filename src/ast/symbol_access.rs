@@ -76,8 +76,4 @@ impl AstNode for SymbolAccess {
     fn pos(&self) -> Interval {
         self.identifier.interval()
     }
-
-    fn as_symbol_access(&self) -> Option<SymbolAccess> {
-        Some(self.clone())
-    }
 }

@@ -1,17 +1,17 @@
 def Char.== (self, other: Char) Bool {
-	return Any.cast!<Void, Bool>(#asm "
+	return #asm Bool "
 		mov rax, qword [rbp + 16]
 		cmp rax, qword [rbp + 24]
 		sete al
 		push rax
-	")
+	"
 }
 
 def Char.!= (self, other: Char) Bool ->
 	!(self == other)
 
 def Char.Str (self) Str {
-	return Any.cast!<Void, Str>(#asm "
+	return #asm Str "
 		mov rdi, 16
 		mov rsi, 1
 		call _LibC.calloc
@@ -19,7 +19,7 @@ def Char.Str (self) Str {
 		mov rdi, qword [rbp + 16]
 		mov qword [rax], rdi
 		push rax
-	")
+	"
 }
 
 def Char.is_digit (self) Bool {

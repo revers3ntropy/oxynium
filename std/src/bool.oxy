@@ -1,17 +1,17 @@
 def Bool.|| (self, other: Bool) Bool {
-	return Any.cast!<Void, Bool>(#asm "
+	return #asm Bool "
 		mov rax, qword [rbp + 16]
 		or rax, qword [rbp + 24]
 		push rax
-	")
+	"
 }
 
 def Bool.&& (self, other: Bool) Bool {
-	return Any.cast!<Void, Bool>(#asm "
+	return #asm Bool "
 		mov rax, qword [rbp + 16]
 		and rax, qword [rbp + 24]
 		push rax
-	")
+	"
 }
 
 def Bool.Str (self) Str {

@@ -71,8 +71,4 @@ impl AstNode for TypeNode {
     fn pos(&self) -> Interval {
         self.identifier.interval()
     }
-
-    fn as_type_expr(&self) -> Option<TypeNode> {
-        Some(self.clone())
-    }
 }

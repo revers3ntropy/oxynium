@@ -1,5 +1,5 @@
 def _LibC.calloc () {
-    #asm "
+    #asm Void "
         sub rsp, 32
         and rsp, -16
         call calloc
@@ -7,7 +7,7 @@ def _LibC.calloc () {
 }
 
 def _LibC.memcpy () {
-    #asm "
+    #asm Void "
         sub rsp, 32
         and rsp, -16
         call memcpy
@@ -15,7 +15,7 @@ def _LibC.memcpy () {
 }
 
 def _LibC.free () {
-    #asm "
+    #asm Void "
         sub rsp, 32
         and rsp, -16
         call free
@@ -23,7 +23,7 @@ def _LibC.free () {
 }
 
 def _LibC.sprintf () {
-    #asm "
+    #asm Void "
         sub rsp, 32
         and rsp, -16
         call sprintf
@@ -31,7 +31,7 @@ def _LibC.sprintf () {
 }
 
 def _LibC.time () {
-    #asm "
+    #asm Void "
         sub rsp, 32
         and rsp, -16
         call time
@@ -39,7 +39,7 @@ def _LibC.time () {
 }
 
 def _LibC.fopen () {
-    #asm "
+    #asm Void "
         sub rsp, 32
         and rsp, -16
         call fopen
@@ -47,7 +47,7 @@ def _LibC.fopen () {
 }
 
 def _LibC.fseek () {
-    #asm "
+    #asm Void "
         sub rsp, 32
         and rsp, -16
         call fseek
@@ -55,7 +55,7 @@ def _LibC.fseek () {
 }
 
 def _LibC.fread () {
-    #asm "
+    #asm Void "
         sub rsp, 32
         and rsp, -16
         call fread
@@ -63,7 +63,7 @@ def _LibC.fread () {
 }
 
 def _LibC.ftell () {
-    #asm "
+    #asm Void "
         sub rsp, 32
         and rsp, -16
         call ftell
@@ -71,7 +71,7 @@ def _LibC.ftell () {
 }
 
 def _LibC.fclose () {
-    #asm "
+    #asm Void "
         sub rsp, 32
         and rsp, -16
         call fclose
@@ -79,7 +79,7 @@ def _LibC.fclose () {
 }
 
 def _LibC.fwrite () {
-    #asm "
+    #asm Void "
         sub rsp, 32
         and rsp, -16
         call fwrite

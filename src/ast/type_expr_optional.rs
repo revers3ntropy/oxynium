@@ -1,13 +1,10 @@
-use crate::ast::type_expr::TypeNode;
-use crate::ast::type_expr_generic::GenericTypeNode;
 use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::Error;
-use crate::parse::token::{Token, TokenType};
 use crate::position::Interval;
 use crate::symbols::SymbolDec;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::MutRc;
 
 #[derive(Debug, Clone)]
 pub struct OptionalTypeNode {
@@ -64,20 +61,5 @@ impl AstNode for OptionalTypeNode {
 
     fn pos(&self) -> Interval {
         self.position.clone()
-    }
-
-    fn as_type_generic_expr(&self) -> Option<GenericTypeNode> {
-        Some(GenericTypeNode {
-            base: new_mut_rc(TypeNode {
-                identifier: Token {
-                    token_type: TokenType::Identifier,
-                    literal: Some("Option".to_string()),
-                    start: self.position.0.clone(),
-                    end: self.position.1.clone(),
-                },
-            }),
-            position: self.pos(),
-            generic_args: vec![self.value.clone()],
-        })
     }
 }

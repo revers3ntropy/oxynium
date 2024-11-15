@@ -1,79 +1,79 @@
 def Int.+ (self, n: Int) Int {
-	return Any.cast!<Void, Int>(#asm "
+	return #asm Int "
 		mov rax, qword [rbp + 16]
 		add rax, qword [rbp + 24]
 		push rax
-	")
+	"
 }
 
 def Int.- (self, n: Int) Int {
-	return Any.cast!<Void, Int>(#asm "
+	return #asm Int "
 		mov rax, qword [rbp + 16]
 		sub rax, qword [rbp + 24]
 		push rax
-	")
+	"
 }
 
 def Int.* (self, n: Int) Int {
-	return Any.cast!<Void, Int>(#asm "
+	return #asm Int "
 		mov rax, qword [rbp + 16]
 		imul rax, qword [rbp + 24]
 		push rax
-	")
+	"
 }
 
 def Int./ (self, n: Int) Int {
-	return Any.cast!<Void, Int>(#asm "
+	return #asm Int "
 		mov rax, qword [rbp + 16]
 		cqo
 		idiv qword [rbp + 24]
 		push rax
-	")
+	"
 }
 
 def Int.% (self, n: Int) Int {
-	return Any.cast!<Void, Int>(#asm "
+	return #asm Int "
 		mov rax, qword [rbp + 16]
 		cqo
 		idiv qword [rbp + 24]
 		push rdx
-	")
+	"
 }
 
 def Int.== (self, n: Int) Bool {
-	return Any.cast!<Void, Bool>(#asm "
+	return #asm Bool "
 		xor rax, rax
 		mov rcx, qword [rbp + 16]
 		cmp rcx, qword [rbp + 24]
 		sete al
 		push rax
-	")
+	"
 }
 
 def Int.!= (self, n: Int) Bool ->
 	!(self == n)
 
 def Int.< (self, n: Int) Bool {
-	return Any.cast!<Void, Bool>(#asm "
+	return #asm Bool "
 		xor rax, rax
 		mov rcx, qword [rbp + 16]
 		cmp rcx, qword [rbp + 24]
 		setl al
 		push rax
-	")
+	"
 }
 
 def Int.<= (self, n: Int) Bool ->
 	self < n || self == n
 
 def Int.> (self, n: Int) Bool {
-	return Any.cast!<Void, Bool>(#asm "
+	return #asm Bool "
 		xor rax, rax
 		mov rcx, qword [rbp + 16]
 		cmp rcx, qword [rbp + 24]
 		setg al
 		push rax
-	")
+	"
 }
 
 def Int.>= (self, n: Int) Bool ->
@@ -96,7 +96,7 @@ def Int.abs (self) Int {
 
 def Int.Str (self) Str {
 	// https://stackoverflow.com/questions/8257714
-	return Any.cast!<Void, Str>(#asm "
+	return #asm Str "
 		; allocate string
 		mov rdi, 8 ; 64 bytes, much larger than needed
 		mov rsi, 8
@@ -120,7 +120,7 @@ def Int.Str (self) Str {
 		call Utf8Str.Str
 		pop rdi
 		push rax
-	")
+	"
 }
 
 def Int.Bool (self) Bool ->

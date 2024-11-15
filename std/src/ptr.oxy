@@ -2,7 +2,7 @@ def Ptr.is_null (self) Bool ->
 	Any.cast!<Ptr<T>, Int>(self) == 0
 
 def Ptr.make <From> (val: From) Ptr<From> {
-	return Any.cast!<Void, Ptr<From>>(#asm "
+	return #asm Ptr<From> "
 		mov rdi, 8
 		mov rsi, 1
 		call _LibC.calloc
@@ -10,15 +10,15 @@ def Ptr.make <From> (val: From) Ptr<From> {
 		mov rdx, qword [rbp + 16]
 		mov qword [rax], rdx
 		push rax
-	")
+	"
 }
 
 def Ptr.unwrap (self) T {
-	return Any.cast!<Void, T>(#asm "
+	return #asm T "
 		mov rax, qword [rbp + 16]
 		mov rax, qword [rax]
 		push rax
-	")
+	"
 }
 
 def Ptr.Str (self) Str ->

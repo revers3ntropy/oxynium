@@ -1,5 +1,5 @@
 def File.open (path: Str, mode: Str) Option<File> {
-	let f = #asm "
+	let f = #asm Ptr<Any> "
 		; FILE* fopen(const char* path, const char* mode);
 
 		push qword [rbp + 16] ; path
@@ -18,14 +18,14 @@ def File.open (path: Str, mode: Str) Option<File> {
 		push rax
 	"
 
-	if Any.cast!<Void, Int>(f) == 0 {
+	if f.is_null() {
 		return Option.none!<File>()
 	}
 
 	return Option.some!<File>(new File {
 		path,
 		mode,
-		handle: Any.cast!<Void, Ptr<Any>>(f)
+		handle: f
 	})
 }
 
@@ -46,7 +46,7 @@ def File.read_to_str (self) Str {
 
 	let _f = self.handle
 
-	return Any.cast!<Void, Str>(#asm "
+	return #asm Str "
 		mov rdi, [rbp - 8] ; rdi = f
 
 		sub rsp, 32
@@ -94,13 +94,13 @@ def File.read_to_str (self) Str {
 		call Utf8Str.Str
 
 		push rax
-	")
+	"
 }
 
 def File.close (self) {
 	let _f = self.handle
 
-	#asm "
+	#asm Void "
 		mov rdi, [rbp - 8] ; rdi = self.handle
 
 		call _LibC.fclose
@@ -113,7 +113,7 @@ def File.close (self) {
 def File.write (self, data: Str) {
 	let _ = self.handle
 
-	#asm "
+	#asm Void "
 		mov rdi, [rbp + 24] ; rdi = data
 
 		push rdi

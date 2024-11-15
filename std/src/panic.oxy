@@ -1,5 +1,5 @@
 def exit (code=0) {
-	#asm "
+	#asm Void "
 		mov rdi, qword [rbp + 16]
 		call _Syscall.exit
 	"

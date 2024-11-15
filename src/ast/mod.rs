@@ -1,7 +1,4 @@
 use crate::ast::str::StrNode;
-use crate::ast::symbol_access::SymbolAccess;
-use crate::ast::type_expr::TypeNode;
-use crate::ast::type_expr_generic::GenericTypeNode;
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
@@ -168,15 +165,6 @@ pub trait AstNode: Debug {
     fn pos(&self) -> Interval;
 
     fn as_str_node(&self) -> Option<StrNode> {
-        None
-    }
-    fn as_type_expr(&self) -> Option<TypeNode> {
-        None
-    }
-    fn as_type_generic_expr(&self) -> Option<GenericTypeNode> {
-        None
-    }
-    fn as_symbol_access(&self) -> Option<SymbolAccess> {
         None
     }
 }

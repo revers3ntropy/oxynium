@@ -120,8 +120,4 @@ impl AstNode for GenericTypeNode {
     fn pos(&self) -> Interval {
         self.position.clone()
     }
-
-    fn as_type_generic_expr(&self) -> Option<GenericTypeNode> {
-        Some(self.clone())
-    }
 }

@@ -1,6 +1,6 @@
 def print (msg = "", line_end="\n") {
 	let len = msg.len() * 8
-	#asm "
+	#asm Void "
 	    mov rsi, qword [rbp + 16]
         mov rdx, qword [rbp - 8] ; string length
 		mov rdi, 1

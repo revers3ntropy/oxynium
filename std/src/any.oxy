@@ -5,7 +5,7 @@
 // features of the language (especially parts of the std),
 // a necessary evil.
 def Any.__CAST_WRAPPER_DO_NOT_CALL () {
-	#asm "
+	#asm Void "
 		Any.cast:
 		    push rbp
             mov rbp, rsp

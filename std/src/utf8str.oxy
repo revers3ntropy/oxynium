@@ -1,6 +1,6 @@
 def Utf8Str.Str (self) Str {
 	// https://stackoverflow.com/questions/1543613
-	return Any.cast!<Void, Str>(#asm "
+	return #asm Str "
 		mov r15, qword [rbp + 16] ; utf8
 		xor r13, r13              ; number of chars in utf8
 
@@ -91,5 +91,5 @@ def Utf8Str.Str (self) Str {
 
 		._$_move_return:
 			push rax
-	")
+	"
 }

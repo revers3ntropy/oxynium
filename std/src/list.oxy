@@ -1,5 +1,6 @@
 def List.empty <E> () -> new List<E> {
     head: new Ptr<E>,
+    // number of bytes in array after 'head'
     size: 0
 }
 
@@ -23,20 +24,20 @@ def List.at (self, i: Int) Option<T> {
 }
 
 def List.at_raw (self, i: Int) T {
-	return Any.cast!<Void, T>(#asm "
+	return #asm T "
 		mov rax, qword [rbp + 16]       ; rax = self
 		mov rax, qword [rax]            ; rax = self.head
 		mov rcx, qword [rbp + 24]       ; rcx = idx
 		mov rax, qword [rax + rcx * 8]  ; rax = self.head[idx]
 		push rax
-	")
+	"
 }
 
 def List.push (self, value: T, n=1) {
 	if n < 0 -> return
 	if n > 1 -> self.push(value, n - 1)
 
-	#asm "
+	#asm Void "
 		; #1: Allocate space for old list and new element
 
 		mov rax, qword [rbp + 16] ; rax = self
@@ -87,7 +88,7 @@ def List.set_at (self, idx: Int, val: T) Result<Void, Str> {
 	if idx < 0 || idx >= self.len() ->
 		return Result.err!<Void, Str>("Index out of bounds")
 
-	#asm "
+	#asm Void "
 		mov rax, qword [rbp + 16]      ; rax = self
 		mov rax, qword [rax]           ; rax = self.head
 		mov rdx, qword [rbp + 24]      ; rdx = idx

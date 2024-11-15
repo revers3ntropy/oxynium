@@ -22,21 +22,21 @@ def Time.Str (self) ->
 	self.seconds.Str() + "." + self.microseconds.Str()
 
 def Time.current_seconds () Int {
-	return Any.cast!<Void, Int>(#asm "
+	return #asm Int "
 		xor rdi, rdi
 		call _LibC.time ; return time(NULL)
 		push rax
-	")
+	"
 }
 
 def Time.current_microseconds () Int {
-	return Any.cast!<Void, Int>(#asm "
+	return #asm Int "
 		lea rdi, [rsp - 16]
 		xor esi, esi
 		call _Syscall.microseconds
 		mov rax, [rdi + 8]
 		push rax
-	")
+	"
 }
 
 def Time.now () -> new Time {

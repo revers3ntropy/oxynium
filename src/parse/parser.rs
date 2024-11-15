@@ -1162,28 +1162,55 @@ impl Parser {
 
         let args: Vec<MutRc<dyn AstNode>>;
 
-        if self.current_matches(TokenType::OpenParen, None) {
-            self.advance(&mut res);
-            ret_on_err!(res);
-
-            if self.current_matches(TokenType::CloseParen, None) {
+        // hacky workaround so that we can parse types in macros
+        if id_tok.literal.clone().unwrap() == "asm" {
+            let had_open_paren = self.current_matches(TokenType::OpenParen, None);
+            if had_open_paren {
                 self.advance(&mut res);
                 ret_on_err!(res);
-                args = Vec::new();
-            } else {
-                let args_res = self.args();
-                if args_res.is_err() {
-                    res.failure(args_res.err().unwrap(), None, None);
-                    return res;
-                }
-                args = args_res.unwrap();
-
-                consume!(CloseParen, self, res);
             }
-        } else {
-            let arg = res.register(self.expression());
+
+            let type_arg = res.register(self.type_expr(None));
             ret_on_err!(res);
-            args = vec![arg.unwrap()];
+
+            if self.current_matches(TokenType::Comma, None) {
+                self.advance(&mut res);
+                ret_on_err!(res);
+            }
+
+            let asm_arg = res.register(self.expression());
+            ret_on_err!(res);
+
+            if had_open_paren && self.current_matches(TokenType::CloseParen, None) {
+                self.advance(&mut res);
+                ret_on_err!(res);
+            }
+
+            args = vec![type_arg.unwrap(), asm_arg.unwrap()];
+        } else {
+            if self.current_matches(TokenType::OpenParen, None) {
+                self.advance(&mut res);
+                ret_on_err!(res);
+
+                if self.current_matches(TokenType::CloseParen, None) {
+                    self.advance(&mut res);
+                    ret_on_err!(res);
+                    args = Vec::new();
+                } else {
+                    let args_res = self.args();
+                    if args_res.is_err() {
+                        res.failure(args_res.err().unwrap(), None, None);
+                        return res;
+                    }
+                    args = args_res.unwrap();
+
+                    consume!(CloseParen, self, res);
+                }
+            } else {
+                let arg = res.register(self.expression());
+                ret_on_err!(res);
+                args = vec![arg.unwrap()];
+            }
         }
 
         res.success(new_mut_rc(MacroCallNode {
