@@ -4,6 +4,7 @@ use crate::error::{unknown_symbol, Error};
 use crate::oxy_std::macros::asm::AsmMacro;
 use crate::oxy_std::macros::include::IncludeMacro;
 use crate::oxy_std::macros::include_asm_file::IncludeAsmFileMacro;
+use crate::oxy_std::macros::unchecked_cast::UncheckedCastMacro;
 use crate::oxy_std::macros::Macro;
 use crate::parse::token::Token;
 use crate::position::Interval;
@@ -30,6 +31,10 @@ impl MacroCallNode {
                 args: self.args.clone(),
             })),
             "include_asm_file" => Some(Rc::new(IncludeAsmFileMacro {
+                position: self.position.clone(),
+                args: self.args.clone(),
+            })),
+            "unchecked_cast" => Some(Rc::new(UncheckedCastMacro {
                 position: self.position.clone(),
                 args: self.args.clone(),
             })),

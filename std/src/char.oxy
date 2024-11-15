@@ -28,7 +28,7 @@ def Char.is_digit (self) Bool {
 }
 
 def Char.Int (self) Int ->
-	Any.cast!<Char, Int>(self)
+	#unchecked_cast(Int, self)
 
 def Char.from_int (i: Int) Char ->
-	Any.cast!<Int, Char>(i)
+	#unchecked_cast(Char, i)

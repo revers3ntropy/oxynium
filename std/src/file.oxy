@@ -1,5 +1,5 @@
 def File.open (path: Str, mode: Str) Option<File> {
-	let f = #asm Ptr<Any> "
+	let f = #asm Ptr<Void> "
 		; FILE* fopen(const char* path, const char* mode);
 
 		push qword [rbp + 16] ; path

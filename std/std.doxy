@@ -113,13 +113,6 @@ class Result <T, E> {
 	extern def error (self) Option<E>,
 }
 
-primitive Any {
-	extern def cast <From, To> (val: From) To,
-	extern def __CAST_WRAPPER_DO_NOT_CALL (),
-	extern def from <From> (val: From) Any,
-	extern def to <To> (self) To,
-}
-
 primitive Ptr <T> {
 	extern def Str (self) Str,
 	extern def is_null (self) Bool,
@@ -145,7 +138,7 @@ class List <T> {
 }
 
 class File {
-	handle: Ptr<Any>,
+	handle: Ptr<Void>,
 	path: Str,
 	mode: Str,
 
@@ -181,7 +174,7 @@ class _LibC {
 
 /// Wrappers around some LibC functions
 class LibC {
-    extern def calloc (num: Int, size: Int) Ptr<Any>,
+    extern def calloc (num: Int, size: Int) Ptr<Void>,
     extern def free <T> (ptr: Ptr<T>),
 }
 

@@ -12,6 +12,10 @@ pub struct RawAsmNode {
 }
 
 impl AstNode for RawAsmNode {
+    fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
+        self.return_type.borrow_mut().setup(ctx.clone())
+    }
+
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         self.return_type.borrow().type_check(ctx)
     }

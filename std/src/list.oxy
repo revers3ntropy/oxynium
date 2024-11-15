@@ -95,7 +95,7 @@ def List.set_at (self, idx: Int, val: T) Result<Void, Str> {
 		mov rsi, qword [rbp + 32]      ; rsi = val
 		mov qword [rax + rdx * 8], rsi ; self.head[idx] = val
 	"
-	return Result.ok!<Void, Str>(Any.cast!<Int, Void>(0))
+	return Result.ok!<Void, Str>(#unchecked_cast(Void, 0))
 }
 
 def List.map <To> (self, f: Fn (T, Int) To) List<To> {

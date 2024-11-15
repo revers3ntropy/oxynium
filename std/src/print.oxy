@@ -7,7 +7,7 @@ def print (msg = "", line_end="\n") {
 		call _Syscall.out
 	"
 
-	if !Any.cast!<Str, Bool>(line_end) {
+	if !#unchecked_cast(Bool, line_end) {
 		print("\n", "")
 		return
 	}

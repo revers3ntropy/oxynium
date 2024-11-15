@@ -41,6 +41,7 @@ pub mod type_expr_generic;
 pub mod type_expr_optional;
 pub mod type_known;
 pub mod unary_op;
+pub mod unchecked_type_cast_node;
 pub mod r#while;
 
 pub const ANON_PREFIX: &str = "_$_";

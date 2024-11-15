@@ -1,5 +1,5 @@
-def LibC.calloc (num: Int, size: Int) Ptr<Any> {
-    return #asm Ptr<Any> "
+def LibC.calloc (num: Int, size: Int) Ptr<Void> {
+    return #asm Ptr<Void> "
         mov rdi, qword [rbp + 16]
         mov rsi, qword [rbp + 24]
         sub rsp, 32

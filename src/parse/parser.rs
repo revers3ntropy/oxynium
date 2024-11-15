@@ -1187,6 +1187,30 @@ impl Parser {
             }
 
             args = vec![type_arg.unwrap(), asm_arg.unwrap()];
+        } else if id_tok.literal.clone().unwrap() == "unchecked_cast" {
+            let had_open_paren = self.current_matches(TokenType::OpenParen, None);
+            if had_open_paren {
+                self.advance(&mut res);
+                ret_on_err!(res);
+            }
+
+            let type_arg = res.register(self.type_expr(None));
+            ret_on_err!(res);
+
+            if self.current_matches(TokenType::Comma, None) {
+                self.advance(&mut res);
+                ret_on_err!(res);
+            }
+
+            let asm_arg = res.register(self.expression());
+            ret_on_err!(res);
+
+            if had_open_paren && self.current_matches(TokenType::CloseParen, None) {
+                self.advance(&mut res);
+                ret_on_err!(res);
+            }
+
+            args = vec![type_arg.unwrap(), asm_arg.unwrap()];
         } else {
             if self.current_matches(TokenType::OpenParen, None) {
                 self.advance(&mut res);

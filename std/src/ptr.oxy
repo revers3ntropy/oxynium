@@ -1,5 +1,5 @@
 def Ptr.is_null (self) Bool ->
-	Any.cast!<Ptr<T>, Int>(self) == 0
+	#unchecked_cast(Int, self) == 0
 
 def Ptr.make <From> (val: From) Ptr<From> {
 	return #asm Ptr<From> "
@@ -22,4 +22,4 @@ def Ptr.unwrap (self) T {
 }
 
 def Ptr.Str (self) Str ->
-	"Ptr@" + Any.cast!<Ptr<T>, Int>(self).Str()
+	"Ptr@" + #unchecked_cast(Int, self).Str()
