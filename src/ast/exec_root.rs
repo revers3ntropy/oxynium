@@ -14,9 +14,82 @@ use std::collections::HashMap;
 
 const LOG_TYPE_CHECK_PASSES: bool = false;
 
+static ASM_TO_GENERATE_ARGS_LIST_FOR_MAIN_FN: &'static str = "
+    pop rdi        ; argc
+    mov rsi, rsp   ; argv
+
+    ; set up 'args' array for main function
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    ; size of array is number of bytes,
+    ; and each pointer is 8 bytes
+    imul rdi, 8
+    ;  create the List<Str> structure on the stack
+    ; (will last for lifetime of program)
+    mov qword [rbp - 8], rdi
+    mov qword [rbp - 16], rsi
+    ; push pointer to stack structure as first arg to oxy_main
+    mov rax, rbp
+    sub rax, 16
+    push rax
+";
+
 #[derive(Debug)]
 pub struct ExecRootNode {
     pub statements: MutRc<dyn AstNode>,
+}
+
+impl ExecRootNode {
+    fn get_main_fn_signatures(ctx: MutRc<dyn Context>) -> Result<(FnType, FnType), Error> {
+        // construct 'main' function signature:
+        // `(fn main(args: List<Utf8Str>) Void) || (fn main() Void)`
+        let main_fn_arg_type = ctx.borrow().get_dec_from_id("List").type_;
+        let args_context = Scope::new_local(ctx.clone());
+        let utf8_str_type = ctx.borrow().get_dec_from_id("Utf8Str").type_;
+        args_context.borrow_mut().declare(
+            SymbolDec {
+                name: "T".to_string(),
+                id: "T".to_string(),
+                is_constant: true,
+                is_type: true,
+                is_func: false,
+                type_: utf8_str_type,
+                require_init: false,
+                is_defined: true,
+                is_param: true,
+                position: Position::unknown_interval(),
+            },
+            Position::unknown_interval(),
+        )?;
+
+        let main_id = ctx.borrow_mut().get_id();
+        let main_ret_type = ctx.borrow().get_dec_from_id("Void").type_;
+        let main_signature = FnType {
+            id: main_id,
+            name: "main".to_string(),
+            ret_type: main_ret_type.clone(),
+            parameters: vec![FnParamType {
+                name: "args".to_string(),
+                type_: main_fn_arg_type.borrow().concrete(args_context)?,
+                default_value: None,
+                position: Position::unknown_interval(),
+            }],
+            generic_args: HashMap::new(),
+            generic_params_order: vec![],
+        };
+
+        let argless_main_signature = FnType {
+            id: main_id,
+            name: "main".to_string(),
+            ret_type: main_ret_type,
+            parameters: vec![],
+            generic_args: HashMap::new(),
+            generic_params_order: vec![],
+        };
+
+        Ok((main_signature, argless_main_signature))
+    }
 }
 
 impl AstNode for ExecRootNode {
@@ -116,56 +189,17 @@ impl AstNode for ExecRootNode {
 
         if has_main {
             res = "call _$_oxy_main".to_string();
-            // construct 'main' function signature: `fn main(args: List<Utf8Str>) Void`
-            let main_fn_arg_type = ctx.borrow().get_dec_from_id("List").type_;
-            let args_context = Scope::new_local(ctx.clone());
-            let utf8_str_type = ctx.borrow().get_dec_from_id("Utf8Str").type_;
-            args_context.borrow_mut().declare(
-                SymbolDec {
-                    name: "T".to_string(),
-                    id: "T".to_string(),
-                    is_constant: true,
-                    is_type: true,
-                    is_func: false,
-                    type_: utf8_str_type,
-                    require_init: false,
-                    is_defined: true,
-                    is_param: true,
-                    position: Position::unknown_interval(),
-                },
-                Position::unknown_interval(),
-            )?;
 
             let main_decl = ctx.borrow().get_dec_from_id("main");
             let main_type = main_decl.type_.clone();
-            let main_id = ctx.borrow_mut().get_id();
-            let main_ret_type = ctx.borrow().get_dec_from_id("Void").type_;
-            let main_signature = FnType {
-                id: main_id,
-                name: "main".to_string(),
-                ret_type: main_ret_type.clone(),
-                parameters: vec![FnParamType {
-                    name: "args".to_string(),
-                    type_: main_fn_arg_type.borrow().concrete(args_context)?,
-                    default_value: None,
-                    position: Position::unknown_interval(),
-                }],
-                generic_args: HashMap::new(),
-                generic_params_order: vec![],
-            };
+            let (main_signature, argless_main_signature) =
+                ExecRootNode::get_main_fn_signatures(ctx.clone())?;
 
-            let argless_main_signature = FnType {
-                id: main_id,
-                name: "main".to_string(),
-                ret_type: main_ret_type,
-                parameters: vec![],
-                generic_args: HashMap::new(),
-                generic_params_order: vec![],
-            };
-
-            if !main_signature.contains(main_type.clone())
-                && !argless_main_signature.contains(main_type)
-            {
+            if main_signature.contains(main_type.clone()) {
+                // OPTIMISATION: only set up args array if the main function takes args
+                // as a parameter
+                res = format!("{ASM_TO_GENERATE_ARGS_LIST_FOR_MAIN_FN}\n{res}");
+            } else if !argless_main_signature.contains(main_type) {
                 return Err(type_error(format!(
                     "`main` function must have type `Fn (args: List<Utf8Str>) Void`"
                 ))
@@ -198,24 +232,6 @@ impl AstNode for ExecRootNode {
                 {text}
                 {main_fn_id}:
                     endbr64
-                    pop rdi        ; argc
-                    mov rsi, rsp   ; argv
-
-                    ; set up 'args' array for main function
-                    push rbp
-                    mov rbp, rsp
-                    sub rsp, 16
-                    ; size of array is number of bytes,
-                    ; and each pointer is 8 bytes
-                    imul rdi, 8
-                    ;  create the List<Str> structure on the stack
-                    ; (will last for lifetime of program)
-                    mov qword [rbp - 8], rdi
-                    mov qword [rbp - 16], rsi
-                    ; push pointer to stack structure as first arg to oxy_main
-                    mov rax, rbp
-                    sub rax, 16
-                    push rax
                     {res}
                     push 0
                     call exit
