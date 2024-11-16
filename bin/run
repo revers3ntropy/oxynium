@@ -3,21 +3,38 @@
 RED='\033[0;31m'
 NC='\033[0m'
 
+# remove so that if something goes wrong, the old file is not used
 {
     rm ./res-out.asm
     rm ./res-out.o
     rm ./res-out
 } 2> /dev/null
 
+compilation_args=()
+exec_args=()
+found_dash_dash=false
+for arg in "$@"; do
+    if [ "$found_dash_dash" == "false" ] && [ "$arg" == "--" ]; then
+        found_dash_dash=true
+        continue
+    fi
+
+    if [ "$found_dash_dash" == "false" ]; then
+        compilation_args+=("$arg")
+    else
+        exec_args+=("$arg")
+    fi
+done
+
 # compile, link and assemble the program
 export RUST_BACKTRACE=1
 bin/compile_std
-cargo run -- -ko=res-out --std std.asm "$@"
+cargo run -- -ko=res-out --std std.asm "${compilation_args[@]}"
 
 echo "==============================="
 
 if test -f "./res-out"; then
-    ./res-out
+    ./res-out "${exec_args[@]}"
 else
     printf "${RED}No output file!${NC}\n"
 fi

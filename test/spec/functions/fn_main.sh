@@ -5,6 +5,11 @@ expect 'hi' '
         print("hi");
     }
 '
+expect 'hi' '
+    def main(args: List<Utf8Str>) {
+        print("hi");
+    }
+'
 expect_err 'TypeError' '
     def main(a: Int) {}
 '

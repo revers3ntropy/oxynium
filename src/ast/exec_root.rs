@@ -2,10 +2,12 @@ use crate::args::ExecMode;
 use crate::ast::STD_DATA_ASM;
 use crate::ast::{std_asm, AstNode, TypeCheckRes};
 use crate::backend::main_fn_id;
+use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::{syntax_error, type_error, Error};
-use crate::position::Interval;
-use crate::types::function::FnType;
+use crate::position::{Interval, Position};
+use crate::symbols::SymbolDec;
+use crate::types::function::{FnParamType, FnType};
 use crate::types::Type;
 use crate::util::MutRc;
 use std::collections::HashMap;
@@ -58,9 +60,10 @@ impl AstNode for ExecRootNode {
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         let mut res = self.statements.borrow_mut().asm(ctx.clone())?;
-        let mut ctx_ref = ctx.borrow_mut();
 
+        let ctx_ref = ctx.borrow_mut();
         let (data_defs, text_defs) = ctx_ref.get_definitions();
+
         let data = data_defs
             .iter()
             .map(|k| format!("{} {}", k.name, k.data.as_ref().unwrap()))
@@ -79,14 +82,20 @@ impl AstNode for ExecRootNode {
             .collect::<Vec<String>>()
             .join("\n");
 
-        let asm_include_directives = ctx_ref
+        let main_decl_option = text_defs.iter().find(|k| k.name == "main");
+        let has_main = main_decl_option.is_some();
+
+        drop(ctx_ref);
+
+        let asm_include_directives = ctx
+            .borrow()
             .get_included_asm_paths()
             .iter()
             .map(|path| format!("%include \"{}\"", path))
             .collect::<Vec<String>>()
             .join("\n");
 
-        if ctx_ref.exec_mode() == ExecMode::Lib {
+        if ctx.borrow().exec_mode() == ExecMode::Lib {
             return Ok(format!(
                 "
                     {asm_include_directives}
@@ -98,49 +107,83 @@ impl AstNode for ExecRootNode {
             ));
         }
 
-        let main_decl_option = text_defs.iter().find(|k| k.name == "main");
-        let has_main = main_decl_option.is_some();
-
         if has_main && res != "" {
             return Err(syntax_error(format!(
                 "cannot have top level statements and 'main' function"
             ))
-            .set_interval(ctx_ref.get_dec_from_id("main").position.clone()));
+            .set_interval(ctx.borrow().get_dec_from_id("main").position.clone()));
         }
 
         if has_main {
             res = "call _$_oxy_main".to_string();
+            // construct 'main' function signature: `fn main(args: List<Utf8Str>) Void`
+            let main_fn_arg_type = ctx.borrow().get_dec_from_id("List").type_;
+            let args_context = Scope::new_local(ctx.clone());
+            let utf8_str_type = ctx.borrow().get_dec_from_id("Utf8Str").type_;
+            args_context.borrow_mut().declare(
+                SymbolDec {
+                    name: "T".to_string(),
+                    id: "T".to_string(),
+                    is_constant: true,
+                    is_type: true,
+                    is_func: false,
+                    type_: utf8_str_type,
+                    require_init: false,
+                    is_defined: true,
+                    is_param: true,
+                    position: Position::unknown_interval(),
+                },
+                Position::unknown_interval(),
+            )?;
 
-            let main_decl = ctx_ref.get_dec_from_id("main");
+            let main_decl = ctx.borrow().get_dec_from_id("main");
             let main_type = main_decl.type_.clone();
+            let main_id = ctx.borrow_mut().get_id();
+            let main_ret_type = ctx.borrow().get_dec_from_id("Void").type_;
             let main_signature = FnType {
-                id: ctx_ref.get_id(),
+                id: main_id,
                 name: "main".to_string(),
-                ret_type: ctx_ref.get_dec_from_id("Void").type_,
+                ret_type: main_ret_type.clone(),
+                parameters: vec![FnParamType {
+                    name: "args".to_string(),
+                    type_: main_fn_arg_type.borrow().concrete(args_context)?,
+                    default_value: None,
+                    position: Position::unknown_interval(),
+                }],
+                generic_args: HashMap::new(),
+                generic_params_order: vec![],
+            };
+
+            let argless_main_signature = FnType {
+                id: main_id,
+                name: "main".to_string(),
+                ret_type: main_ret_type,
                 parameters: vec![],
                 generic_args: HashMap::new(),
                 generic_params_order: vec![],
             };
 
-            if !main_signature.contains(main_type) {
-                return Err(
-                    type_error(format!("`main` function must have type `Fn () Void`"))
-                        .set_interval(main_decl.position.clone()),
-                );
+            if !main_signature.contains(main_type.clone())
+                && !argless_main_signature.contains(main_type)
+            {
+                return Err(type_error(format!(
+                    "`main` function must have type `Fn (args: List<Utf8Str>) Void`"
+                ))
+                .set_interval(main_decl.position.clone()));
             }
         }
 
-        if ctx_ref.has_dec_with_id("main") {
+        if ctx.borrow().has_dec_with_id("main") {
             if !has_main {
                 return Err(syntax_error(format!(
                     "if `main` function is declared it must be defined"
                 ))
-                .set_interval(ctx_ref.get_dec_from_id("main").position.clone()));
+                .set_interval(ctx.borrow().get_dec_from_id("main").position.clone()));
             }
         }
 
-        let std_asm = std_asm(ctx_ref.target());
-        let main_fn_id = main_fn_id(ctx_ref.target());
+        let std_asm = std_asm(ctx.borrow().target());
+        let main_fn_id = main_fn_id(ctx.borrow().target());
         Ok(format!(
             "
                 bits 64
@@ -154,12 +197,30 @@ impl AstNode for ExecRootNode {
                 {std_asm}
                 {text}
                 {main_fn_id}:
-                    endbr64                
+                    endbr64
+                    pop rdi        ; argc
+                    mov rsi, rsp   ; argv
+
+                    ; set up 'args' array for main function
+                    push rbp
+                    mov rbp, rsp
+                    sub rsp, 16
+                    ; size of array is number of bytes,
+                    ; and each pointer is 8 bytes
+                    imul rdi, 8
+                    ;  create the List<Str> structure on the stack
+                    ; (will last for lifetime of program)
+                    mov qword [rbp - 8], rdi
+                    mov qword [rbp - 16], rsi
+                    ; push pointer to stack structure as first arg to oxy_main
+                    mov rax, rbp
+                    sub rax, 16
+                    push rax
                     {res}
                     push 0
                     call exit
             ",
-            ctx_ref.std_asm_path()
+            ctx.borrow().std_asm_path()
         ))
     }
 
