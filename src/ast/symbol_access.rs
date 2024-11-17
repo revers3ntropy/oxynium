@@ -8,17 +8,17 @@ use crate::types::r#type::TypeType;
 use crate::util::{new_mut_rc, MutRc};
 
 #[derive(Debug, Clone)]
-pub struct SymbolAccess {
+pub struct SymbolAccessNode {
     pub identifier: Token,
 }
 
-impl SymbolAccess {
+impl SymbolAccessNode {
     fn id(&self) -> String {
         self.identifier.literal.as_ref().unwrap().clone()
     }
 }
 
-impl AstNode for SymbolAccess {
+impl AstNode for SymbolAccessNode {
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         if !is_valid_identifier(&self.id()) {
             return Err(syntax_error(format!("invalid identifier '{}'", self.id())));

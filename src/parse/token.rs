@@ -72,6 +72,15 @@ impl Token {
         }
     }
 
+    pub fn new_unknown_pos(token_type: TokenType, literal: Option<String>) -> Token {
+        Token {
+            token_type,
+            literal,
+            start: Position::unknown(),
+            end: Position::unknown(),
+        }
+    }
+
     pub fn interval(&self) -> Interval {
         (self.start.clone(), self.end.clone())
     }

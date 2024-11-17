@@ -21,6 +21,7 @@ pub mod empty_local_var_decl;
 pub mod exec_root;
 pub mod fn_call;
 pub mod fn_declaration;
+pub mod for_loop;
 pub mod global_const_decl;
 pub mod r#if;
 pub mod include_asm_file;

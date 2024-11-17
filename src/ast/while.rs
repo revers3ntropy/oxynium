@@ -76,15 +76,15 @@ impl AstNode for WhileLoopNode {
 
         Ok(format!(
             "
-            {start_lbl}:
-                {cond}
-                pop rax
-                test rax, rax
-                je {end_lbl}
-                {body}
-                jmp {start_lbl}
-            {end_lbl}:
-        "
+                {start_lbl}:
+                    {cond}
+                    pop rax
+                    test rax, rax
+                    je {end_lbl}
+                    {body}
+                    jmp {start_lbl}
+                {end_lbl}:
+            "
         ))
     }
 

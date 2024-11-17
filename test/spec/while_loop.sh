@@ -1,4 +1,4 @@
-describe 'Loops'
+describe 'While Loop'
 
 expect '1' '
     def main () {

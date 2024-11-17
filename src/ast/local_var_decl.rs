@@ -118,10 +118,10 @@ impl AstNode for LocalVarNode {
 
         Ok(format!(
             "
-            {value_asm}
-            pop rax
-            mov {id}, rax
-        "
+                {value_asm}
+                pop rax
+                mov {id}, rax
+            "
         ))
     }
 

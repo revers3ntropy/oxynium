@@ -128,13 +128,7 @@ fn can_do_inline(
         | TokenType::LTE => get_type!(ctx, "Int"),
         _ => get_type!(ctx, "Bool"),
     };
-    if !operand_types.borrow().contains(lhs_type) {
-        return false;
-    }
-    if !operand_types.borrow().contains(rhs_type) {
-        return false;
-    }
-    true
+    operand_types.borrow().contains(lhs_type) && operand_types.borrow().contains(rhs_type)
 }
 
 fn do_inline(
@@ -153,11 +147,11 @@ fn do_inline(
                 }
                 return Some(format!(
                     "
-                    {rhs}
-                    pop rax
-                    neg rax
-                    push rax
-                "
+                        {rhs}
+                        pop rax
+                        neg rax
+                        push rax
+                    "
                 ));
             }
             if push_0_regex.is_match(rhs.trim()) {
@@ -173,29 +167,29 @@ fn do_inline(
                 if op.token_type == TokenType::Plus {
                     return Some(format!(
                         "
-                        {rhs}
-                        {inc_operator} qword [rsp]
-                    "
+                            {rhs}
+                            {inc_operator} qword [rsp]
+                        "
                     ));
                 }
                 return Some(format!(
                     "
-                    {rhs}
-                    pop rax
-                    neg rax
-                    inc rax
-                    push rax
-                "
+                        {rhs}
+                        pop rax
+                        neg rax
+                        inc rax
+                        push rax
+                    "
                 ));
             }
             if push_1_regex.is_match(rhs.trim()) {
                 return Some(format!(
                     "
-                    {lhs}
-                    pop rax
-                    {inc_operator} rax
-                    push rax
-                "
+                        {lhs}
+                        pop rax
+                        {inc_operator} rax
+                        push rax
+                    "
                 ));
             }
         }

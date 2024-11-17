@@ -29,7 +29,7 @@ done
 # compile, link and assemble the program
 export RUST_BACKTRACE=1
 bin/compile_std
-cargo run -- -ko=res-out --std std.asm "${compilation_args[@]}"
+cargo run -- -k -o=res-out --std std.asm "${compilation_args[@]}"
 
 echo "==============================="
 

@@ -94,7 +94,7 @@ impl Type for ClassType {
                     return false;
                 }
             }
-            return true;
+            true
         } else {
             false
         }

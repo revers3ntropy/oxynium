@@ -68,10 +68,10 @@ impl AstNode for MutateVar {
 
         Ok(format!(
             "
-           {value}
-           pop rax
-           mov {id}, rax
-        "
+               {value}
+               pop rax
+               mov {id}, rax
+            "
         ))
     }
 
