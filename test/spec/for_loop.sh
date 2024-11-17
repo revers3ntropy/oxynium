@@ -5,23 +5,21 @@ expect '' '
         for arg in args {}
     }
 '
-expect '1,2,3' '
+expect '1,2,3,' '
     def main () {
         let arr = List.empty!<Int>();
         arr.push(1);
         arr.push(2);
         arr.push(3);
         for i in arr {
-            print(i.Str(), "");
-            print(",", "");
+            print(i.Str(), ",");
         }
     }
 '
-expect 'a b c' '
+expect 'a b c ' '
     def main () {
         for c in "abc" {
-            print(c.Str(), "");
-            print(" ", "");
+            print(c.Str(), " ");
         }
     }
 '
