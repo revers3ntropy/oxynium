@@ -127,10 +127,16 @@ fn redundant_push(ast: Vec<String>) -> Vec<String> {
             i += 1;
         }
 
+        // remove excess pushes before push-pop pairs start
         while pushes.len() > pops.len() {
             res.push(format!("push {}", pushes[0]));
             pushes.remove(0);
         }
+        
+        // remove excess pops before push-pop pairs start
+        // so we can analyse if there are any issues
+        let excess_pop_count = pops.len() - pushes.len();
+        let mut excess_pops = pops.split_off(pops.len() - excess_pop_count);
 
         let mut used_registers = Vec::new();
         let mut past_last_push_idx = res.len();
@@ -162,14 +168,16 @@ fn redundant_push(ast: Vec<String>) -> Vec<String> {
                 let index = used_registers.iter().position(|x| *x == push_reg).unwrap();
                 used_registers.remove(index);
             }
-            res.push(format!("mov {}, {}", pop_reg.clone(), push_reg.clone()));
+            // insert backwards to avoid register clobbering
+            res.insert(past_last_push_idx, format!("mov {}, {}", pop_reg.clone(), push_reg.clone()));
             pushes.pop();
             pops.remove(0);
         }
 
-        while pops.len() > 0 {
-            res.push(format!("pop {}", pops[0]));
-            pops.remove(0);
+        // deal with excess pops
+        while excess_pops.len() > 0 {
+            res.push(format!("pop {}", excess_pops[0]));
+            excess_pops.remove(0);
         }
     }
 
@@ -256,7 +264,7 @@ mod tests {
 
         assert_eq!(
             super::redundant_push(strings_vec!["push r10", "push r11", "pop r12", "pop r13",]),
-            strings_vec!["mov r12, r11", "mov r13, r10",]
+            strings_vec!["mov r13, r10", "mov r12, r11",]
         );
 
         assert_eq!(
@@ -283,9 +291,27 @@ mod tests {
             ]
         );
 
+        // case from Range.at_raw, which was optimised incorrectly
+        // which lead to a seg fault
+        assert_eq!(
+            super::redundant_push(strings_vec![
+                "push qword [rbp + 16]",
+                "pop rax",
+                "push qword [rax + 16]",
+                "push qword [rbp + 24]",
+                "pop rax",
+                "pop rbx",
+            ]),
+            strings_vec![
+                "mov rax, qword [rbp + 16]",
+                "mov rbx, qword [rax + 16]",
+                "mov rax, qword [rbp + 24]",
+            ]
+        );
+
         assert_eq!(
             super::redundant_push(strings_vec!["push rax", "push rbx", "pop rbx", "pop rax",]),
-            strings_vec!["mov rbx, rbx", "mov rax, rax",]
+            strings_vec!["mov rax, rax", "mov rbx, rbx",]
         );
 
         assert_eq!(

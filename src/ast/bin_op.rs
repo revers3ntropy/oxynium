@@ -33,9 +33,7 @@ impl AstNode for BinOpNode {
 
         if lhs_tr.t.borrow().is_unknown() {
             if ctx.borrow().throw_on_unknowns() {
-                return Err(type_error(format!(
-                    "unknown type on left hand side of binary operator"
-                ))
+                return Err(type_error("unknown type on left hand side of binary operator".to_string())
                 .set_interval(self.lhs.borrow().pos()));
             }
             return Ok(TypeCheckRes::unknown_and(unknowns));

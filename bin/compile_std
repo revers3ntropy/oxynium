@@ -22,7 +22,8 @@ cargo run -- std/std.oxy \
              --exec_mode=1 \
              --out=std \
              --allow_overrides \
-             --stop_after_asm
+             --stop_after_asm \
+             -O0
 
 end=$(date +%s.%4N)
 runtime=$(echo "$end - $start" | bc -l)

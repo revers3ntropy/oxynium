@@ -145,9 +145,6 @@ impl Type for FnType {
             );
         }
 
-        let return_type = self.ret_type.borrow().concrete(ctx.clone())?;
-        res.borrow_mut().ret_type = return_type;
-
         for param in &self.parameters {
             let type_ = param.type_.borrow().concrete(ctx.clone())?;
             res.borrow_mut().parameters.push(FnParamType {
@@ -157,6 +154,9 @@ impl Type for FnType {
                 position: param.position.clone(),
             });
         }
+
+        let return_type = self.ret_type.borrow().concrete(ctx.clone())?;
+        res.borrow_mut().ret_type = return_type;
 
         let cache_id = self.cache_id(ctx.clone());
         ctx.borrow_mut().concrete_type_cache_remove(&cache_id);
