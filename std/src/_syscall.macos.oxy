@@ -1,26 +1,26 @@
 def _Syscall.out () {
-    #asm "
+    #asm Void "
         mov rax, 0x02000004
         syscall
     "
 }
 
 def _Syscall.input () {
-    #asm "
+    #asm Void "
         mov rax, 0x02000003
         syscall
     "
 }
 
 def _Syscall.exit () {
-    #asm "
+    #asm Void "
         mov rax, 0x02000001
         syscall
     "
 }
 
 def _Syscall.microseconds () {
-    #asm "
+    #asm Void "
         mov rax, 0x02000116
         syscall
     "
