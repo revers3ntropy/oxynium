@@ -11,10 +11,11 @@ use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::{Token, TokenType};
 use crate::position::{Interval, Position};
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 
 #[derive(Debug)]
 pub struct ForLoopNode {
+    pub start: Position,
     pub id_tok: Token,
     pub value: MutRc<dyn AstNode>,
     pub statements: MutRc<dyn AstNode>,
@@ -26,33 +27,35 @@ pub struct ForLoopNode {
 
 impl AstNode for ForLoopNode {
     fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
-        // TODO use name that cannot be used elsewhere
-        self.counter_identifier = format!("{}__counter", self.id_tok.literal.as_ref().unwrap());
+        self.counter_identifier = format!("_$__{}__counter", self.id_tok.literal.as_ref().unwrap());
 
-        self.counter_var_assignment_node = new_mut_rc(LocalVarNode {
-            identifier: Token::new_unknown_pos(
+        self.counter_var_assignment_node = mut_rc(LocalVarNode {
+            identifier: Token::new(
                 TokenType::Identifier,
                 Some(self.counter_identifier.clone()),
+                self.start.clone(),
+                self.start.clone(),
             ),
-            value: new_mut_rc(IntNode {
+            value: mut_rc(IntNode {
                 value: 0,
-                position: Position::unknown_interval(),
+                position: (self.start.clone(), self.start.clone()),
             }),
             mutable: false,
             type_annotation: None,
-            start: Position::unknown(),
+            start: self.start.clone(),
+            allow_anon_identifier: true,
         });
 
-        self.local_var_assignment_node = new_mut_rc(LocalVarNode {
+        self.local_var_assignment_node = mut_rc(LocalVarNode {
             identifier: self.id_tok.clone(),
             // args.at_raw(i)
-            value: new_mut_rc(FnCallNode {
+            value: mut_rc(FnCallNode {
                 object: Some(self.value.clone()),
                 identifier: Token::new_unknown_pos(
                     TokenType::Identifier,
                     Some("at_raw".to_string()),
                 ),
-                args: vec![new_mut_rc(SymbolAccessNode {
+                args: vec![mut_rc(SymbolAccessNode {
                     identifier: Token::new_unknown_pos(
                         TokenType::Identifier,
                         Some(self.counter_identifier.clone()),
@@ -64,6 +67,7 @@ impl AstNode for ForLoopNode {
             mutable: false,
             type_annotation: None,
             start: self.id_tok.start.clone(),
+            allow_anon_identifier: false,
         });
 
         self.local_var_assignment_node
@@ -105,12 +109,12 @@ impl AstNode for ForLoopNode {
 
         // while i < args.len() { ... }
         let mut while_loop_node = WhileLoopNode {
-            condition: Some(new_mut_rc(BinOpNode {
-                lhs: new_mut_rc(SymbolAccessNode {
+            condition: Some(mut_rc(BinOpNode {
+                lhs: mut_rc(SymbolAccessNode {
                     identifier: counter_identifier.clone(),
                 }),
                 operator: Token::new_unknown_pos(TokenType::LT, None),
-                rhs: new_mut_rc(FnCallNode {
+                rhs: mut_rc(FnCallNode {
                     object: Some(self.value.clone()),
                     identifier: Token::new_unknown_pos(
                         TokenType::Identifier,
@@ -122,20 +126,20 @@ impl AstNode for ForLoopNode {
                 }),
             })),
 
-            statements: new_mut_rc(StatementsNode {
+            statements: mut_rc(StatementsNode {
                 statements: vec![
                     // let arg = args.at_raw(i)
                     self.local_var_assignment_node.clone(),
                     self.statements.clone(),
                     // i = i + 1
-                    new_mut_rc(MutateVar {
+                    mut_rc(MutateVar {
                         identifier: counter_identifier.clone(),
-                        value: new_mut_rc(BinOpNode {
-                            lhs: new_mut_rc(SymbolAccessNode {
+                        value: mut_rc(BinOpNode {
+                            lhs: mut_rc(SymbolAccessNode {
                                 identifier: counter_identifier.clone(),
                             }),
                             operator: Token::new_unknown_pos(TokenType::Plus, None),
-                            rhs: new_mut_rc(IntNode {
+                            rhs: mut_rc(IntNode {
                                 value: 1,
                                 position: Position::unknown_interval(),
                             }),

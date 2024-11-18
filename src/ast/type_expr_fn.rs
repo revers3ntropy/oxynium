@@ -3,7 +3,7 @@ use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
 use crate::types::function::{FnParamType, FnType};
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 
 #[derive(Debug, Clone)]
 pub struct FnTypeNode {
@@ -44,7 +44,7 @@ impl AstNode for FnTypeNode {
         unknowns += ret_type_res.unknowns;
 
         Ok(TypeCheckRes::from(
-            new_mut_rc(FnType {
+            mut_rc(FnType {
                 id: ctx.borrow_mut().get_id(),
                 name: format!(""),
                 ret_type: ret_type_res.t,

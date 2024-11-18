@@ -33,7 +33,8 @@ use crate::error::{numeric_overflow, syntax_error, Error};
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
 use crate::position::{Interval, Position};
-use crate::util::{new_mut_rc, MutRc};
+use crate::symbols::is_valid_identifier;
+use crate::util::{mut_rc, MutRc};
 use std::any::Any;
 
 macro_rules! ret_on_err {
@@ -114,7 +115,7 @@ impl Parser {
         let mut res = ParseResults::new();
 
         if self.tokens.len() == 0 {
-            res.node = Some(new_mut_rc(PassNode {
+            res.node = Some(mut_rc(PassNode {
                 position: Position::unknown_interval(),
             }));
             return res;
@@ -295,7 +296,7 @@ impl Parser {
             let right = res.register(func_b(self));
             ret_on_err!(res);
 
-            left = Some(new_mut_rc(BinOpNode {
+            left = Some(mut_rc(BinOpNode {
                 lhs: left.unwrap(),
                 operator: op_tok,
                 rhs: right.unwrap(),
@@ -342,7 +343,7 @@ impl Parser {
 
         self.clear_end_statements(&mut res);
 
-        res.success(new_mut_rc(StatementsNode { statements }));
+        res.success(mut_rc(StatementsNode { statements }));
         res
     }
 
@@ -360,7 +361,7 @@ impl Parser {
             let end = self.last_tok().unwrap().end.clone();
 
             if make_scope_node {
-                res.success(new_mut_rc(ScopeNode {
+                res.success(mut_rc(ScopeNode {
                     ctx: None,
                     body: statements.unwrap(),
                     position: (start, end),
@@ -390,7 +391,7 @@ impl Parser {
             statements = res.register(self.statements());
             ret_on_err!(res);
         } else {
-            statements = Some(new_mut_rc(PassNode {
+            statements = Some(mut_rc(PassNode {
                 position: (start.clone(), self.current_tok().unwrap().end.clone()),
             }));
         }
@@ -400,7 +401,7 @@ impl Parser {
         let end = self.last_tok().unwrap().end.clone();
 
         if make_scope_node {
-            res.success(new_mut_rc(ScopeNode {
+            res.success(mut_rc(ScopeNode {
                 ctx: None,
                 body: statements.unwrap(),
                 position: (start, end),
@@ -451,14 +452,14 @@ impl Parser {
         }
         if self.current_matches(TokenType::Identifier, Some("break".to_string())) {
             self.advance(&mut res);
-            res.success(new_mut_rc(BreakNode {
+            res.success(mut_rc(BreakNode {
                 position: (start.clone(), self.last_tok().unwrap().end.clone()),
             }));
             return res;
         }
         if self.current_matches(TokenType::Identifier, Some("continue".to_string())) {
             self.advance(&mut res);
-            res.success(new_mut_rc(ContinueNode {
+            res.success(mut_rc(ContinueNode {
                 position: (start.clone(), self.last_tok().unwrap().end.clone()),
             }));
             return res;
@@ -616,7 +617,7 @@ impl Parser {
                 );
                 return res;
             }
-            res.success(new_mut_rc(EmptyGlobalConstNode {
+            res.success(mut_rc(EmptyGlobalConstNode {
                 identifier: name,
                 type_: type_.unwrap(),
                 is_external,
@@ -650,7 +651,7 @@ impl Parser {
                 return res;
             }
             let value = value.unwrap();
-            res.success(new_mut_rc(GlobalConstNode {
+            res.success(mut_rc(GlobalConstNode {
                 identifier: name,
                 value,
                 position: (start, self.last_tok().unwrap().end.clone()),
@@ -659,7 +660,7 @@ impl Parser {
             return res;
         } else if tok.token_type == TokenType::String {
             self.advance(&mut res);
-            res.success(new_mut_rc(GlobalConstNode {
+            res.success(mut_rc(GlobalConstNode {
                 identifier: name,
                 value: tok.literal.unwrap(),
                 position: (start, self.last_tok().unwrap().end.clone()),
@@ -723,7 +724,7 @@ impl Parser {
             self.add_end_statement(&mut res);
             ret_on_err!(res);
 
-            res.success(new_mut_rc(EmptyLocalVarNode {
+            res.success(mut_rc(EmptyLocalVarNode {
                 identifier: name,
                 type_: type_annotation.unwrap(),
                 position: (start, self.last_tok().unwrap().end.clone()),
@@ -736,12 +737,13 @@ impl Parser {
         let expr = res.register(self.expression());
         ret_on_err!(res);
 
-        res.success(new_mut_rc(LocalVarNode {
+        res.success(mut_rc(LocalVarNode {
             identifier: name_tok,
             value: expr.unwrap(),
             mutable,
             type_annotation,
             start,
+            allow_anon_identifier: false,
         }));
         res
     }
@@ -754,7 +756,7 @@ impl Parser {
                 consume!(self, res);
                 let node = res.register(self.unary_expr());
                 ret_on_err!(res);
-                res.success(new_mut_rc(UnaryOpNode {
+                res.success(mut_rc(UnaryOpNode {
                     operator: tok,
                     rhs: node.unwrap(),
                 }));
@@ -774,7 +776,7 @@ impl Parser {
                 self.advance(&mut res);
                 let factor = res.register(self.factor());
                 ret_on_err!(res);
-                res.success(new_mut_rc(UnaryOpNode {
+                res.success(mut_rc(UnaryOpNode {
                     operator: t,
                     rhs: factor.unwrap(),
                 }));
@@ -841,7 +843,7 @@ impl Parser {
                 return self.compound(Some(base_option.unwrap()));
             }
 
-            return self.compound(Some(new_mut_rc(FieldAccessNode {
+            return self.compound(Some(mut_rc(FieldAccessNode {
                 base,
                 field_name: name_tok,
                 position: (start, self.last_tok().unwrap().end.clone()),
@@ -912,7 +914,11 @@ impl Parser {
             return self.function_call(start, base, identifier, generic_args);
         }
 
-        let base = base.unwrap_or(new_mut_rc(SymbolAccessNode {
+        if !is_valid_identifier(&identifier.literal.clone().unwrap()) {
+            res.failure(syntax_error("invalid identifier".to_string()), None, None);
+            return res;
+        }
+        let base = base.unwrap_or(mut_rc(SymbolAccessNode {
             identifier: identifier.clone(),
         }));
 
@@ -923,7 +929,7 @@ impl Parser {
             // `C!<T>.f(...)`
             return self.function_call(
                 start.clone(),
-                Some(new_mut_rc(GenericTypeNode {
+                Some(mut_rc(GenericTypeNode {
                     base,
                     generic_args,
                     position: (start, self.last_tok().clone().unwrap().end),
@@ -947,7 +953,7 @@ impl Parser {
         // `C!<T1>.f!<T2>(...)`
         self.function_call(
             start.clone(),
-            Some(new_mut_rc(GenericTypeNode {
+            Some(mut_rc(GenericTypeNode {
                 base,
                 generic_args,
                 position: (start, self.last_tok().unwrap().end),
@@ -973,7 +979,7 @@ impl Parser {
             // fn(), no arguments
             if t.token_type == TokenType::CloseParen {
                 self.advance(&mut res);
-                res.success(new_mut_rc(FnCallNode {
+                res.success(mut_rc(FnCallNode {
                     object: base,
                     identifier: name_tok,
                     args: Vec::new(),
@@ -993,7 +999,7 @@ impl Parser {
 
         consume!(CloseParen, self, res);
 
-        res.success(new_mut_rc(FnCallNode {
+        res.success(mut_rc(FnCallNode {
             object: base,
             identifier: name_tok,
             args,
@@ -1014,10 +1020,14 @@ impl Parser {
         let value = res.register(self.expression());
         ret_on_err!(res);
 
-        res.success(new_mut_rc(MutateVar {
+        if !is_valid_identifier(&id_tok.literal.clone().unwrap()) {
+            res.failure(syntax_error("invalid identifier".to_string()), None, None);
+            return res;
+        }
+        res.success(mut_rc(MutateVar {
             identifier: id_tok.clone(),
-            value: new_mut_rc(BinOpNode {
-                lhs: new_mut_rc(SymbolAccessNode { identifier: id_tok }),
+            value: mut_rc(BinOpNode {
+                lhs: mut_rc(SymbolAccessNode { identifier: id_tok }),
                 operator,
                 rhs: value.unwrap(),
             }),
@@ -1034,7 +1044,7 @@ impl Parser {
         let value = res.register(self.expression());
         ret_on_err!(res);
 
-        res.success(new_mut_rc(MutateVar {
+        res.success(mut_rc(MutateVar {
             identifier: id_tok,
             value: value.unwrap(),
         }));
@@ -1069,14 +1079,14 @@ impl Parser {
                     );
                     return res;
                 }
-                res.success(new_mut_rc(IntNode {
+                res.success(mut_rc(IntNode {
                     value: int_res.unwrap(),
                     position: (tok.start.clone(), tok.end.clone()),
                 }));
             }
             TokenType::String => {
                 self.advance(&mut res);
-                res.success(new_mut_rc(StrNode { value: tok }));
+                res.success(mut_rc(StrNode { value: tok }));
             }
             TokenType::OpenParen => {
                 self.advance(&mut res);
@@ -1105,7 +1115,7 @@ impl Parser {
                     let type_of = res.register(self.expression());
                     ret_on_err!(res);
 
-                    res.success(new_mut_rc(UnaryOpNode {
+                    res.success(mut_rc(UnaryOpNode {
                         operator: tok,
                         rhs: type_of.unwrap(),
                     }));
@@ -1113,10 +1123,14 @@ impl Parser {
                 }
                 if tok.clone().literal.unwrap() == "false" || tok.clone().literal.unwrap() == "true"
                 {
-                    res.success(new_mut_rc(BoolNode {
+                    res.success(mut_rc(BoolNode {
                         value: tok.clone().literal.unwrap() == "true",
                         position: (tok.start.clone(), tok.end.clone()),
                     }));
+                    return res;
+                }
+                if !is_valid_identifier(&tok.literal.clone().unwrap()) {
+                    res.failure(syntax_error("invalid identifier".to_string()), None, None);
                     return res;
                 }
                 if let Some(next) = self.current_tok() {
@@ -1137,8 +1151,7 @@ impl Parser {
                         return self.assign(tok);
                     }
                 }
-
-                res.success(new_mut_rc(SymbolAccessNode { identifier: tok }));
+                res.success(mut_rc(SymbolAccessNode { identifier: tok }));
             }
             TokenType::Hash => {
                 // macro
@@ -1243,7 +1256,7 @@ impl Parser {
             }
         }
 
-        res.success(new_mut_rc(MacroCallNode {
+        res.success(mut_rc(MacroCallNode {
             identifier: id_tok,
             args,
             position: (start, self.last_tok().unwrap().end.clone()),
@@ -1296,16 +1309,18 @@ impl Parser {
         self.add_end_statement(&mut res);
         ret_on_err!(res);
 
-        res.success(new_mut_rc(ForLoopNode {
+        res.success(mut_rc(ForLoopNode {
+            start: start.clone(),
             id_tok,
             value,
             statements: statements.unwrap(),
             position: (start.clone(), self.last_tok().unwrap().end.clone()),
+            // initialised later
             counter_identifier: "".to_string(),
-            local_var_assignment_node: new_mut_rc(PassNode {
+            local_var_assignment_node: mut_rc(PassNode {
                 position: (start.clone(), self.last_tok().unwrap().end.clone()),
             }),
-            counter_var_assignment_node: new_mut_rc(PassNode {
+            counter_var_assignment_node: mut_rc(PassNode {
                 position: (start.clone(), self.last_tok().unwrap().end.clone()),
             }),
         }));
@@ -1337,7 +1352,7 @@ impl Parser {
         self.add_end_statement(&mut res);
         ret_on_err!(res);
 
-        res.success(new_mut_rc(WhileLoopNode {
+        res.success(mut_rc(WhileLoopNode {
             condition,
             statements: statements.unwrap(),
             position: (start, self.last_tok().unwrap().end.clone()),
@@ -1374,7 +1389,7 @@ impl Parser {
         self.add_end_statement(&mut res);
         ret_on_err!(res);
 
-        res.success(new_mut_rc(IfNode {
+        res.success(mut_rc(IfNode {
             comparison: comparison.unwrap(),
             body: statements.unwrap(),
             else_body,
@@ -1409,7 +1424,7 @@ impl Parser {
         let return_type = res.register(self.type_expr(None));
         ret_on_err!(res);
 
-        res.success(new_mut_rc(FnTypeNode {
+        res.success(mut_rc(FnTypeNode {
             parameters,
             ret_type: return_type.unwrap(),
             position: (fn_tok_pos.0.clone(), self.last_tok().unwrap().end),
@@ -1430,7 +1445,7 @@ impl Parser {
         }
 
         if !self.current_matches(TokenType::LT, None) {
-            res.success(new_mut_rc(TypeNode {
+            res.success(mut_rc(TypeNode {
                 identifier: type_tok,
             }));
             return res;
@@ -1451,8 +1466,8 @@ impl Parser {
 
         consume!(GT, self, res);
 
-        res.success(new_mut_rc(GenericTypeNode {
-            base: new_mut_rc(TypeNode {
+        res.success(mut_rc(GenericTypeNode {
+            base: mut_rc(TypeNode {
                 identifier: type_tok.clone(),
             }),
             generic_args,
@@ -1481,8 +1496,8 @@ impl Parser {
             consume!(DblQM, self, res);
 
             let start = value.clone().borrow().pos().0;
-            return self.type_expr(Some(new_mut_rc(OptionalTypeNode {
-                value: new_mut_rc(OptionalTypeNode {
+            return self.type_expr(Some(mut_rc(OptionalTypeNode {
+                value: mut_rc(OptionalTypeNode {
                     value,
                     position: (start.clone(), self.last_tok().unwrap().end),
                 }),
@@ -1494,7 +1509,7 @@ impl Parser {
             consume!(QM, self, res);
 
             let start = value.clone().borrow().pos().0;
-            return self.type_expr(Some(new_mut_rc(OptionalTypeNode {
+            return self.type_expr(Some(mut_rc(OptionalTypeNode {
                 value,
                 position: (start, self.last_tok().unwrap().end),
             })));
@@ -1761,7 +1776,7 @@ impl Parser {
                 0,
                 Parameter {
                     identifier: "self".to_owned(),
-                    type_: Some(new_mut_rc(TypeNode {
+                    type_: Some(mut_rc(TypeNode {
                         identifier: Token {
                             token_type: TokenType::Identifier,
                             literal: Some(class_name.clone().unwrap()),
@@ -1777,7 +1792,7 @@ impl Parser {
 
         consume!(CloseParen, self, res);
 
-        let mut ret_type: MutRc<dyn AstNode> = new_mut_rc(TypeNode {
+        let mut ret_type: MutRc<dyn AstNode> = mut_rc(TypeNode {
             identifier: Token::new(
                 TokenType::Identifier,
                 Some("Void".to_string()),
@@ -1829,7 +1844,7 @@ impl Parser {
                 ret_on_err!(res);
             }
 
-            res.success(new_mut_rc(FnDeclarationNode {
+            res.success(mut_rc(FnDeclarationNode {
                 identifier,
                 params_scope: None,
                 ret_type,
@@ -1866,7 +1881,7 @@ impl Parser {
         } else {
             consume!(Arrow, self, res);
             let start = self.last_tok().unwrap().start;
-            body = Some(new_mut_rc(ReturnNode {
+            body = Some(mut_rc(ReturnNode {
                 value: res.register(self.expression()),
                 position: (start, self.last_tok().unwrap().end.clone()),
             }));
@@ -1874,7 +1889,7 @@ impl Parser {
             should_infer_return_type = has_empty_return_type;
         }
 
-        res.success(new_mut_rc(FnDeclarationNode {
+        res.success(mut_rc(FnDeclarationNode {
             identifier,
             params_scope: None,
             ret_type,
@@ -1904,7 +1919,7 @@ impl Parser {
             // so `fn a() { return } }` wouldn't work if '}' was a valid expression
             || self.current_matches(TokenType::CloseBrace, None)
         {
-            res.success(new_mut_rc(ReturnNode {
+            res.success(mut_rc(ReturnNode {
                 value: None,
                 position: (start, self.last_tok().unwrap().end.clone()),
             }));
@@ -1914,7 +1929,7 @@ impl Parser {
         let expr = res.register(self.expression());
         ret_on_err!(res);
 
-        res.success(new_mut_rc(ReturnNode {
+        res.success(mut_rc(ReturnNode {
             value: Some(expr.unwrap()),
             position: (start, self.last_tok().unwrap().end.clone()),
         }));
@@ -1964,7 +1979,7 @@ impl Parser {
         }
 
         if !self.current_matches(TokenType::OpenBrace, None) {
-            res.success(new_mut_rc(ClassDeclarationNode {
+            res.success(mut_rc(ClassDeclarationNode {
                 identifier: id_tok,
                 fields,
                 methods,
@@ -2067,7 +2082,7 @@ impl Parser {
             return res;
         }
 
-        res.success(new_mut_rc(ClassDeclarationNode {
+        res.success(mut_rc(ClassDeclarationNode {
             identifier: id_tok,
             fields,
             methods,
@@ -2084,12 +2099,15 @@ impl Parser {
         let mut res = ParseResults::new();
 
         result_consume!(identifier = Identifier, self, res);
+        if !is_valid_identifier(&identifier.literal.clone().unwrap()) {
+            return Err(syntax_error("invalid identifier".to_string()));
+        }
 
         if !self.current_matches(TokenType::Colon, None) {
             // `new C { a }` should be equivalent to `new C { a: a }`
             return Ok((
                 identifier.clone().literal.unwrap(),
-                new_mut_rc(SymbolAccessNode { identifier }),
+                mut_rc(SymbolAccessNode { identifier }),
             ));
         }
 
@@ -2146,7 +2164,7 @@ impl Parser {
         let mut fields = Vec::new();
 
         if !self.current_matches(TokenType::OpenBrace, None) {
-            res.success(new_mut_rc(ClassInitNode {
+            res.success(mut_rc(ClassInitNode {
                 identifier: identifier_tok,
                 fields,
                 position: (start, self.last_tok().unwrap().end.clone()),
@@ -2179,7 +2197,7 @@ impl Parser {
         self.consume(&mut res, TokenType::CloseBrace);
         ret_on_err!(res);
 
-        res.success(new_mut_rc(ClassInitNode {
+        res.success(mut_rc(ClassInitNode {
             identifier: identifier_tok,
             fields,
             position: (start, self.last_tok().unwrap().end.clone()),

@@ -10,7 +10,7 @@ use crate::symbols::SymbolDec;
 use crate::types::function::{FnParamType, FnType};
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 
 struct CalleeType {
     fn_type: Option<FnType>,

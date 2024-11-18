@@ -3,7 +3,9 @@ use crate::context::Context;
 use crate::error::{syntax_error, type_error, Error};
 use crate::parse::token::Token;
 use crate::position::{Interval, Position};
-use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
+use crate::symbols::{
+    can_declare_with_identifier, can_declare_with_identifier_allow_anon, SymbolDec, SymbolDef,
+};
 use crate::util::MutRc;
 
 #[derive(Debug)]
@@ -13,6 +15,9 @@ pub struct LocalVarNode {
     pub mutable: bool,
     pub type_annotation: Option<MutRc<dyn AstNode>>,
     pub start: Position,
+    // allow identifier to start with _$ because it
+    // has been 'declared' internally, not by the user
+    pub allow_anon_identifier: bool,
 }
 
 impl LocalVarNode {
@@ -23,7 +28,9 @@ impl LocalVarNode {
 
 impl AstNode for LocalVarNode {
     fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
-        if !can_declare_with_identifier(&self.id()) {
+        if !self.allow_anon_identifier && !can_declare_with_identifier(&self.id())
+            || self.allow_anon_identifier && !can_declare_with_identifier_allow_anon(&self.id())
+        {
             return Err(
                 syntax_error(format!("Invalid local variable '{}'", self.id()))
                     .set_interval(self.identifier.interval()),

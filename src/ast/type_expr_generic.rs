@@ -6,7 +6,7 @@ use crate::position::Interval;
 use crate::symbols::SymbolDec;
 use crate::types::r#type::TypeType;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 
 #[derive(Debug, Clone)]
 pub struct GenericTypeNode {
@@ -96,7 +96,7 @@ impl AstNode for GenericTypeNode {
 
         generics_ctx.borrow_mut().set_parent(ctx.clone());
 
-        let res_type = new_mut_rc(
+        let res_type = mut_rc(
             class_type
                 .concrete(generics_ctx)?
                 .borrow()
@@ -107,7 +107,7 @@ impl AstNode for GenericTypeNode {
         if is_type_type {
             // preserve wrapper
             Ok(TypeCheckRes::from(
-                new_mut_rc(TypeType {
+                mut_rc(TypeType {
                     instance_type: res_type,
                 }),
                 unknowns,

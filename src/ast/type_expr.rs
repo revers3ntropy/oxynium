@@ -6,7 +6,7 @@ use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 
 #[derive(Debug, Clone)]
 pub struct TypeNode {
@@ -41,7 +41,7 @@ impl AstNode for TypeNode {
         let type_: MutRc<dyn Type>;
         if !ctx.borrow().has_dec_with_id(&self.id()) {
             unknowns += 1;
-            type_ = new_mut_rc(UnknownType {});
+            type_ = mut_rc(UnknownType {});
         } else {
             type_ = get_type!(ctx, &self.id());
 

@@ -5,7 +5,7 @@ use crate::position::Interval;
 use crate::symbols::{SymbolDec, SymbolDef};
 use crate::target::Target;
 use crate::types::Type;
-use crate::util::{indent, new_mut_rc, MutRc};
+use crate::util::{indent, mut_rc, MutRc};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::Path;
@@ -32,7 +32,7 @@ impl Scope {
         is_global: bool,
         is_anon_function_scope: bool,
     ) -> MutRc<dyn Context> {
-        let self_ = new_mut_rc(Scope {
+        let self_ = mut_rc(Scope {
             self_: None,
             parent,
             declarations: HashMap::new(),

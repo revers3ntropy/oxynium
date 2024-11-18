@@ -1,7 +1,7 @@
 use crate::context::Context;
 use crate::error::Error;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 use std::fmt;
 
 #[derive(Clone)]
@@ -27,7 +27,7 @@ impl Type for UnknownType {
     }
 
     fn concrete(&self, _ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
-        Ok(new_mut_rc(self.clone()))
+        Ok(mut_rc(self.clone()))
     }
 
     fn cache_id(&self, _ctx: MutRc<dyn Context>) -> String {

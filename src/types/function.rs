@@ -5,7 +5,7 @@ use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 use std::collections::HashMap;
 use std::fmt;
 
@@ -120,10 +120,10 @@ impl Type for FnType {
             return Ok(cached);
         }
 
-        let res = new_mut_rc(FnType {
+        let res = mut_rc(FnType {
             id: self.id,
             name: self.name.clone(),
-            ret_type: new_mut_rc(UnknownType {}),
+            ret_type: mut_rc(UnknownType {}),
             parameters: Vec::new(),
             generic_args: HashMap::new(),
             generic_params_order: self.generic_params_order.clone(),

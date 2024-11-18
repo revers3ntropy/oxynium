@@ -5,7 +5,7 @@ use crate::position::Interval;
 use crate::target::Target;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 use std::fmt::Debug;
 
 pub mod bin_op;
@@ -65,7 +65,7 @@ macro_rules! get_type {
         if $ctx.borrow().has_dec_with_id($name) {
             $ctx.borrow_mut().get_dec_from_id($name).type_.clone()
         } else {
-            new_mut_rc(UnknownType {})
+            mut_rc(UnknownType {})
         }
     };
 }
@@ -110,14 +110,14 @@ impl TypeCheckRes {
             let root = ctx.clone().borrow().global_scope();
             if !root.borrow().has_dec_with_id(name) {
                 unknowns += 1;
-                t = new_mut_rc(UnknownType {});
+                t = mut_rc(UnknownType {});
             } else {
                 t = get_type!(root, name);
             }
         } else {
             if !ctx.borrow().has_dec_with_id(name) {
                 unknowns += 1;
-                t = new_mut_rc(UnknownType {});
+                t = mut_rc(UnknownType {});
             } else {
                 t = get_type!(ctx, name);
             }
@@ -137,7 +137,7 @@ impl TypeCheckRes {
 
     fn unknown() -> Self {
         Self {
-            t: new_mut_rc(UnknownType {}),
+            t: mut_rc(UnknownType {}),
             is_returned: false,
             always_returns: false,
             unknowns: 1,
@@ -145,7 +145,7 @@ impl TypeCheckRes {
     }
     fn unknown_and(unknowns: usize) -> Self {
         Self {
-            t: new_mut_rc(UnknownType {}),
+            t: mut_rc(UnknownType {}),
             is_returned: false,
             always_returns: false,
             unknowns: unknowns + 1,

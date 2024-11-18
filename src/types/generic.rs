@@ -2,7 +2,7 @@ use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::Token;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 use std::fmt;
 
 #[derive(Clone)]
@@ -36,7 +36,7 @@ impl Type for GenericType {
             let t = ctx.borrow().get_dec_from_id(&key.clone()).type_;
             return Ok(t);
         }
-        Ok(new_mut_rc(self.clone()))
+        Ok(mut_rc(self.clone()))
     }
 
     fn cache_id(&self, ctx: MutRc<dyn Context>) -> String {

@@ -1,7 +1,7 @@
 use crate::context::Context;
 use crate::error::Error;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 use std::fmt;
 
 #[derive(Clone)]
@@ -32,7 +32,7 @@ impl Type for TypeType {
     }
 
     fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
-        Ok(new_mut_rc(TypeType {
+        Ok(mut_rc(TypeType {
             instance_type: self.instance_type.borrow().concrete(ctx)?,
         }))
     }

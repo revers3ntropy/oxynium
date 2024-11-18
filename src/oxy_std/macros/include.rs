@@ -9,7 +9,7 @@ use crate::error::{type_error, Error, ErrorSource};
 use crate::oxy_std::macros::Macro;
 use crate::position::Interval;
 use crate::target::Target;
-use crate::util::{new_mut_rc, read_file};
+use crate::util::{mut_rc, read_file};
 use crate::util::{string_to_static_str, MutRc};
 use std::path::Path;
 
@@ -80,7 +80,7 @@ impl Macro for IncludeMacro {
     fn resolve(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn AstNode>, Error> {
         let path = self.get_path(ctx.clone())?;
         if path.is_none() {
-            return Ok(new_mut_rc(PassNode {
+            return Ok(mut_rc(PassNode {
                 position: self.position.clone(),
             }));
         }
@@ -107,7 +107,7 @@ impl Macro for IncludeMacro {
         ctx.borrow_mut()
             .set_current_dir_path(file_path.parent().unwrap_or(file_path));
 
-        Ok(new_mut_rc(ScopeNode {
+        Ok(mut_rc(ScopeNode {
             position: self.position.clone(),
             body: ast,
             ctx: Some(ctx),

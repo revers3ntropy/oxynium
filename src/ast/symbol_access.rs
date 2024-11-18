@@ -1,11 +1,10 @@
 use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{syntax_error, type_error, unknown_symbol, Error};
+use crate::error::{type_error, unknown_symbol, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
-use crate::symbols::is_valid_identifier;
 use crate::types::r#type::TypeType;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 
 #[derive(Debug, Clone)]
 pub struct SymbolAccessNode {
@@ -20,9 +19,6 @@ impl SymbolAccessNode {
 
 impl AstNode for SymbolAccessNode {
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
-        if !is_valid_identifier(&self.id()) {
-            return Err(syntax_error(format!("invalid identifier '{}'", self.id())));
-        }
         if !ctx.borrow_mut().has_dec_with_id(&self.id()) {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(
@@ -34,7 +30,7 @@ impl AstNode for SymbolAccessNode {
         }
         if ctx.borrow_mut().get_dec_from_id(&self.id()).is_type {
             return Ok(TypeCheckRes::from(
-                new_mut_rc(TypeType {
+                mut_rc(TypeType {
                     instance_type: ctx.borrow_mut().get_dec_from_id(&self.id()).type_.clone(),
                 }),
                 0,

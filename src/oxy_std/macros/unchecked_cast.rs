@@ -4,7 +4,7 @@ use crate::context::Context;
 use crate::error::{type_error, Error};
 use crate::oxy_std::macros::Macro;
 use crate::position::Interval;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 
 pub struct UncheckedCastMacro {
     pub position: Interval,
@@ -23,6 +23,6 @@ impl Macro for UncheckedCastMacro {
         }
         let new_type = args.remove(0);
         let value = args.remove(0);
-        Ok(new_mut_rc(UncheckedTypeCastNode { value, new_type }))
+        Ok(mut_rc(UncheckedTypeCastNode { value, new_type }))
     }
 }

@@ -7,7 +7,7 @@ use crate::position::Interval;
 use crate::post_process::optimise::o1;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 use regex::Regex;
 
 #[derive(Debug)]
@@ -33,7 +33,9 @@ impl AstNode for BinOpNode {
 
         if lhs_tr.t.borrow().is_unknown() {
             if ctx.borrow().throw_on_unknowns() {
-                return Err(type_error("unknown type on left hand side of binary operator".to_string())
+                return Err(type_error(
+                    "unknown type on left hand side of binary operator".to_string(),
+                )
                 .set_interval(self.lhs.borrow().pos()));
             }
             return Ok(TypeCheckRes::unknown_and(unknowns));

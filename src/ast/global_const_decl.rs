@@ -6,7 +6,7 @@ use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
 use crate::types::unknown::UnknownType;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 
 #[derive(Debug)]
 pub struct GlobalConstNode<T> {

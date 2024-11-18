@@ -4,7 +4,7 @@ use crate::error::Error;
 use crate::parse::token::Token;
 use crate::types::function::FnType;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 use std::collections::HashMap;
 use std::ops::Deref;
 
@@ -109,10 +109,10 @@ impl Type for ClassType {
         }
 
         if self.generic_params_order.len() < 1 {
-            return Ok(new_mut_rc(self.clone()));
+            return Ok(mut_rc(self.clone()));
         }
 
-        let res = new_mut_rc(ClassType {
+        let res = mut_rc(ClassType {
             id: self.id,
             name: self.name.clone(),
             fields: HashMap::new(),
@@ -165,7 +165,7 @@ impl Type for ClassType {
 
             res.borrow_mut()
                 .methods
-                .insert(name.clone(), new_mut_rc(new_method_type));
+                .insert(name.clone(), mut_rc(new_method_type));
         }
 
         let cache_id = self.cache_id(ctx.clone());

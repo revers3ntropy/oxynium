@@ -11,7 +11,7 @@ use crate::types::class::{ClassFieldType, ClassType};
 use crate::types::function::FnType;
 use crate::types::generic::GenericType;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -88,7 +88,7 @@ impl AstNode for ClassDeclarationNode {
                     is_constant: true,
                     is_type: true,
                     is_func: false,
-                    type_: new_mut_rc(GenericType {
+                    type_: mut_rc(GenericType {
                         identifier: generic_param.clone(),
                     }),
                     require_init: false,
@@ -115,13 +115,13 @@ impl AstNode for ClassDeclarationNode {
             for generic_param in self.generic_parameters.iter() {
                 generic_args.insert(
                     generic_param.literal.clone().unwrap(),
-                    new_mut_rc(GenericType {
+                    mut_rc(GenericType {
                         identifier: generic_param.clone(),
                     }) as MutRc<dyn Type>,
                 );
             }
 
-            this_type = new_mut_rc(ClassType {
+            this_type = mut_rc(ClassType {
                 name: self.identifier.clone().literal.unwrap(),
                 fields: HashMap::new(),
                 methods: HashMap::new(),
@@ -168,7 +168,7 @@ impl AstNode for ClassDeclarationNode {
                 method.params.remove(0);
 
                 let mut self_param = first_param.clone();
-                self_param.type_ = Some(new_mut_rc(KnownTypeNode {
+                self_param.type_ = Some(mut_rc(KnownTypeNode {
                     t: this_type.clone(),
                     pos: first_param.position.clone(),
                 }));

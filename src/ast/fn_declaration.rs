@@ -12,7 +12,7 @@ use crate::types::function::{FnParamType, FnType};
 use crate::types::generic::GenericType;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -79,7 +79,7 @@ impl FnDeclarationNode {
 
             if let Some(type_type) = class.clone().borrow().as_type_type() {
                 if let Some(class_type) = type_type.as_class() {
-                    class = new_mut_rc(class_type)
+                    class = mut_rc(class_type)
                 }
             }
 
@@ -208,7 +208,7 @@ impl AstNode for FnDeclarationNode {
                     is_constant: true,
                     is_type: true,
                     is_func: false,
-                    type_: new_mut_rc(GenericType {
+                    type_: mut_rc(GenericType {
                         identifier: generic_param.clone(),
                     }),
                     require_init: false,
@@ -229,7 +229,7 @@ impl AstNode for FnDeclarationNode {
         unknowns += ret_type_result.unknowns;
 
         let ret_type = if self.should_infer_return_type {
-            new_mut_rc(UnknownType {})
+            mut_rc(UnknownType {})
         } else {
             ret_type_result.t
         };
@@ -354,13 +354,13 @@ impl AstNode for FnDeclarationNode {
             for generic_param in generic_params.iter() {
                 generic_args.insert(
                     generic_param.literal.clone().unwrap(),
-                    new_mut_rc(GenericType {
+                    mut_rc(GenericType {
                         identifier: generic_param.clone(),
                     }) as MutRc<dyn Type>,
                 );
             }
 
-            this_type = new_mut_rc(FnType {
+            this_type = mut_rc(FnType {
                 id: ctx.borrow_mut().get_id(),
                 name: self.id(),
                 ret_type: ret_type.clone(),

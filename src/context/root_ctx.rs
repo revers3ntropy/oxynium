@@ -6,7 +6,7 @@ use crate::position::Interval;
 use crate::symbols::{SymbolDec, SymbolDef};
 use crate::target::Target;
 use crate::types::Type;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::Path;
@@ -33,7 +33,7 @@ pub struct RootContext {
 
 impl RootContext {
     pub fn new(cli_args: Args) -> MutRc<Self> {
-        let self_ = new_mut_rc(Self {
+        let self_ = mut_rc(Self {
             self_: None,
             loop_label_stack: vec![],
             call_stack: vec![],

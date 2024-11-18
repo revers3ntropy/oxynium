@@ -4,7 +4,7 @@ use crate::context::Context;
 use crate::error::{type_error, Error};
 use crate::oxy_std::macros::Macro;
 use crate::position::Interval;
-use crate::util::new_mut_rc;
+use crate::util::mut_rc;
 use crate::util::MutRc;
 
 pub struct IncludeAsmFileMacro {
@@ -24,7 +24,7 @@ impl Macro for IncludeAsmFileMacro {
         }
         let arg = args.remove(0);
         if let Some(as_str_node) = arg.borrow().as_str_node() {
-            return Ok(new_mut_rc(IncludeAsmFileNode {
+            return Ok(mut_rc(IncludeAsmFileNode {
                 file_path: as_str_node.value.clone(),
             }));
         }

@@ -6,7 +6,7 @@ use crate::get_type;
 use crate::parse::token::{Token, TokenType};
 use crate::position::Interval;
 use crate::types::unknown::UnknownType;
-use crate::util::{new_mut_rc, MutRc};
+use crate::util::{mut_rc, MutRc};
 
 #[derive(Debug)]
 pub struct UnaryOpNode {

@@ -4,7 +4,7 @@ use crate::context::Context;
 use crate::error::{type_error, Error};
 use crate::oxy_std::macros::Macro;
 use crate::position::Interval;
-use crate::util::new_mut_rc;
+use crate::util::mut_rc;
 use crate::util::MutRc;
 
 pub struct AsmMacro {
@@ -23,7 +23,7 @@ impl Macro for AsmMacro {
         let type_arg = args.remove(0);
         let asm_arg = args.remove(0);
         if let Some(as_str_node) = asm_arg.borrow().as_str_node() {
-            return Ok(new_mut_rc(RawAsmNode {
+            return Ok(mut_rc(RawAsmNode {
                 asm: as_str_node.value.clone(),
                 return_type: type_arg,
             }));

@@ -6,7 +6,7 @@ use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::symbols::SymbolDec;
 use crate::types::Type;
-use crate::util::{intersection, new_mut_rc, MutRc};
+use crate::util::{intersection, mut_rc, MutRc};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -180,7 +180,7 @@ impl AstNode for ClassInitNode {
             }
         }
 
-        Ok(TypeCheckRes::from(new_mut_rc(class_type), unknowns))
+        Ok(TypeCheckRes::from(mut_rc(class_type), unknowns))
     }
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {

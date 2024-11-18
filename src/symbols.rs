@@ -56,18 +56,25 @@ const RESERVED_KEYWORDS: [&str; 50] = [
     "false",
 ];
 
-pub fn is_valid_identifier(s: &str) -> bool {
+pub fn is_valid_identifier_allow_anon(s: &str) -> bool {
     s.chars().next().map_or(false, |c| {
         c.is_alphabetic() || c == '_' || c == '$' || c == '.'
     }) && s
         .chars()
         .all(|c| c.is_alphanumeric() || c == '_' || c == '$' || c == '.')
         && !s.as_bytes()[0].is_ascii_digit()
-        && !s.starts_with("_$")
+}
+
+pub fn is_valid_identifier(s: &str) -> bool {
+    is_valid_identifier_allow_anon(s) && !s.starts_with("_$")
 }
 
 pub fn can_declare_with_identifier(s: &str) -> bool {
     is_valid_identifier(s) && !RESERVED_KEYWORDS.contains(&s)
+}
+
+pub fn can_declare_with_identifier_allow_anon(s: &str) -> bool {
+    is_valid_identifier_allow_anon(s) && !RESERVED_KEYWORDS.contains(&s)
 }
 
 #[derive(Debug, Clone)]
