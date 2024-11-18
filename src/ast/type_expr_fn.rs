@@ -10,7 +10,7 @@ pub struct FnTypeNode {
     pub parameters: Vec<MutRc<dyn AstNode>>,
     pub ret_type: MutRc<dyn AstNode>,
     pub position: Interval,
-    pub fn_tok_pos: Interval,
+    // pub fn_tok_pos: Interval,
 }
 
 impl AstNode for FnTypeNode {

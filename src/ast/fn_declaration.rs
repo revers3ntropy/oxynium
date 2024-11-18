@@ -480,7 +480,7 @@ impl AstNode for FnDeclarationNode {
         let end_label = ctx.borrow_mut().get_anon_label();
         ctx.borrow_mut().stack_frame_push(CallStackFrame {
             name: self.id(),
-            params: self.params.iter().map(|a| a.identifier.clone()).collect(),
+            // params: self.params.iter().map(|a| a.identifier.clone()).collect(),
             ret_lbl: end_label.clone(),
         });
 

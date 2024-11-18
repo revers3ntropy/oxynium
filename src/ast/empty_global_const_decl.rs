@@ -11,7 +11,7 @@ pub struct EmptyGlobalConstNode {
     pub identifier: Token,
     pub type_: MutRc<dyn AstNode>,
     pub is_external: bool,
-    pub is_exported: bool,
+    // pub is_exported: bool,
     pub position: Interval,
 }
 

@@ -9,6 +9,7 @@
 #include "src/print.oxy"
 #include "src/ptr.oxy"
 #include "src/result.oxy"
+#include "src/range.oxy"
 #include "src/str.oxy"
 #include "src/time.oxy"
 #include "src/utf8str.oxy"

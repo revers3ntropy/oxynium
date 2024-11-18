@@ -13,7 +13,7 @@ pub struct GlobalConstNode<T> {
     pub identifier: Token,
     pub value: T,
     pub position: Interval,
-    pub is_exported: bool,
+    // pub is_exported: bool,
 }
 
 impl<T> GlobalConstNode<T> {

@@ -593,7 +593,7 @@ impl Parser {
         res
     }
 
-    fn global_const_decl(&mut self, is_external: bool, is_exported: bool) -> ParseResults {
+    fn global_const_decl(&mut self, is_external: bool, _is_exported: bool) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start.clone();
 
@@ -620,7 +620,7 @@ impl Parser {
                 identifier: name,
                 type_: type_.unwrap(),
                 is_external,
-                is_exported,
+                //is_exported,
                 position: (start, self.last_tok().unwrap().end.clone()),
             }));
             return res;
@@ -654,7 +654,7 @@ impl Parser {
                 identifier: name,
                 value,
                 position: (start, self.last_tok().unwrap().end.clone()),
-                is_exported,
+                // is_exported,
             }));
             return res;
         } else if tok.token_type == TokenType::String {
@@ -663,7 +663,7 @@ impl Parser {
                 identifier: name,
                 value: tok.literal.unwrap(),
                 position: (start, self.last_tok().unwrap().end.clone()),
-                is_exported,
+                // is_exported,
             }));
             return res;
         }
@@ -1413,7 +1413,7 @@ impl Parser {
             parameters,
             ret_type: return_type.unwrap(),
             position: (fn_tok_pos.0.clone(), self.last_tok().unwrap().end),
-            fn_tok_pos,
+            //fn_tok_pos,
         }));
 
         res

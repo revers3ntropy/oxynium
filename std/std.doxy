@@ -178,6 +178,17 @@ class LibC {
     extern def free <T> (ptr: Ptr<T>),
 }
 
+class Range {
+	start: Int,
+	end: Int,
+	step: Int,
+
+	extern def len (self) Int,
+	extern def at_raw (self, i: Int) Int,
+}
+
+extern def range (start: Int, end=0.min(), step=0.min()) Range
+
 /// Reads from stdin until a newline is reached
 /// allocates string to heap to fit input
 /// returns pointer to string in rax
@@ -206,7 +217,6 @@ class Duration
 class Map
 class Filter
 class Iter
-class Range
 class Slice
 class Vec
 class Set

@@ -8,7 +8,6 @@ pub struct ParseResults {
     pub node: Option<MutRc<dyn AstNode>>,
     pub error: Option<Error>,
 
-    pub reverse_count: usize,
     pub last_registered_advance_count: usize,
     pub advance_count: usize,
 }
@@ -18,7 +17,6 @@ impl ParseResults {
         ParseResults {
             node: None,
             error: None,
-            reverse_count: 0,
             last_registered_advance_count: 0,
             advance_count: 0,
         }

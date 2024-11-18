@@ -16,7 +16,7 @@ use std::rc::Rc;
 #[derive(Debug, Clone)]
 pub struct CallStackFrame {
     pub name: String,
-    pub params: Vec<String>,
+    // pub params: Vec<String>,
     pub ret_lbl: String,
 }
 
