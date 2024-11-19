@@ -17,6 +17,7 @@ pub enum TokenType {
     Dot,          // .
     EndStatement, // ;
     String,       // "foo"
+    CharLiteral,  // 'a'
     Equals,       // =
     DblEquals,    // ==
     OpenBrace,    // {
@@ -101,6 +102,9 @@ impl Token {
             TokenType::EndStatement => ";".to_string(),
             TokenType::String => {
                 format!("\"{}\"", self.literal.as_ref().unwrap().clone())
+            }
+            TokenType::CharLiteral => {
+                format!("'{}'", self.literal.as_ref().unwrap().clone())
             }
             TokenType::Equals => "=".to_string(),
             TokenType::DblEquals => "==".to_string(),

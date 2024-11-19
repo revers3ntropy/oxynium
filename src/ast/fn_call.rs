@@ -390,10 +390,10 @@ impl AstNode for FnCallNode {
 
         asm.push_str(&format!(
             "
-            call {dec_id}
-            {}
-            {}
-        ",
+                call {dec_id}
+                {}
+                {}
+            ",
             if num_params > 0 {
                 format!("add rsp, {}", num_params * 8)
             } else {

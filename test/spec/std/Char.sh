@@ -1,30 +1,34 @@
 describe 'primitive Char'
 
-expect '' 'print(new Char.Str())'
-expect_err 'TypeError' 'print(new Char)'
-
+expect 'Char' 'print(typeof new Char)'
+expect 'Char' "print(typeof 'a')"
 
 describe 'def Char.Str'
 
-# TODO: requires char literals
+expect '' 'print(new Char.Str())'
+expect 'a' "print('a'.Str())"
+expect 'ab' "print('a'.Str() + 'b'.Str())"
+expect '💖' "print('💖'.Str())"
+expect '10' "print(#unchecked_cast(Int, '\n').Str())"
+expect '10' "print(#unchecked_cast(Int, '\n').Str())"
 
 describe 'def Char.is_digit'
 
-expect 'true,true,true,false,false,false,false' '
-    print("0".at(0).is_digit().Str());
-    print(",");
-    print("4".at(0).is_digit().Str());
-    print(",");
-    print("9".at(0).is_digit().Str());
-    print(",");
-    print(" ".at(0).is_digit().Str());
-    print(",");
-    print("a".at(0).is_digit().Str());
-    print(",");
-    print("Z".at(0).is_digit().Str());
-    print(",");
-    print("💖".at(0).is_digit().Str());
-'
+expect 'true,true,true,false,false,false,false' "
+    print('0'.is_digit().Str());
+    print(','.Str());
+    print('4'.is_digit().Str());
+    print(','.Str());
+    print('9'.is_digit().Str());
+    print(','.Str());
+    print(' '.is_digit().Str());
+    print(','.Str());
+    print('a'.is_digit().Str());
+    print(','.Str());
+    print('Z'.is_digit().Str());
+    print(','.Str());
+    print('💖'.is_digit().Str());
+"
 
 
 describe 'def Char.=='

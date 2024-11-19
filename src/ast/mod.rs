@@ -11,6 +11,7 @@ use std::fmt::Debug;
 pub mod bin_op;
 pub mod bool;
 pub mod r#break;
+pub mod char;
 pub mod class_declaration;
 pub mod class_field_access;
 pub mod class_init;

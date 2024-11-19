@@ -50,7 +50,6 @@ pub struct Lexer {
     input: Vec<char>,
     position: Position,
     current_char: Option<char>,
-    #[allow(dead_code)]
     cli_args: Args,
 }
 
@@ -138,6 +137,11 @@ impl Lexer {
 
             if c == '"' {
                 tokens.push(self.make_string()?);
+                continue;
+            }
+
+            if c == '\'' {
+                tokens.push(self.make_char_literal()?);
                 continue;
             }
 
@@ -270,6 +274,45 @@ impl Lexer {
             Some(string),
             start,
             self.position.clone().reverse(None),
+        ))
+    }
+
+    fn make_char_literal(&mut self) -> Result<Token, Error> {
+        let start = self.position.clone();
+        self.advance();
+        let char: String;
+        if self.current_char.unwrap() == '\\' {
+            self.advance();
+            match self.current_char.unwrap() {
+                'n' => char = "\n".to_string(),
+                't' => char = "\t".to_string(),
+                'r' => char = "\r".to_string(),
+                '"' => char = "\"".to_string(),
+                '\\' => char = "\\".to_string(),
+                _ => {
+                    return Err(syntax_error(format!(
+                        "invalid escape character '\\{}'",
+                        self.current_char.unwrap()
+                    ))
+                    .set_interval((self.position.clone().reverse(None), self.position.clone())))
+                }
+            };
+        } else {
+            char = self.current_char.unwrap().to_string();
+        }
+        self.advance();
+
+        if self.current_char.unwrap() != '\'' {
+            return Err(syntax_error("unterminated character literal".to_string())
+                .set_interval((start, self.position.clone())));
+        }
+        self.advance();
+
+        Ok(Token::new(
+            TokenType::CharLiteral,
+            Some(char),
+            start.clone(),
+            self.position.clone(),
         ))
     }
 }

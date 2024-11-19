@@ -1,5 +1,6 @@
 use crate::ast::bin_op::BinOpNode;
 use crate::ast::bool::BoolNode;
+use crate::ast::char::CharNode;
 use crate::ast::class_declaration::{ClassDeclarationNode, ClassField};
 use crate::ast::class_field_access::FieldAccessNode;
 use crate::ast::class_init::ClassInitNode;
@@ -1087,6 +1088,10 @@ impl Parser {
             TokenType::String => {
                 self.advance(&mut res);
                 res.success(mut_rc(StrNode { value: tok }));
+            }
+            TokenType::CharLiteral => {
+                self.advance(&mut res);
+                res.success(mut_rc(CharNode { value: tok }));
             }
             TokenType::OpenParen => {
                 self.advance(&mut res);
