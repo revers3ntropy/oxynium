@@ -34,6 +34,17 @@ expect 'Option<Str>,hello,hello,Option<Str>,world,false,true,true,false,Option<O
     }
 '
 
+expect_err 'TypeError' '
+    def main () {
+        Option.some(1)
+    }
+'
+expect_err 'TypeError' '
+    def main () {
+        Option.some!<Str>(1)
+    }
+'
+
 describe 'Option None Coalescing'
 
 expect '5,1,0,5,1,0' '

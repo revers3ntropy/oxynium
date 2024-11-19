@@ -2,7 +2,14 @@ describe 'For Loop'
 
 expect '' '
     def main (args: List<Utf8Str>) {
+        for a in args {}
+        for b in args -> b
+    }
+'
+expect_err 'UnknownSymbol' '
+    def main (args: List<Utf8Str>) {
         for arg in args {}
+        arg
     }
 '
 expect '1,2,3,' '
@@ -72,5 +79,60 @@ expect_err 'SyntaxError' '
 expect_err 'SyntaxError' '
     def main () {
         for _$_, _$_ in "" {}
+    }
+'
+
+describe 'for _ in range'
+
+expect '0,1,2,3,4,' '
+    def main () {
+        for i in range(5) {
+            print(i.Str(), ",");
+        }
+    }
+'
+expect '-3-2-1012345' '
+    def main () {
+        for i in range(-3, 0) {
+            print(i.Str());
+        }
+        for i in range(3) {
+            print(i.Str());
+        }
+        for i in range(3, 6) {
+            print(i.Str());
+        }
+    }
+'
+expect '3,5,7,' '
+    def main () {
+        for i in range(3, 9, 2) {
+            print(i.Str(), ",");
+        }
+    }
+'
+expect '012234' '
+    def main () {
+        for i in range(1 + 2) {
+            print(i.Str())
+        }
+
+        let n = 4
+        for j in range(3 - 1, n + 1) {
+            print(j.Str())
+        }
+    }
+'
+expect '' '
+    def main () {
+        for i in range(5, 1) {
+            print(i.Str())
+        }
+        for j in range(5, 1, -1) {
+            print(j.Str())
+        }
+        for k in range(-10) {
+            print(k.Str())
+        }
     }
 '
