@@ -137,14 +137,17 @@ fn do_inline(
     rhs: String,
     ctx: MutRc<dyn Context>,
 ) -> Result<String, Error> {
-    let push_0_regex = Regex::new(r"^mov rax, 0\n +push rax$").unwrap();
-    let push_1_regex = Regex::new(r"^mov rax, 1\n +push rax$").unwrap();
+    let push_0_regex = Regex::new(r"^ *mov rax, ?0 *\n *push rax *$").unwrap();
+    let push_1_regex = Regex::new(r"^ *mov rax, ?1 *\n *push rax *$").unwrap();
     let o1_res = o1("constant-folding", &ctx.borrow().get_cli_args(), &|| {
         if vec![TokenType::Plus, TokenType::Sub].contains(&op.token_type) {
             if push_0_regex.is_match(lhs.trim()) {
+                // 0 + x
                 if op.token_type == TokenType::Plus {
                     return Some(rhs.clone());
                 }
+                // 0 - x
+                // equivalent to -x
                 return Some(format!(
                     "
                         {rhs}
@@ -154,6 +157,7 @@ fn do_inline(
                     "
                 ));
             }
+            // x + 0 or x - 0
             if push_0_regex.is_match(rhs.trim()) {
                 return Some(lhs.clone());
             }
@@ -164,6 +168,7 @@ fn do_inline(
                 _ => unreachable!(),
             };
             if push_1_regex.is_match(lhs.trim()) {
+                // 1 + x
                 if op.token_type == TokenType::Plus {
                     return Some(format!(
                         "
@@ -172,6 +177,7 @@ fn do_inline(
                         "
                     ));
                 }
+                // 1 - x
                 return Some(format!(
                     "
                         {rhs}
@@ -182,6 +188,7 @@ fn do_inline(
                     "
                 ));
             }
+            // x + 1 or x - 1
             if push_1_regex.is_match(rhs.trim()) {
                 return Some(format!(
                     "
@@ -195,25 +202,58 @@ fn do_inline(
         }
 
         if op.token_type == TokenType::Astrix {
+            // 1 * x ==> x
             if push_1_regex.is_match(lhs.trim()) {
                 return Some(rhs.clone());
             }
+            // x * 1 ==> x
             if push_1_regex.is_match(rhs.trim()) {
                 return Some(lhs.clone());
             }
+            // 0 * x ==> 0
             if push_0_regex.is_match(lhs.trim()) {
                 return Some(lhs.clone());
             }
+            // x * 0 ==> 0
             if push_0_regex.is_match(rhs.trim()) {
                 return Some(rhs.clone());
             }
         }
         if op.token_type == TokenType::FSlash {
+            // x / 1 ==> x
             if push_1_regex.is_match(rhs.trim()) {
                 return Some(lhs.clone());
             }
+            // 0 / x ==> 0
+            // but 0 / 0 is undefined
             if push_0_regex.is_match(lhs.trim()) && !push_0_regex.is_match(rhs.trim()) {
                 return Some(lhs.clone());
+            }
+        }
+
+        if op.token_type == TokenType::DblEquals {
+            // x = x ==> x
+            if lhs.trim() == rhs.trim() {
+                return Some("push 1".to_string());
+            }
+            let lhs_is_0 = push_0_regex.is_match(lhs.trim());
+            let rhs_is_0 = push_0_regex.is_match(rhs.trim());
+            if lhs_is_0 && rhs_is_0 {
+                return Some("push 1".to_string());
+            }
+            if lhs_is_0 || rhs_is_0 {
+                let value = if lhs_is_0 { rhs.clone() } else { lhs.clone() };
+                return Some(format!(
+                    "
+                        {}
+                        pop rdi
+                        xor rax, rax
+                        cmp rdi, 0
+                        sete al
+                        push rax
+                    ",
+                    value
+                ));
             }
         }
         return None;
@@ -225,6 +265,7 @@ fn do_inline(
         }
     }
 
+    // catch x / 0 as compilation error
     if op.token_type == TokenType::FSlash && push_0_regex.is_match(rhs.trim()) {
         return Err(type_error("Nice try".to_string()));
     }
@@ -232,13 +273,13 @@ fn do_inline(
     match op.token_type {
         TokenType::Plus | TokenType::Sub | TokenType::And | TokenType::Or => Ok(format!(
             "
-                    {}
-                    {}
-                    pop rax
-                    pop rbx
-                    {} rax, rbx
-                    push rax
-                ",
+                {}
+                {}
+                pop rax
+                pop rbx
+                {} rax, rbx
+                push rax
+            ",
             rhs,
             lhs,
             match op.token_type {
@@ -250,14 +291,14 @@ fn do_inline(
         )),
         TokenType::Astrix | TokenType::FSlash => Ok(format!(
             "
-            {}
-            {}
-            pop rax
-            pop rbx
-            cqo ; extend rax to rdx:rax
-            {} rbx
-            push rax
-        ",
+                {}
+                {}
+                pop rax
+                pop rbx
+                cqo ; extend rax to rdx:rax
+                {} rbx
+                push rax
+            ",
             rhs,
             lhs,
             match op.token_type {
@@ -267,14 +308,14 @@ fn do_inline(
         )),
         TokenType::Percent => Ok(format!(
             "
-                        {}
-                        {}
-                        pop rax
-                        pop rbx
-                        cqo ; extend rax to rdx:rax
-                        idiv rbx
-                        push rdx
-                    ",
+                {}
+                {}
+                pop rax
+                pop rbx
+                cqo ; extend rax to rdx:rax
+                idiv rbx
+                push rdx
+            ",
             rhs, lhs,
         )),
         TokenType::GT
@@ -284,15 +325,15 @@ fn do_inline(
         | TokenType::DblEquals
         | TokenType::NotEquals => Ok(format!(
             "
-                        {}
-                        {}
-                        pop rcx ; lhs
-                        pop rdx ; rhs
-                        xor rax, rax     ; al is first byte of rax,
-                        cmp rcx, rdx
-                        {} al          ; so clear rax and put into al
-                        push rax
-                ",
+                {}
+                {}
+                pop rcx ; lhs
+                pop rdx ; rhs
+                xor rax, rax     ; al is first byte of rax,
+                cmp rcx, rdx
+                {} al          ; so clear rax and put into al
+                push rax
+            ",
             rhs,
             lhs,
             match op.token_type {

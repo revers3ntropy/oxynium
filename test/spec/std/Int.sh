@@ -9,12 +9,14 @@ expect_err 'TypeError' '0 || 1'
 
 describe 'Arithmetic'
 
-expect_expr_int '1'     '1'
-expect_expr_int '2'     '1+1'
-expect_expr_int '4'     '1+3'
-expect_expr_int '5'     '1+1+1+1+1'
-expect_expr_int '9'     '   1 + 1 + 1 + 1 + 3+ 2  '
-expect_expr_int '58601' '58600+1'
+expect '1,2,4,5,9,58601' '
+    print(1.Str(), ",")
+    print((1+1).Str(), ",")
+    print((1+ 3).Str(), ",")
+    print((1+1+1+2).Str(), ",")
+    print((   1 + 1 +  1 + 1 + 3+ 2  ).Str(), ",")
+    print((58600 + 1).Str())
+'
 
 expect_expr_int '1'      '2-1'
 expect_expr_int '0'      '1-1'
@@ -71,14 +73,14 @@ expect '13-132119-2' '
     print((a - 0).Str());
     print((0 - 2).Str());
 '
-expect '10003200' '
-    print((1 * 1).Str());
-    print((1 * 0).Str());
-    print((0 * 1).Str());
-    print((0 * 0).Str());
-    print((1 * 3).Str());
-    print((2 * 1).Str());
-    print((2 * 0).Str());
+expect '1,0,0,0,3,2,0,0' '
+    print((1 * 1).Str(), ",");
+    print((1 * 0).Str(), ",");
+    print((0 * 1).Str(), ",");
+    print((0 * 0).Str(), ",");
+    print((1 * 3).Str(), ",");
+    print((2 * 1).Str(), ",");
+    print((2 * 0).Str(), ",");
     print((0 * 2).Str());
 '
 expect '10020' '
@@ -264,22 +266,14 @@ expect_err 'TypeError' 'def a(); a <= 4'
 describe 'def Int.=='
 
 expect 'false,false,true,false,false,false,false,false,false' '
-    print((1 == 2).Str());
-    print(",");
-    print((2 == 1).Str());
-    print(",");
-    print((1 == 1).Str());
-    print(",");
-    print((1 == 0).Str());
-    print(",");
-    print((0 == 1).Str());
-    print(",");
-    print((1 == -1).Str());
-    print(",");
-    print((-1 == 1).Str());
-    print(",");
-    print((1 + 4 == 2).Str());
-    print(",");
+    print((1 == 2).Str(), ",");
+    print((2 == 1).Str(), ",");
+    print((1 == 1).Str(), ",");
+    print((1 == 0).Str(), ",");
+    print((0 == 1).Str(), ",");
+    print((1 == -1).Str(), ",");
+    print((-1 == 1).Str(), ",");
+    print((1 + 4 == 2).Str(), ",");
     print((1 + 4 == 2 * 3).Str());
 '
 expect_err 'TypeError' 'true == 2'
