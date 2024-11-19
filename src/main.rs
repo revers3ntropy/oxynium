@@ -60,6 +60,8 @@ fn import_exec(args: &Args) {
     }
 
     let source_code = read_result.unwrap();
+    // replace tabs with 4 spaces so error messages are more accurate
+    let source_code = source_code.replace("\t", "    ");
     let res = compile_and_assemble(source_code.clone(), args.input.clone(), &args);
     if let Some(mut err) = res.err() {
         err.try_set_source(ErrorSource {
