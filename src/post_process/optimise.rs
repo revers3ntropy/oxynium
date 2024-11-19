@@ -50,6 +50,7 @@ pub fn optimise(asm: Vec<String>, args: &Args) -> Vec<String> {
     asm = o1_asm("redundant-push", asm, args, redundant_push);
     asm = o1_asm("redundant-mov", asm, args, redundant_mov);
     asm = o1_asm("redundant-jmp", asm, args, redundant_jmp);
+    asm = o1_asm("collapse-zero", asm, args, collapse_zero);
 
     asm
 }
@@ -132,7 +133,7 @@ fn redundant_push(ast: Vec<String>) -> Vec<String> {
             res.push(format!("push {}", pushes[0]));
             pushes.remove(0);
         }
-        
+
         // remove excess pops before push-pop pairs start
         // so we can analyse if there are any issues
         let excess_pop_count = pops.len() - pushes.len();
@@ -169,7 +170,10 @@ fn redundant_push(ast: Vec<String>) -> Vec<String> {
                 used_registers.remove(index);
             }
             // insert backwards to avoid register clobbering
-            res.insert(past_last_push_idx, format!("mov {}, {}", pop_reg.clone(), push_reg.clone()));
+            res.insert(
+                past_last_push_idx,
+                format!("mov {}, {}", pop_reg.clone(), push_reg.clone()),
+            );
             pushes.pop();
             pops.remove(0);
         }
@@ -242,6 +246,28 @@ fn redundant_jmp(ast: Vec<String>) -> Vec<String> {
         if !next.ends_with(":") || !line.ends_with(&next[..next.len() - 1]) {
             res.push(line);
         }
+    }
+
+    res
+}
+
+fn collapse_zero(ast: Vec<String>) -> Vec<String> {
+    // mov rax, 0 ==> xor rax, rax
+    // very minor optimisation
+
+    let mov_0_regex = Regex::new(r" *mov (.+), ?0 *").unwrap();
+    let mut res = Vec::new();
+
+    for line in ast {
+        if mov_0_regex.is_match(&line) {
+            let captures = mov_0_regex.captures(&line).unwrap();
+            let register = captures.get(1).unwrap().as_str();
+            if REGISTERS_NO_STACK.contains(&register) {
+                res.push(format!("xor {}, {}", register, register));
+            }
+        }
+
+        res.push(line);
     }
 
     res
