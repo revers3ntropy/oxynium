@@ -1,3 +1,4 @@
+use crate::args::Args;
 use crate::ast::bin_op::BinOpNode;
 use crate::ast::bool::BoolNode;
 use crate::ast::char::CharNode;
@@ -9,6 +10,7 @@ use crate::ast::empty_local_var_decl::EmptyLocalVarNode;
 use crate::ast::fn_call::FnCallNode;
 use crate::ast::fn_declaration::{FnDeclarationNode, Parameter};
 use crate::ast::for_loop::ForLoopNode;
+use crate::ast::for_range_loop::ForRangeLoopNode;
 use crate::ast::global_const_decl::GlobalConstNode;
 use crate::ast::int::IntNode;
 use crate::ast::local_var_decl::LocalVarNode;
@@ -34,6 +36,7 @@ use crate::error::{numeric_overflow, syntax_error, Error};
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
 use crate::position::{Interval, Position};
+use crate::post_process::optimise::o1_enabled;
 use crate::symbols::is_valid_identifier;
 use crate::util::{mut_rc, MutRc};
 use std::any::Any;
@@ -105,11 +108,16 @@ macro_rules! result_consume {
 pub struct Parser {
     tokens: Vec<Token>,
     tok_idx: usize,
+    args: Args,
 }
 
 impl Parser {
-    pub fn new(tokens: Vec<Token>) -> Parser {
-        Parser { tokens, tok_idx: 0 }
+    pub fn new(args: Args, tokens: Vec<Token>) -> Parser {
+        Parser {
+            args,
+            tokens,
+            tok_idx: 0,
+        }
     }
 
     pub fn parse(&mut self) -> ParseResults {
@@ -1292,6 +1300,96 @@ impl Parser {
             return res;
         }
 
+        if o1_enabled("for-in-range", &self.args) {
+            if self.current_matches(TokenType::Identifier, Some("range".to_string())) {
+                self.advance(&mut res);
+                consume!(OpenParen, self, res);
+
+                let a = res.register(self.expression());
+                ret_on_err!(res);
+                let mut b: Option<MutRc<dyn AstNode>> = None;
+                let mut c: Option<MutRc<dyn AstNode>> = None;
+
+                if !self.current_matches(TokenType::CloseParen, None) {
+                    consume!(Comma, self, res);
+
+                    b = res.register(self.expression());
+                    ret_on_err!(res);
+                    assert!(b.is_some());
+
+                    if !self.current_matches(TokenType::CloseParen, None) {
+                        consume!(Comma, self, res);
+
+                        c = res.register(self.expression());
+                        ret_on_err!(res);
+                        assert!(c.is_some());
+                    }
+                }
+
+                if self.current_matches(TokenType::Comma, None) {
+                    self.advance(&mut res);
+                }
+
+                consume!(CloseParen, self, res);
+
+                if had_open_paren {
+                    consume!(CloseParen, self, res);
+                }
+
+                let statements = res.register(self.scope(true));
+
+                self.add_end_statement(&mut res);
+                ret_on_err!(res);
+
+                let start_pos = start.clone();
+
+                let start: MutRc<dyn AstNode>;
+                let end: MutRc<dyn AstNode>;
+                let step: MutRc<dyn AstNode>;
+                if b.is_none() {
+                    start = mut_rc(IntNode {
+                        value: 0,
+                        position: Position::unknown_interval(),
+                    });
+                    end = a.unwrap();
+                    step = mut_rc(IntNode {
+                        value: 1,
+                        position: Position::unknown_interval(),
+                    });
+                } else if c.is_none() {
+                    start = a.unwrap();
+                    end = b.unwrap();
+                    step = mut_rc(IntNode {
+                        value: 1,
+                        position: Position::unknown_interval(),
+                    });
+                } else {
+                    start = a.unwrap();
+                    end = b.unwrap();
+                    step = c.unwrap();
+                }
+
+                res.success(mut_rc(ForRangeLoopNode {
+                    start,
+                    end,
+                    step,
+                    id_token: id_tok,
+                    statements: statements.unwrap(),
+                    position: (start_pos.clone(), self.last_tok().unwrap().end.clone()),
+                    counter_decl_node: mut_rc(PassNode {
+                        position: (start_pos.clone(), self.last_tok().unwrap().end.clone()),
+                    }),
+                    end_decl_node: mut_rc(PassNode {
+                        position: (start_pos.clone(), self.last_tok().unwrap().end.clone()),
+                    }),
+                    step_decl_node: mut_rc(PassNode {
+                        position: (start_pos.clone(), self.last_tok().unwrap().end.clone()),
+                    }),
+                }));
+                return res;
+            }
+        }
+
         let value = res.register(self.expression());
         ret_on_err!(res);
         if value.is_none() {
@@ -1304,7 +1402,7 @@ impl Parser {
         }
         let value = value.unwrap();
 
-        if had_open_paren && self.current_matches(TokenType::CloseParen, None) {
+        if had_open_paren {
             consume!(CloseParen, self, res);
         }
 

@@ -10,12 +10,20 @@ const REGISTERS_NO_STACK: [&str; 14] = [
     "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15",
 ];
 
-pub fn o1<T>(name: &str, args: &Args, cb: &impl Fn() -> T) -> Option<T> {
+pub fn o1_enabled(name: &str, args: &Args) -> bool {
     if args.enable.contains(&name.to_string()) {
-        Some(cb())
+        true
     } else if args.disable.contains(&name.to_string()) {
-        None
+        false
     } else if args.optimise >= 1 {
+        true
+    } else {
+        false
+    }
+}
+
+pub fn o1<T>(name: &str, args: &Args, cb: &impl Fn() -> T) -> Option<T> {
+    if o1_enabled(name, args) {
         Some(cb())
     } else {
         None

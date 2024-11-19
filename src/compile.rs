@@ -77,7 +77,7 @@ pub fn generate_ast(
     perf!(args, start, "Lexed");
     let start = Instant::now();
 
-    let mut parser = Parser::new(tokens);
+    let mut parser = Parser::new(args.clone(), tokens);
     let ast = parser.parse();
     if ast.error.is_some() {
         return Err(ast.error.unwrap());
