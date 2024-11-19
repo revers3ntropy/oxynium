@@ -7,6 +7,7 @@ use crate::error::{invalid_symbol, syntax_error, type_error, unknown_symbol, Err
 use crate::get_type;
 use crate::parse::token::{Token, TokenType};
 use crate::position::Interval;
+use crate::post_process::optimise::o1_enabled;
 use crate::symbols::{can_declare_with_identifier, SymbolDec, SymbolDef};
 use crate::types::function::{FnParamType, FnType};
 use crate::types::generic::GenericType;
@@ -43,7 +44,7 @@ pub struct FnDeclarationNode {
 
 impl FnDeclarationNode {
     fn id(&self) -> String {
-        return if self.identifier.token_type == TokenType::Identifier {
+        if self.identifier.token_type == TokenType::Identifier {
             let self_id = self.identifier.literal.clone().unwrap();
             match &self.class_name {
                 Some(class) => method_id(class.clone(), self_id),
@@ -51,7 +52,7 @@ impl FnDeclarationNode {
             }
         } else {
             operator_method_id(self.class_name.clone().unwrap(), self.identifier.clone())
-        };
+        }
     }
 
     fn get_generic_param_names(
@@ -110,7 +111,7 @@ impl FnDeclarationNode {
 impl AstNode for FnDeclarationNode {
     fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
         if self.should_infer_return_type && self.body.is_none() {
-            return Err(type_error(format!("must have a return type or body"))
+            return Err(type_error("must have a return type or body".to_string())
                 .set_interval(self.identifier.interval()));
         }
         if !self.is_anon {
@@ -122,9 +123,9 @@ impl AstNode for FnDeclarationNode {
             } else {
                 // check the signature of the operator method
                 if self.class_name.is_none() {
-                    return Err(syntax_error(format!(
-                        "cannot declare operator method outside of class"
-                    ))
+                    return Err(syntax_error(
+                        "cannot declare operator method outside of class".to_string(),
+                    )
                     .set_interval(self.identifier.interval()));
                 }
 
@@ -139,9 +140,9 @@ impl AstNode for FnDeclarationNode {
                 // check for no default values
                 for param in &self.params {
                     if param.default_value.is_some() {
-                        return Err(type_error(format!(
-                            "operator overload methods cannot have default values"
-                        ))
+                        return Err(type_error(
+                            "operator overload methods cannot have default values".to_string(),
+                        )
                         .set_interval(param.position.clone()));
                     }
                 }
@@ -150,9 +151,9 @@ impl AstNode for FnDeclarationNode {
             // is anonymous function
 
             if self.class_name.is_some() {
-                return Err(syntax_error(format!(
-                    "cannot declare anonymous function inside of class"
-                ))
+                return Err(syntax_error(
+                    "cannot declare anonymous function inside of class".to_string(),
+                )
                 .set_interval(self.position.clone()));
             }
         }
@@ -450,8 +451,16 @@ impl AstNode for FnDeclarationNode {
             return Ok("".to_string());
         }
 
-        if !self.has_usage {
-            // TODO: emit warning
+        if !self.has_usage
+            && o1_enabled("dead-code-elimination", &ctx.borrow().get_cli_args())
+            && self
+                .identifier
+                .literal
+                .clone()
+                .map(|s| s != "main")
+                .or(Some(true))
+                .unwrap()
+        {
             // kinda needs attributes before this can be done
             // as some STD functions are 'unused' but still required
             // also, TODO: better system (eg dependency tree)

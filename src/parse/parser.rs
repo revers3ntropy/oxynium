@@ -1289,6 +1289,29 @@ impl Parser {
         }
 
         consume!(id_tok = Identifier, self, res);
+        if !is_valid_identifier(&id_tok.literal.clone().unwrap()) {
+            res.failure(
+                syntax_error("invalid identifier".to_string()),
+                Some(id_tok.start.clone()),
+                Some(id_tok.end.clone()),
+            );
+            return res;
+        }
+
+        let mut counter_tok: Option<Token> = None;
+        if self.current_matches(TokenType::Comma, None) {
+            self.advance(&mut res);
+            consume!(counter = Identifier, self, res);
+            if !is_valid_identifier(&counter.literal.clone().unwrap()) {
+                res.failure(
+                    syntax_error("invalid identifier".to_string()),
+                    Some(counter.start.clone()),
+                    Some(counter.end.clone()),
+                );
+                return res;
+            }
+            counter_tok = Some(counter);
+        }
 
         consume!(in_tok = Identifier, self, res);
         if in_tok.literal.clone().unwrap() != "in" {
@@ -1373,12 +1396,16 @@ impl Parser {
                     start,
                     end,
                     step,
-                    id_token: id_tok,
+                    value_tok: id_tok,
+                    counter_tok,
                     statements: statements.unwrap(),
                     position: (start_pos.clone(), self.last_tok().unwrap().end.clone()),
-                    counter_decl_node: mut_rc(PassNode {
+                    value_decl_node: mut_rc(PassNode {
                         position: (start_pos.clone(), self.last_tok().unwrap().end.clone()),
                     }),
+                    counter_decl_node: Some(mut_rc(PassNode {
+                        position: (start_pos.clone(), self.last_tok().unwrap().end.clone()),
+                    })),
                     end_decl_node: mut_rc(PassNode {
                         position: (start_pos.clone(), self.last_tok().unwrap().end.clone()),
                     }),
@@ -1418,8 +1445,8 @@ impl Parser {
             value,
             statements: statements.unwrap(),
             position: (start.clone(), self.last_tok().unwrap().end.clone()),
-            // initialised later
-            counter_identifier: "".to_string(),
+            // replaced with anon label if not supplied here
+            counter_tok: counter_tok.unwrap_or(Token::new_unknown_pos(TokenType::Identifier, None)),
             local_var_assignment_node: mut_rc(PassNode {
                 position: (start.clone(), self.last_tok().unwrap().end.clone()),
             }),

@@ -23,21 +23,16 @@ const inp = "73167176531330624919225119674426574742355349194934\
 71636269561882670428252483600823257530420752963450";
 
     def main () {
-        let mut max = 0;
-        let mut i = 0;
-        while i < 1000 - 13 {
-            let mut product = 1;
-            let mut j = 0;
-            while j < 13 {
-                product = product * (inp.at(i + j).Int() - 48);
-                j += 1;
-            };
-            if product > max {
-                max = product;
-            };
-            i += 1;
-        };
-        print(max.Str());
+        let mut max = 0
+        for i in range(1000 - 13) {
+            let mut product = 1
+            for j in range(13) {
+                product = product * (inp.at(i + j).Int() - 48)
+            }
+            if product > max ->
+                max = product
+        }
+        print(max.Str())
     }
 ' '
     #include <iostream>

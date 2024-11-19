@@ -6,14 +6,12 @@ perf_test_comp_cpp 1 '232792560' '
         while {
             i += 1;
 
-            let mut j = 2;
             let mut is_divisible = true;
-            while j < 20 {
+            for j in range(2, 20) {
                 if i % j != 0 {
                     is_divisible = false;
                     break
                 }
-                j += 1;
             }
             if is_divisible {
                 print(i.Str());

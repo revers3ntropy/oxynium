@@ -33,14 +33,13 @@ expect 'herso geoso ponkfiaryarmidalli nakedmolerat lynx pig' '
         let mut i = 0
         let mut nth_vowel = 0
 
-        while i < str.len() {
-            if is_vowel(str.at_raw(i)) {
+        for char in str {
+            if is_vowel(char) {
                 nth_vowel += 1
                 res += nth_last_vowel(str, nth_vowel).Str()
             } else {
-                res += str.at_raw(i).Str()
+                res += char.Str()
             }
-            i += 1
         }
 
         return res

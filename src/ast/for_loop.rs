@@ -17,25 +17,30 @@ use crate::util::{mut_rc, MutRc};
 pub struct ForLoopNode {
     pub start: Position,
     pub id_tok: Token,
+    pub counter_tok: Token,
     pub value: MutRc<dyn AstNode>,
     pub statements: MutRc<dyn AstNode>,
     pub position: Interval,
-    pub counter_identifier: String,
     pub counter_var_assignment_node: MutRc<dyn AstNode>,
     pub local_var_assignment_node: MutRc<dyn AstNode>,
 }
 
 impl AstNode for ForLoopNode {
     fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
-        self.counter_identifier = format!("_$__{}__counter", self.id_tok.literal.as_ref().unwrap());
+        if self.counter_tok.literal.is_none() {
+            self.counter_tok = Token::new(
+                TokenType::Identifier,
+                Some(format!(
+                    "_$__{}__counter",
+                    self.id_tok.literal.as_ref().unwrap()
+                )),
+                self.counter_tok.start.clone(),
+                self.counter_tok.end.clone(),
+            );
+        }
 
         self.counter_var_assignment_node = mut_rc(LocalVarNode {
-            identifier: Token::new(
-                TokenType::Identifier,
-                Some(self.counter_identifier.clone()),
-                self.start.clone(),
-                self.start.clone(),
-            ),
+            identifier: self.counter_tok.clone(),
             value: mut_rc(IntNode {
                 value: 0,
                 position: (self.start.clone(), self.start.clone()),
@@ -56,10 +61,7 @@ impl AstNode for ForLoopNode {
                     Some("at_raw".to_string()),
                 ),
                 args: vec![mut_rc(SymbolAccessNode {
-                    identifier: Token::new_unknown_pos(
-                        TokenType::Identifier,
-                        Some(self.counter_identifier.clone()),
-                    ),
+                    identifier: self.counter_tok.clone(),
                 })],
                 generic_args: vec![],
                 position: Position::unknown_interval(),
@@ -104,14 +106,11 @@ impl AstNode for ForLoopNode {
     }
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
-        let counter_identifier =
-            Token::new_unknown_pos(TokenType::Identifier, Some(self.counter_identifier.clone()));
-
         // while i < args.len() { ... }
         let mut while_loop_node = WhileLoopNode {
             condition: Some(mut_rc(BinOpNode {
                 lhs: mut_rc(SymbolAccessNode {
-                    identifier: counter_identifier.clone(),
+                    identifier: self.counter_tok.clone(),
                 }),
                 operator: Token::new_unknown_pos(TokenType::LT, None),
                 rhs: mut_rc(FnCallNode {
@@ -133,10 +132,10 @@ impl AstNode for ForLoopNode {
                     self.statements.clone(),
                     // i = i + 1
                     mut_rc(MutateVar {
-                        identifier: counter_identifier.clone(),
+                        identifier: self.counter_tok.clone(),
                         value: mut_rc(BinOpNode {
                             lhs: mut_rc(SymbolAccessNode {
-                                identifier: counter_identifier.clone(),
+                                identifier: self.counter_tok.clone(),
                             }),
                             operator: Token::new_unknown_pos(TokenType::Plus, None),
                             rhs: mut_rc(IntNode {

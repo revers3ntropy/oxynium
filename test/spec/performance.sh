@@ -1,26 +1,16 @@
 describe 'Runtime Performance'
 
 perf_test_comp_cpp 1 '149995000' '
-    const n = 10000;
+    const n = 10000
     def main () {
-        let mut sum = 0;
-        let mut i = 0;
-        while {
-            if i >= n {
-                break;
-            };
-            let mut j = 0;
-            while {
-                if j >= n {
-                    break;
-                };
-                sum = sum + 1;
-                j = j + 1;
-            };
-            sum = sum + i;
-            i = i + 1;
-        };
-        print(sum.Str());
+        let mut sum = 0
+        for i in range(n) {
+            for j in range(n) {
+                sum = sum + 1
+            }
+            sum = sum + i
+        }
+        print(sum.Str())
     }
 ' '
     #include <iostream>
@@ -28,21 +18,11 @@ perf_test_comp_cpp 1 '149995000' '
     int main () {
         long sum = 0;
         int n = 10000;
-        int i = 0;
-        while (true) {
-            if (i >= n) {
-                break;
-            }
-            int j = 0;
-            while (true) {
-                if (j >= n) {
-                    break;
-                }
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
                 sum = sum + 1;
-                j = j + 1;
             }
             sum = sum + i;
-            i = i + 1;
         }
         std::cout << sum;
     }

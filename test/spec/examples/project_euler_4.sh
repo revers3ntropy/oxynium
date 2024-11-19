@@ -3,22 +3,18 @@ describe 'Project Euler #4: Largest palindrome product'
 perf_test_comp_cpp 1 '906609' '
     def main() {
         let mut max = 0;
-        let mut i = 100;
-        while i < 1000 {
-            let mut j = 100;
-            while j < 1000 {
+        for i in range(100, 1000) {
+            for j in range(100, 1000) {
                 let prod = i * j;
                 if prod > max {
-                    let prod_str = prod.Str();
+                    let prod_str = prod.Str()
                     if prod_str == prod_str.reversed()  {
-                        max = prod;
+                        max = prod
                     }
                 }
-                j += 1;
             }
-            i += 1;
         }
-        print(max.Str());
+        print(max.Str())
     }
 ' '
     #include <stdio.h>
