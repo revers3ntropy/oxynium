@@ -9,6 +9,7 @@ use crate::types::Type;
 use crate::util::{mut_rc, MutRc};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
 use std::path::Path;
 use std::rc::Rc;
 
@@ -50,6 +51,12 @@ impl RootContext {
         });
         self_.borrow_mut().self_ = Some(self_.clone());
         self_
+    }
+}
+
+impl Debug for RootContext {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.str())
     }
 }
 

@@ -8,6 +8,7 @@ use crate::types::Type;
 use crate::util::{indent, mut_rc, MutRc};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
 use std::path::Path;
 use std::rc::Rc;
 
@@ -23,6 +24,12 @@ pub struct Scope {
     current_dir_path: Option<&'static Path>,
     is_global: bool,
     is_anon_function_scope: bool,
+}
+
+impl Debug for Scope {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.str())
+    }
 }
 
 impl Scope {
