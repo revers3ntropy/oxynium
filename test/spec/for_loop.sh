@@ -6,12 +6,6 @@ expect '' '
         for b in args -> b
     }
 '
-expect_err 'UnknownSymbol' '
-    def main (args: List<Utf8Str>) {
-        for arg in args {}
-        arg
-    }
-'
 expect '1,2,3,' '
     def main () {
         let arr = List.empty!<Int>();
@@ -20,6 +14,18 @@ expect '1,2,3,' '
         arr.push(3);
         for n in arr {
             print(n.Str(), ",");
+        }
+    }
+'
+expect 'a1b1a2b2' '
+    def main () {
+        let arr = List.empty!<Int>();
+        arr.push(1);
+        arr.push(2);
+        for n in arr {
+            for m in "ab" {
+                print(m.Str(), n.Str());
+            }
         }
     }
 '
@@ -35,6 +41,13 @@ expect '0a 1b 2c ' '
         for c, i in "abc" {
             print(i.Str() + c.Str(), " ");
         }
+    }
+'
+expect '3c' '
+    def main () {
+        for c, i in "abc" {}
+        // variables still exist after loop
+        print(i.Str() + c.Str());
     }
 '
 expect '0true,1false,' '
@@ -82,6 +95,40 @@ expect_err 'SyntaxError' '
     }
 '
 
+
+describe 'break and continue in for loops'
+
+expect '0,1,2,' '
+    def main () {
+        for i in range(5) {
+            if i >= 3 -> break
+            print(i.Str(), ",");
+        }
+    }
+'
+expect '0,1,2,34' '
+    def main () {
+        for i in range(5) {
+            print(i.Str());
+            if i >= 3 {
+                continue
+            }
+            print(",");
+        }
+    }
+'
+expect '0,1,2,345' '
+    def main () {
+        for i in range(8) {
+            print(i.Str());
+            if i > 5 -> break
+            if i >= 3 -> continue
+            print(",");
+        }
+    }
+'
+
+
 describe 'for _ in range'
 
 expect '0,1,2,3,4,' '
@@ -96,11 +143,11 @@ expect '-3-2-1012345' '
         for i in range(-3, 0) {
             print(i.Str());
         }
-        for i in range(3) {
-            print(i.Str());
+        for j in range(3) {
+            print(j.Str());
         }
-        for i in range(3, 6) {
-            print(i.Str());
+        for k in range(3, 6) {
+            print(k.Str());
         }
     }
 '

@@ -32,8 +32,6 @@ use crate::ast::type_expr_generic::GenericTypeNode;
 use crate::ast::type_expr_optional::OptionalTypeNode;
 use crate::ast::unary_op::UnaryOpNode;
 use crate::ast::AstNode;
-use crate::context::root_ctx::RootContext;
-use crate::context::scope::Scope;
 use crate::error::{numeric_overflow, syntax_error, Error};
 use crate::parse::parse_results::ParseResults;
 use crate::parse::token::{Token, TokenType};
@@ -1447,7 +1445,6 @@ impl Parser {
             value,
             statements: statements.unwrap(),
             // parent of scope gets overwritten in AST setup
-            local_ctx: Scope::new_local(RootContext::new(self.args.clone())),
             position: (start.clone(), self.last_tok().unwrap().end.clone()),
             // replaced with anon label if not supplied here
             counter_tok: counter_tok.unwrap_or(Token::new_unknown_pos(TokenType::Identifier, None)),

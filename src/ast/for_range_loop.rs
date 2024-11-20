@@ -152,6 +152,7 @@ impl AstNode for ForRangeLoopNode {
         let body = self.statements.borrow_mut().asm(ctx.clone())?;
 
         ctx.borrow_mut().loop_labels_pop();
+
         let get_value_asm = ctx
             .borrow()
             .get_dec_from_id(&self.value_tok.literal.as_ref().unwrap().clone())
