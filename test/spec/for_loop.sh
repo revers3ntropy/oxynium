@@ -117,7 +117,7 @@ expect '0,1,2,34' '
         }
     }
 '
-expect '0,1,2,345' '
+expect '0,1,2,3456' '
     def main () {
         for i in range(8) {
             print(i.Str());

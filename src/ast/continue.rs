@@ -19,9 +19,9 @@ impl AstNode for ContinueNode {
         }
         Ok(format!(
             "
-            jmp {}
-        ",
-            labels.unwrap().0
+                jmp {}
+            ",
+            labels.unwrap().post_body
         ))
     }
     fn pos(&self) -> Interval {

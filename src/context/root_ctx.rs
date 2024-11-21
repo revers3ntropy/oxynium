@@ -1,6 +1,6 @@
 use crate::args::{Args, ExecMode};
 use crate::ast::ANON_PREFIX;
-use crate::context::{CallStackFrame, Context};
+use crate::context::{CallStackFrame, Context, LoopLabels};
 use crate::error::Error;
 use crate::position::Interval;
 use crate::symbols::{SymbolDec, SymbolDef};
@@ -16,7 +16,7 @@ use std::rc::Rc;
 pub struct RootContext {
     self_: Option<MutRc<dyn Context>>,
     // Vec<(start of loop label, end of loop label)>
-    loop_label_stack: Vec<(String, String)>,
+    loop_label_stack: Vec<LoopLabels>,
     call_stack: Vec<CallStackFrame>,
     anon_symbol_count: u64,
     pub exec_mode: ExecMode,
@@ -179,15 +179,15 @@ impl Context for RootContext {
         unreachable!()
     }
 
-    fn loop_labels_push(&mut self, start: String, end: String) {
-        self.loop_label_stack.push((start, end));
+    fn loop_labels_push(&mut self, lbl: LoopLabels) {
+        self.loop_label_stack.push(lbl);
     }
 
-    fn loop_labels_pop(&mut self) -> Option<(String, String)> {
+    fn loop_labels_pop(&mut self) -> Option<LoopLabels> {
         self.loop_label_stack.pop()
     }
 
-    fn loop_label_peak(&self) -> Option<(String, String)> {
+    fn loop_label_peak(&self) -> Option<LoopLabels> {
         self.loop_label_stack.last().cloned()
     }
 

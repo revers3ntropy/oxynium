@@ -1,7 +1,7 @@
 use crate::ast::int::IntNode;
 use crate::ast::local_var_decl::LocalVarNode;
 use crate::ast::{AstNode, TypeCheckRes};
-use crate::context::Context;
+use crate::context::{Context, LoopLabels};
 use crate::error::Error;
 use crate::parse::token::{Token, TokenType};
 use crate::position::Interval;
@@ -134,8 +134,9 @@ impl AstNode for ForRangeLoopNode {
     }
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
-        let start_lbl = ctx.borrow_mut().get_anon_label();
-        let end_lbl = ctx.borrow_mut().get_anon_label();
+        let pre_body_lbl = ctx.borrow_mut().get_anon_label();
+        let post_body_lbl = ctx.borrow_mut().get_anon_label();
+        let post_loop_lbl = ctx.borrow_mut().get_anon_label();
 
         let value_dec_asm = self.value_decl_node.borrow_mut().asm(ctx.clone())?;
         let mut counter_dec_asm = "".to_string();
@@ -145,8 +146,10 @@ impl AstNode for ForRangeLoopNode {
         let end_dec_asm = self.end_decl_node.borrow_mut().asm(ctx.clone())?;
         let step_dec_asm = self.step_decl_node.borrow_mut().asm(ctx.clone())?;
 
-        ctx.borrow_mut()
-            .loop_labels_push(start_lbl.clone(), end_lbl.clone());
+        ctx.borrow_mut().loop_labels_push(LoopLabels {
+            post_body: post_body_lbl.clone(),
+            post_loop: post_loop_lbl.clone(),
+        });
 
         // loop label exists on loop label stack just inside loop body
         let body = self.statements.borrow_mut().asm(ctx.clone())?;
@@ -172,17 +175,18 @@ impl AstNode for ForRangeLoopNode {
                 {counter_dec_asm}
                 {end_dec_asm}
                 {step_dec_asm}
-                {start_lbl}:
+                {pre_body_lbl}:
                     mov rax, {get_value_asm}
                     cmp rax, {get_end_asm}
-                    jge {end_lbl}
+                    jge {post_loop_lbl}
                     {body}
+                    {post_body_lbl}:
                     mov rax, {get_value_asm}
                     add rax, {get_step_asm}
                     mov {get_value_asm}, rax
                     {}
-                    jmp {start_lbl}
-                {end_lbl}:
+                    jmp {pre_body_lbl}
+                {post_loop_lbl}:
             ",
             if let Some(counter_tok) = &self.counter_tok {
                 let get_counter_asm = ctx

@@ -20,6 +20,16 @@ pub struct CallStackFrame {
     pub ret_lbl: String,
 }
 
+// used by break and continue statements to find the correct label to jump to
+#[derive(Debug, Clone)]
+pub struct LoopLabels {
+    // the reason we need this label (and can't use the start of the loop)
+    // is that in `for _ in range` loops, `continue` statements wouldn't be
+    // able to skip the rest of the body and increment the counter
+    pub post_body: String,
+    pub post_loop: String,
+}
+
 pub trait Context: Debug {
     fn reset(&mut self);
     fn freeze(&mut self);
@@ -58,9 +68,9 @@ pub trait Context: Debug {
     fn define_global(&mut self, symbol: SymbolDef, trace_interval: Interval) -> Result<(), Error>;
     fn get_definitions(&self) -> (Vec<&SymbolDef>, Vec<&SymbolDef>);
 
-    fn loop_labels_push(&mut self, start: String, end: String);
-    fn loop_labels_pop(&mut self) -> Option<(String, String)>;
-    fn loop_label_peak(&self) -> Option<(String, String)>;
+    fn loop_labels_push(&mut self, lbl: LoopLabels);
+    fn loop_labels_pop(&mut self) -> Option<LoopLabels>;
+    fn loop_label_peak(&self) -> Option<LoopLabels>;
 
     fn stack_frame_push(&mut self, frame: CallStackFrame);
     fn stack_frame_pop(&mut self) -> Option<CallStackFrame>;

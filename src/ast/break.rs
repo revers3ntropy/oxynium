@@ -20,9 +20,9 @@ impl AstNode for BreakNode {
         }
         Ok(format!(
             "
-            jmp {}
-        ",
-            labels.unwrap().1
+                jmp {}
+            ",
+            labels.unwrap().post_loop
         ))
     }
 

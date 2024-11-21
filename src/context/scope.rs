@@ -1,5 +1,5 @@
 use crate::args::{Args, ExecMode};
-use crate::context::{CallStackFrame, Context};
+use crate::context::{CallStackFrame, Context, LoopLabels};
 use crate::error::{type_error, Error};
 use crate::position::Interval;
 use crate::symbols::{SymbolDec, SymbolDef};
@@ -298,15 +298,15 @@ impl Context for Scope {
 
     // Loop labels
 
-    fn loop_labels_push(&mut self, start: String, end: String) {
-        self.parent.borrow_mut().loop_labels_push(start, end)
+    fn loop_labels_push(&mut self, lbl: LoopLabels) {
+        self.parent.borrow_mut().loop_labels_push(lbl)
     }
 
-    fn loop_labels_pop(&mut self) -> Option<(String, String)> {
+    fn loop_labels_pop(&mut self) -> Option<LoopLabels> {
         self.parent.borrow_mut().loop_labels_pop()
     }
 
-    fn loop_label_peak(&self) -> Option<(String, String)> {
+    fn loop_label_peak(&self) -> Option<LoopLabels> {
         self.parent.borrow().loop_label_peak()
     }
 

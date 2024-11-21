@@ -1,5 +1,5 @@
 use crate::ast::{AstNode, TypeCheckRes};
-use crate::context::Context;
+use crate::context::{Context, LoopLabels};
 use crate::error::{type_error, Error};
 use crate::get_type;
 use crate::position::Interval;
@@ -44,11 +44,14 @@ impl AstNode for WhileLoopNode {
     }
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
-        let start_lbl = ctx.borrow_mut().get_anon_label();
-        let end_lbl = ctx.borrow_mut().get_anon_label();
+        let pre_body_lbl = ctx.borrow_mut().get_anon_label();
+        let post_body_lbl = ctx.borrow_mut().get_anon_label();
+        let post_loop_lbl = ctx.borrow_mut().get_anon_label();
 
-        ctx.borrow_mut()
-            .loop_labels_push(start_lbl.clone(), end_lbl.clone());
+        ctx.borrow_mut().loop_labels_push(LoopLabels {
+            post_body: post_body_lbl.clone(),
+            post_loop: post_loop_lbl.clone(),
+        });
 
         // loop label exists on loop label stack just inside loop body
         let body = self.statements.borrow_mut().asm(ctx.clone())?;
@@ -59,10 +62,11 @@ impl AstNode for WhileLoopNode {
         if self.condition.is_none() {
             return Ok(format!(
                 "
-                {start_lbl}:
+                {pre_body_lbl}:
                     {body}
-                    jmp {start_lbl}
-                {end_lbl}:
+                {post_body_lbl}:
+                    jmp {pre_body_lbl}
+                {post_loop_lbl}:
             "
             ));
         }
@@ -76,14 +80,15 @@ impl AstNode for WhileLoopNode {
 
         Ok(format!(
             "
-                {start_lbl}:
+                {pre_body_lbl}:
                     {cond}
                     pop rax
                     test rax, rax
-                    je {end_lbl}
+                    je {post_loop_lbl}
                     {body}
-                    jmp {start_lbl}
-                {end_lbl}:
+                {post_body_lbl}:
+                    jmp {pre_body_lbl}
+                {post_loop_lbl}:
             "
         ))
     }

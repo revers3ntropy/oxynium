@@ -289,11 +289,9 @@ def Str.ends_with (self, other: Str) Bool {
 }
 
 def Str.reversed (self) Str {
-	let mut i = 0
 	let mut s = ""
-	while i < self.len() {
-		s = self.at(i).Str() + s
-		i += 1
+	for char in self {
+		s = char.Str() + s
 	}
 	return s
 }
