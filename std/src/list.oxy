@@ -100,10 +100,8 @@ def List.set_at (self, idx: Int, val: T) Result<Void, Str> {
 
 def List.map <To> (self, f: Fn (T, Int) To) List<To> {
 	let new_list = List.empty!<To>()
-	let mut i = 0;
-	while i < self.len() {
-		new_list.push(f(self.at_raw(i), i))
-		i = i + 1
+	for item in self {
+		new_list.push(f(item, i))
 	}
 	return new_list
 }
