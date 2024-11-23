@@ -100,7 +100,7 @@ def List.set_at (self, idx: Int, val: T) Result<Void, Str> {
 
 def List.map <To> (self, f: Fn (T, Int) To) List<To> {
 	let new_list = List.empty!<To>()
-	for item in self {
+	for item, i in self {
 		new_list.push(f(item, i))
 	}
 	return new_list
