@@ -127,6 +127,15 @@ expect '0,1,2,3456' '
         }
     }
 '
+expect '12' $'
+    def main () {
+        for c, i in "abc" {
+            if c == \'a\' ->
+                continue
+            print(i.Str())
+        }
+    }
+'
 
 
 describe 'for _ in range'

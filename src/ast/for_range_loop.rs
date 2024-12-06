@@ -180,7 +180,7 @@ impl AstNode for ForRangeLoopNode {
                     cmp rax, {get_end_asm}
                     jge {post_loop_lbl}
                     {body}
-                    {post_body_lbl}:
+                {post_body_lbl}:
                     mov rax, {get_value_asm}
                     add rax, {get_step_asm}
                     mov {get_value_asm}, rax

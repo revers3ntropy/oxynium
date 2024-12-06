@@ -125,27 +125,28 @@ impl AstNode for ForLoopNode {
                 }),
             })),
 
-            statements: mut_rc(StatementsNode {
+            body: mut_rc(StatementsNode {
                 statements: vec![
                     // let arg = args.at_raw(i)
                     self.local_var_assignment_node.clone(),
                     self.statements.clone(),
-                    // i = i + 1
-                    mut_rc(MutateVar {
-                        identifier: self.counter_tok.clone(),
-                        value: mut_rc(BinOpNode {
-                            lhs: mut_rc(SymbolAccessNode {
-                                identifier: self.counter_tok.clone(),
-                            }),
-                            operator: Token::new_unknown_pos(TokenType::Plus, None),
-                            rhs: mut_rc(IntNode {
-                                value: 1,
-                                position: Position::unknown_interval(),
-                            }),
-                        }),
-                    }),
                 ],
             }),
+
+            // i = i + 1
+            post_body: Some(mut_rc(MutateVar {
+                identifier: self.counter_tok.clone(),
+                value: mut_rc(BinOpNode {
+                    lhs: mut_rc(SymbolAccessNode {
+                        identifier: self.counter_tok.clone(),
+                    }),
+                    operator: Token::new_unknown_pos(TokenType::Plus, None),
+                    rhs: mut_rc(IntNode {
+                        value: 1,
+                        position: Position::unknown_interval(),
+                    }),
+                }),
+            })),
             position: self.position.clone(),
         };
 

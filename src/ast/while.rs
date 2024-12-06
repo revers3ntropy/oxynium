@@ -9,7 +9,8 @@ use crate::util::{mut_rc, MutRc};
 #[derive(Debug)]
 pub struct WhileLoopNode {
     pub condition: Option<MutRc<dyn AstNode>>,
-    pub statements: MutRc<dyn AstNode>,
+    pub body: MutRc<dyn AstNode>,
+    pub post_body: Option<MutRc<dyn AstNode>>,
     pub position: Interval,
 }
 
@@ -18,7 +19,10 @@ impl AstNode for WhileLoopNode {
         if let Some(ref condition) = self.condition.clone() {
             condition.borrow_mut().setup(ctx.clone())?;
         }
-        self.statements.borrow_mut().setup(ctx.clone())
+        if let Some(ref post_body) = self.post_body.clone() {
+            post_body.borrow_mut().setup(ctx.clone())?;
+        }
+        self.body.borrow_mut().setup(ctx.clone())
     }
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         let mut unknowns = 0;
@@ -37,7 +41,11 @@ impl AstNode for WhileLoopNode {
                 );
             }
         }
-        let mut statements_tr = self.statements.borrow_mut().type_check(ctx.clone())?;
+
+        if let Some(post_body) = &self.post_body {
+            unknowns += post_body.borrow_mut().type_check(ctx.clone())?.unknowns;
+        }
+        let mut statements_tr = self.body.borrow_mut().type_check(ctx.clone())?;
         statements_tr.unknowns += unknowns;
         statements_tr.always_returns = statements_tr.always_returns && self.condition.is_none();
         Ok(statements_tr)
@@ -54,7 +62,13 @@ impl AstNode for WhileLoopNode {
         });
 
         // loop label exists on loop label stack just inside loop body
-        let body = self.statements.borrow_mut().asm(ctx.clone())?;
+        let body = self.body.borrow_mut().asm(ctx.clone())?;
+
+        let post_body = if let Some(post_body) = self.post_body.clone() {
+            post_body.borrow_mut().asm(ctx.clone())?
+        } else {
+            "".to_string()
+        };
 
         ctx.borrow_mut().loop_labels_pop();
 
@@ -65,6 +79,7 @@ impl AstNode for WhileLoopNode {
                 {pre_body_lbl}:
                     {body}
                 {post_body_lbl}:
+                    {post_body}
                     jmp {pre_body_lbl}
                 {post_loop_lbl}:
             "
@@ -87,6 +102,7 @@ impl AstNode for WhileLoopNode {
                     je {post_loop_lbl}
                     {body}
                 {post_body_lbl}:
+                    {post_body}
                     jmp {pre_body_lbl}
                 {post_loop_lbl}:
             "

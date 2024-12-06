@@ -1485,7 +1485,8 @@ impl Parser {
 
         res.success(mut_rc(WhileLoopNode {
             condition,
-            statements: statements.unwrap(),
+            body: statements.unwrap(),
+            post_body: None,
             position: (start, self.last_tok().unwrap().end.clone()),
         }));
         res
