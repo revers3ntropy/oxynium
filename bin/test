@@ -8,6 +8,8 @@ WHITE=$(tput setaf 7)
 MAGENTA=$(tput setaf 5)
 NC=$(tput sgr0)
 
+CLEAR_LINE="\r\033[K"
+
 fails=0
 warnings=0
 tests=0
@@ -47,7 +49,7 @@ function describe () {
                 else
                     time=$(echo "$YELLOW$time$NC")
                 fi
-                printf "$GREEN✔$NC %s\n" "$current_spec_name (${time}s)"
+                printf "$CLEAR_LINE$GREEN✔$NC %s\n" "$current_spec_name (${time}s)"
             fi
         fi
     fi
@@ -56,6 +58,7 @@ function describe () {
     current_spec_has_failed=0
     tests_started=1
     last_test_start=$(date +"%s.%4N")
+    echo -n "  ${WHITE}${current_spec_name}${NC}"
 }
 
 function execute() {
