@@ -39,7 +39,7 @@ impl AstNode for StatementsNode {
             }
             if !ret_type.clone().unwrap().borrow().contains(t.t.clone()) {
                 return Err(type_error(format!(
-                    "Cannot return different types, expected `{}` found `{}`",
+                    "cannot return different types, expected `{}` found `{}`",
                     ret_type.unwrap().borrow().str(),
                     t.t.borrow().str()
                 ))

@@ -196,7 +196,7 @@ impl Type for ClassType {
                             ctx.borrow().get_dec_from_id(&k).type_.borrow().deref()
                         )
                     {
-                        panic!()
+                        unreachable!()
                     }
                     format!(
                         "{}:{}",
