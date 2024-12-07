@@ -416,3 +416,29 @@ expect '1,2,3,4,5,6,7,8,9,0,-1,90,-90,9,9223372036854775807,false,false,false,fa
     print(",")
     print(Str.Int("9223372036854775808").ok.Str())
 '
+
+
+describe 'def Str.split'
+
+expect '2 a c 3 1 2 3 5 h e l l o' '
+    def main () {
+        let mut parts = "abc".split("b")
+        print(parts.len().Str(), " ")
+        print(parts.at_raw(0).Str(), " ")
+        print(parts.at_raw(1).Str(), " ")
+
+        parts = "1 2 3".split(" ")
+        print(parts.len().Str(), " ")
+        print(parts.at_raw(0).Str(), " ")
+        print(parts.at_raw(1).Str(), " ")
+        print(parts.at_raw(2).Str(), " ")
+
+        parts = "hello".split("")
+        print(parts.len().Str(), " ")
+        print(parts.at_raw(0).Str(), " ")
+        print(parts.at_raw(1).Str(), " ")
+        print(parts.at_raw(2).Str(), " ")
+        print(parts.at_raw(3).Str(), " ")
+        print(parts.at_raw(4).Str(), "")
+    }
+'

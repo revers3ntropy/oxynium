@@ -49,6 +49,9 @@ class Str {
 	extern def Str (self) Str,
 	extern def Int (self) Result<Int, Str>,
 	extern def Utf8Str (self) Utf8Str,
+	// called by `.split("")`
+	extern def List (self) List<Char>,
+	extern def List_strings (self) List<Str>,
     extern def at (self, i: Int) Char,
     /// Returns the character at the given index
     /// Does not check if index is out of bounds
@@ -66,7 +69,7 @@ class Str {
     extern def insert (self, index: Int, other: Str) Str,
     extern def remove (self, index: Int, count = 1) Str,
     extern def utf8_size (self) Int,
-    extern def split (self, delimiter: Str) List<Str>,
+    extern def split (self, delimiter="") List<Str>,
 }
 
 class Utf8Str {
