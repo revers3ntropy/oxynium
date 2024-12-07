@@ -7,20 +7,20 @@ expect '1223326' '
                               .read_to_str()
                               .split("\n")
 
-        let mut left = List.empty!<Int>()
-        let mut right = List.empty!<Int>()
+        let mut left = List.with_capacity!<Int>(input_lines.length * 8)
+        let mut right = List.with_capacity!<Int>(input_lines.length * 8)
 
         for line in input_lines {
+            // assumes all lines are well-formed
             let parts = line.split("   ")
-            left.push(parts.at(0).unwrap().Int().unwrap())
-            right.push(parts.at(1).unwrap().Int().unwrap())
+            left.push(parts.at_raw(0).Int().unwrap())
+            right.push(parts.at_raw(1).Int().unwrap())
         }
 
-        let int_compare = fn (a: Int, b: Int) Int {
-            if a < b -> return -1
-            if a > b -> return 1
-            return 0
-        }
+        // as we cannot yet use methods as first-class functions,
+        // use a work-around
+        let int_compare = fn (a: Int, b: Int) Int -> Int.compare(a, b)
+
         left = left.sort(int_compare)
         right = right.sort(int_compare)
 
