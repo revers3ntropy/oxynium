@@ -1,4 +1,4 @@
-describe 'AOC Day 1'
+describe 'AOC 2023 Day 1'
 
 expect '53921' '
     def main () {
