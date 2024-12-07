@@ -8,7 +8,7 @@ WHITE=$(tput setaf 7)
 MAGENTA=$(tput setaf 5)
 NC=$(tput sgr0)
 
-CLEAR_LINE="\r\033[K"
+CLEAR_LINE="\r\033[2K"
 
 fails=0
 warnings=0
@@ -23,6 +23,9 @@ last_test_start=0
 
 filter="$1"
 
+terminal=/dev/pts/1
+terminal_columns=$(stty -a <"$terminal" | grep -Po '(?<=columns )\d+')
+
 ulimit -c unlimited
 
 function run_cargo_tests {
@@ -34,29 +37,38 @@ function run_cargo_tests {
     fi
 }
 
-function setup () {
+function setup {
   cargo build -r
   bin/compile_std
 }
 
+function finish_current_spec {
+    if [ "$current_spec_has_failed" -eq 1 ]; then
+        return
+    fi
+
+    if [ "$filter" == "" ] || [[ "$current_spec_name" == *"$filter"* ]]; then
+        time=$(printf "%01.02g" "0$(echo "$(date +"%s.%4N") - $last_test_start" | bc -l)")
+        if (( $(echo "$time > 1" |bc -l) )); then
+            time=$(echo "$RED$time$NC")
+        else
+            time=$(echo "$YELLOW$time$NC")
+        fi
+        printf "$CLEAR_LINE$GREEN✔$NC $current_spec_name (${time}s)\n"
+    elif [ "$filter" != "" ]; then
+        printf "$CLEAR_LINE"
+    fi
+}
+
 function describe () {
     if [ $tests_started -eq 1 ]; then
-        if [ "$current_spec_has_failed" -eq 0 ]; then
-            if [ "$filter" == "" ] || [[ "$current_spec_name" == *"$filter"* ]]; then
-                time=$(printf "%01.02g" "0$(echo "$(date +"%s.%4N") - $last_test_start" | bc -l)")
-                if (( $(echo "$time > 1" |bc -l) )); then
-                    time=$(echo "$RED$time$NC")
-                else
-                    time=$(echo "$YELLOW$time$NC")
-                fi
-                printf "$CLEAR_LINE$GREEN✔$NC %s\n" "$current_spec_name (${time}s)"
-            fi
-        fi
+        finish_current_spec
+    else
+        tests_started=1
     fi
     current_spec_name="$1"
     current_spec_num_tests=0
     current_spec_has_failed=0
-    tests_started=1
     last_test_start=$(date +"%s.%4N")
     echo -n "  ${WHITE}${current_spec_name}${NC}"
 }
@@ -331,10 +343,9 @@ function results() {
 }
 
 function clean_up() {
-    # show last 'all passing' message
-    describe ""
-    rm ./in.oxy
-    rm ./test-out
+    finish_current_spec
+    rm -f ./in.oxy
+    rm -f ./test-out
 }
 
 start=$(date +"%s.%4N")
