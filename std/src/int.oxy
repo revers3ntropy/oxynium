@@ -126,3 +126,8 @@ def Int.Str (self) Str {
 def Int.Bool (self) Bool ->
     self != 0
 
+def Int.compare (self, other: Int) Int {
+	if self < other -> return -1
+	if self > other -> return 1
+	return 0
+}

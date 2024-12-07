@@ -105,3 +105,39 @@ def List.map <To> (self, f: Fn (T, Int) To) List<To> {
 	}
 	return new_list
 }
+
+def List.clone (self) List<T> {
+	let new_list = List.empty!<T>()
+	for item in self {
+		new_list.push(item)
+	}
+	return new_list
+}
+
+def List.concat (self, other: List<T>) List<T> {
+	let new_list = self.clone()
+	for item in other {
+		new_list.push(item)
+	}
+	return new_list
+}
+
+def List.sort (self, f: Fn (T, T) Int) List<T> {
+	// quicksort
+	if self.len() <= 1 -> return self.clone()
+	let pivot = self.at_raw(0)
+	let pivot_list = List.empty!<T>()
+	pivot_list.push(pivot)
+	let left = List.empty!<T>()
+	let right = List.empty!<T>()
+	for i in range(1, self.len()) {
+		let item = self.at_raw(i)
+		if f(item, pivot) < 0 -> left.push(item)
+		else -> right.push(item)
+	}
+	// should chain here, but type system is broken :(
+	let left_sorted: List<T> = left
+		.sort(f)
+	let left_and_pivot: List<T> = left_sorted.concat(pivot_list)
+	return left_and_pivot.concat(right.sort(f))
+}

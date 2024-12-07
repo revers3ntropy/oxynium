@@ -21,8 +21,6 @@ primitive Bool {
 }
 
 primitive Int {
-    extern def from_str (s: Str) Result<Int, Str>,
-
     extern def +  (self, n: Int) Int,
     extern def -  (self, n: Int) Int,
     extern def *  (self, n: Int) Int,
@@ -39,6 +37,7 @@ primitive Int {
     extern def max (self, other=9223372036854775807) Int,
     extern def min (self, other=-9223372036854775807-1) Int,
     extern def abs (self) Int,
+    extern def compare (self, other: Int) Int,
 }
 
 class Str {
@@ -135,6 +134,9 @@ class List <T> {
     extern def push (self, value: T, n=1),
     extern def set_at (self, i: Int, value: T) Result<Void, Str>,
 	extern def map <To> (self, f: Fn(T, Int) To) List<To>,
+	extern def concat (self, other: List<T>) List<T>,
+	extern def clone (self) List<T>,
+	extern def sort(self, f: Fn(T, T) Int) List<T>,
 }
 
 class File {
