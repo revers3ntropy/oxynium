@@ -1,23 +1,31 @@
 def List.empty <E> () -> new List<E> {
-    head: new Ptr<E>,
+	// dangerously use NULL as a pointer to the head of the list,
+	// must make sure to check the length of the array before
+	// accessing any elements
+    head: #unchecked_cast(Ptr<E>, 0),
+    length: 0,
     // number of bytes in array after 'head'
-    size: 0
+    capacity: 0
 }
 
-def List.len (self) Int ->
-	// number of elements in list is size of list
-	// divided by size of each element,
-	// which is always 8 bytes
-	self.size / 8
+def List.with_capacity <E> (capacity: Int) -> new List<E> {
+	head: #unchecked_cast(Ptr<E>, LibC.calloc(capacity, 8)),
+	length: 0,
+	capacity: capacity
+}
+
+// only exists so we conform by the Iterable 'interface'
+// which internally requires 'len' and 'at_raw' methods
+def List.len (self) Int -> self.length
 
 def List.at (self, i: Int) Option<T> {
-	if self.len() == 0 ->
+	if self.length == 0 ->
 		return Option.none!<T>()
 
 	if i < 0 ->
-		return self.at(self.len() + i)
+		return self.at(self.length + i)
 
-	if i < 0 || i >= self.len() ->
+	if i < 0 || i >= self.length ->
 		return Option.none!<T>()
 
 	return Option.some!<T>(self.at_raw(i))
@@ -33,59 +41,56 @@ def List.at_raw (self, i: Int) T {
 	"
 }
 
-def List.push (self, value: T, n=1) {
-	if n < 0 -> return
-	if n > 1 -> self.push(value, n - 1)
+def List.next_capacity (self) Int {
+	// if the list is empty, return a default capacity
+	if self.capacity == 0 ->
+		return 64
+	// in the unusual case when doubling the allocated
+	// memory would result in fewer elements than we
+	// need, just allocate enough memory for the elements
+	// (for example if an array was created with
+	//  with_capacity(3) and then push() was called)
+	if self.capacity * 2 < (self.length + 1) * 8 ->
+		return (self.length + 1) * 8
+	// by default, double the capacity
+	// TODO ideally we would choose a function based on
+	//      the size of the elements, but we don't have
+	//      access to that information
+	return self.capacity * 2
+}
 
+def List.push (self, value: T) {
+	if self.capacity < (self.length + 1) * 8 ->
+		self.reallocate(self.next_capacity())
 	#asm Void "
-		; #1: Allocate space for old list and new element
-
-		mov rax, qword [rbp + 16] ; rax = self
-		mov rcx, qword [rax + 8]  ; rdx = self.size
-		add rcx, 8 				  ; rdx = self.size + 8
-		mov qword [rax + 8], rcx  ; self.size = self.size + 8
-		mov rdi, rcx 		      ; self.size + 8
-		mov rsi, 1
-		call _LibC.calloc         ; rax = allocate((self.size + 1) * 8)
-
-		; #2: Copy old list to new list
-
-		mov rdi, rax ; rdi = new list
-		mov rsi, qword [rbp + 16] ; rsi = self
-		mov rdx, qword [rsi + 8]  ; rcx = self.size
-		mov rsi, qword [rsi]      ; rsi = old_list.head
-		sub rdx, 8 			      ; rcx = self.size - 8
-
-		; just before copying, while rsi = old_list.head
-		; set the location of the list to the new list
-		mov rcx, qword [rbp + 16] ; rcx = self
-		mov qword [rcx], rax      ; self.head = new_list
-
-		call _LibC.memcpy    ; memcpy(new list, old list, (old list size - 1) * 8)
-
-		; #3: Add new element to new list
-
-		mov rax, qword [rbp + 16]      ; rax = self
-		mov rcx, qword [rax + 8]       ; rcx = self.size
-		mov rax, qword [rax]           ; rcx = self.head (new head)
-		mov rdx, qword [rbp + 24]      ; rdx = val
-		mov qword [rax + rcx - 8], rdx ; new_list[self.len() - 1] = val
-
-		push rax
+		mov rax, qword [rbp + 16]       ; rax = self
+		mov rcx, qword [rax + 8]        ; rax = self.length
+		inc qword [rax + 8]             ; self.length += 1
 	"
+	self.set_at(self.length - 1, value)
+		// TODO how should we handle this error?
+		.unwrap()
 }
 
 def List.Str (self) ->
-	"List[" + self.len().Str() + "]"
+	// TODO format the array nicely;
+	//      although does this require more information
+	//      about the type of the elements?
+	"List[" + self.length.Str() + "]"
 
 def List.set_at (self, idx: Int, val: T) Result<Void, Str> {
-	if self.len() == 0 ->
+	if self.length == 0 ->
 		return Result.err!<Void, Str>("Index out of bounds")
 
+	// we can use negative indices to access elements from the end
+	// however cannot access from < -length
+	// i.e. -length <= idx < length
+	if idx < -self.length ->
+		return Result.err!<Void, Str>("Index out of bounds")
 	if idx < 0 ->
-		return self.set_at(self.len() + idx, val)
+		return self.set_at(self.length + idx, val)
 
-	if idx < 0 || idx >= self.len() ->
+	if idx >= self.length ->
 		return Result.err!<Void, Str>("Index out of bounds")
 
 	#asm Void "
@@ -106,8 +111,23 @@ def List.map <To> (self, f: Fn (T, Int) To) List<To> {
 	return new_list
 }
 
+def List.reallocate (self, new_capacity: Int) {
+	if new_capacity < self.length * 8 ->
+		panic("cannot reallocate List to have fewer elements than it currently has")
+	let new_head = LibC.calloc!<T>(new_capacity, 8)
+	// only copy up to where we have elements stored
+	LibC.memcpy!<T>(new_head, self.head, self.length * 8)
+	#asm Void "
+		mov rax, qword [rbp + 16]  ; rax = self
+		mov rcx, qword [rbp - 8]
+		mov qword [rax], rcx       ; self.head = new_head
+		mov rcx, qword [rbp + 24]
+		mov qword [rax + 16], rcx  ; self.capacity = new_capacity
+	"
+}
+
 def List.clone (self) List<T> {
-	let new_list = List.empty!<T>()
+	let new_list = List.with_capacity!<T>(self.capacity)
 	for item in self {
 		new_list.push(item)
 	}
@@ -116,6 +136,7 @@ def List.clone (self) List<T> {
 
 def List.concat (self, other: List<T>) List<T> {
 	let new_list = self.clone()
+	new_list.reallocate(self.length * 8 + other.length * 8)
 	for item in other {
 		new_list.push(item)
 	}
@@ -125,16 +146,20 @@ def List.concat (self, other: List<T>) List<T> {
 def List.sort (self, f: Fn (T, T) Int) List<T> {
 	// quicksort
 	if self.len() <= 1 -> return self.clone()
+
 	let pivot = self.at_raw(0)
 	let pivot_list = List.empty!<T>()
 	pivot_list.push(pivot)
+
 	let left = List.empty!<T>()
 	let right = List.empty!<T>()
+
 	for i in range(1, self.len()) {
 		let item = self.at_raw(i)
 		if f(item, pivot) < 0 -> left.push(item)
 		else -> right.push(item)
 	}
+
 	// should chain here, but type system is broken :(
 	let left_sorted: List<T> = left
 		.sort(f)

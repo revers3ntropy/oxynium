@@ -1,5 +1,5 @@
-def LibC.calloc (num: Int, size: Int) Ptr<Void> {
-    return #asm Ptr<Void> "
+def LibC.calloc <T> (num: Int, size: Int) Ptr<T> {
+    return #asm Ptr<T> "
         mov rdi, qword [rbp + 16]
         mov rsi, qword [rbp + 24]
         sub rsp, 32
@@ -16,4 +16,15 @@ def LibC.free <T> (ptr: Ptr<T>) Void {
         and rsp, -16
         call _free
     "
+}
+
+def LibC.memcpy <T> (dest: Ptr<T>, src: Ptr<T>, size: Int) Void {
+	#asm Void "
+		mov rdi, qword [rbp + 16]
+		mov rsi, qword [rbp + 24]
+		mov rdx, qword [rbp + 32]
+		sub rsp, 32
+		and rsp, -16
+		call _memcpy
+	"
 }

@@ -122,19 +122,25 @@ primitive Ptr <T> {
 class List <T> {
 	// address of first element
 	head: Ptr<T>,
+	// number of elements in the list
+	length: Int,
 	// number of bytes required to store list
-    size: Int,
+	// capacity >= length * 8
+    capacity: Int,
 
     extern def empty <E> () List<E>,
+    extern def with_capacity <E> (capacity: Int) List<E>,
 
     extern def Str (self) Str,
 	extern def len (self) Int,
     extern def at (self, i: Int) Option<T>,
     extern def at_raw (self, i: Int) T,
-    extern def push (self, value: T, n=1),
+    extern def next_capacity (self) Int,
+    extern def push (self, value: T),
     extern def set_at (self, i: Int, value: T) Result<Void, Str>,
 	extern def map <To> (self, f: Fn(T, Int) To) List<To>,
 	extern def concat (self, other: List<T>) List<T>,
+	extern def reallocate (self, new_capacity: Int),
 	extern def clone (self) List<T>,
 	extern def sort(self, f: Fn(T, T) Int) List<T>,
 }
@@ -176,8 +182,9 @@ class _LibC {
 
 /// Wrappers around some LibC functions
 class LibC {
-    extern def calloc (num: Int, size: Int) Ptr<Void>,
+    extern def calloc <T> (num: Int, size: Int) Ptr<T>,
     extern def free <T> (ptr: Ptr<T>),
+    extern def memcpy <T> (dest: Ptr<T>, src: Ptr<T>, size: Int),
 }
 
 class Range {
