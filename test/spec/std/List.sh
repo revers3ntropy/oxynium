@@ -178,3 +178,35 @@ expect 'false false false 2 true 1 false true false 3 false' '
     	print(l.set_at(10, 1).ok.Str(), "")
     }
 '
+
+
+describe 'def List.sort'
+
+expect '1 2 3 4 5 6 6 5 4 3 2 1 ' '
+    def int_compare (a: Int, b: Int) Int ->
+        Int.compare(a, b)
+
+    def int_compare_rev (a: Int, b: Int) Int ->
+        Int.compare(b, a)
+
+
+    def main () {
+        let l = List.empty!<Int>()
+        l.push(6)
+        l.push(2)
+        l.push(3)
+        l.push(4)
+        l.push(5)
+        l.push(1)
+
+        let l2 = l.sort(int_compare)
+        for i in l2 {
+            print(i.Str(), " ")
+        }
+
+        let l3 = l.sort(int_compare_rev)
+        for j in l3 {
+            print(j.Str(), " ")
+        }
+    }
+'
