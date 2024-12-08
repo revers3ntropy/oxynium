@@ -2,7 +2,7 @@ describe 'AOC 2024 Day 2'
 
 expect '230' '
 def main () {
-	let reports = File.open("test/spec/examples/aoc2024/d1-input.txt")
+	let reports = File.open("test/spec/examples/aoc2024/d2-input.txt")
 						.unwrap()
 						.read_to_str()
 						.split("\n")
