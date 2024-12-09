@@ -65,7 +65,7 @@ impl AstNode for BinOpNode {
             .set_interval(self.pos()));
         }
 
-        let ret_type = fn_signature.borrow().ret_type.clone();
+        let ret_type = fn_signature.borrow().return_type.clone();
 
         Ok(TypeCheckRes::from(ret_type, unknowns))
     }

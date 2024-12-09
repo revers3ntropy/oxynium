@@ -1,10 +1,9 @@
 use crate::ast::{AstNode, TypeCheckRes};
-use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
-use crate::symbols::SymbolDec;
 use crate::util::MutRc;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct OptionalTypeNode {
@@ -19,15 +18,11 @@ impl AstNode for OptionalTypeNode {
 
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
         let root_ctx = ctx.clone().borrow().global_scope();
-
         let option = root_ctx.borrow().get_dec_from_id("Option").type_;
-
-        let generics_ctx = Scope::new_local(root_ctx);
-
         let generic_arg_name = option
             .clone()
             .borrow()
-            .as_class()
+            .as_generic_class()
             .unwrap()
             .generic_params_order
             .first()
@@ -37,24 +32,9 @@ impl AstNode for OptionalTypeNode {
             .unwrap();
 
         let TypeCheckRes { unknowns, t, .. } = self.value.borrow().type_check(ctx.clone())?;
+        let generics = HashMap::from([(generic_arg_name.clone(), t)]);
 
-        generics_ctx.borrow_mut().declare(
-            SymbolDec {
-                name: generic_arg_name.clone(),
-                id: generic_arg_name,
-                is_constant: false,
-                is_type: true,
-                is_func: false,
-                type_: t,
-                require_init: false,
-                is_defined: false,
-                is_param: false,
-                position: self.position.clone(),
-            },
-            self.position.clone(),
-        )?;
-
-        let type_res = option.borrow().concrete(generics_ctx)?;
+        let type_res = option.borrow().concrete(&generics)?;
 
         Ok(TypeCheckRes::from(type_res, unknowns))
     }

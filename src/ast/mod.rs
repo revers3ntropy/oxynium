@@ -3,9 +3,12 @@ use crate::context::Context;
 use crate::error::Error;
 use crate::position::Interval;
 use crate::target::Target;
+use crate::types::function::FnType;
+use crate::types::generic_function::GenericFnType;
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{mut_rc, MutRc};
+use std::collections::HashMap;
 use std::fmt::Debug;
 
 pub mod bin_op;
@@ -24,6 +27,7 @@ pub mod fn_call;
 pub mod fn_declaration;
 pub mod for_loop;
 pub mod for_range_loop;
+pub mod generic_fn_call;
 pub mod global_const_decl;
 pub mod r#if;
 pub mod include_asm_file;
@@ -70,6 +74,25 @@ macro_rules! get_type {
             mut_rc(UnknownType {})
         }
     };
+}
+
+#[derive(Debug, Clone)]
+pub enum CallableType {
+    Fn(FnType),
+    GenericFn(GenericFnType),
+}
+
+impl CallableType {
+    // helper so making CallableType concrete is easier
+    pub fn concrete(
+        &self,
+        generics: &HashMap<String, MutRc<dyn Type>>,
+    ) -> Result<MutRc<dyn Type>, Error> {
+        match self {
+            CallableType::Fn(f) => f.concrete(generics),
+            CallableType::GenericFn(f) => f.concrete(generics),
+        }
+    }
 }
 
 // (type of result of node, type of returned values from node and children)

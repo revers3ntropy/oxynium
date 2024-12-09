@@ -5,12 +5,12 @@ use crate::position::Interval;
 use crate::types::function::{FnParamType, FnType};
 use crate::util::{mut_rc, MutRc};
 
+// TODO allow generic function types to be declared
 #[derive(Debug, Clone)]
 pub struct FnTypeNode {
     pub parameters: Vec<MutRc<dyn AstNode>>,
     pub ret_type: MutRc<dyn AstNode>,
     pub position: Interval,
-    // pub fn_tok_pos: Interval,
 }
 
 impl AstNode for FnTypeNode {
@@ -46,11 +46,9 @@ impl AstNode for FnTypeNode {
         Ok(TypeCheckRes::from(
             mut_rc(FnType {
                 id: ctx.borrow_mut().get_id(),
-                name: format!(""),
-                ret_type: ret_type_res.t,
+                name: "".to_string(),
+                return_type: ret_type_res.t,
                 parameters,
-                generic_args: Default::default(),
-                generic_params_order: vec![],
             }),
             unknowns,
         ))

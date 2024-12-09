@@ -11,6 +11,7 @@ use crate::ast::fn_call::FnCallNode;
 use crate::ast::fn_declaration::{FnDeclarationNode, Parameter};
 use crate::ast::for_loop::ForLoopNode;
 use crate::ast::for_range_loop::ForRangeLoopNode;
+use crate::ast::generic_fn_call::GenericFnCallNode;
 use crate::ast::global_const_decl::GlobalConstNode;
 use crate::ast::int::IntNode;
 use crate::ast::local_var_decl::LocalVarNode;
@@ -427,7 +428,7 @@ impl Parser {
         let mut res = ParseResults::new();
         if self.current_tok().is_none() {
             res.failure(
-                syntax_error(format!("statement expected")),
+                syntax_error("statement expected".to_string()),
                 Some(self.last_tok().unwrap().start.clone()),
                 Some(self.last_tok().unwrap().end.clone()),
             );
@@ -561,7 +562,7 @@ impl Parser {
                 None,
             );
         }
-        return res;
+        res
     }
 
     fn expression(&mut self) -> ParseResults {
@@ -678,9 +679,7 @@ impl Parser {
             return res;
         }
         res.failure(
-            syntax_error(format!(
-                "can only have integers or strings as global constants"
-            )),
+            syntax_error("can only have integers or strings as global constants".to_string()),
             Some(self.current_tok().unwrap().start.clone()),
             Some(self.current_tok().unwrap().end.clone()),
         );
@@ -988,13 +987,20 @@ impl Parser {
             // fn(), no arguments
             if t.token_type == TokenType::CloseParen {
                 self.advance(&mut res);
-                res.success(mut_rc(FnCallNode {
-                    object: base,
+                let fn_call_node = FnCallNode {
+                    base,
                     identifier: name_tok,
                     args: Vec::new(),
-                    generic_args,
                     position: (start, self.last_tok().unwrap().end.clone()),
-                }));
+                };
+                if generic_args.len() > 0 {
+                    res.success(mut_rc(GenericFnCallNode {
+                        fn_call_node,
+                        generic_args,
+                    }));
+                } else {
+                    res.success(mut_rc(fn_call_node));
+                }
                 return res;
             }
         }
@@ -1008,13 +1014,20 @@ impl Parser {
 
         consume!(CloseParen, self, res);
 
-        res.success(mut_rc(FnCallNode {
-            object: base,
+        let fn_call_node = FnCallNode {
+            base,
             identifier: name_tok,
             args,
-            generic_args,
             position: (start, self.last_tok().unwrap().end.clone()),
-        }));
+        };
+        if generic_args.len() > 0 {
+            res.success(mut_rc(GenericFnCallNode {
+                fn_call_node,
+                generic_args,
+            }));
+        } else {
+            res.success(mut_rc(fn_call_node));
+        }
         res
     }
 

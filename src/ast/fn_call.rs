@@ -1,31 +1,37 @@
 use crate::ast::class_declaration::method_id;
-use crate::ast::{AstNode, TypeCheckRes};
-use crate::context::scope::Scope;
+use crate::ast::{AstNode, CallableType, TypeCheckRes};
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::get_type;
 use crate::parse::token::Token;
 use crate::position::{Interval, Position};
-use crate::symbols::SymbolDec;
+use crate::types::class::ClassType;
 use crate::types::function::{FnParamType, FnType};
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{mut_rc, MutRc};
+use std::ops::Deref;
 
-struct CalleeType {
-    fn_type: Option<FnType>,
+pub struct BaseTypeInfo {
+    base_type: Option<ClassType>,
     calling_through_instance: bool,
-    base_type: Option<MutRc<dyn Type>>,
     unknowns: usize,
     dec_id: String,
 }
 
+pub struct CalleeTypeInfo {
+    pub fn_type: Option<FnType>,
+    pub calling_through_instance: bool,
+    pub base_type: Option<MutRc<dyn Type>>,
+    pub unknowns: usize,
+    pub dec_id: String,
+}
+
 #[derive(Debug)]
 pub struct FnCallNode {
-    pub object: Option<MutRc<dyn AstNode>>,
+    pub base: Option<MutRc<dyn AstNode>>,
     pub identifier: Token,
     pub args: Vec<MutRc<dyn AstNode>>,
-    pub generic_args: Vec<MutRc<dyn AstNode>>,
     pub position: Interval,
 }
 
@@ -58,77 +64,141 @@ impl FnCallNode {
         ))
     }
 
-    fn get_callee_type(&self, ctx: MutRc<dyn Context>) -> Result<CalleeType, Error> {
-        if let Some(obj) = self.object.clone() {
-            let mut calling_through_instance = true;
-            // getting function type on method call
-            let obj_tc_res = obj.borrow_mut().type_check(ctx.clone())?;
-            if obj_tc_res.t.borrow().is_unknown() {
-                return Ok(CalleeType {
-                    fn_type: None,
-                    calling_through_instance: false,
-                    base_type: None,
-                    unknowns: obj_tc_res.unknowns,
-                    dec_id: "".to_string(),
-                });
-            }
-            let mut base_type = obj_tc_res.t.borrow().as_class();
-            if base_type.is_none() {
-                if let Some(type_type) = obj_tc_res.t.borrow().as_type_type() {
-                    let class_type = type_type.instance_type.borrow().as_class();
-
-                    if class_type.is_none() {
-                        return Err(type_error(format!(
-                            "cannot access methods statically for type '{}'",
-                            type_type.str()
-                        ))
-                        .set_interval(self.position.clone()));
-                    }
-
-                    // if the type is a TypeType,
-                    // is means we are doing something like this:
-                    //      class C { ... }
-                    //      C.method()
-                    // and accessing the method statically rather than through
-                    // an instance, which we want to allow but must be dealt with
-                    // explicitly, and unwrap the type before accessing methods.
-                    base_type = Some(class_type.unwrap());
-                    calling_through_instance = false;
-                } else {
-                    return Err(type_error(format!(
-                        "cannot access method of non-class type '{}'",
-                        obj_tc_res.t.borrow().str()
-                    ))
-                    .set_interval(self.position.clone()));
-                }
-            }
-            let base_type = base_type.unwrap().as_class().unwrap();
-
-            let method_type = base_type.method_type(&self.identifier.clone().literal.unwrap());
-            if method_type.is_none() {
-                if ctx.borrow().throw_on_unknowns() {
-                    return Err(type_error(format!(
-                        "class '{}' does not have method '{}'",
-                        base_type.str(),
-                        self.identifier.clone().literal.unwrap(),
-                    ))
-                    .set_interval(self.position.clone()));
-                }
-                return Ok(CalleeType {
-                    fn_type: None,
-                    calling_through_instance: false,
-                    base_type: None,
-                    unknowns: obj_tc_res.unknowns,
-                    dec_id: "".to_string(),
-                });
-            }
-            return Ok(CalleeType {
-                fn_type: Some(method_type.unwrap().borrow().as_fn().unwrap()),
-                calling_through_instance,
-                base_type: Some(obj_tc_res.t.clone()),
+    pub fn get_base_type(
+        &self,
+        ctx: MutRc<dyn Context>,
+        base: MutRc<dyn AstNode>,
+    ) -> Result<BaseTypeInfo, Error> {
+        // getting function type on method call
+        let obj_tc_res = base.borrow_mut().type_check(ctx.clone())?;
+        if obj_tc_res.t.borrow().is_unknown() {
+            return Ok(BaseTypeInfo {
+                base_type: None,
+                calling_through_instance: false,
                 unknowns: obj_tc_res.unknowns,
-                dec_id: self.declaration_id(obj_tc_res)?,
+                dec_id: "".to_string(),
             });
+        }
+        let mut calling_through_instance = true;
+        let mut base_type_as_class = obj_tc_res.t.borrow().as_class();
+        let base_type_as_generic_class = obj_tc_res.t.borrow().as_generic_class();
+        if base_type_as_class.is_none() && base_type_as_generic_class.is_none() {
+            if let Some(type_type) = obj_tc_res.t.borrow().as_type_type() {
+                let class_type = type_type.instance_type.borrow().as_class();
+                let generic_class_type = type_type.instance_type.borrow().as_generic_class();
+
+                if class_type.is_none() && generic_class_type.is_none() {
+                    return Err(type_error(format!(
+                        "cannot access methods statically for type '{}'",
+                        type_type.str()
+                    ))
+                    .set_interval(self.position.clone()));
+                }
+
+                // if the type is a TypeType,
+                // is means we are doing something like this:
+                //      class C { ... }
+                //      C.method()
+                // and accessing the method statically rather than through
+                // an instance, which we want to allow but must be dealt with
+                // explicitly, and unwrap the type before accessing methods.
+                base_type_as_class = Some(if class_type.is_some() {
+                    class_type.unwrap()
+                } else {
+                    // ignore the generic parameters on the base class
+                    // as static methods are not allowed to access
+                    // them, so they will never be needed
+                    generic_class_type.unwrap().class_type.clone()
+                });
+                calling_through_instance = false;
+            } else {
+                return Err(type_error(format!(
+                    "cannot access method of non-class type '{}'",
+                    obj_tc_res.t.borrow().str()
+                ))
+                .set_interval(self.position.clone()));
+            }
+        }
+
+        if base_type_as_class.is_none() {
+            base_type_as_class = Some(base_type_as_generic_class.unwrap().class_type);
+        }
+
+        Ok(BaseTypeInfo {
+            base_type: Some(base_type_as_class.unwrap()),
+            calling_through_instance,
+            unknowns: obj_tc_res.unknowns,
+            dec_id: self.declaration_id(obj_tc_res)?,
+        })
+    }
+
+    fn get_callee_type_on_base(
+        &self,
+        ctx: MutRc<dyn Context>,
+        base: MutRc<dyn AstNode>,
+    ) -> Result<CalleeTypeInfo, Error> {
+        let BaseTypeInfo {
+            base_type,
+            unknowns,
+            dec_id,
+            calling_through_instance,
+        } = self.get_base_type(ctx.clone(), base.clone())?;
+
+        if base_type.is_none() {
+            if ctx.borrow().throw_on_unknowns() {
+                return Err(unknown_symbol(format!(
+                    "cannot find type of '{}'",
+                    base.borrow().type_check(ctx.clone())?.t.borrow().str()
+                ))
+                .set_interval(self.position.clone()));
+            }
+            return Ok(CalleeTypeInfo {
+                fn_type: None,
+                calling_through_instance: false,
+                base_type: None,
+                unknowns,
+                dec_id,
+            });
+        }
+        let base_type = base_type.unwrap();
+
+        let method_type = base_type.method_type(&self.identifier.clone().literal.unwrap());
+        if method_type.is_none() {
+            if ctx.borrow().throw_on_unknowns() {
+                return Err(type_error(format!(
+                    "class '{}' does not have method '{}'",
+                    base_type.str(),
+                    self.identifier.clone().literal.unwrap(),
+                ))
+                .set_interval(self.position.clone()));
+            }
+            return Ok(CalleeTypeInfo {
+                fn_type: None,
+                calling_through_instance: false,
+                base_type: None,
+                unknowns,
+                dec_id,
+            });
+        }
+        match method_type.unwrap().borrow().deref() {
+            CallableType::GenericFn(_) => Err(type_error(format!(
+                "cannot call generic method '{}' directly",
+                self.identifier.clone().literal.unwrap()
+            ))
+            .set_interval(self.position.clone())),
+            CallableType::Fn(fn_type) => Ok(CalleeTypeInfo {
+                fn_type: Some(fn_type.clone()),
+                calling_through_instance,
+                base_type: Some(mut_rc(base_type.clone())),
+                unknowns,
+                dec_id,
+            }),
+        }
+    }
+
+    fn get_callee_type(&self, ctx: MutRc<dyn Context>) -> Result<CalleeTypeInfo, Error> {
+        if let Some(obj) = self.base.clone() {
+            return self.get_callee_type_on_base(ctx.clone(), obj);
         }
 
         // getting function type on normal function call
@@ -136,7 +206,7 @@ impl FnCallNode {
             .borrow_mut()
             .has_dec_with_id(&self.identifier.clone().literal.unwrap())
         {
-            return Ok(CalleeType {
+            return Ok(CalleeTypeInfo {
                 fn_type: None,
                 calling_through_instance: false,
                 base_type: None,
@@ -150,127 +220,61 @@ impl FnCallNode {
             .get_dec_from_id(&self.identifier.clone().literal.unwrap());
 
         let fn_type_option = fn_dec.type_.clone();
-        let fn_type_option = fn_type_option.borrow().as_fn();
-        if fn_type_option.is_none() {
+        let fn_type_as_fn = fn_type_option.borrow().as_fn();
+        if fn_type_as_fn.is_none() {
             return Err(unknown_symbol(format!(
                 "'{}' is not a function",
                 self.identifier.clone().literal.unwrap()
             ))
             .set_interval(self.identifier.interval()));
         }
-        return Ok(CalleeType {
-            fn_type: Some(fn_type_option.unwrap()),
+        Ok(CalleeTypeInfo {
+            fn_type: Some(fn_type_as_fn.unwrap()),
             calling_through_instance: false,
             base_type: None,
             unknowns: 0,
             dec_id: fn_dec.id,
-        });
+        })
     }
-}
 
-impl AstNode for FnCallNode {
-    fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
-        if let Some(obj) = self.object.clone() {
-            obj.borrow_mut().setup(ctx.clone())?;
+    pub fn definition_not_found(
+        &self,
+        ctx: MutRc<dyn Context>,
+        unknowns: usize,
+        base_type: Option<MutRc<dyn Type>>,
+    ) -> Result<TypeCheckRes, Error> {
+        if !ctx.borrow().throw_on_unknowns() {
+            return Ok(TypeCheckRes::unknown_and(unknowns));
         }
-        for arg in self.args.iter_mut() {
-            arg.borrow_mut().setup(ctx.clone())?;
-        }
-        Ok(())
+        Err(unknown_symbol(format!(
+            "can't find {} `{}`",
+            if base_type.is_some() {
+                format!("method on type `{}`", base_type.unwrap().borrow().str())
+            } else {
+                "function".to_string()
+            },
+            self.identifier.clone().literal.unwrap()
+        ))
+        .set_interval(self.identifier.interval()))
     }
-    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
+
+    pub fn type_check_with_concrete_callee_type(
+        &self,
+        ctx: MutRc<dyn Context>,
+        fn_type: FnType,
+        mut unknowns: usize,
+        base_type: Option<MutRc<dyn Type>>,
+    ) -> Result<TypeCheckRes, Error> {
         let mut args: Vec<FnParamType> = Vec::new();
 
-        let CalleeType {
-            fn_type,
-            calling_through_instance,
-            base_type,
-            mut unknowns,
-            ..
-        } = self.get_callee_type(ctx.clone())?;
-
-        if fn_type.is_none() {
-            if !ctx.borrow().throw_on_unknowns() {
-                return Ok(TypeCheckRes::unknown_and(unknowns));
-            }
-            return Err(unknown_symbol(format!(
-                "can't find {} `{}`",
-                if base_type.is_some() {
-                    format!("method on type `{}`", base_type.unwrap().borrow().str())
-                } else {
-                    "function".to_string()
-                },
-                self.identifier.clone().literal.unwrap()
-            ))
-            .set_interval(self.identifier.interval()));
-        }
-        let mut fn_type = fn_type.unwrap();
-
-        if self.generic_args.len() > fn_type.generic_params_order.len() {
-            return Err(type_error(format!(
-                "too many generic arguments for function `{}`",
-                fn_type.str()
-            ))
-            .set_interval(self.position.clone())
-            .hint(format!(
-                "function `{}` requires {} generic arguments",
-                fn_type.str(),
-                fn_type.generic_params_order.len()
-            )));
-        }
-
-        if self.generic_args.len() < fn_type.generic_params_order.len() {
-            return Err(type_error(format!(
-                "not enough generic arguments for function `{}`",
-                fn_type.str()
-            ))
-            .set_interval(self.position.clone())
-            .hint(format!(
-                "function `{}` requires {} generic arguments",
-                fn_type.str(),
-                fn_type.generic_params_order.len()
-            )));
-        }
-
-        let generics_ctx = Scope::new_local(ctx.clone());
-
-        let mut i = 0;
-        for arg in self.generic_args.clone() {
-            let arg_type_res = arg.borrow().type_check(ctx.clone())?;
-            unknowns += arg_type_res.unknowns;
-            let name = fn_type.generic_params_order[i].clone().literal.unwrap();
-            generics_ctx.borrow_mut().declare(
-                SymbolDec {
-                    name: name.clone(),
-                    id: name.clone(),
-                    is_constant: true,
-                    is_type: true,
-                    is_func: false,
-                    type_: arg_type_res.t,
-                    require_init: false,
-                    is_defined: true,
-                    is_param: true,
-                    position: arg.borrow().pos(),
-                },
-                arg.borrow().pos(),
-            )?;
-            i += 1;
-        }
-
-        if calling_through_instance {
+        if let Some(base) = base_type.clone() {
             args.push(FnParamType {
                 name: "self".to_string(),
-                type_: base_type.unwrap(),
+                type_: base,
                 default_value: None,
                 position: Position::unknown_interval(),
             });
         }
-
-        fn_type = fn_type
-            .concrete(generics_ctx.clone())?
-            .borrow()
-            .as_fn()
-            .unwrap();
 
         for arg in self.args.iter() {
             let TypeCheckRes {
@@ -314,6 +318,17 @@ impl AstNode for FnCallNode {
         }
 
         for i in 0..args.len() {
+            if fn_type.parameters[i].type_.borrow().as_generic().is_some() {
+                if ctx.borrow().throw_on_unknowns() {
+                    return Err(type_error(format!(
+                        "unknown parameter type for `{}`",
+                        fn_type.parameters[i].name
+                    ))
+                    .set_interval(fn_type.parameters[i].position.clone()));
+                } else {
+                    continue;
+                }
+            }
             if !fn_type.parameters[i]
                 .type_
                 .borrow()
@@ -330,7 +345,7 @@ impl AstNode for FnCallNode {
             }
         }
 
-        if fn_type.ret_type.borrow().is_unknown() {
+        if fn_type.return_type.borrow().is_unknown() {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(
                     unknown_symbol(format!("unknown return type for `{}`", fn_type.str()))
@@ -339,28 +354,22 @@ impl AstNode for FnCallNode {
             }
             unknowns += 1;
         }
-        Ok(TypeCheckRes::from(fn_type.ret_type.clone(), unknowns))
+        Ok(TypeCheckRes::from(fn_type.return_type.clone(), unknowns))
     }
 
-    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
-        let mut asm = format!("");
-
-        let CalleeType {
+    pub fn generate_asm_using_callee_type(
+        &self,
+        ctx: MutRc<dyn Context>,
+        info: CalleeTypeInfo,
+    ) -> Result<String, Error> {
+        let CalleeTypeInfo {
             fn_type,
             calling_through_instance,
             dec_id,
             ..
-        } = self.get_callee_type(ctx.clone())?;
-
-        // would require unresolved unknowns to be None
-        let fn_type = fn_type.expect(
-            format!(
-                "function not found: {:#?}\n\nctx:\n{}\n",
-                self,
-                ctx.borrow().str()
-            )
-            .as_str(),
-        );
+        } = info;
+        let fn_type = fn_type.unwrap();
+        let mut asm = "".to_string();
 
         let mut args = self.args.clone();
 
@@ -381,12 +390,14 @@ impl AstNode for FnCallNode {
             asm.push_str("\n");
         }
 
-        if let Some(obj) = self.object.clone() {
+        if let Some(obj) = self.base.clone() {
             asm.push_str(&obj.borrow_mut().asm(ctx.clone())?);
             asm.push_str("\n");
         }
 
-        let returns_void = get_type!(ctx, "Void").borrow().contains(fn_type.ret_type);
+        let returns_void = get_type!(ctx, "Void")
+            .borrow()
+            .contains(fn_type.return_type);
 
         asm.push_str(&format!(
             "
@@ -403,6 +414,46 @@ impl AstNode for FnCallNode {
         ));
 
         Ok(asm)
+    }
+}
+
+impl AstNode for FnCallNode {
+    fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
+        if let Some(obj) = self.base.clone() {
+            obj.borrow_mut().setup(ctx.clone())?;
+        }
+        for arg in self.args.iter_mut() {
+            arg.borrow_mut().setup(ctx.clone())?;
+        }
+        Ok(())
+    }
+    fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
+        let CalleeTypeInfo {
+            fn_type,
+            calling_through_instance,
+            base_type,
+            unknowns,
+            ..
+        } = self.get_callee_type(ctx.clone())?;
+
+        if fn_type.is_none() {
+            return self.definition_not_found(ctx.clone(), unknowns, base_type);
+        }
+        let fn_type = fn_type.unwrap();
+        self.type_check_with_concrete_callee_type(
+            ctx.clone(),
+            fn_type,
+            unknowns,
+            if calling_through_instance {
+                Some(base_type.unwrap())
+            } else {
+                None
+            },
+        )
+    }
+
+    fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
+        self.generate_asm_using_callee_type(ctx.clone(), self.get_callee_type(ctx.clone())?)
     }
 
     fn pos(&self) -> Interval {

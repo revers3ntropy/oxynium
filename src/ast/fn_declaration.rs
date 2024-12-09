@@ -58,7 +58,7 @@ impl FnDeclarationNode {
     fn get_generic_param_names(
         &self,
         ctx: MutRc<dyn Context>,
-        //      (list of tokens which are the generic parameters, unknowns)
+        //   -> (list of tokens which are the generic parameters, unknowns)
     ) -> Result<(Vec<Token>, usize), Error> {
         let mut generic_params = self.generic_parameters.clone();
 
@@ -349,7 +349,7 @@ impl AstNode for FnDeclarationNode {
             }
             // override with latest data
             this_type.borrow_mut().parameters = parameters;
-            this_type.borrow_mut().ret_type = ret_type.clone();
+            this_type.borrow_mut().return_type = ret_type.clone();
         } else {
             let mut generic_args = HashMap::new();
             for generic_param in generic_params.iter() {
@@ -364,10 +364,11 @@ impl AstNode for FnDeclarationNode {
             this_type = mut_rc(FnType {
                 id: ctx.borrow_mut().get_id(),
                 name: self.id(),
-                ret_type: ret_type.clone(),
+                return_type: ret_type.clone(),
                 parameters,
                 generic_args,
                 generic_params_order: generic_params.clone(),
+                parent_ctx: ctx.clone(),
             });
             // declare in the parent context
             ctx.borrow_mut().declare(
@@ -407,7 +408,7 @@ impl AstNode for FnDeclarationNode {
                             .set_interval(self.identifier.interval()),
                     );
                 }
-                this_type.borrow_mut().ret_type = body_ret_type.clone();
+                this_type.borrow_mut().return_type = body_ret_type.clone();
                 inferred_ret_type = body_ret_type.clone();
             }
 

@@ -129,6 +129,7 @@ impl AstNode for ClassDeclarationNode {
                 id: ctx.borrow_mut().get_id(),
                 generic_args,
                 generic_params_order: self.generic_parameters.clone(),
+                parent_ctx: ctx.clone(),
             });
         }
 

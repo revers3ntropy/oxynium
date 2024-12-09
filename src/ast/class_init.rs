@@ -221,17 +221,16 @@ impl AstNode for ClassInitNode {
 
         if fields.len() < 1 {
             return Ok(if is_primitive {
-                format!("\n push 0 \n")
+                "\n push 0 \n".to_string()
             } else {
-                format!(
-                    "
-                        mov rdi, 8
-                        mov rsi, 1
-                        call _LibC.calloc
-                        mov qword [rax], 0
-                        push rax
-                    "
-                )
+                "
+                    mov rdi, 8
+                    mov rsi, 1
+                    call _LibC.calloc
+                    mov qword [rax], 0
+                    push rax
+                "
+                .to_string()
             });
         }
 
@@ -255,9 +254,9 @@ impl AstNode for ClassInitNode {
         }
 
         if is_primitive {
-            asm.push_str(&format!("push qword [rax]\n"));
+            asm.push_str(&"push qword [rax]\n".to_string());
         } else {
-            asm.push_str(&format!("push rax\n"));
+            asm.push_str(&"push rax\n".to_string());
         }
 
         Ok(asm)

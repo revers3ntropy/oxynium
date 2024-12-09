@@ -1,12 +1,11 @@
 use crate::ast::{AstNode, TypeCheckRes};
-use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::position::Interval;
-use crate::symbols::SymbolDec;
 use crate::types::r#type::TypeType;
 use crate::types::Type;
 use crate::util::{mut_rc, MutRc};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct GenericTypeNode {
@@ -43,24 +42,24 @@ impl AstNode for GenericTypeNode {
 
         let mut is_type_type = false;
 
-        let mut class_type = raw_type.clone().borrow().as_class();
+        let mut class_type = raw_type.clone().borrow().as_generic_class();
         if class_type.is_none() {
             let type_type = raw_type.clone().borrow().as_type_type();
             if let Some(type_type) = type_type {
-                class_type = type_type.instance_type.borrow().as_class();
+                class_type = type_type.instance_type.borrow().as_generic_class();
                 is_type_type = true;
             }
         }
         if class_type.is_none() {
+            // TODO make error message better for when trying to give generic
+            //      arguments to non-generic class
             return Err(type_error(format!(
-                "expected class type, found `{}`",
+                "expected generic class, found `{}`",
                 self.base.borrow().type_check(ctx.clone())?.t.borrow().str()
             ))
             .set_interval(self.position.clone()));
         }
         let class_type = class_type.unwrap();
-
-        let generics_ctx = Scope::new_local(ctx.clone());
 
         if self.generic_args.len() != class_type.generic_params_order.len() {
             return Err(type_error(format!(
@@ -71,39 +70,19 @@ impl AstNode for GenericTypeNode {
             .set_interval(self.position.clone()));
         }
 
+        let mut generics = HashMap::new();
         let mut i = 0;
         for arg in self.generic_args.clone() {
             let arg_type_res = arg.borrow().type_check(ctx.clone())?;
             unknowns += arg_type_res.unknowns;
-            let name = class_type.generic_params_order[i].clone();
-            generics_ctx.borrow_mut().declare(
-                SymbolDec {
-                    name: name.clone().literal.unwrap(),
-                    id: name.clone().literal.unwrap(),
-                    is_constant: true,
-                    is_type: true,
-                    is_func: false,
-                    type_: arg_type_res.t,
-                    require_init: false,
-                    is_defined: true,
-                    is_param: true,
-                    position: arg.borrow().pos(),
-                },
-                arg.borrow().pos(),
-            )?;
+            let name = class_type.generic_params_order[i].clone().literal.unwrap();
+            generics.insert(name, arg_type_res.t.borrow().concrete(&HashMap::new())?);
             i += 1;
         }
 
-        generics_ctx.borrow_mut().set_parent(ctx.clone());
+        let res_type = mut_rc(class_type.concrete(&generics)?.borrow().as_class().unwrap());
 
-        let res_type = mut_rc(
-            class_type
-                .concrete(generics_ctx)?
-                .borrow()
-                .as_class()
-                .unwrap(),
-        );
-
+        // TODO what code generates these two cases? Surely the first is only ever reached...
         if is_type_type {
             // preserve wrapper
             Ok(TypeCheckRes::from(

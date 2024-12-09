@@ -55,7 +55,7 @@ impl AstNode for ForLoopNode {
             identifier: self.id_tok.clone(),
             // args.at_raw(i)
             value: mut_rc(FnCallNode {
-                object: Some(self.value.clone()),
+                base: Some(self.value.clone()),
                 identifier: Token::new_unknown_pos(
                     TokenType::Identifier,
                     Some("at_raw".to_string()),
@@ -63,7 +63,6 @@ impl AstNode for ForLoopNode {
                 args: vec![mut_rc(SymbolAccessNode {
                     identifier: self.counter_tok.clone(),
                 })],
-                generic_args: vec![],
                 position: Position::unknown_interval(),
             }),
             mutable: false,
@@ -114,13 +113,12 @@ impl AstNode for ForLoopNode {
                 }),
                 operator: Token::new_unknown_pos(TokenType::LT, None),
                 rhs: mut_rc(FnCallNode {
-                    object: Some(self.value.clone()),
+                    base: Some(self.value.clone()),
                     identifier: Token::new_unknown_pos(
                         TokenType::Identifier,
                         Some("len".to_string()),
                     ),
                     args: vec![],
-                    generic_args: vec![],
                     position: Position::unknown_interval(),
                 }),
             })),

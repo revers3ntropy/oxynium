@@ -43,49 +43,31 @@ pub struct ExecRootNode {
 impl ExecRootNode {
     fn get_main_fn_signatures(ctx: MutRc<dyn Context>) -> Result<(FnType, FnType), Error> {
         // construct 'main' function signature:
-        // `(fn main(args: List<Utf8Str>) Void) || (fn main() Void)`
-        let main_fn_arg_type = ctx.borrow().get_dec_from_id("List").type_;
-        let args_context = Scope::new_local(ctx.clone());
-        let utf8_str_type = ctx.borrow().get_dec_from_id("Utf8Str").type_;
-        args_context.borrow_mut().declare(
-            SymbolDec {
-                name: "T".to_string(),
-                id: "T".to_string(),
-                is_constant: true,
-                is_type: true,
-                is_func: false,
-                type_: utf8_str_type,
-                require_init: false,
-                is_defined: true,
-                is_param: true,
-                position: Position::unknown_interval(),
-            },
-            Position::unknown_interval(),
-        )?;
+        // `(fn main(args: List<Utf8Str>) Void) | (fn main() Void)`
+        let list_type = ctx.borrow().get_dec_from_id("List").type_;
+        let utf8str_type = ctx.borrow().get_dec_from_id("Utf8Str").type_;
+        let generics_for_list = HashMap::from([("T".to_string(), utf8str_type.clone())]);
+        let concrete_list_type = list_type.borrow().concrete(&generics_for_list)?;
 
         let main_id = ctx.borrow_mut().get_id();
         let main_ret_type = ctx.borrow().get_dec_from_id("Void").type_;
         let main_signature = FnType {
             id: main_id,
             name: "main".to_string(),
-            ret_type: main_ret_type.clone(),
+            return_type: main_ret_type.clone(),
             parameters: vec![FnParamType {
                 name: "args".to_string(),
-                type_: main_fn_arg_type.borrow().concrete(args_context)?,
+                type_: concrete_list_type,
                 default_value: None,
                 position: Position::unknown_interval(),
             }],
-            generic_args: HashMap::new(),
-            generic_params_order: vec![],
         };
 
         let argless_main_signature = FnType {
             id: main_id,
             name: "main".to_string(),
-            ret_type: main_ret_type,
+            return_type: main_ret_type,
             parameters: vec![],
-            generic_args: HashMap::new(),
-            generic_params_order: vec![],
         };
 
         Ok((main_signature, argless_main_signature))
