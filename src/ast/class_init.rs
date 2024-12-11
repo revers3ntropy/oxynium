@@ -1,10 +1,8 @@
 use crate::ast::{AstNode, TypeCheckRes};
-use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
-use crate::symbols::SymbolDec;
 use crate::types::Type;
 use crate::util::{intersection, mut_rc, MutRc};
 use std::collections::HashMap;
@@ -86,8 +84,6 @@ impl AstNode for ClassInitNode {
         }
         let mut class_type = class_type.unwrap();
 
-        let generics_ctx = Scope::new_local(ctx.clone());
-
         if self.generic_args.len() != class_type.generic_params_order.len() {
             return Err(type_error(format!(
                 "class `{}` takes {} generic arguments, but {} were given",
@@ -98,33 +94,21 @@ impl AstNode for ClassInitNode {
             .set_interval(self.identifier.interval()));
         }
 
+        let mut generics = HashMap::new();
         let mut i = 0;
         for arg in self.generic_args.clone() {
             let arg_type_res = arg.borrow().type_check(ctx.clone())?;
             unknowns += arg_type_res.unknowns;
             let name = class_type.generic_params_order[i].clone();
-            generics_ctx.borrow_mut().declare(
-                SymbolDec {
-                    name: name.clone().literal.unwrap(),
-                    id: name.clone().literal.unwrap(),
-                    is_constant: true,
-                    is_type: true,
-                    is_func: false,
-                    type_: arg_type_res.t,
-                    require_init: false,
-                    is_defined: true,
-                    is_param: true,
-                    position: arg.borrow().pos(),
-                },
-                arg.borrow().pos(),
-            )?;
+            generics.insert(name.literal.unwrap().clone(), arg_type_res.t);
             i += 1;
         }
 
-        generics_ctx.borrow_mut().set_parent(ctx.clone());
+        class_type = class_type.clone();
+        class_type.generic_args = generics.clone();
 
         class_type = class_type
-            .concrete(generics_ctx.clone())?
+            .concrete(&HashMap::new(), &mut HashMap::new())?
             .borrow()
             .as_class()
             .unwrap();

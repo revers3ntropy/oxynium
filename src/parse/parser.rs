@@ -480,12 +480,14 @@ impl Parser {
         }
         if self.current_matches(TokenType::Identifier, Some("def".to_string())) {
             self.advance(&mut res);
-            res.node = res.register(self.function_declaration(false, false, false, None));
+            res.node =
+                res.register(self.function_declaration(false, false, false, None, Vec::new()));
             return res;
         }
         if self.current_matches(TokenType::Identifier, Some("fn".to_string())) {
             self.advance(&mut res);
-            res.node = res.register(self.function_declaration(false, false, true, None));
+            res.node =
+                res.register(self.function_declaration(false, false, true, None, Vec::new()));
             return res;
         }
         if self.current_matches(TokenType::Identifier, Some("class".to_string())) {
@@ -522,7 +524,8 @@ impl Parser {
 
         if self.current_matches(TokenType::Identifier, Some("def".to_string())) {
             self.advance(&mut res);
-            res.node = res.register(self.function_declaration(is_extern, true, false, None));
+            res.node =
+                res.register(self.function_declaration(is_extern, true, false, None, Vec::new()));
         } else if self.current_matches(TokenType::Identifier, Some("class".to_string())) {
             self.advance(&mut res);
             res.node = res.register(self.class_declaration(false, true));
@@ -550,7 +553,8 @@ impl Parser {
 
         if self.current_matches(TokenType::Identifier, Some("def".to_string())) {
             self.advance(&mut res);
-            res.node = res.register(self.function_declaration(true, false, false, None));
+            res.node =
+                res.register(self.function_declaration(true, false, false, None, Vec::new()));
         } else if self.current_matches(TokenType::Identifier, Some("const".to_string())) {
             self.advance(&mut res);
             res.node = res.register(self.global_const_decl(true, false));
@@ -1114,11 +1118,23 @@ impl Parser {
             TokenType::Identifier => {
                 self.advance(&mut res);
                 if tok.clone().literal.unwrap() == "def" {
-                    res.node = res.register(self.function_declaration(false, false, false, None));
+                    res.node = res.register(self.function_declaration(
+                        false,
+                        false,
+                        false,
+                        None,
+                        Vec::new(),
+                    ));
                     return res;
                 }
                 if tok.clone().literal.unwrap() == "fn" {
-                    res.node = res.register(self.function_declaration(false, false, true, None));
+                    res.node = res.register(self.function_declaration(
+                        false,
+                        false,
+                        true,
+                        None,
+                        Vec::new(),
+                    ));
                     return res;
                 }
                 if tok.clone().literal.unwrap() == "new" {
@@ -1760,6 +1776,8 @@ impl Parser {
         is_exported: bool,
         is_anon: bool,
         mut class_name: Option<String>,
+        // empty if not a method
+        mut class_generic_parameters: Vec<Token>,
     ) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
@@ -1787,10 +1805,10 @@ impl Parser {
             return res;
         }
 
-        if self.next_matches(TokenType::Dot, None) {
+        if self.next_matches(TokenType::Dot, None) || self.next_matches(TokenType::Not, None) {
             if class_name.is_some() {
                 res.failure(
-                    syntax_error("Unexpected `.`".to_owned()),
+                    syntax_error("unexpected token".to_owned()),
                     Some(self.last_tok().unwrap().end.clone().advance(None)),
                     None,
                 );
@@ -1798,9 +1816,21 @@ impl Parser {
             }
             class_name = Some(self.current_tok().unwrap().literal.clone().unwrap());
             self.advance(&mut res);
-            self.advance(&mut res);
             ret_on_err!(res);
             is_external_method = true;
+
+            // parse generic parameters for class, so that we know what generic parameters the type
+            // of the 'self' parameter should have
+            if self.current_matches(TokenType::Not, None) {
+                consume!(Not, self, res);
+                consume!(LT, self, res);
+                let generic_parameters_option = res.register_result(self.generic_parameters());
+                ret_on_err!(res);
+                class_generic_parameters = generic_parameters_option.unwrap();
+                consume!(GT, self, res);
+            }
+
+            consume!(Dot, self, res);
         }
 
         let identifier: Token;
@@ -1836,7 +1866,8 @@ impl Parser {
                     syntax_error(format!(
                         "`{}` is not a valid function name",
                         self.current_tok().unwrap().str()
-                    )),
+                    ))
+                    .hint("overloadable operators cannot be top-level functions".to_string()),
                     Some(self.last_tok().unwrap().start.clone()),
                     Some(self.last_tok().unwrap().end.clone()),
                 );
@@ -1858,11 +1889,11 @@ impl Parser {
             consume!(GT, self, res);
         }
 
-        consume!(OpenParen, self, res);
+        consume!(open_paren = OpenParen, self, res);
 
         let mut other_params = true;
 
-        let mut self_param_interval = Position::unknown_interval();
+        let mut self_param_interval = open_paren.interval();
 
         let mut is_static_method = false;
         if class_name.is_some() {
@@ -1877,10 +1908,9 @@ impl Parser {
                     // catch what might be a common mistake
                     if self.current_matches(TokenType::Colon, None) {
                         res.failure(
-                            syntax_error(format!(
-                                "cannot give type annotation to parameter `self` on method '{}'",
-                                identifier.str()
-                            )),
+                            syntax_error(
+                                "cannot give type annotation to parameter `self`".to_string(),
+                            ),
                             Some(self.last_tok().unwrap().start),
                             Some(self.current_tok().unwrap().end),
                         );
@@ -1889,6 +1919,14 @@ impl Parser {
                 }
             } else {
                 is_static_method = true;
+                if generic_parameters.len() > 0 {
+                    res.failure(
+                        syntax_error("static methods cannot have generic parameters".to_string()),
+                        Some(self.last_tok().unwrap().start),
+                        Some(self.last_tok().unwrap().end),
+                    );
+                    return res;
+                }
             }
         }
         let mut params = Ok(vec![]);
@@ -1903,19 +1941,44 @@ impl Parser {
         let mut params = params.unwrap();
 
         if class_name.is_some() && !is_static_method {
-            // insert 'self' parameter separately as it's type is not given
-            params.insert(
-                0,
-                Parameter {
-                    identifier: "self".to_owned(),
-                    type_: Some(mut_rc(TypeNode {
+            let type_of_self: MutRc<dyn AstNode>;
+            if generic_parameters.len() > 0 {
+                type_of_self = mut_rc(GenericTypeNode {
+                    base: mut_rc(TypeNode {
                         identifier: Token {
                             token_type: TokenType::Identifier,
                             literal: Some(class_name.clone().unwrap()),
                             start: self_param_interval.0.clone(),
                             end: self_param_interval.1.clone(),
                         },
-                    })),
+                    }),
+                    generic_args: class_generic_parameters
+                        .clone()
+                        .iter()
+                        .map(|x| -> MutRc<dyn AstNode> {
+                            mut_rc(TypeNode {
+                                identifier: x.clone(),
+                            })
+                        })
+                        .collect(),
+                    position: (self_param_interval.0.clone(), self_param_interval.1.clone()),
+                });
+            } else {
+                type_of_self = mut_rc(TypeNode {
+                    identifier: Token {
+                        token_type: TokenType::Identifier,
+                        literal: Some(class_name.clone().unwrap()),
+                        start: self_param_interval.0.clone(),
+                        end: self_param_interval.1.clone(),
+                    },
+                });
+            }
+            // insert 'self' parameter separately as it's type is not given
+            params.insert(
+                0,
+                Parameter {
+                    identifier: "self".to_owned(),
+                    type_: Some(type_of_self),
                     default_value: None,
                     position: self_param_interval,
                 },
@@ -1935,7 +1998,7 @@ impl Parser {
         let mut has_empty_return_type = true;
 
         // needs updating when the possible values after a return type
-        // change. For now:
+        // change - for now:
         // - EOF for, well, EOF
         // - Comma for undefined method
         // - EndStatement for undefined function
@@ -2139,6 +2202,7 @@ impl Parser {
                     false,
                     false,
                     Some(identifier.clone()),
+                    generic_parameters.clone(),
                 ));
                 ret_on_err!(res);
 
@@ -2169,6 +2233,7 @@ impl Parser {
                     false,
                     false,
                     Some(identifier.clone()),
+                    generic_parameters.clone(),
                 ));
                 ret_on_err!(res);
 

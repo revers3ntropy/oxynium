@@ -1,4 +1,3 @@
-use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::Token;
 use crate::types::function::FnType;
@@ -6,6 +5,7 @@ use crate::types::generic::GenericType;
 use crate::types::r#class::ClassType;
 use crate::types::r#type::TypeType;
 use crate::util::MutRc;
+use std::collections::HashMap;
 use std::fmt::Debug;
 
 pub mod r#class;
@@ -22,8 +22,12 @@ pub trait Type: Debug {
         None
     }
     fn contains(&self, other: MutRc<dyn Type>) -> bool;
-    fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error>;
-    fn cache_id(&self, ctx: MutRc<dyn Context>) -> String;
+    fn concrete(
+        &self,
+        generics: &HashMap<String, MutRc<dyn Type>>,
+        concrete_cache: &mut HashMap<String, MutRc<dyn Type>>,
+    ) -> Result<MutRc<dyn Type>, Error>;
+    fn cache_id(&self, generics: &HashMap<String, MutRc<dyn Type>>) -> String;
 
     fn as_fn(&self) -> Option<FnType> {
         None

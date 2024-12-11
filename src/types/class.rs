@@ -1,12 +1,10 @@
 use crate::ast::class_declaration::{method_id, operator_method_id};
-use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::Token;
 use crate::types::function::FnType;
 use crate::types::Type;
 use crate::util::{mut_rc, MutRc};
 use std::collections::HashMap;
-use std::ops::Deref;
 
 #[derive(Clone, Debug)]
 pub struct ClassFieldType {
@@ -100,12 +98,23 @@ impl Type for ClassType {
         }
     }
 
-    fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
-        if let Some(cached) = ctx
-            .borrow()
-            .concrete_type_cache_get(self.cache_id(ctx.clone()))
-        {
-            return Ok(cached);
+    fn concrete(
+        &self,
+        generics: &HashMap<String, MutRc<dyn Type>>,
+        cache: &mut HashMap<String, MutRc<dyn Type>>,
+    ) -> Result<MutRc<dyn Type>, Error> {
+        let mut our_generics = generics.clone();
+        for p in self.generic_params_order.iter() {
+            let concrete_argument = self
+                .generic_args
+                .get(&p.clone().literal.unwrap())
+                .unwrap()
+                .borrow()
+                .concrete(generics, cache)?;
+            our_generics.insert(p.clone().literal.unwrap(), concrete_argument);
+        }
+        if let Some(cached) = cache.get(&self.cache_id(&our_generics)) {
+            return Ok(cached.clone());
         }
 
         if self.generic_params_order.len() < 1 {
@@ -123,9 +132,8 @@ impl Type for ClassType {
         });
 
         // outside of the loop to avoid borrowing issues
-        let cache_id = self.cache_id(ctx.clone());
-        ctx.borrow_mut()
-            .concrete_type_cache_set(cache_id, res.clone());
+        let cache_id = self.cache_id(&our_generics);
+        cache.insert(cache_id, res.clone());
 
         for p in self.generic_params_order.iter() {
             res.borrow_mut().generic_args.insert(
@@ -134,7 +142,7 @@ impl Type for ClassType {
                     .get(&p.clone().literal.unwrap())
                     .unwrap()
                     .borrow()
-                    .concrete(ctx.clone())?,
+                    .concrete(&our_generics, cache)?,
             );
         }
 
@@ -143,7 +151,7 @@ impl Type for ClassType {
                 field.name.clone(),
                 ClassFieldType {
                     name: field.name.clone(),
-                    type_: field.type_.borrow().concrete(ctx.clone())?,
+                    type_: field.type_.borrow().concrete(&our_generics, cache)?,
                     stack_offset: field.stack_offset,
                 },
             );
@@ -158,7 +166,7 @@ impl Type for ClassType {
 
             let new_method_type = method
                 .borrow()
-                .concrete(ctx.clone())?
+                .concrete(&our_generics, cache)?
                 .borrow()
                 .as_fn()
                 .unwrap();
@@ -168,48 +176,33 @@ impl Type for ClassType {
                 .insert(name.clone(), mut_rc(new_method_type));
         }
 
-        let cache_id = self.cache_id(ctx.clone());
-        ctx.borrow_mut().concrete_type_cache_remove(&cache_id);
+        cache.remove(&self.cache_id(&our_generics));
 
         Ok(res)
     }
 
-    fn cache_id(&self, ctx: MutRc<dyn Context>) -> String {
+    fn cache_id(&self, generics: &HashMap<String, MutRc<dyn Type>>) -> String {
         if self.generic_params_order.len() < 1 {
             return self.id.to_string();
         }
         format!(
             "{}<{}>",
             self.id,
-            self.generic_args
+            self.generic_params_order
                 .iter()
-                .map(|(k, value)| {
-                    if value.borrow().as_generic().is_none() {
-                        return value.borrow().cache_id(ctx.clone());
-                    }
-                    if !ctx.borrow().has_dec_with_id(k) {
-                        return format!("{}:{}", k, k);
-                    }
-                    if format!("{:p}", self)
-                        == format!(
-                            "{:p}",
-                            ctx.borrow().get_dec_from_id(&k).type_.borrow().deref()
-                        )
-                    {
-                        unreachable!()
-                    }
+                .map(|p| {
                     format!(
                         "{}:{}",
-                        k,
-                        ctx.borrow()
-                            .get_dec_from_id(&k)
-                            .type_
+                        p.clone().literal.unwrap(),
+                        self.generic_args
+                            .get(&p.clone().literal.unwrap())
+                            .unwrap()
                             .borrow()
-                            .cache_id(ctx.clone())
+                            .cache_id(generics)
                     )
                 })
                 .collect::<Vec<String>>()
-                .join(",")
+                .join(", ")
         )
     }
 

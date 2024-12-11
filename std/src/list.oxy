@@ -1,4 +1,4 @@
-def List.empty <E> () -> new List<E> {
+def List!<T>.empty <E> () -> new List<E> {
 	// dangerously use NULL as a pointer to the head of the list,
 	// must make sure to check the length of the array before
 	// accessing any elements
@@ -8,7 +8,7 @@ def List.empty <E> () -> new List<E> {
     capacity: 0
 }
 
-def List.with_capacity <E> (capacity: Int) -> new List<E> {
+def List!<T>.with_capacity <E> (capacity: Int) -> new List<E> {
 	head: #unchecked_cast(Ptr<E>, LibC.calloc(capacity, 8)),
 	length: 0,
 	capacity: capacity
@@ -16,9 +16,9 @@ def List.with_capacity <E> (capacity: Int) -> new List<E> {
 
 // only exists so we conform by the Iterable 'interface'
 // which internally requires 'len' and 'at_raw' methods
-def List.len (self) Int -> self.length
+def List!<T>.len (self) Int -> self.length
 
-def List.at (self, i: Int) Option<T> {
+def List!<T>.at (self, i: Int) Option<T> {
 	if self.length == 0 ->
 		return Option.none!<T>()
 
@@ -31,7 +31,7 @@ def List.at (self, i: Int) Option<T> {
 	return Option.some!<T>(self.at_raw(i))
 }
 
-def List.at_raw (self, i: Int) T {
+def List!<T>.at_raw (self, i: Int) T {
 	return #asm T "
 		mov rax, qword [rbp + 16]       ; rax = self
 		mov rax, qword [rax]            ; rax = self.head
@@ -41,7 +41,7 @@ def List.at_raw (self, i: Int) T {
 	"
 }
 
-def List.next_capacity (self) Int {
+def List!<T>.next_capacity (self) Int {
 	// if the list is empty, return a default capacity
 	if self.capacity == 0 ->
 		return 64
@@ -59,7 +59,7 @@ def List.next_capacity (self) Int {
 	return self.capacity * 2
 }
 
-def List.push (self, value: T) {
+def List!<T>.push (self, value: T) {
 	if self.capacity < (self.length + 1) * 8 ->
 		self.reallocate(self.next_capacity())
 	#asm Void "
@@ -72,13 +72,13 @@ def List.push (self, value: T) {
 		.unwrap()
 }
 
-def List.Str (self) ->
+def List!<T>.Str (self) ->
 	// TODO format the array nicely;
 	//      although does this require more information
 	//      about the type of the elements?
 	"List[" + self.length.Str() + "]"
 
-def List.set_at (self, idx: Int, val: T) Result<Void, Str> {
+def List!<T>.set_at (self, idx: Int, val: T) Result<Void, Str> {
 	if self.length == 0 ->
 		return Result.err!<Void, Str>("Index out of bounds")
 
@@ -103,7 +103,7 @@ def List.set_at (self, idx: Int, val: T) Result<Void, Str> {
 	return Result.ok!<Void, Str>(#unchecked_cast(Void, 0))
 }
 
-def List.map <To> (self, f: Fn (T, Int) To) List<To> {
+def List!<T>.map <To> (self, f: Fn (T, Int) To) List<To> {
 	let new_list = List.empty!<To>()
 	for item, i in self {
 		new_list.push(f(item, i))
@@ -111,7 +111,7 @@ def List.map <To> (self, f: Fn (T, Int) To) List<To> {
 	return new_list
 }
 
-def List.reallocate (self, new_capacity: Int) {
+def List!<T>.reallocate (self, new_capacity: Int) {
 	if new_capacity < self.length * 8 ->
 		panic("cannot reallocate List to have fewer elements than it currently has")
 	let new_head = LibC.calloc!<T>(new_capacity, 8)
@@ -126,7 +126,7 @@ def List.reallocate (self, new_capacity: Int) {
 	"
 }
 
-def List.clone (self) List<T> {
+def List!<T>.clone (self) List<T> {
 	let new_list = List.with_capacity!<T>(self.capacity)
 	for item in self {
 		new_list.push(item)
@@ -134,7 +134,7 @@ def List.clone (self) List<T> {
 	return new_list
 }
 
-def List.concat (self, other: List<T>) List<T> {
+def List!<T>.concat (self, other: List<T>) List<T> {
 	let new_list = self.clone()
 	new_list.reallocate(self.length * 8 + other.length * 8)
 	for item in other {
@@ -143,7 +143,7 @@ def List.concat (self, other: List<T>) List<T> {
 	return new_list
 }
 
-def List.sort (self, f: Fn (T, T) Int) List<T> {
+def List!<T>.sort (self, f: Fn (T, T) Int) List<T> {
 	// quicksort
 	if self.len() <= 1 -> return self.clone()
 

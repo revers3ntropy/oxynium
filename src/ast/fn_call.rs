@@ -1,16 +1,15 @@
 use crate::ast::class_declaration::method_id;
 use crate::ast::{AstNode, TypeCheckRes};
-use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::{type_error, unknown_symbol, Error};
 use crate::get_type;
 use crate::parse::token::Token;
-use crate::position::{Interval, Position};
-use crate::symbols::SymbolDec;
+use crate::position::Interval;
 use crate::types::function::{FnParamType, FnType};
 use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{mut_rc, MutRc};
+use std::collections::HashMap;
 
 struct CalleeType {
     fn_type: Option<FnType>,
@@ -204,7 +203,7 @@ impl AstNode for FnCallNode {
             ))
             .set_interval(self.identifier.interval()));
         }
-        let mut fn_type = fn_type.unwrap();
+        let fn_type = fn_type.unwrap();
 
         if self.generic_args.len() > fn_type.generic_params_order.len() {
             return Err(type_error(format!(
@@ -232,42 +231,30 @@ impl AstNode for FnCallNode {
             )));
         }
 
-        let generics_ctx = Scope::new_local(ctx.clone());
+        if calling_through_instance {
+            args.push(FnParamType {
+                name: "self".to_string(),
+                type_: base_type.unwrap(),
+                default_value: None,
+                position: self.identifier.interval(),
+            });
+        }
+
+        let mut generics = HashMap::new();
 
         let mut i = 0;
         for arg in self.generic_args.clone() {
             let arg_type_res = arg.borrow().type_check(ctx.clone())?;
             unknowns += arg_type_res.unknowns;
             let name = fn_type.generic_params_order[i].clone().literal.unwrap();
-            generics_ctx.borrow_mut().declare(
-                SymbolDec {
-                    name: name.clone(),
-                    id: name.clone(),
-                    is_constant: true,
-                    is_type: true,
-                    is_func: false,
-                    type_: arg_type_res.t,
-                    require_init: false,
-                    is_defined: true,
-                    is_param: true,
-                    position: arg.borrow().pos(),
-                },
-                arg.borrow().pos(),
-            )?;
+            generics.insert(name, arg_type_res.t);
             i += 1;
         }
 
-        if calling_through_instance {
-            args.push(FnParamType {
-                name: "self".to_string(),
-                type_: base_type.unwrap(),
-                default_value: None,
-                position: Position::unknown_interval(),
-            });
-        }
-
+        let mut fn_type = fn_type.clone();
+        fn_type.generic_args = generics;
         fn_type = fn_type
-            .concrete(generics_ctx.clone())?
+            .concrete(&HashMap::new(), &mut HashMap::new())?
             .borrow()
             .as_fn()
             .unwrap();

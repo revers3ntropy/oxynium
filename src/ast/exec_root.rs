@@ -2,11 +2,9 @@ use crate::args::ExecMode;
 use crate::ast::STD_DATA_ASM;
 use crate::ast::{std_asm, AstNode, TypeCheckRes};
 use crate::backend::main_fn_id;
-use crate::context::scope::Scope;
 use crate::context::Context;
 use crate::error::{syntax_error, type_error, Error};
 use crate::position::{Interval, Position};
-use crate::symbols::SymbolDec;
 use crate::types::function::{FnParamType, FnType};
 use crate::types::Type;
 use crate::util::MutRc;
@@ -41,37 +39,25 @@ pub struct ExecRootNode {
 }
 
 impl ExecRootNode {
-    fn get_main_fn_signatures(ctx: MutRc<dyn Context>) -> Result<(FnType, FnType), Error> {
+    fn main_fn_signature_with_args(ctx: MutRc<dyn Context>) -> Result<FnType, Error> {
         // construct 'main' function signature:
-        // `(fn main(args: List<Utf8Str>) Void) || (fn main() Void)`
-        let main_fn_arg_type = ctx.borrow().get_dec_from_id("List").type_;
-        let args_context = Scope::new_local(ctx.clone());
-        let utf8_str_type = ctx.borrow().get_dec_from_id("Utf8Str").type_;
-        args_context.borrow_mut().declare(
-            SymbolDec {
-                name: "T".to_string(),
-                id: "T".to_string(),
-                is_constant: true,
-                is_type: true,
-                is_func: false,
-                type_: utf8_str_type,
-                require_init: false,
-                is_defined: true,
-                is_param: true,
-                position: Position::unknown_interval(),
-            },
-            Position::unknown_interval(),
-        )?;
+        // `(fn main(args: List<Utf8Str>) Void) | (fn main() Void)`
+        let list_type = ctx.borrow().get_dec_from_id("List").type_;
+        let utf8str_type = ctx.borrow().get_dec_from_id("Utf8Str").type_;
+        let generics_for_list = HashMap::from([("T".to_string(), utf8str_type.clone())]);
+        let list_of_utf8str_type = list_type
+            .borrow()
+            .concrete(&generics_for_list, &mut HashMap::new())?;
 
         let main_id = ctx.borrow_mut().get_id();
-        let main_ret_type = ctx.borrow().get_dec_from_id("Void").type_;
+        let void_type = ctx.borrow().get_dec_from_id("Void").type_;
         let main_signature = FnType {
             id: main_id,
             name: "main".to_string(),
-            ret_type: main_ret_type.clone(),
+            ret_type: void_type.clone(),
             parameters: vec![FnParamType {
                 name: "args".to_string(),
-                type_: main_fn_arg_type.borrow().concrete(args_context)?,
+                type_: list_of_utf8str_type,
                 default_value: None,
                 position: Position::unknown_interval(),
             }],
@@ -79,16 +65,21 @@ impl ExecRootNode {
             generic_params_order: vec![],
         };
 
-        let argless_main_signature = FnType {
+        Ok(main_signature)
+    }
+
+    fn main_function_signature_without_args(ctx: MutRc<dyn Context>) -> Result<FnType, Error> {
+        let main_id = ctx.borrow_mut().get_id();
+        let void_type = ctx.borrow().get_dec_from_id("Void").type_;
+
+        Ok(FnType {
             id: main_id,
             name: "main".to_string(),
-            ret_type: main_ret_type,
+            ret_type: void_type,
             parameters: vec![],
             generic_args: HashMap::new(),
             generic_params_order: vec![],
-        };
-
-        Ok((main_signature, argless_main_signature))
+        })
     }
 }
 
@@ -192,18 +183,22 @@ impl AstNode for ExecRootNode {
 
             let main_decl = ctx.borrow().get_dec_from_id("main");
             let main_type = main_decl.type_.clone();
-            let (main_signature, argless_main_signature) =
-                ExecRootNode::get_main_fn_signatures(ctx.clone())?;
 
-            if main_signature.contains(main_type.clone()) {
-                // OPTIMISATION: only set up args array if the main function takes args
-                // as a parameter
-                res = format!("{ASM_TO_GENERATE_ARGS_LIST_FOR_MAIN_FN}\n{res}");
-            } else if !argless_main_signature.contains(main_type) {
-                return Err(type_error(format!(
-                    "`main` function must have type `Fn (args: List<Utf8Str>) Void`"
-                ))
-                .set_interval(main_decl.position.clone()));
+            if !ExecRootNode::main_function_signature_without_args(ctx.clone())?
+                .contains(main_type.clone())
+            {
+                if ExecRootNode::main_fn_signature_with_args(ctx.clone())?
+                    .contains(main_type.clone())
+                {
+                    // OPTIMISATION: only set up args array if the main function takes args
+                    // as a parameter
+                    res = format!("{ASM_TO_GENERATE_ARGS_LIST_FOR_MAIN_FN}\n{res}");
+                } else {
+                    return Err(type_error(format!(
+                        "`main` function must have type `Fn (args: List<Utf8Str>) Void`"
+                    ))
+                    .set_interval(main_decl.position.clone()));
+                }
             }
         }
 

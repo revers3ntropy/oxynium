@@ -1,7 +1,7 @@
-use crate::context::Context;
 use crate::error::Error;
 use crate::types::Type;
 use crate::util::{mut_rc, MutRc};
+use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Clone)]
@@ -26,12 +26,16 @@ impl Type for UnknownType {
         true
     }
 
-    fn concrete(&self, _ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
+    fn concrete(
+        &self,
+        _generics: &HashMap<String, MutRc<dyn Type>>,
+        _cache: &mut HashMap<String, MutRc<dyn Type>>,
+    ) -> Result<MutRc<dyn Type>, Error> {
         Ok(mut_rc(self.clone()))
     }
 
-    fn cache_id(&self, _ctx: MutRc<dyn Context>) -> String {
-        format!("?")
+    fn cache_id(&self, _generics: &HashMap<String, MutRc<dyn Type>>) -> String {
+        "?".to_string()
     }
 
     fn is_unknown(&self) -> bool {

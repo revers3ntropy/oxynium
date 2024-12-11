@@ -1,5 +1,4 @@
 use crate::ast::AstNode;
-use crate::context::Context;
 use crate::error::Error;
 use crate::parse::token::Token;
 use crate::position::Interval;
@@ -112,12 +111,20 @@ impl Type for FnType {
         false
     }
 
-    fn concrete(&self, ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Type>, Error> {
-        if let Some(cached) = ctx
-            .borrow()
-            .concrete_type_cache_get(self.cache_id(ctx.clone()))
-        {
-            return Ok(cached);
+    fn concrete(
+        &self,
+        generics: &HashMap<String, MutRc<dyn Type>>,
+        cache: &mut HashMap<String, MutRc<dyn Type>>,
+    ) -> Result<MutRc<dyn Type>, Error> {
+        let mut our_generics = generics.clone();
+        for p in self.generic_params_order.iter() {
+            let concrete_argument = self
+                .generic_args
+                .get(&p.clone().literal.unwrap())
+                .unwrap()
+                .borrow()
+                .concrete(generics, cache)?;
+            our_generics.insert(p.clone().literal.unwrap(), concrete_argument);
         }
 
         let res = mut_rc(FnType {
@@ -129,11 +136,6 @@ impl Type for FnType {
             generic_params_order: self.generic_params_order.clone(),
         });
 
-        // outside of the loop to avoid borrowing issues
-        let cache_id = self.cache_id(ctx.clone());
-        ctx.borrow_mut()
-            .concrete_type_cache_set(cache_id, res.clone());
-
         for p in self.generic_params_order.iter() {
             res.borrow_mut().generic_args.insert(
                 p.clone().literal.unwrap(),
@@ -141,12 +143,12 @@ impl Type for FnType {
                     .get(&p.clone().literal.unwrap())
                     .unwrap()
                     .borrow()
-                    .concrete(ctx.clone())?,
+                    .concrete(&our_generics, cache)?,
             );
         }
 
         for param in &self.parameters {
-            let type_ = param.type_.borrow().concrete(ctx.clone())?;
+            let type_ = param.type_.borrow().concrete(&our_generics, cache)?;
             res.borrow_mut().parameters.push(FnParamType {
                 name: param.name.clone(),
                 type_,
@@ -155,44 +157,34 @@ impl Type for FnType {
             });
         }
 
-        let return_type = self.ret_type.borrow().concrete(ctx.clone())?;
+        let return_type = self.ret_type.borrow().concrete(&our_generics, cache)?;
         res.borrow_mut().ret_type = return_type;
-
-        let cache_id = self.cache_id(ctx.clone());
-        ctx.borrow_mut().concrete_type_cache_remove(&cache_id);
 
         Ok(res)
     }
 
-    fn cache_id(&self, ctx: MutRc<dyn Context>) -> String {
+    fn cache_id(&self, generics: &HashMap<String, MutRc<dyn Type>>) -> String {
         if self.generic_params_order.len() < 1 {
             return format!("({})", self.str());
         }
         format!(
             "({}<{}>)",
             self.id,
-            self.generic_args
+            self.generic_params_order
                 .iter()
-                .map(|(k, value)| {
-                    if value.borrow().as_generic().is_some() {
-                        if !ctx.borrow().has_dec_with_id(k) {
-                            return "?".to_string();
-                        }
-                        format!(
-                            "{}:{}",
-                            k,
-                            ctx.borrow()
-                                .get_dec_from_id(&k)
-                                .type_
-                                .borrow()
-                                .cache_id(ctx.clone())
-                        )
-                    } else {
-                        value.borrow().cache_id(ctx.clone())
-                    }
+                .map(|p| {
+                    format!(
+                        "{}:{}",
+                        p.clone().literal.unwrap(),
+                        self.generic_args
+                            .get(&p.clone().literal.unwrap())
+                            .unwrap()
+                            .borrow()
+                            .cache_id(generics)
+                    )
                 })
                 .collect::<Vec<String>>()
-                .join(",")
+                .join(", ")
         )
     }
 
