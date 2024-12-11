@@ -1919,14 +1919,6 @@ impl Parser {
                 }
             } else {
                 is_static_method = true;
-                if generic_parameters.len() > 0 {
-                    res.failure(
-                        syntax_error("static methods cannot have generic parameters".to_string()),
-                        Some(self.last_tok().unwrap().start),
-                        Some(self.last_tok().unwrap().end),
-                    );
-                    return res;
-                }
             }
         }
         let mut params = Ok(vec![]);
