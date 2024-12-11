@@ -163,3 +163,85 @@ expect_err 'TypeError' '
     }
     print(new C<Int>.a!<Str>(1).Str());
 '
+
+
+describe 'Generic Method edge cases'
+
+expect '1 hi' '
+    class C {
+        def a <T> (self, t: T) -> t,
+        def b <T> (self, t: T) T -> t
+    }
+    print(new C.a!<Int>(1).Str(), " ")
+    print(new C.b!<Str>("hi"))
+'
+
+expect 'A<Int> A<Str> A<Char>' '
+    class A <T> {
+        def b <U> (self) -> new A<U>
+    }
+    print(typeof new A<Int>, " ")
+    print(typeof (new A<Int>).b!<Str>(), " ")
+    print(typeof (new A<Int>).b!<Str>().b!<Char>(), " ")
+'
+expect 'A<Void> A<Int>' '
+    class A <T> {
+        def b <U> (self) -> new A<U>
+    }
+    print(typeof (new A<Int>).b!<Str>().b!<Char>().b!<Void>(), " ")
+    print(typeof (new A<Int>).b!<Str>().b!<Char>().b!<Int>(), " ")
+'
+expect 'List<Int> List<Str> List<Char>' $'
+    print(typeof List.empty!<Int>(), " ")
+    print(typeof List.empty!<Int>().map!<Str>(fn (a: Int, b: Int) -> " "), " ")
+    print(typeof List.empty!<Int>()
+            .map!<Str>(fn (a: Int, b: Int) -> " ")
+            .map!<Char>(fn (a: Str, b: Int) -> \' \'),
+    " ")
+'
+expect 'Char' $'
+    print(typeof List.empty!<Int>()
+            .map!<Str>(fn (a: Int, b: Int) -> " ")
+            .map!<Char>(fn (a: Str, b: Int) -> \' \')
+            .at_raw(0),
+    " ")
+'
+expect 'Char' '
+    print(typeof List.empty!<Int>()
+            .map!<Str>(fn (a: Int, b: Int) -> " ")
+            .map!<List<Char>>(fn (a: Str, b: Int) -> List.empty!<Char>())
+            .at_raw(0).at_raw(0),
+    " ")
+'
+expect 'C<Int, Str, Char> A<Char> B<Int, Void> B<B<Str, A<Int>>, C<Void, Void, Int>>' '
+    class A<T> {
+        def a<U>(self) -> new B<T, U>
+    }
+    class B<T, U> {
+        def b<V>(self) -> new C<T, U, V>
+    }
+    class C<T, U, V> {
+        def c(self) -> new A<V>,
+        def d<Q>(self) -> new B<T, Q>
+    }
+    print(typeof (new A<Int>).a!<Str>().b!<Char>(), " ")
+    print(typeof (new A<Int>).a!<Str>().b!<Char>().c(), " ")
+    print(typeof (new A<Int>).a!<Str>().b!<Char>().d!<Void>(), " ")
+    print(typeof (new A<B<Str, A<Int>>>).a!<C<Void, Void, Int>>())
+'
+expect 'Builder<Char> Builder<Char> Builder<Char> Builder<Char> Builder<Char> Builder<Int>' '
+    class Builder<T> {
+        def a() -> new Builder<Char>,
+        def b(self) -> new Builder<T>,
+        def c(self) -> new Builder<T>,
+        def d(self) -> new Builder<T>,
+        def e(self) -> new Builder<Int>
+    }
+
+    print(typeof Builder.a(), " ")
+    print(typeof Builder.a().b(), " ")
+    print(typeof Builder.a().b().b(), " ")
+    print(typeof Builder.a().c().b(), " ")
+    print(typeof Builder.a().b().c().d(), " ")
+    print(typeof Builder.a().b().c().d().e())
+'
