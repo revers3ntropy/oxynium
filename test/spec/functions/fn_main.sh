@@ -5,14 +5,6 @@ expect 'hi' '
         print("hi");
     }
 '
-expect 'hi' '
-    def main(args: List<Utf8Str>) {
-        print("hi");
-    }
-'
-expect_err 'TypeError' '
-    def main(a: Int) {}
-'
 expect_err 'TypeError' '
     def main() {
         return "hi"
@@ -73,4 +65,24 @@ expect '16' '
     def main() {
         print(s.Str());
     };
+'
+
+
+describe 'main Function with Arguments'
+
+expect 'hi' '
+    def main(args: List<Utf8Str>) {
+        print("hi")
+    }
+'
+expect_err 'TypeError' '
+    def main(a: Int) {}
+'
+expect './test-out 1' '
+    def main(args: List<Utf8Str>) {
+        for arg in args {
+            print(arg.Str(), " ")
+        }
+        print(args.len().Str())
+    }
 '
