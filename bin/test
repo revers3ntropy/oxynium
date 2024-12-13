@@ -123,7 +123,7 @@ function test_failed() {
     fails=$((fails+1))
 
     if [ "$current_spec_has_failed" -eq 0 ]; then
-        echo -e "${RED}❌ $current_spec_name ($current_spec_file)${NC}"
+        echo -e "${CLEAR_LINE}${RED}❌ $current_spec_name ($current_spec_file)${NC}"
     fi
     current_spec_has_failed=1
 
