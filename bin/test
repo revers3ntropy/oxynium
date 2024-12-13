@@ -278,13 +278,6 @@ function perf_results() {
         return
     fi
 
-#    printf "        Oxy Comp | C++ Comp | Oxy Exec | C++ Exec\n"
-#
-#    for index in "${!perf_names[@]}"; do
-#        printf "#$index ${perf_names[$index]}: ${oxy_comp[$index]} ${cpp_comp[$index]} ${oxy_exec[$index]} ${cpp_exec[$index]}\n"
-#    done
-
-
     for i in "${!perf_names[@]}"; do
         printf "${perf_names[i]}, "
     done
