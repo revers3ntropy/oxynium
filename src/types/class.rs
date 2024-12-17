@@ -1,7 +1,9 @@
 use crate::ast::class_declaration::{method_id, operator_method_id};
 use crate::error::Error;
 use crate::parse::token::Token;
-use crate::types::function::FnType;
+use crate::types::function::{FnParamType, FnType};
+use crate::types::generic::GenericType;
+use crate::types::unknown::UnknownType;
 use crate::types::Type;
 use crate::util::{mut_rc, MutRc};
 use std::collections::HashMap;
@@ -158,12 +160,56 @@ impl Type for ClassType {
 
         // Concrete-ify any abstract method interfaces
         for (name, method_type) in self.methods.clone() {
-            let new_method_type = method_type
+            // skip static methods
+            if let Some(first_param) = method_type.borrow().parameters.first() {
+                if first_param.name != "self" {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+            let method_type = method_type.borrow();
+            let mut new_method_type = FnType {
+                id: method_type.id,
+                name: method_type.name.clone(),
+                ret_type: mut_rc(UnknownType {}),
+                parameters: Vec::new(),
+                generic_args: HashMap::new(),
+                generic_params_order: method_type.generic_params_order.clone(),
+            };
+
+            let mut method_generics = our_generics.clone();
+
+            for p in new_method_type.generic_params_order.iter() {
+                new_method_type.generic_args.insert(
+                    p.clone().literal.unwrap(),
+                    mut_rc(GenericType {
+                        identifier: p.clone(),
+                    }),
+                );
+                method_generics.insert(
+                    p.clone().literal.unwrap(),
+                    mut_rc(GenericType {
+                        identifier: p.clone(),
+                    }),
+                );
+            }
+
+            for param in &method_type.parameters {
+                let type_ = param.type_.borrow().concrete(&method_generics, cache)?;
+                new_method_type.parameters.push(FnParamType {
+                    name: param.name.clone(),
+                    type_,
+                    default_value: param.default_value.clone(),
+                    position: param.position.clone(),
+                });
+            }
+
+            let return_type = method_type
+                .ret_type
                 .borrow()
-                .concrete(&our_generics, cache)?
-                .borrow()
-                .as_fn()
-                .unwrap();
+                .concrete(&method_generics, cache)?;
+            new_method_type.ret_type = return_type;
 
             res.borrow_mut()
                 .methods
