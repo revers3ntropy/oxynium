@@ -103,6 +103,10 @@ impl Type for ClassType {
         generics: &HashMap<String, MutRc<dyn Type>>,
         cache: &mut HashMap<String, MutRc<dyn Type>>,
     ) -> Result<MutRc<dyn Type>, Error> {
+        if self.generic_params_order.len() < 1 {
+            return Ok(mut_rc(self.clone()));
+        }
+
         let mut our_generics = generics.clone();
         for p in self.generic_params_order.iter() {
             let concrete_argument = self
@@ -113,12 +117,9 @@ impl Type for ClassType {
                 .concrete(generics, cache)?;
             our_generics.insert(p.clone().literal.unwrap(), concrete_argument);
         }
-        if let Some(cached) = cache.get(&self.cache_id(&our_generics)) {
+        let cache_id = self.cache_id(&our_generics);
+        if let Some(cached) = cache.get(&cache_id) {
             return Ok(cached.clone());
-        }
-
-        if self.generic_params_order.len() < 1 {
-            return Ok(mut_rc(self.clone()));
         }
 
         let res = mut_rc(ClassType {
@@ -131,9 +132,7 @@ impl Type for ClassType {
             generic_params_order: self.generic_params_order.clone(),
         });
 
-        // outside of the loop to avoid borrowing issues
-        let cache_id = self.cache_id(&our_generics);
-        cache.insert(cache_id, res.clone());
+        cache.insert(cache_id.clone(), res.clone());
 
         for p in self.generic_params_order.iter() {
             res.borrow_mut().generic_args.insert(
@@ -158,13 +157,8 @@ impl Type for ClassType {
         }
 
         // Concrete-ify any abstract method interfaces
-        let methods = self.methods.clone();
-        let method_names = methods.clone().into_keys();
-        for name in method_names {
-            let methods_clone = methods.clone();
-            let method = methods_clone.get(name.as_str()).clone().unwrap();
-
-            let new_method_type = method
+        for (name, method_type) in self.methods.clone() {
+            let new_method_type = method_type
                 .borrow()
                 .concrete(&our_generics, cache)?
                 .borrow()
@@ -176,7 +170,7 @@ impl Type for ClassType {
                 .insert(name.clone(), mut_rc(new_method_type));
         }
 
-        cache.remove(&self.cache_id(&our_generics));
+        cache.remove(&cache_id);
 
         Ok(res)
     }
