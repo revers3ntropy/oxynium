@@ -51,7 +51,10 @@ impl Type for FnType {
                         .map(|p| {
                             self.generic_args
                                 .get(&p.clone().literal.unwrap())
-                                .unwrap()
+                                .expect(&format!(
+                                    "Generic argument '{}' not found",
+                                    p.clone().literal.unwrap()
+                                ))
                                 .borrow()
                                 .str()
                         })

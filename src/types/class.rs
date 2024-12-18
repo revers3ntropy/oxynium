@@ -1,4 +1,5 @@
 use crate::ast::class_declaration::{method_id, operator_method_id};
+use crate::ast::ANON_PREFIX;
 use crate::error::Error;
 use crate::parse::token::Token;
 use crate::types::function::{FnParamType, FnType};
@@ -39,6 +40,10 @@ impl ClassType {
 
     pub fn field_offset(&self, field: String) -> usize {
         self.fields.get(&field).unwrap().stack_offset
+    }
+
+    fn rename_generic_param_for_method(param_name: String) -> String {
+        format!("{ANON_PREFIX}{param_name}")
     }
 }
 
@@ -175,22 +180,36 @@ impl Type for ClassType {
                 ret_type: mut_rc(UnknownType {}),
                 parameters: Vec::new(),
                 generic_args: HashMap::new(),
-                generic_params_order: method_type.generic_params_order.clone(),
+                generic_params_order: method_type
+                    .generic_params_order
+                    .iter()
+                    .map(|p| {
+                        let mut renamed = p.clone();
+                        renamed.literal = Some(ClassType::rename_generic_param_for_method(
+                            p.literal.clone().unwrap(),
+                        ));
+                        renamed
+                    })
+                    .collect(),
             };
 
             let mut method_generics = our_generics.clone();
 
-            for p in new_method_type.generic_params_order.iter() {
+            for p in method_type.generic_params_order.iter() {
+                let mut renamed = p.clone();
+                renamed.literal = Some(ClassType::rename_generic_param_for_method(
+                    p.literal.clone().unwrap(),
+                ));
                 new_method_type.generic_args.insert(
-                    p.clone().literal.unwrap(),
+                    renamed.clone().literal.unwrap(),
                     mut_rc(GenericType {
-                        identifier: p.clone(),
+                        identifier: renamed.clone(),
                     }),
                 );
                 method_generics.insert(
                     p.clone().literal.unwrap(),
                     mut_rc(GenericType {
-                        identifier: p.clone(),
+                        identifier: renamed.clone(),
                     }),
                 );
             }

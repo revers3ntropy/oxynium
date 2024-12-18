@@ -178,51 +178,51 @@ expect '1 hi' '
 
 expect 'A<Int> A<Str> A<Char>' '
     class A <T> {
-        def b <U> (self) -> new A<U>
+        def b <U> (self) A<U> -> new A<U>
     }
     print(typeof new A<Int>, " ")
     print(typeof (new A<Int>).b!<Str>(), " ")
-    print(typeof (new A<Int>).b!<Str>().b!<Char>(), " ")
+    print(typeof (new A<Int>).b!<Str>().b!<Char>())
 '
 expect 'A<Void> A<Int>' '
     class A <T> {
-        def b <U> (self) -> new A<U>
+        def b <U> (self) A<U> -> new A<U>
     }
     print(typeof (new A<Int>).b!<Str>().b!<Char>().b!<Void>(), " ")
-    print(typeof (new A<Int>).b!<Str>().b!<Char>().b!<Int>(), " ")
+    print(typeof (new A<Int>).b!<Str>().b!<Char>().b!<Int>())
 '
 expect 'List<Int> List<Str> List<Char>' $'
     print(typeof List.empty!<Int>(), " ")
     print(typeof List.empty!<Int>().map!<Str>(fn (a: Int, b: Int) -> " "), " ")
     print(typeof List.empty!<Int>()
             .map!<Str>(fn (a: Int, b: Int) -> " ")
-            .map!<Char>(fn (a: Str, b: Int) -> \' \'),
-    " ")
+            .map!<Char>(fn (a: Str, b: Int) -> \' \')
+    )
 '
 expect 'Char' $'
     print(typeof List.empty!<Int>()
             .map!<Str>(fn (a: Int, b: Int) -> " ")
             .map!<Char>(fn (a: Str, b: Int) -> \' \')
-            .at_raw(0),
-    " ")
+            .at_raw(0)
+    )
 '
 expect 'Char' '
     print(typeof List.empty!<Int>()
             .map!<Str>(fn (a: Int, b: Int) -> " ")
             .map!<List<Char>>(fn (a: Str, b: Int) -> List.empty!<Char>())
             .at_raw(0).at_raw(0),
-    " ")
+    )
 '
 expect 'C<Int, Str, Char> A<Char> B<Int, Void> B<B<Str, A<Int>>, C<Void, Void, Int>>' '
     class A<T> {
-        def a<U>(self) -> new B<T, U>
+        def a<U>(self) B<T, U> -> new B<T, U>
     }
     class B<T, U> {
-        def b<V>(self) -> new C<T, U, V>
+        def b<V>(self) C<T, U, V> -> new C<T, U, V>
     }
     class C<T, U, V> {
-        def c(self) -> new A<V>,
-        def d<Q>(self) -> new B<T, Q>
+        def c(self) A<V> -> new A<V>,
+        def d<Q>(self) B<T, Q> -> new B<T, Q>
     }
     print(typeof (new A<Int>).a!<Str>().b!<Char>(), " ")
     print(typeof (new A<Int>).a!<Str>().b!<Char>().c(), " ")
@@ -231,11 +231,11 @@ expect 'C<Int, Str, Char> A<Char> B<Int, Void> B<B<Str, A<Int>>, C<Void, Void, I
 '
 expect 'Builder<Char> Builder<Char> Builder<Char> Builder<Char> Builder<Char> Builder<Int>' '
     class Builder<T> {
-        def a() -> new Builder<Char>,
-        def b(self) -> new Builder<T>,
+        def a() Builder<Char> -> new Builder<Char>,
+        def b(self) Builder<T> -> new Builder<T>,
         def c(self) -> new Builder<T>,
         def d(self) -> new Builder<T>,
-        def e(self) -> new Builder<Int>
+        def e(self) Builder<Int> -> new Builder<Int>
     }
 
     print(typeof Builder.a(), " ")
