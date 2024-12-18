@@ -157,13 +157,13 @@ impl FnCallNode {
             ))
             .set_interval(self.identifier.interval()));
         }
-        return Ok(CalleeType {
+        Ok(CalleeType {
             fn_type: Some(fn_type_option.unwrap()),
             calling_through_instance: false,
             base_type: None,
             unknowns: 0,
             dec_id: fn_dec.id,
-        });
+        })
     }
 }
 
@@ -190,6 +190,14 @@ impl AstNode for FnCallNode {
 
         if fn_type.is_none() {
             if !ctx.borrow().throw_on_unknowns() {
+                // must continue to type check everything we can so set-up can happen
+                // in these child nodes
+                for arg in self.generic_args.clone() {
+                    unknowns += arg.borrow().type_check(ctx.clone())?.unknowns;
+                }
+                for arg in self.args.iter() {
+                    unknowns += arg.borrow().type_check(ctx.clone())?.unknowns;
+                }
                 return Ok(TypeCheckRes::unknown_and(unknowns));
             }
             return Err(unknown_symbol(format!(
