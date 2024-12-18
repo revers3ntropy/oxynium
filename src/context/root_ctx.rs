@@ -64,7 +64,6 @@ impl Context for RootContext {
         self.set_ignoring_definitions(false);
         self.loop_label_stack.clear();
         self.call_stack.clear();
-        self.anon_symbol_count = 0;
     }
 
     fn freeze(&mut self) {
