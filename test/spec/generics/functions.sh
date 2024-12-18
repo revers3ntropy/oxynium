@@ -210,7 +210,7 @@ expect 'Char' '
     print(typeof List.empty!<Int>()
             .map!<Str>(fn (a: Int, b: Int) -> " ")
             .map!<List<Char>>(fn (a: Str, b: Int) -> List.empty!<Char>())
-            .at_raw(0).at_raw(0),
+            .at_raw(0).at_raw(0)
     )
 '
 expect 'C<Int, Str, Char> A<Char> B<Int, Void> B<B<Str, A<Int>>, C<Void, Void, Int>>' '
