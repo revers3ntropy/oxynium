@@ -3,7 +3,7 @@ describe 'macro #unchecked_cast'
 expect 'Void' 'print(typeof #unchecked_cast Void "")'
 expect 'Int' 'print(typeof #unchecked_cast Int, "")'
 expect 'Result<Str, Void>' '
-    print(typeof #unchecked_cast(Result<Str, Void>, Option.ok!<Int, Int>(1)))
+    print(typeof #unchecked_cast(Result<Str, Void>, Option.some!<Int>(1)))
 '
 expect 'Result<Str, Option<Int>>' '
     print(typeof #unchecked_cast Result<Str, Option<Int>> 2)

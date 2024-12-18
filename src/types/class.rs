@@ -166,6 +166,7 @@ impl Type for ClassType {
         // Concrete-ify any abstract method interfaces
         for (name, method_type) in self.methods.clone() {
             // skip static methods
+            // TODO why does removing this make performance very bad??
             if let Some(first_param) = method_type.borrow().parameters.first() {
                 if first_param.name != "self" {
                     continue;
