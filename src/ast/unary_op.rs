@@ -70,16 +70,10 @@ impl AstNode for UnaryOpNode {
             TokenType::Identifier => match self.operator.clone().literal.unwrap().as_str() {
                 "typeof" => {
                     let rhs_type = self.rhs.borrow().type_check(ctx.clone())?;
-                    let rhs_type = rhs_type.t;
-                    let rhs_type = if rhs_type.borrow().as_type_type().is_some() {
-                        "Type".to_string()
-                    } else {
-                        rhs_type.borrow().str()
-                    };
                     StrNode {
                         value: Token {
                             token_type: TokenType::String,
-                            literal: Some(rhs_type),
+                            literal: Some(rhs_type.t.clone().borrow().str()),
                             start: self.rhs.borrow().pos().0,
                             end: self.rhs.borrow().pos().1,
                         },

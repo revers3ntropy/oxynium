@@ -24,9 +24,8 @@ const STD_DOXY: &'static str = include_str!("../std/std.doxy");
 fn setup_ctx_with_doxy(ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Context>, Error> {
     let start = Instant::now();
 
-    if ctx.borrow().exec_mode() == ExecMode::Lib {
-        ctx.borrow_mut().set_ignoring_definitions(true);
-    }
+    // do not allow any function definitions from std.doxy
+    ctx.borrow_mut().set_ignoring_definitions(true);
 
     let mut node = ExecRootNode {
         statements: generate_ast(
@@ -41,10 +40,7 @@ fn setup_ctx_with_doxy(ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Context>, Er
     perf!(ctx.borrow().get_cli_args(), start, "Setup STD AST");
     let start = Instant::now();
 
-    let type_check_res = node.type_check(ctx.clone());
-    if type_check_res.is_err() {
-        return Err(type_check_res.err().unwrap());
-    }
+    node.type_check(ctx.clone())?;
 
     perf!(ctx.borrow().get_cli_args(), start, "Type-checked STD");
     let start = Instant::now();

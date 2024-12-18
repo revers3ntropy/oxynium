@@ -10,7 +10,7 @@ use crate::types::Type;
 use crate::util::MutRc;
 use std::collections::HashMap;
 
-const LOG_TYPE_CHECK_PASSES: bool = false;
+const LOG_TYPE_CHECK_PASSES: bool = true;
 
 static ASM_TO_GENERATE_ARGS_LIST_FOR_MAIN_FN: &'static str = "
     pop rdi        ; argc
@@ -103,7 +103,6 @@ impl AstNode for ExecRootNode {
         while unknowns > 0 {
             i += 1;
 
-            ctx.borrow_mut().clear_concrete_cache();
             let res = self.statements.borrow().type_check(ctx.clone())?;
             if LOG_TYPE_CHECK_PASSES {
                 println!("(Pass {}) Unknowns: {} ", i, res.unknowns);

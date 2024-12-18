@@ -16,7 +16,6 @@ use std::rc::Rc;
 #[derive(Debug, Clone)]
 pub struct CallStackFrame {
     pub name: String,
-    // pub params: Vec<String>,
     pub ret_lbl: String,
 }
 
@@ -78,11 +77,6 @@ pub trait Context: Debug {
 
     #[allow(dead_code)]
     fn str(&self) -> String;
-
-    fn concrete_type_cache_get(&self, id: String) -> Option<MutRc<dyn Type>>;
-    fn concrete_type_cache_set(&mut self, id: String, t: MutRc<dyn Type>);
-    fn clear_concrete_cache(&mut self);
-    fn concrete_type_cache_remove(&mut self, id: &str);
 
     fn set_ignoring_definitions(&mut self, value: bool);
     fn is_ignoring_definitions(&self) -> bool;

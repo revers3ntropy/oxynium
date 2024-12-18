@@ -8,7 +8,6 @@ use crate::target::Target;
 use crate::types::Type;
 use crate::util::{mut_rc, MutRc};
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::path::Path;
 use std::rc::Rc;
@@ -27,7 +26,6 @@ pub struct RootContext {
     // throw error on unknown types
     err_on_unknowns: bool,
     cli_args: Args,
-    concrete_type_cache: HashMap<String, MutRc<dyn Type>>,
     ignore_definitions: bool,
     include_asm_paths: Vec<String>,
 }
@@ -45,7 +43,6 @@ impl RootContext {
             frozen: false,
             err_on_unknowns: false,
             cli_args,
-            concrete_type_cache: HashMap::new(),
             ignore_definitions: false,
             include_asm_paths: vec![],
         });
@@ -65,6 +62,9 @@ impl Context for RootContext {
         self.frozen = false;
         self.err_on_unknowns = false;
         self.set_ignoring_definitions(false);
+        self.loop_label_stack.clear();
+        self.call_stack.clear();
+        self.anon_symbol_count = 0;
     }
 
     fn freeze(&mut self) {
@@ -218,25 +218,6 @@ impl Context for RootContext {
                 ""
             },
         )
-    }
-
-    fn concrete_type_cache_get(&self, id: String) -> Option<MutRc<dyn Type>> {
-        self.concrete_type_cache.get(&id).map(|t| t.clone())
-    }
-
-    fn concrete_type_cache_set(&mut self, id: String, t: MutRc<dyn Type>) {
-        if self.concrete_type_cache.contains_key(&id) {
-            panic!("Type {} already exists in cache", id);
-        }
-        self.concrete_type_cache.insert(id, t);
-    }
-
-    fn clear_concrete_cache(&mut self) {
-        self.concrete_type_cache.clear();
-    }
-
-    fn concrete_type_cache_remove(&mut self, id: &str) {
-        self.concrete_type_cache.remove(id);
     }
 
     fn set_ignoring_definitions(&mut self, value: bool) {

@@ -337,24 +337,6 @@ impl Context for Scope {
         s
     }
 
-    // Concrete Type Cache
-
-    fn concrete_type_cache_get(&self, id: String) -> Option<MutRc<dyn Type>> {
-        self.parent.borrow().concrete_type_cache_get(id)
-    }
-
-    fn concrete_type_cache_set(&mut self, id: String, t: MutRc<dyn Type>) {
-        self.parent.borrow_mut().concrete_type_cache_set(id, t)
-    }
-
-    fn clear_concrete_cache(&mut self) {
-        self.parent.borrow_mut().clear_concrete_cache()
-    }
-
-    fn concrete_type_cache_remove(&mut self, id: &str) {
-        self.parent.borrow_mut().concrete_type_cache_remove(id)
-    }
-
     // ignoring definitions
     fn set_ignoring_definitions(&mut self, value: bool) {
         self.parent.borrow_mut().set_ignoring_definitions(value)
