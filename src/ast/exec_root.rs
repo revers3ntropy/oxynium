@@ -19,14 +19,16 @@ static ASM_TO_GENERATE_ARGS_LIST_FOR_MAIN_FN: &'static str = "
     ; set up 'args' array for main function
     push rbp
     mov rbp, rsp
-    sub rsp, 16
+    sub rsp, 24
+    mov rax, rdi ; rax = length
     ; size of array is number of bytes,
     ; and each pointer is 8 bytes
-    imul rdi, 8
+    imul rdi, 8 ; rdi = capacity
     ;  create the List<Str> structure on the stack
     ; (will last for lifetime of program)
-    mov qword [rbp - 8], rdi
+    mov qword [rbp - 8], rax
     mov qword [rbp - 16], rsi
+    mov qword [rbp - 24], rdi
     ; push pointer to stack structure as first arg to oxy_main
     mov rax, rbp
     sub rax, 16

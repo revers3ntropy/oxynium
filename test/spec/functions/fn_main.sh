@@ -78,11 +78,11 @@ expect 'hi' '
 expect_err 'TypeError' '
     def main(a: Int) {}
 '
-expect './test-out 1' '
+expect '1, ./test-out, ' '
     def main(args: List<Utf8Str>) {
+        print(args.len().Str(), ", ")
         for arg in args {
-            print(arg.Str(), " ")
+            print(arg.Str(), ", ")
         }
-        print(args.len().Str())
     }
 '
