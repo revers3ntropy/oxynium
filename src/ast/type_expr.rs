@@ -44,21 +44,6 @@ impl AstNode for TypeNode {
             type_ = mut_rc(UnknownType {});
         } else {
             type_ = get_type!(ctx, &self.id());
-
-            // let as_class = t.borrow().as_class();
-            // if let Some(class) = as_class {
-            //     if class.generic_params_order.len() > 0 {
-            //         return Err(type_error(format!(
-            //             "Generic arguments required for '{}'",
-            //             self.id()
-            //         ))
-            //         .set_interval(self.pos()));
-            //     } else {
-            //         type_ = t;
-            //     }
-            // } else {
-            //     type_ = t;
-            // }
         }
 
         if type_.borrow().is_unknown() {

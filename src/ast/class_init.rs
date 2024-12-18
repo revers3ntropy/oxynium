@@ -63,9 +63,11 @@ impl AstNode for ClassInitNode {
                 ))
                 .set_interval(self.identifier.interval()));
             }
+            for arg in self.generic_args.clone() {
+                unknowns += arg.borrow().type_check(ctx.clone())?.unknowns;
+            }
             for field in self.fields.clone() {
-                let field_type_res = field.1.borrow().type_check(ctx.clone())?;
-                unknowns += field_type_res.unknowns;
+                unknowns += field.1.borrow().type_check(ctx.clone())?.unknowns;
             }
             return Ok(TypeCheckRes::unknown_and(unknowns));
         }

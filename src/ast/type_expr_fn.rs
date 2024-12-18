@@ -10,7 +10,6 @@ pub struct FnTypeNode {
     pub parameters: Vec<MutRc<dyn AstNode>>,
     pub ret_type: MutRc<dyn AstNode>,
     pub position: Interval,
-    // pub fn_tok_pos: Interval,
 }
 
 impl AstNode for FnTypeNode {
@@ -46,7 +45,7 @@ impl AstNode for FnTypeNode {
         Ok(TypeCheckRes::from(
             mut_rc(FnType {
                 id: ctx.borrow_mut().get_id(),
-                name: format!(""),
+                name: "".to_string(),
                 ret_type: ret_type_res.t,
                 parameters,
                 generic_args: Default::default(),

@@ -49,10 +49,7 @@ fn setup_ctx_with_doxy(ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Context>, Er
     perf!(ctx.borrow().get_cli_args(), start, "Type-checked STD");
     let start = Instant::now();
 
-    let asm_error = node.asm(ctx.clone());
-    if asm_error.is_err() {
-        return Err(asm_error.err().unwrap());
-    }
+    node.asm(ctx.clone())?;
 
     perf!(ctx.borrow().get_cli_args(), start, "Compiled STD");
     let start = Instant::now();
@@ -103,17 +100,18 @@ fn compile(
     let ctx = Scope::new_global(ctx);
 
     let setup_ctx_res = setup_ctx_with_doxy(ctx);
-    if setup_ctx_res.is_err() {
-        let mut err = setup_ctx_res.err().unwrap();
-        err.try_set_source(ErrorSource {
-            file_name: "std.doxy".to_string(),
-            source: STD_DOXY.to_string(),
-        });
-        return Err(err);
-    }
-    let ctx = setup_ctx_res.unwrap();
+    let ctx = match setup_ctx_res {
+        Err(mut err) => {
+            err.try_set_source(ErrorSource {
+                file_name: "std.doxy".to_string(),
+                source: STD_DOXY.to_string(),
+            });
+            return Err(err);
+        }
+        Ok(ctx) => ctx,
+    };
 
-    // TODO: Hack to extend the lifetimes of the strings,
+    // TODO: Remove this hack to extend the lifetimes of the strings,
     //      so that they can be used in the context,
     //      which permanently leaks their memory.
     let current_dir = env::current_dir().unwrap();

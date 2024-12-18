@@ -106,6 +106,42 @@ impl FnDeclarationNode {
 
         Ok((generic_params, 0))
     }
+
+    fn declare_generic_parameters_on_own_scope(
+        &self,
+        ctx: MutRc<dyn Context>,
+    ) -> Result<usize, Error> {
+        let (generic_params, unknowns) = self.get_generic_param_names(ctx.clone())?;
+        for generic_param in generic_params.iter() {
+            if self
+                .params_scope
+                .clone()
+                .unwrap()
+                .borrow()
+                .has_dec_with_id(&generic_param.literal.clone().unwrap())
+            {
+                continue;
+            }
+            self.params_scope.clone().unwrap().borrow_mut().declare(
+                SymbolDec {
+                    name: generic_param.literal.clone().unwrap(),
+                    id: generic_param.literal.clone().unwrap(),
+                    is_constant: true,
+                    is_type: true,
+                    is_func: false,
+                    type_: mut_rc(GenericType {
+                        identifier: generic_param.clone(),
+                    }),
+                    require_init: false,
+                    is_defined: false,
+                    is_param: false,
+                    position: generic_param.interval(),
+                },
+                generic_param.interval(),
+            )?;
+        }
+        Ok(unknowns)
+    }
 }
 
 impl AstNode for FnDeclarationNode {
@@ -190,36 +226,7 @@ impl AstNode for FnDeclarationNode {
             }
         }
 
-        let (generic_params, mut unknowns) = self.get_generic_param_names(ctx.clone())?;
-
-        for generic_param in generic_params.iter() {
-            if self
-                .params_scope
-                .clone()
-                .unwrap()
-                .borrow()
-                .has_dec_with_id(&generic_param.literal.clone().unwrap())
-            {
-                continue;
-            }
-            self.params_scope.clone().unwrap().borrow_mut().declare(
-                SymbolDec {
-                    name: generic_param.literal.clone().unwrap(),
-                    id: generic_param.literal.clone().unwrap(),
-                    is_constant: true,
-                    is_type: true,
-                    is_func: false,
-                    type_: mut_rc(GenericType {
-                        identifier: generic_param.clone(),
-                    }),
-                    require_init: false,
-                    is_defined: false,
-                    is_param: false,
-                    position: generic_param.interval(),
-                },
-                generic_param.interval(),
-            )?;
-        }
+        let mut unknowns = self.declare_generic_parameters_on_own_scope(ctx.clone())?;
 
         // don't use param_scope so that the function can have params
         // with the same name as the function
@@ -352,7 +359,7 @@ impl AstNode for FnDeclarationNode {
             this_type.borrow_mut().ret_type = ret_type.clone();
         } else {
             let mut generic_args = HashMap::new();
-            for generic_param in generic_params.iter() {
+            for generic_param in self.generic_parameters.iter() {
                 generic_args.insert(
                     generic_param.literal.clone().unwrap(),
                     mut_rc(GenericType {
@@ -367,7 +374,7 @@ impl AstNode for FnDeclarationNode {
                 ret_type: ret_type.clone(),
                 parameters,
                 generic_args,
-                generic_params_order: generic_params.clone(),
+                generic_params_order: self.generic_parameters.clone(),
             });
             // declare in the parent context
             ctx.borrow_mut().declare(
@@ -402,10 +409,10 @@ impl AstNode for FnDeclarationNode {
             let mut inferred_ret_type = ret_type;
             if self.should_infer_return_type {
                 if !is_returned {
-                    return Err(
-                        type_error(format!("must return a value or specify return type"))
-                            .set_interval(self.identifier.interval()),
-                    );
+                    return Err(type_error(
+                        "must return a value or specify return type".to_string(),
+                    )
+                    .set_interval(self.identifier.interval()));
                 }
                 this_type.borrow_mut().ret_type = body_ret_type.clone();
                 inferred_ret_type = body_ret_type.clone();

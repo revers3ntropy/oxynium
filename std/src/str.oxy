@@ -102,7 +102,7 @@ def Str.Utf8Str (self) Utf8Str {
 	if utf8_size == 0 {
 		return #unchecked_cast(Utf8Str, "")
 	}
-	let res = #unchecked_cast(Ptr<Char>, LibC.calloc(utf8_size, 1))
+	let res = LibC.calloc!<Char>(utf8_size, 1)
 	#asm Void "
 		mov r15, qword [rbp + 16] ; r15 = self
 

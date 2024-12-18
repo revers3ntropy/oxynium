@@ -82,23 +82,19 @@ impl AstNode for ForLoopNode {
     }
 
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
-        let TypeCheckRes {
-            unknowns: counter_unknowns,
-            ..
-        } = self
+        let TypeCheckRes { mut unknowns, .. } = self
             .counter_var_assignment_node
             .borrow_mut()
             .type_check(ctx.clone())?;
-        let mut unknowns = counter_unknowns;
 
-        let TypeCheckRes {
-            unknowns: local_var_unknowns,
-            ..
-        } = self
+        unknowns += self
             .local_var_assignment_node
             .borrow_mut()
-            .type_check(ctx.clone())?;
-        unknowns += local_var_unknowns;
+            .type_check(ctx.clone())?
+            .unknowns;
+
+        // self.value becomes a child of self.local_var_assignment_node
+        // so it type checked with that
 
         let mut statements_tr = self.statements.borrow_mut().type_check(ctx.clone())?;
         statements_tr.unknowns += unknowns;

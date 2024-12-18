@@ -23,9 +23,9 @@ impl AstNode for GenericTypeNode {
     }
 
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
-        let mut unknowns = 0;
-
-        let raw_type = self.base.borrow().type_check(ctx.clone())?.t;
+        let raw_type_res = self.base.borrow().type_check(ctx.clone())?;
+        let mut unknowns = raw_type_res.unknowns;
+        let raw_type = raw_type_res.t;
         if raw_type.borrow().is_unknown() {
             if ctx.borrow().throw_on_unknowns() {
                 return Err(
@@ -34,8 +34,7 @@ impl AstNode for GenericTypeNode {
                 );
             }
             for arg in self.generic_args.clone() {
-                let field_type_res = arg.borrow().type_check(ctx.clone())?;
-                unknowns += field_type_res.unknowns;
+                unknowns += arg.borrow().type_check(ctx.clone())?.unknowns;
             }
             return Ok(TypeCheckRes::unknown_and(unknowns));
         }

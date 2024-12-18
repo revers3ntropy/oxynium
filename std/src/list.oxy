@@ -9,7 +9,7 @@ def List!<T>.empty <E> () -> new List<E> {
 }
 
 def List!<T>.with_capacity <E> (capacity: Int) -> new List<E> {
-	head: #unchecked_cast(Ptr<E>, LibC.calloc(capacity, 8)),
+	head: LibC.calloc!<E>(capacity, 8),
 	length: 0,
 	capacity: capacity
 }

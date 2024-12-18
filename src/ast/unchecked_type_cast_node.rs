@@ -17,7 +17,10 @@ impl AstNode for UncheckedTypeCastNode {
     }
 
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
-        self.new_type.borrow().type_check(ctx)
+        let unknowns = self.value.borrow().type_check(ctx.clone())?.unknowns;
+        let mut res = self.new_type.borrow().type_check(ctx)?;
+        res.unknowns += unknowns;
+        Ok(res)
     }
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {

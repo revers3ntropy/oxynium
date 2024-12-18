@@ -139,7 +139,7 @@ impl FnCallNode {
                 fn_type: None,
                 calling_through_instance: false,
                 base_type: None,
-                unknowns: 0,
+                unknowns: 1,
                 dec_id: "".to_string(),
             });
         }
@@ -332,7 +332,6 @@ impl AstNode for FnCallNode {
                         .set_interval(self.identifier.interval()),
                 );
             }
-            unknowns += 1;
         }
         Ok(TypeCheckRes::from(fn_type.ret_type.clone(), unknowns))
     }
