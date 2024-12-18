@@ -10,7 +10,7 @@ use crate::types::Type;
 use crate::util::MutRc;
 use std::collections::HashMap;
 
-const LOG_TYPE_CHECK_PASSES: bool = true;
+const LOG_TYPE_CHECK_PASSES: bool = false;
 
 static ASM_TO_GENERATE_ARGS_LIST_FOR_MAIN_FN: &'static str = "
     pop rdi        ; argc
