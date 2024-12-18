@@ -79,25 +79,26 @@ impl AstNode for ClassDeclarationNode {
         }
 
         let mut unknowns = 0;
-
-        for generic_param in self.generic_parameters.iter() {
-            self.generics_ctx.clone().unwrap().borrow_mut().declare(
-                SymbolDec {
-                    name: generic_param.literal.clone().unwrap(),
-                    id: generic_param.literal.clone().unwrap(),
-                    is_constant: true,
-                    is_type: true,
-                    is_func: false,
-                    type_: mut_rc(GenericType {
-                        identifier: generic_param.clone(),
-                    }),
-                    require_init: false,
-                    is_defined: false,
-                    is_param: false,
-                    position: generic_param.interval(),
-                },
-                generic_param.interval(),
-            )?;
+        if !ctx.borrow().is_frozen() {
+            for generic_param in self.generic_parameters.iter() {
+                self.generics_ctx.clone().unwrap().borrow_mut().declare(
+                    SymbolDec {
+                        name: generic_param.literal.clone().unwrap(),
+                        id: generic_param.literal.clone().unwrap(),
+                        is_constant: true,
+                        is_type: true,
+                        is_func: false,
+                        type_: mut_rc(GenericType {
+                            identifier: generic_param.clone(),
+                        }),
+                        require_init: false,
+                        is_defined: false,
+                        is_param: false,
+                        position: generic_param.interval(),
+                    },
+                    generic_param.interval(),
+                )?;
+            }
         }
 
         let this_type: MutRc<ClassType>;
