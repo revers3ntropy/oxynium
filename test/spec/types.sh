@@ -2,9 +2,10 @@ describe 'Invalid Declarations'
 
 expect_err 'TypeError' '
     def f() Int {
-        return a;
-        let a = 5;
-    };
+        let b = a
+        let a = 5
+        return b
+    }
 '
 expect_err 'TypeError' '
     def f() {

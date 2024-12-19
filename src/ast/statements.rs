@@ -1,6 +1,6 @@
 use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
-use crate::error::{type_error, Error};
+use crate::error::{syntax_error, type_error, Error};
 use crate::position::Interval;
 use crate::util::MutRc;
 
@@ -23,7 +23,8 @@ impl AstNode for StatementsNode {
 
         for statement in self.statements.iter() {
             if always_returns {
-                // TODO: warn about unreachable code
+                return Err(syntax_error("unreachable code".to_string())
+                    .set_interval(statement.borrow().pos()));
             }
             let t = statement.borrow().type_check(ctx.clone())?;
             unknowns += t.unknowns;

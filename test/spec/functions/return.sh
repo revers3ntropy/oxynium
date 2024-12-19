@@ -1,22 +1,5 @@
 describe 'Return from Functions'
 
-expect '' '
-    def f() {
-        return;
-        print("hi");
-    };
-    f();
-'
-
-expect '1' '
-    def f() {
-        print("1");
-        return;
-        print("2");
-    };
-    f();
-'
-
 expect '12' '
     def f() {
         let mut i = 0;
@@ -95,19 +78,6 @@ expect 'hi' '
     };
     f();
 '
-expect '1' '
-    def f() Int {
-        return 1;
-        print("hi");
-    };
-    print(f().Str());
-'
-expect_err 'TypeError' '
-    def f() Int {
-        return 1;
-        return true;
-    };
-'
 expect 'hi' '
     def f() Str {
       return "hi";
@@ -116,21 +86,17 @@ expect 'hi' '
 '
 expect 'false' '
     def f() Bool {
-      return 1 == 2;
-    };
-    print(f().Str());
+      return 1 == 2
+    }
+    print(f().Str())
 '
 expect 'true' '
-    def f() Bool {
-      return true;
-    };
-    print(f().Str());
+    def f() -> true
+    print(f().Str())
 '
 expect '' '
-    def f() Str {
-        return "";
-    };
-    print(f().Str());
+    def f() Str -> ""
+    print(f().Str())
 '
 expect_err 'TypeError' '
     def f() Str {
@@ -167,17 +133,6 @@ expect '49' '
     print(f(4).Str());
     print((f(4) + f(5)).Str());
 '
-expect '49' '
-    def g() {
-        print(49.Str());
-        return;
-        print(true.Str());
-    };
-    def f(n: Int) Void {
-        return g();
-    };
-    f(4);
-'
 expect '' '
     def g(a: Str) {};
     def f(n: Int, m: Int) Void {
@@ -199,8 +154,8 @@ expect_err 'SyntaxError' '
     return 1 + 2;
 '
 expect_err 'SyntaxError' '
-    return;
-    def main() {}
+    def f () -> 1
+    return
 '
 expect_err 'SyntaxError' '
     def main() {
@@ -292,5 +247,27 @@ expect_err 'TypeError' '
         while a {
             return 1
         }
+    }
+'
+
+
+describe 'Unreachable code throws error'
+
+expect_err 'SyntaxError' '
+    def f() {
+        return
+        print("hi")
+    }
+'
+expect_err 'SyntaxError' '
+    def f() Int {
+        return 1
+        print("hi")
+    }
+'
+expect_err 'SyntaxError' '
+    def f() Int {
+        return 1
+        return 2
     }
 '

@@ -93,7 +93,7 @@ impl Macro for IncludeMacro {
             source: read_result.clone(),
         };
 
-        let ast_res = generate_ast(&ctx.borrow().get_cli_args(), read_result, path.clone());
+        let ast_res = generate_ast(&ctx.borrow().get_cli_args(), &read_result, path.clone());
 
         if let Err(mut err) = ast_res {
             err.try_set_source(err_source);
