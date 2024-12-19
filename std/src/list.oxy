@@ -143,8 +143,8 @@ def List!<T>.concat (self, other: List<T>) List<T> {
 	return new_list
 }
 
+/// quicksort implementation
 def List!<T>.sort (self, f: Fn (T, T) Int) List<T> {
-	// quicksort
 	if self.len() <= 1 -> return self.clone()
 
 	let pivot = self.at_raw(0)
@@ -160,9 +160,17 @@ def List!<T>.sort (self, f: Fn (T, T) Int) List<T> {
 		else -> right.push(item)
 	}
 
-	// should chain here, but type system is broken :(
-	let left_sorted: List<T> = left
+	return left
 		.sort(f)
-	let left_and_pivot: List<T> = left_sorted.concat(pivot_list)
-	return left_and_pivot.concat(right.sort(f))
+		.concat(pivot_list)
+		.concat(right.sort(f))
+}
+
+def List.filter (self, f: Fn (T) Bool) List<T> {
+	let new_list = List.empty!<T>()
+	for item in self {
+		if f(item) ->
+			new_list.push(item)
+	}
+	return new_list
 }

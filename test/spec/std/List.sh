@@ -210,3 +210,40 @@ expect '1 2 3 4 5 6 6 5 4 3 2 1 ' '
         }
     }
 '
+
+
+describe 'def List.filter'
+
+expect '0 6 12 18 24 30 36 42 48 |||0' '
+    def is_multiple_of_6 (a: Int) Bool ->
+        a % 6 == 0
+
+    def main () {
+        for i in (range(50)).List().filter(is_multiple_of_6) {
+            print(i.Str(), " ")
+        }
+        print("|")
+        for j in (range(0)).List().filter(is_multiple_of_6) {
+            print(j.Str(), " ")
+        }
+        print("|")
+        for k in List.empty!<Int>().filter(is_multiple_of_6) {
+            print(k.Str(), " ")
+        }
+        print("|")
+        for l in (range(6)).List().filter(is_multiple_of_6) {
+            print(l.Str())
+        }
+    }
+'
+expect '50 0 0 0' '
+    def T (_: Int) Bool -> true
+    def F (_: Int) Bool -> true
+
+    def main () {
+        print(range(50).List().filter(T).len().Str(), " ")
+        print(range(0).List().filter(T).len().Str(), " ")
+        print(range(50).List().filter(F).len().Str(), " ")
+        print(range(0).List().filter(F).len().Str(), " ")
+    }
+'

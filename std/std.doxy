@@ -146,6 +146,7 @@ class List <T> {
 	extern def reallocate (self, new_capacity: Int),
 	extern def clone (self) List<T>,
 	extern def sort(self, f: Fn(T, T) Int) List<T>,
+	extern def filter(self, f: Fn(T) Bool) List<T>,
 }
 
 class File {
@@ -158,6 +159,31 @@ class File {
 	extern def write (self, data: Str),
 	extern def close (self),
 	extern def is_open (self) Bool,
+}
+
+// uses the minimum integer as a sentinel value,
+// as calling range with negative parameters is undefined
+// behaviour anyway
+extern def range (start: Int, end=0.min(), step=0.min()) Range
+
+class Range {
+	start: Int,
+	end: Int,
+	step: Int,
+
+	extern def List (self) List<Int>,
+	extern def Str(self) Str,
+	extern def len (self) Int,
+	extern def at_raw (self, i: Int) Int,
+}
+
+/// Wrappers around some LibC functions so that arguments can be passed
+/// correctly, as Oxynium passes all arguments on the stack whereas
+/// libc functions expect arguments in registers
+class LibC {
+    extern def calloc <T> (num: Int, size: Int) Ptr<T>,
+    extern def free <T> (ptr: Ptr<T>),
+    extern def memcpy <T> (dest: Ptr<T>, src: Ptr<T>, size: Int),
 }
 
 class _Syscall {
@@ -183,24 +209,6 @@ class _LibC {
     extern def fwrite (),
 }
 
-/// Wrappers around some LibC functions
-class LibC {
-    extern def calloc <T> (num: Int, size: Int) Ptr<T>,
-    extern def free <T> (ptr: Ptr<T>),
-    extern def memcpy <T> (dest: Ptr<T>, src: Ptr<T>, size: Int),
-}
-
-class Range {
-	start: Int,
-	end: Int,
-	step: Int,
-
-	extern def len (self) Int,
-	extern def at_raw (self, i: Int) Int,
-}
-
-extern def range (start: Int, end=0.min(), step=0.min()) Range
-
 /// Reads from stdin until a newline is reached
 /// allocates string to heap to fit input
 /// returns pointer to string in rax
@@ -210,6 +218,8 @@ extern def print (msg="", line_end="\n")
 extern def panic (msg="Panic!")
 
 // Libc dependencies - declared externally in asm
+// declared here so that you cannot redeclare them,
+// should be called through the LibC class
 extern def malloc ()
 extern def memset ()
 extern def memcpy ()
