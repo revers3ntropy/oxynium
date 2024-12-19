@@ -1,5 +1,6 @@
 use crate::args::{Args, ExecMode};
 use crate::ast::exec_root::ExecRootNode;
+use crate::ast::statements::StatementsNode;
 use crate::ast::AstNode;
 use crate::context::root_ctx::RootContext;
 use crate::context::scope::Scope;
@@ -11,7 +12,7 @@ use crate::perf;
 use crate::position::Position;
 use crate::post_process::format_asm::post_process;
 use crate::target::Target;
-use crate::util::{string_to_static_str, MutRc};
+use crate::util::{mut_rc, string_to_static_str, MutRc};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -19,59 +20,21 @@ use std::process::Command;
 use std::time::Instant;
 use std::{env, fs};
 
-const STD_DOXY: &'static str = include_str!("../std/std.doxy");
-
-fn setup_ctx_with_doxy(ctx: MutRc<dyn Context>) -> Result<MutRc<dyn Context>, Error> {
-    let start = Instant::now();
-
-    // do not allow any function definitions from std.doxy
-    ctx.borrow_mut().set_ignoring_definitions(true);
-
-    let mut node = ExecRootNode {
-        statements: generate_ast(
-            &ctx.borrow().get_cli_args(),
-            STD_DOXY.to_owned(),
-            "std.doxy".to_owned(),
-        )?,
-    };
-
-    node.setup(ctx.clone())?;
-
-    perf!(ctx.borrow().get_cli_args(), start, "Setup STD AST");
-    let start = Instant::now();
-
-    node.type_check(ctx.clone())?;
-
-    perf!(ctx.borrow().get_cli_args(), start, "Type-checked STD");
-    let start = Instant::now();
-
-    node.asm(ctx.clone())?;
-
-    perf!(ctx.borrow().get_cli_args(), start, "Compiled STD");
-    let start = Instant::now();
-
-    ctx.borrow_mut().reset();
-
-    perf!(ctx.borrow().get_cli_args(), start, "Reset context");
-
-    Ok(ctx)
-}
+const PRELUDE: &'static str = include_str!("../std/prelude.oxy");
 
 pub fn generate_ast(
     args: &Args,
-    input: String,
+    input: &String,
     file_name: String,
 ) -> Result<MutRc<dyn AstNode>, Error> {
     let start = Instant::now();
 
-    let mut lexer = Lexer::new(input.clone(), file_name, args.clone());
-    let tokens = lexer.lex()?;
+    let tokens = Lexer::new(input.clone(), file_name, args.clone()).lex()?;
 
     perf!(args, start, "Lexed");
     let start = Instant::now();
 
-    let mut parser = Parser::new(args.clone(), tokens);
-    let ast = parser.parse();
+    let ast = Parser::new(args.clone(), tokens).parse();
     if ast.error.is_some() {
         return Err(ast.error.unwrap());
     }
@@ -94,13 +57,17 @@ fn compile(
     ctx.borrow_mut().exec_mode = args.exec_mode;
 
     let ctx = Scope::new_global(ctx);
-
-    let setup_ctx_res = setup_ctx_with_doxy(ctx);
-    let ctx = match setup_ctx_res {
+    let prelude_source = PRELUDE.to_owned();
+    let prelude_node = match generate_ast(
+        &ctx.borrow().get_cli_args(),
+        &prelude_source,
+        "std.doxy".to_owned(),
+    ) {
+        // TODO remove this and get source correctly from the start
         Err(mut err) => {
             err.try_set_source(ErrorSource {
                 file_name: "std.doxy".to_string(),
-                source: STD_DOXY.to_string(),
+                source: prelude_source,
             });
             return Err(err);
         }
@@ -123,8 +90,11 @@ fn compile(
 
     ctx.borrow_mut().set_current_dir_path(file_dir);
 
+    let program_node = generate_ast(&ctx.borrow().get_cli_args(), &input, file_name.clone())?;
     let mut root_node = ExecRootNode {
-        statements: generate_ast(&ctx.borrow().get_cli_args(), input, file_name.clone())?,
+        statements: mut_rc(StatementsNode {
+            statements: vec![prelude_node, program_node],
+        }),
     };
 
     let start = Instant::now();

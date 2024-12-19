@@ -1,6 +1,7 @@
-// This file is included as a raw string in every Oxynium program
+// prelude.oxy
+// This file is included at the start of every Oxynium program
 // and contains the declarations for the Standard Library (STD).
-// The implementations for these definitions can be found under /std/src.
+// The implementations for these definitions can be found under `/std/src`.
 
 primitive Void
 
@@ -155,7 +156,7 @@ class File {
 	mode: Str,
 
 	extern def open (path: Str, mode="r") Option<File>,
-	extern def read_to_str (self, buffer_size=1000) Str,
+	extern def read_to_str (self) Str,
 	extern def write (self, data: Str),
 	extern def close (self),
 	extern def is_open (self) Bool,

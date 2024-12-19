@@ -237,13 +237,13 @@ expect '0 6 12 18 24 30 36 42 48 |||0' '
     }
 '
 expect '50 0 0 0' '
-    def T (_: Int) Bool -> true
-    def F (_: Int) Bool -> true
+    def t (_: Int) Bool -> true
+    def f (_: Int) Bool -> false
 
     def main () {
-        print(range(50).List().filter(T).len().Str(), " ")
-        print(range(0).List().filter(T).len().Str(), " ")
-        print(range(50).List().filter(F).len().Str(), " ")
-        print(range(0).List().filter(F).len().Str(), " ")
+        print(range(50).List().filter(t).len().Str(), " ")
+        print(range(0).List().filter(t).len().Str(), " ")
+        print(range(50).List().filter(f).len().Str(), " ")
+        print(range(0).List().filter(f).len().Str())
     }
 '
