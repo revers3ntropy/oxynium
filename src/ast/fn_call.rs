@@ -130,18 +130,20 @@ impl FnCallNode {
             });
         }
 
+        let unknown_callee_type = CalleeType {
+            fn_type: None,
+            calling_through_instance: false,
+            base_type: None,
+            unknowns: 0,
+            dec_id: "".to_string(),
+        };
+
         // getting function type on normal function call
         if !ctx
             .borrow_mut()
             .has_dec_with_id(&self.identifier.clone().literal.unwrap())
         {
-            return Ok(CalleeType {
-                fn_type: None,
-                calling_through_instance: false,
-                base_type: None,
-                unknowns: 1,
-                dec_id: "".to_string(),
-            });
+            return Ok(unknown_callee_type);
         }
 
         let fn_dec = ctx
@@ -149,6 +151,9 @@ impl FnCallNode {
             .get_dec_from_id(&self.identifier.clone().literal.unwrap());
 
         let fn_type_option = fn_dec.type_.clone();
+        if fn_type_option.borrow().is_unknown() {
+            return Ok(unknown_callee_type);
+        }
         let fn_type_option = fn_type_option.borrow().as_fn();
         if fn_type_option.is_none() {
             return Err(unknown_symbol(format!(

@@ -38,10 +38,26 @@ expect_err 'TypeError' '
     }
     a!<Str, Str>("");
 '
+expect 'abc' '
+def main () {
+    let f_ = f
+    print(f_!<Str>("abc"))
+}
+def f<T>(a: T) T -> a
+'
 
 
 describe 'Generic Methods'
 
+expect 'abc' '
+def main () {
+    let f = S.f
+    print(f!<Str>("abc"))
+}
+class S {
+    def f<T>(a: T) T -> a
+}
+'
 expect '1' '
     class C {
         def a <T> (self, t: T) T {
@@ -244,4 +260,20 @@ expect 'Builder<Char> Builder<Char> Builder<Char> Builder<Char> Builder<Char> Bu
     print(typeof Builder.a().c().b(), " ")
     print(typeof Builder.a().b().c().d(), " ")
     print(typeof Builder.a().b().c().d().e())
+'
+expect '2' '
+class S {
+    def f <P> (self, a: P) P -> a
+}
+def main () {
+    print(S.f!<Int>(new S, 2).Str())
+}
+'
+expect_err 'TypeError' '
+class S <T> {
+    def f <P> (self) Void
+}
+def main () {
+    print(S.f!<Int>(new S<Int>, true));
+}
 '
