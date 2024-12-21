@@ -26,9 +26,7 @@ expect 'Hello World!' '
         msg: Str,
 
         def make(msg: Str) C {
-            return new C {
-                msg: msg
-            }
+            return new C { msg }
         },
 
         def log(self) {
@@ -53,7 +51,6 @@ expect 'Hello World!' '
     }
     (new C).log("Hello World!")
 '
-
 expect 'hi' '
     class S {
         msg: Str,
@@ -66,6 +63,26 @@ expect 'hi' '
         print(S.f(s));
     }
 '
+expect_err 'TypeError' '
+    class S;
+    new S.f();
+'
+expect_err 'TypeError' '
+    class S {
+        def f(self){}
+    };
+    new S.g();
+'
+expect_err 'TypeError' '
+class S {
+    def f () {}
+}
+(new S).f()
+'
+
+
+describe 'Can call instance methods statically and pass instance'
+
 expect 'abc' '
     class S {
         def f(self, msg: Str) Str {
@@ -78,21 +95,18 @@ expect 'abc' '
 '
 expect 'hello' '
     class S {
-        def f(self, a: Int, msg: Str = "hello") Str {
-            return msg;
-        }
+        def f(self, a: Int, msg="hello") -> msg
     }
     def main () {
         print(S.f(new S, 1));
     }
 '
 expect_err 'TypeError' '
-    class S;
-    new S.f();
-'
-expect_err 'TypeError' '
-    class S {
-        def f(self){}
-    };
-    new S.g();
+class A
+class S {
+    def f(self, a: Int, msg="hello") -> msg
+}
+def main () {
+    print(S.f(new A, 1));
+}
 '

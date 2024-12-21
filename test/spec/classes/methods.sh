@@ -88,7 +88,7 @@ expect 'hello world' '
 '
 
 
-describe 'Non-Static Methods Require self Parameter'
+describe 'self parameter cannot have type annotation'
 
 expect_err 'SyntaxError' '
     class S {
@@ -99,4 +99,35 @@ expect_err 'SyntaxError' '
     class S {
         def log(self: Int) {}
     }
+'
+
+
+describe 'Can use static methods as first-class functions'
+
+expect '1' '
+class S {
+    def g() -> 1
+}
+def main () {
+    let g = S.g
+    print(g().Str())
+}
+'
+expect_err 'TypeError' '
+class S {
+    def g(self) -> 1
+}
+def main () {
+    let g = S.g
+    print(g().Str())
+}
+'
+expect_err 'TypeError' '
+class S {
+    def g(self) -> 1
+}
+def main () {
+    let g = (new S).g
+    print(g().Str())
+}
 '

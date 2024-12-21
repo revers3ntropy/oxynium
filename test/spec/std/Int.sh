@@ -308,3 +308,18 @@ expect_err 'TypeError' '2 != true'
 expect_err 'TypeError' '1 != 2 != 4'
 expect_err 'TypeError' '2 != ""'
 expect_err 'TypeError' '2 != Int'
+
+
+describe 'def Int.compare'
+
+expect '-1,1,0,1,-1,1,-1,1,0' '
+    print(Int.compare(1, 2).Str(), ",");
+    print(Int.compare(2, 1).Str(), ",");
+    print(Int.compare(1, 1).Str(), ",");
+    print(Int.compare(1, 0).Str(), ",");
+    print(Int.compare(0, 1).Str(), ",");
+    print(Int.compare(1, -1).Str(), ",");
+    print(Int.compare(-1, 1).Str(), ",");
+    print(Int.compare(1 + 4, 2).Str(), ",");
+    print(Int.compare(1 + 5, 2 * 3).Str());
+'

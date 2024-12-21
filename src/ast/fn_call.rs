@@ -233,8 +233,7 @@ impl AstNode for FnCallNode {
             ))
             .set_interval(self.position.clone())
             .hint(format!(
-                "function `{}` requires {} generic arguments",
-                fn_type.str(),
+                "{} generic arguments are required for this function",
                 fn_type.generic_params_order.len()
             )));
         }
