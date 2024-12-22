@@ -2,7 +2,7 @@
 
 # Oxynium Compiler in Rust
 
-Linux support only so far.
+Linux/MacOS x86-64 support only so far.
 
 ## Requirements
 
@@ -14,6 +14,7 @@ Linux support only so far.
 `curl -sSL https://oxynium.org/scripts/install | bash`
 
 ### Unstable
+
 *Can also install from development branch, which will include the latest features*
 
 `curl -sSL https://oxynium.org/scripts/install | bash -s -- "latest"`
@@ -24,10 +25,12 @@ Linux support only so far.
 - rustc
 
 #### For running full testing suite:
+
 - python3
 - Docker (and cli)
 
 ## Examples
+
 See `test/spec/*` for more examples
 
 ```shell
@@ -48,20 +51,21 @@ Hello, world!
 $ oxy [input_file?] [options]
 ```
 
-Quote the input to escape shell expansion, 
-e.g. `oxy -e "(1+1)*2"` instead of `oxy -e (1+1)*2`
-
 ### Options
 
-| Command             | Type | Description                          | Default                      |
-|---------------------|------|--------------------------------------|------------------------------|
-| `-o`, `--output`    | Str  | Output assembly file path            | `'out.asm'`                  |
-| `-e`, `--eval`      | Str  | Pass the program on the CLI          |                              |
-| `-s`, `--std`       | Str  | Path to STD asm file                 | `/usr/local/bin/oxy-std.asm` |
-| `-k`, `--keep`      | Bool | Keep outputted `.asm` and `.o` files | `0`                          |
-| `-x`, `--exec_mode` | Int  | Exec mode                            | `0`                          |
+| Command             | Type   | Description                                    | Default              |
+|---------------------|--------|------------------------------------------------|----------------------|
+| `-o`, `--output`    | Str    | Output assembly file path                      | `'out.asm'`          |
+| `-e`, `--eval`      | Str    | Pass the program on the CLI                    |                      |
+| `-s`, `--std`       | Str    | Path to STD asm file                           | `~/.oxynium/std.asm` |
+| `-k`, `--keep`      | Bool   | Keep outputted `.asm` and `.o` files           | `0`                  |
+| `-x`, `--exec_mode` | Int    | Exec mode (1 for library, 0 for executable)    | `0`                  |
+| `-t`, `--target`    | String | Compilation target ('x86_64-linux' or 'macos') | current system       |
+| `-O`, `--optimise`  | Int    | Optimisation level (0 or 1)                    | `1`                  |
+| `-E`, `--enable`    | String | Enable an optimisation                         |                      |
+| `-D`, `--disable`   | String | Disable an optimisation                        |                      |
 
-#### Exec Mode
-`0` Compile to application
+#### Note for --eval
 
-`1` Compile as library
+Quote the input to escape shell expansion,
+e.g. `oxy -e "(1+1)*2"` instead of `oxy -e (1+1)*2`
