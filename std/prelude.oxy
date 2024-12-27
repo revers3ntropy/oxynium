@@ -268,7 +268,6 @@ class Net
 class Ref
 class Primitive
 class Task
-class Fn
 class Class
 class Instance
 class Def
