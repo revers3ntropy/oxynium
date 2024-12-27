@@ -242,38 +242,51 @@ extern def fclose ()
 extern def fread ()
 extern def ftell ()
 
-// Classes that may become part of the standard library in the future
+// symbols that may become part of the standard library in the future
 
+class Std
+class std
 class Instant
 class Duration
 class Map
 class Filter
 class Iter
+class Iterator
+class Stream
 class Slice
+class Hash
+class HashMap
+class Map
 class Vec
+class Array
+class String
+class Collection
 class Set
 class Tuple
 class Path
+class Task
 class Thread
 class Process
 class Channel
-class Collection
 class Default
-class Debug
 class Display
+class Debug
 class Error
-class Hash
 class Hint
+class Annotation
 class Net
-class Ref
+class Http
+class Https
 class Primitive
-class Task
 class Class
+class Struct
 class Instance
 class Def
+class Ref
 class Rc
+class Box
 class Mem
 class Marker
-class Test
 class Dyn
 class Unsafe
+class Test
