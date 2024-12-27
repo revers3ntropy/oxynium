@@ -102,6 +102,7 @@ class Option <T> {
 	extern def ?? (self, other: T) T,
 	extern def unwrap (self, err_message="Unwrapping None Option") T,
 	extern def or (self, default: T) T,
+	extern def is_some_and(self, f: Fn(T) Bool) Bool,
 }
 
 class Result <T, E> {

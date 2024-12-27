@@ -25,3 +25,9 @@ def Option.or (self, default_value: T) T {
 		return default_value
 	return #unchecked_cast(T, self.value)
 }
+
+def Option.is_some_and (self, f: Fn(T) Bool) Bool {
+	if self.is_some ->
+		return f(#unchecked_cast(T, self.value))
+	return false
+}
