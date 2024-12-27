@@ -97,12 +97,7 @@ impl Lexer {
                 {
                     self.advance();
                 }
-                tokens.push(Token::new(
-                    SINGLE_CHAR_TOKENS[&c.to_string()],
-                    None,
-                    pos.clone(),
-                    pos,
-                ));
+                tokens.push(Token::new(TokenType::NL, None, pos.clone(), pos));
                 continue;
             }
             if c.is_whitespace() {

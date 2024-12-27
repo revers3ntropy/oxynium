@@ -13,6 +13,12 @@ primitive Char {
     extern def Str (self) Str,
     extern def Int (self) Int,
     extern def is_digit (self) Bool,
+    extern def is_alphabetic (self) Bool,
+    extern def is_uppercase (self) Bool,
+	extern def is_lowercase (self) Bool,
+    extern def is_alphanumeric (self) Bool,
+    extern def is_ascii (self) Bool,
+    extern def is_whitespace (self) Bool,
 }
 
 primitive Bool {

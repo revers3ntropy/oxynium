@@ -1,3 +1,6 @@
+def Char.from_int (i: Int) Char ->
+	#unchecked_cast(Char, i)
+
 def Char.== (self, other: Char) Bool {
 	return #asm Bool "
 		mov rax, qword [rbp + 16]
@@ -22,13 +25,32 @@ def Char.Str (self) Str {
 	"
 }
 
-def Char.is_digit (self) Bool {
-	let as_int = self.Int()
-	return as_int >= 48 && as_int <= 57
-}
-
 def Char.Int (self) Int ->
 	#unchecked_cast(Int, self)
 
-def Char.from_int (i: Int) Char ->
-	#unchecked_cast(Char, i)
+def Char.is_digit (self) Bool ->
+	#unchecked_cast(Int, self) >= #unchecked_cast(Int, '0') &&
+	#unchecked_cast(Int, self) <= #unchecked_cast(Int, '9')
+
+def Char.is_alphabetic (self) Bool ->
+	self.is_uppercase() || self.is_lowercase()
+
+def Char.is_uppercase (self) Bool ->
+	#unchecked_cast(Int, self) >= #unchecked_cast(Int, 'A') &&
+	#unchecked_cast(Int, self) <= #unchecked_cast(Int, 'Z')
+
+def Char.is_lowercase (self) Bool ->
+	#unchecked_cast(Int, self) >= #unchecked_cast(Int, 'a') &&
+	#unchecked_cast(Int, self) <= #unchecked_cast(Int, 'z')
+
+def Char.is_alphanumeric (self) Bool ->
+	self.is_alphabetic() || self.is_digit()
+
+def Char.is_ascii (self) Bool ->
+	#unchecked_cast(Int, self) < 128
+
+def Char.is_whitespace (self) Bool ->
+	self == ' ' || self == '\n' || self == '\t' || self == '\r'
+
+
+
