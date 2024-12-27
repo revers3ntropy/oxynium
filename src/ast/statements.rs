@@ -52,7 +52,7 @@ impl AstNode for StatementsNode {
             return Ok(TypeCheckRes::returns(always_returns, ret_type, unknowns));
         }
 
-        Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns, true))
+        Ok(TypeCheckRes::from_type_in_ctx(&ctx, "Void", unknowns, true))
     }
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {

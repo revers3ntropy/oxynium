@@ -4,6 +4,7 @@ use crate::ast::bool::BoolNode;
 use crate::ast::char::CharNode;
 use crate::ast::class_declaration::{ClassDeclarationNode, ClassField};
 use crate::ast::class_field_access::FieldAccessNode;
+use crate::ast::class_field_assignement::FieldAssignmentNode;
 use crate::ast::class_init::ClassInitNode;
 use crate::ast::empty_global_const_decl::EmptyGlobalConstNode;
 use crate::ast::empty_local_var_decl::EmptyLocalVarNode;
@@ -854,6 +855,19 @@ impl Parser {
                     res.register(self.identifier_bang(start, Some(base), self.last_tok().unwrap()));
                 ret_on_err!(res);
                 return self.compound(Some(base_option.unwrap()));
+            }
+
+            if self.current_matches(TokenType::Equals, None) {
+                consume!(Equals, self, res);
+                let new_value = res.register(self.expression());
+                ret_on_err!(res);
+                let new_value = new_value.unwrap();
+                return self.compound(Some(mut_rc(FieldAssignmentNode {
+                    base,
+                    field_name: name_tok,
+                    new_value,
+                    position: (start, self.last_tok().unwrap().end.clone()),
+                })));
             }
 
             return self.compound(Some(mut_rc(FieldAccessNode {

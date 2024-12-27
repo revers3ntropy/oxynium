@@ -29,7 +29,7 @@ impl AstNode for UnaryOpNode {
         let t = match self.operator.token_type {
             TokenType::Sub => get_type!(ctx, "Int"),
             TokenType::Identifier => match self.operator.clone().literal.unwrap().as_str() {
-                "typeof" => return Ok(TypeCheckRes::from_ctx(&ctx, "Str", unknowns, true)),
+                "typeof" => return Ok(TypeCheckRes::from_type_in_ctx(&ctx, "Str", unknowns, true)),
                 _ => panic!("Invalid arithmetic unary operator: {:?}", self.operator),
             },
             _ => get_type!(ctx, "Bool"),

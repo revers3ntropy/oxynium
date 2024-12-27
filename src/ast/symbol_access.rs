@@ -37,7 +37,7 @@ impl AstNode for SymbolAccessNode {
             ));
         }
 
-        Ok(TypeCheckRes::from_ctx(&ctx, &self.id(), 0, false))
+        Ok(TypeCheckRes::from_type_in_ctx(&ctx, &self.id(), 0, false))
     }
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {

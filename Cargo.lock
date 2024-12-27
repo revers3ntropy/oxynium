@@ -174,7 +174,7 @@ checksum = "ceedf44fb00f2d1984b0bc98102627ce622e083e49a5bacdb3e514fa4238e267"
 
 [[package]]
 name = "oxynium"
-version = "0.2.24"
+version = "0.2.25"
 dependencies = [
  "clap",
  "phf",

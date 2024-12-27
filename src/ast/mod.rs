@@ -14,6 +14,7 @@ pub mod r#break;
 pub mod char;
 pub mod class_declaration;
 pub mod class_field_access;
+pub mod class_field_assignement;
 pub mod class_init;
 pub mod r#continue;
 pub mod empty_exec_root;
@@ -100,7 +101,7 @@ impl TypeCheckRes {
         }
     }
 
-    fn from_ctx(
+    fn from_type_in_ctx(
         ctx: &MutRc<dyn Context>,
         name: &str,
         mut unknowns: usize,
@@ -160,7 +161,7 @@ pub trait AstNode: Debug {
         Ok(())
     }
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
-        Ok(TypeCheckRes::from_ctx(&ctx, "Void", 0, true))
+        Ok(TypeCheckRes::from_type_in_ctx(&ctx, "Void", 0, true))
     }
     fn asm(&mut self, _ctx: MutRc<dyn Context>) -> Result<String, Error> {
         Ok("".to_string())

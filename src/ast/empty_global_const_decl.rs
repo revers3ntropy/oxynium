@@ -54,7 +54,7 @@ impl AstNode for EmptyGlobalConstNode {
             self.pos(),
         )?;
 
-        Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns, true))
+        Ok(TypeCheckRes::from_type_in_ctx(&ctx, "Void", unknowns, true))
     }
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         if ctx.borrow_mut().stack_frame_peak().is_some() {

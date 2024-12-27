@@ -208,7 +208,7 @@ impl Lexer {
             return None;
         }
 
-        let current_char = Some(self.input[self.position.idx as usize] as char);
+        let current_char = Some(self.input[self.position.idx as usize]);
         self.current_char = current_char;
 
         current_char

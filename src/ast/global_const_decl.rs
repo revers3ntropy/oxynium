@@ -47,7 +47,7 @@ impl AstNode for GlobalConstNode<i64> {
             },
             self.identifier.interval(),
         )?;
-        Ok(TypeCheckRes::from_ctx(&ctx, "Int", 0, true))
+        Ok(TypeCheckRes::from_type_in_ctx(&ctx, "Int", 0, true))
     }
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
@@ -144,7 +144,7 @@ impl AstNode for GlobalConstNode<String> {
             },
             self.identifier.interval(),
         )?;
-        Ok(TypeCheckRes::from_ctx(&ctx, "Str", 0, true))
+        Ok(TypeCheckRes::from_type_in_ctx(&ctx, "Str", 0, true))
     }
 
     fn pos(&self) -> Interval {

@@ -53,7 +53,7 @@ impl AstNode for MutateVar {
             return Err(mismatched_types(symbol.type_.clone(), assign_type.clone())
                 .set_interval(self.value.borrow_mut().pos()));
         }
-        Ok(TypeCheckRes::from_ctx(&ctx, "Void", unknowns, true))
+        Ok(TypeCheckRes::from_type_in_ctx(&ctx, "Void", unknowns, true))
     }
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
