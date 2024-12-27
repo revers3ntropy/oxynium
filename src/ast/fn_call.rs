@@ -106,6 +106,16 @@ impl FnCallNode {
             let method_type = base_type.method_type(&self.identifier.clone().literal.unwrap());
             if method_type.is_none() {
                 if ctx.borrow().throw_on_unknowns() {
+                    if base_type
+                        .fields
+                        .contains_key(&self.identifier.literal.clone().unwrap())
+                    {
+                        return Err(type_error(format!(
+                            "field '{}' is not a method so cannot be called",
+                            self.identifier.clone().literal.unwrap(),
+                        ))
+                        .set_interval(self.identifier.interval()));
+                    }
                     return Err(type_error(format!(
                         "class '{}' does not have method '{}'",
                         base_type.str(),
