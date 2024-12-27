@@ -1838,7 +1838,12 @@ impl Parser {
             // FIXME generate better unique signature for anonymous functions
             let id = format!(
                 "fn@{}#{}",
-                self.last_tok().unwrap().end.file,
+                self.last_tok()
+                    .unwrap()
+                    .end
+                    .file
+                    .replace("/", "__")
+                    .replace(".", ""),
                 self.last_tok().unwrap().end.idx
             );
             identifier = Token::new(
