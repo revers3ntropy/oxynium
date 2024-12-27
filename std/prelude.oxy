@@ -248,7 +248,6 @@ class Std
 class std
 class Instant
 class Duration
-class Map
 class Filter
 class Iter
 class Iterator
