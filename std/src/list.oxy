@@ -117,13 +117,8 @@ def List!<T>.reallocate (self, new_capacity: Int) {
 	let new_head = LibC.calloc!<T>(new_capacity, 8)
 	// only copy up to where we have elements stored
 	LibC.memcpy!<T>(new_head, self.head, self.length * 8)
-	#asm Void "
-		mov rax, qword [rbp + 16]  ; rax = self
-		mov rcx, qword [rbp - 8]
-		mov qword [rax], rcx       ; self.head = new_head
-		mov rcx, qword [rbp + 24]
-		mov qword [rax + 16], rcx  ; self.capacity = new_capacity
-	"
+	self.head = new_head
+	self.capacity = new_capacity
 }
 
 def List!<T>.clone (self) List<T> {
