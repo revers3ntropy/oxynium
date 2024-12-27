@@ -38,7 +38,7 @@ expect_err 'SyntaxError' 'print(typeof typeof)'
 expect_err 'SyntaxError' 'print(typeof while {})'
 expect_err 'SyntaxError' 'print(typeof if true {})'
 expect 'Fn a() Void' 'print(typeof def a() {})'
-expect 'Fn fn@in.oxy#14() Void' 'print(typeof fn () {})'
+expect 'Fn fn@inoxy#14() Void' 'print(typeof fn () {})'
 
 expect 'T,T,Int,Str' '
     def a <T> (a: T) T {
