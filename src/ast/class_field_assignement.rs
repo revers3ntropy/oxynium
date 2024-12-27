@@ -4,7 +4,7 @@ use crate::error::{type_error, Error};
 use crate::parse::token::Token;
 use crate::position::Interval;
 use crate::types::Type;
-use crate::util::{mut_rc, MutRc};
+use crate::util::MutRc;
 
 #[derive(Debug)]
 pub struct FieldAssignmentNode {
