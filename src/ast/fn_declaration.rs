@@ -434,6 +434,17 @@ impl AstNode for FnDeclarationNode {
                 get_type!(ctx, "Void")
             };
             if !inferred_ret_type.borrow().contains(body_ret_type.clone()) {
+                if body_ret_type.borrow().str() == "Void" {
+                    return Err(type_error(format!(
+                        "`{}` must be annotated with return type",
+                        self.identifier.str(),
+                    ))
+                    .set_interval(self.identifier.interval())
+                    .hint(format!(
+                        "found type `{}` being returned",
+                        inferred_ret_type.borrow().str()
+                    )));
+                }
                 return Err(type_error(format!(
                     "`{}` has return type `{}` but found `{}` being returned",
                     self.identifier.str(),
