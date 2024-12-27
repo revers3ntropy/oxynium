@@ -29,6 +29,11 @@ def File.open (path: Str, mode: Str) Option<File> {
 	})
 }
 
+def File.read(path: Str) Option<Str> {
+	return File.open(path, "r")
+		.map!<Str>(fn (f: File) -> f.read_to_str())
+}
+
 def File.is_open (self) Bool ->
     !self.handle.is_null()
 

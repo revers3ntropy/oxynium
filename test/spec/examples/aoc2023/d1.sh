@@ -21,8 +21,8 @@ expect '53921' '
 
             let mut i = line.len() - 1
             while (true) {
-                if line.at(i).is_digit() {
-                    num += line.at(i).Str()
+                if line.at_raw(i).is_digit() {
+                    num += line.at_raw(i).Str()
                     break
                 }
                 i -= 1

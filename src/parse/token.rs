@@ -128,7 +128,7 @@ impl Token {
     }
 
     pub fn overload_op_id(&self) -> Option<&str> {
-        return match self.token_type {
+        match self.token_type {
             TokenType::Plus => Some("add"),
             TokenType::Sub => Some("sub"),
             TokenType::Astrix => Some("mul"),
@@ -144,7 +144,7 @@ impl Token {
             TokenType::And => Some("and"),
             TokenType::DblQM => Some("none_coalesce"),
             _ => None,
-        };
+        }
     }
 }
 

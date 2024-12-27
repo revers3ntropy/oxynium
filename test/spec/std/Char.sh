@@ -10,7 +10,7 @@ expect 'a' "print('a'.Str())"
 expect 'ab' "print('a'.Str() + 'b'.Str())"
 expect '💖' "print('💖'.Str())"
 expect '10' "print(#unchecked_cast(Int, '\n').Str())"
-expect '10' "print(#unchecked_cast(Int, '\n').Str())"
+expect '65' "print(#unchecked_cast(Int, 'A').Str())"
 
 describe 'def Char.is_digit'
 
@@ -33,27 +33,21 @@ expect 'true,true,true,false,false,false,false' "
 
 describe 'def Char.=='
 
-expect 'true,false,true,true' '
-    print(("a".at(0) == "a".at(0)).Str());
-    print(",");
-    print(("a".at(0) == "b".at(0)).Str());
-    print(",");
-    print(("💖".at(0) == "💖".at(0)).Str());
-    print(",");
-    print(("🇨🇦".at(0) == "🇦".at(0)).Str());
+expect 'true,false,true,true' $'
+    print((\'a\' == \'a\').Str(), ",")
+    print((\'a\' == \'b\').Str(), ",")
+    print((\'💖\' == \'💖\').Str(), ",")
+    print(("🇨🇦".at_raw(0) == "🇦".at_raw(0)).Str())
 '
 
 
 describe 'def Char.!='
 
-expect 'false,true,false,false' '
-    print(("a".at(0) != "a".at(0)).Str());
-    print(",");
-    print(("a".at(0) != "b".at(0)).Str());
-    print(",");
-    print(("💖".at(0) != "💖".at(0)).Str());
-    print(",");
-    print(("🇨🇦".at(0) != "🇦".at(0)).Str());
+expect 'false,true,false,false' $'
+    print((\'a\' != \'a\').Str(), ",")
+    print((\'a\' != \'b\').Str(), ",")
+    print((\'💖\' != \'💖\').Str(), ",")
+    print(("🇨🇦".at_raw(0) != "🇦".at_raw(0)).Str())
 '
 
 

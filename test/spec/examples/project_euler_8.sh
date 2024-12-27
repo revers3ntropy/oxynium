@@ -27,7 +27,7 @@ const inp = "73167176531330624919225119674426574742355349194934\
         for i in range(1000 - 13) {
             let mut product = 1
             for j in range(13) {
-                product = product * (inp.at(i + j).Int() - 48)
+                product = product * (inp.at_raw(i + j).Int() - 48)
             }
             if product > max ->
                 max = product

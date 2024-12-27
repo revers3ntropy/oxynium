@@ -107,21 +107,18 @@ impl Lexer {
 
             // must come before search for identifier char as
             // that includes digits
-            if char::is_numeric(c) {
+            if c.is_numeric() {
                 let start = self.position.clone();
+                let mut end = self.position.clone();
 
                 // build a number while we can
                 let mut number = String::new();
                 while self.current_char.is_some() && self.current_char.unwrap().is_numeric() {
                     number.push(self.current_char.unwrap());
+                    end = self.position.clone();
                     self.advance();
                 }
-                tokens.push(Token::new(
-                    TokenType::Int,
-                    Some(number),
-                    start,
-                    self.position.clone().reverse(None),
-                ));
+                tokens.push(Token::new(TokenType::Int, Some(number), start, end));
                 continue;
             }
 

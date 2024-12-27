@@ -8,25 +8,31 @@ def Option.some <From> (value: From) -> new Option <From> {
     is_some: true,
 }
 
-def Option.?? (self, value: T) T {
+def Option!<T>.?? (self, value: T) T {
 	if self.is_some ->
 	    return #unchecked_cast(T, self.value)
 	return value
 }
 
-def Option.unwrap (self, err_message="Unwrapping None Option") T {
+def Option!<T>.unwrap (self, err_message="Unwrapping None Option") T {
 	if !self.is_some ->
 		panic(err_message)
 	return #unchecked_cast(T, self.value)
 }
 
-def Option.or (self, default_value: T) T {
+def Option!<T>.map<U> (self, f: Fn(T) U) Option<U> {
+	if self.is_some ->
+		return Option.some!<U>(f(#unchecked_cast(T, self.value)))
+	return Option.none!<U>()
+}
+
+def Option!<T>.or (self, default_value: T) T {
 	if !self.is_some ->
 		return default_value
 	return #unchecked_cast(T, self.value)
 }
 
-def Option.is_some_and (self, f: Fn(T) Bool) Bool {
+def Option!<T>.is_some_and (self, f: Fn(T) Bool) Bool {
 	if self.is_some ->
 		return f(#unchecked_cast(T, self.value))
 	return false

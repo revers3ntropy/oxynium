@@ -43,7 +43,7 @@ impl Position {
         self.idx -= 1;
         self.col -= 1;
 
-        if current_char.is_some() && current_char.unwrap() == '\n' {
+        if current_char.is_some_and(|c| c == '\n') {
             self.line -= 1;
             self.col = 0;
         }
