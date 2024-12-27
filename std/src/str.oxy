@@ -138,52 +138,12 @@ def Str.Utf8Str (self) Utf8Str {
 	return #unchecked_cast(Utf8Str, res)
 }
 
-def Str.at (self, i: Int) Char {
-	return #asm Char "
-		mov rdx, qword [rbp + 16] ; pop string
-		mov r15, qword [rbp + 24] ; pop index
-
-		cmp r15, 0
-		jl .backwards
-
-		xor rax, rax ; character
-		xor rcx, rcx ; index
-
-		.loop:
-			mov rax, qword [rdx]
-			test rax, rax
-			je .end
-			add rdx, 8
-
-			cmp rcx, r15
-			jge .end
-
-			inc rcx
-			jmp .loop
-
-		.backwards:
-			neg r15
-			mov r14, rdx
-
-			push rdx
-			call Str.len
-			pop rdx
-			imul rax, 8
-			add rdx, rax ; rdx = end of string + 1
-
-			imul r15, 8
-			sub rdx, r15 ; rdx = end of string - index
-			cmp rdx, r14 ; if rdx < r14, index is out of bounds
-			jl .end_and_clear
-
-			mov rax, qword [rdx]
-			jmp .end
-
-		.end_and_clear:
-			xor rax, rax
-		.end:
-			push rax
-	"
+def Str.at (self, i: Int) Option<Char> {
+	if i < 0 && i >= -self.len() ->
+		return self.at(self.len() + i)
+	if i < 0 || i >= self.len() ->
+		return Option.none!<Char>()
+	return Option.some!<Char>(self.at_raw(i))
 }
 
 /// Returns the character at the given index
@@ -209,15 +169,17 @@ def Str.find (self, other: Str) Int {
 	    return 0
 
 	for c, i in self {
-		if c != other.at(0) ->
+		if c != other.at_raw(0) ->
 			continue
 		let mut j = 1
-		while j < other.len() && self.at(i + j) == other.at(j) {
+		while j < other.len()
+			&& (i + j) < self.len()
+			&& self.at_raw(i + j) == other.at_raw(j)
+		{
 			j += 1
 		}
 		if j == other.len() ->
 			return i
-
 	}
 	return -1
 }
@@ -280,12 +242,9 @@ def Str.starts_with (self, other: Str) Bool {
 	if other.len() > self.len() ->
 		return false
 
-	let mut i = 0
-	while i < other.len() {
-		if self.at(i) != other.at(i) ->
+	for c, i in other {
+		if self.at_raw(i) != c ->
 			return false
-
-		i = i + 1
 	}
 	return true
 }
@@ -294,12 +253,9 @@ def Str.ends_with (self, other: Str) Bool {
 	if other.len() > self.len() ->
 		return false
 
-	let mut i = 0
-	while i < other.len() {
-		if self.at(self.len() - i - 1) != other.at(other.len() - i - 1) {
+	for i in range(other.len()) {
+		if self.at_raw(self.len() - i - 1) != other.at_raw(other.len() - i - 1) ->
 			return false
-		}
-		i += 1
 	}
 	return true
 }
@@ -320,9 +276,9 @@ def Str.replace (self, search: Str, replace_with="", max=-1) Str {
 	let mut s = ""
 	let mut replacements = 0
 	while i < self.len() {
-		if self.at(i) == search.at(0) {
+		if self.at_raw(i) == search.at_raw(0) {
 			let mut j = 1
-			while j < search.len() && self.at(i + j) == search.at(j) {
+			while j < search.len() && self.at_raw(i + j) == search.at_raw(j) {
 				j += 1
 			}
 			if j == search.len() {
@@ -336,7 +292,7 @@ def Str.replace (self, search: Str, replace_with="", max=-1) Str {
 				continue
 			}
 		}
-		s += self.at(i).Str()
+		s += self.at_raw(i).Str()
 		i += 1
 	}
 	return s
@@ -393,31 +349,29 @@ def Str.utf8_size (self) Int {
 
 def Str.Int (self) Result<Int, Str> {
 	let n = self.len()
-	if n == 0 {
+	if n == 0 ->
 		return Result.err!<Int, Str>("empty string")
-	}
 
 	let mut i = 0
 	let mut sign = 1
-	if self.at(0).Str() == "-" {
+	if self.at_raw(0) == '-' {
 		sign = -1
 		i += 1
 	}
 
-	let zero = "0".at(0).Int()
-	let nine = "9".at(0).Int()
+	let zero = '0'.Int()
+	let nine = '9'.Int()
 
 	let mut result: Int = 0
 	while i < n {
-		let c = self.at(i).Int()
-		if c < zero || c > nine {
+		let c = self.at_raw(i).Int()
+		if c < zero || c > nine ->
 			return Result.err!<Int, Str>("invalid character")
-		}
+
 		result = result * 10 + (c - zero)
 		i += 1
-		if result < 0 {
+		if result < 0 ->
 			return Result.err!<Int, Str>("overflow")
-		}
 	}
 
 	return Result.ok!<Int, Str>(result * sign)

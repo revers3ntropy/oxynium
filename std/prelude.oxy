@@ -53,7 +53,7 @@ class Str {
 	// called by `.split("")`
 	extern def List (self) List<Char>,
 	extern def List_strings (self) List<Str>,
-    extern def at (self, i: Int) Char,
+    extern def at (self, i: Int) Option<Char>,
     /// Returns the character at the given index
     /// Does not check if index is out of bounds
     extern def at_raw (self, i: Int) Char,

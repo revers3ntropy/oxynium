@@ -61,21 +61,21 @@ expect_err 'TypeError' 'print("abcd".len())'
 
 describe 'def Str.at'
 
-expect 'c'  'print("abc".at(-1).Str())'
-expect 'b'  'print("abc".at(-2).Str())'
-expect 'a'  'print("abc".at(-3).Str())'
-expect ''   'print("abc".at(-4).Str())'
-expect 'a'  'print("abc".at(0).Str())'
-expect 'b'  'print("abc".at(1).Str())'
-expect 'c'  'print("abc".at(2).Str())'
-expect ''   'print("abc".at(4).Str())'
-expect '💖' 'print("💖💖".at(0).Str())'
-expect ''   'print("💖💖".at(4).Str())'
-expect '🏳' 'print("🏳️‍🌈".at(0).Str())'
-# (0-width character, is something there...)
-expect '️'  'print("🏳️‍🌈".at(1).Str())'
-expect '🇦' 'print("🇨🇦".at(1).Str())'
-expect '🇨' 'print("🇨🇦".at(0).Str())'
+expect 'c'  $'print("abc".at(-1).or(\' \').Str())'
+expect 'b'  $'print("abc".at(-2).or(\' \').Str())'
+expect 'a'  $'print("abc".at(-3).or(\' \').Str())'
+expect ' '   $'print("abc".at(-4).or(\' \').Str())'
+expect 'a'  $'print("abc".at(0).or(\' \').Str())'
+expect 'b'  $'print("abc".at(1).or(\' \').Str())'
+expect 'c'  $'print("abc".at(2).or(\' \').Str())'
+expect ' '   $'print("abc".at(4).or(\' \').Str())'
+expect '💖' $'print("💖💖".at(0).or(\' \').Str())'
+expect ' '   $'print("💖💖".at(4).or(\' \').Str())'
+expect '🏳' $'print("🏳️‍🌈".at(0).or(\' \').Str())'
+# 0-width character (there is something there...)
+expect '️'  $'print("🏳️‍🌈".at(1).or(\' \').Str())'
+expect '🇦' $'print("🇨🇦".at(1).or(\' \').Str())'
+expect '🇨' $'print("🇨🇦".at(0).or(\' \').Str())'
 
 
 

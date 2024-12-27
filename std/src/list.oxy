@@ -22,7 +22,7 @@ def List!<T>.at (self, i: Int) Option<T> {
 	if self.length == 0 ->
 		return Option.none!<T>()
 
-	if i < 0 ->
+	if i < 0 && i >= -self.length ->
 		return self.at(self.length + i)
 
 	if i < 0 || i >= self.length ->
