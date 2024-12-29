@@ -125,9 +125,10 @@ class Result <T, E> {
 }
 
 primitive Ptr <T> {
+	extern def make <From> (val: From) Ptr<From>,
+
 	extern def Str (self) Str,
 	extern def is_null (self) Bool,
-	extern def make <From> (val: From) Ptr<From>,
 	extern def unwrap (self) T,
 }
 
@@ -165,6 +166,7 @@ class File {
 
 	extern def open (path: Str, mode="r") Option<File>,
 	extern def read (path: Str) Option<Str>,
+
 	extern def read_to_str (self) Str,
 	extern def write (self, data: Str),
 	extern def close (self),

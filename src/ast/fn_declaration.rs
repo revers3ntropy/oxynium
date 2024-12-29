@@ -257,7 +257,7 @@ impl AstNode for FnDeclarationNode {
 
             if !can_declare_with_identifier(&identifier) {
                 return Err(syntax_error("Invalid parameter name".to_string())
-                    .set_interval(self.position.clone()));
+                    .set_interval(position.clone()));
             }
 
             let mut param_type = None;
@@ -274,7 +274,7 @@ impl AstNode for FnDeclarationNode {
                         "parameters after `{}` must have default values",
                         identifier
                     ))
-                    .set_interval(self.position.clone()));
+                    .set_interval(position.clone()));
                 }
 
                 // TODO: type check on global scope
