@@ -61,12 +61,12 @@ fn compile(
     let prelude_node = match generate_ast(
         &ctx.borrow().get_cli_args(),
         &prelude_source,
-        "std.doxy".to_owned(),
+        "prelude.oxy".to_owned(),
     ) {
         // TODO remove this and get source correctly from the start
         Err(mut err) => {
             err.try_set_source(ErrorSource {
-                file_name: "std.doxy".to_string(),
+                file_name: "prelude.oxy".to_string(),
                 source: prelude_source,
             });
             return Err(err);
