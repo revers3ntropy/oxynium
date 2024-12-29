@@ -5,22 +5,6 @@
 
 primitive Void
 
-primitive Char {
-    extern def from_int (i: Int) Char,
-
-    extern def == (self, other: Char) Bool,
-    extern def != (self, other: Char) Bool,
-    extern def Str (self) Str,
-    extern def Int (self) Int,
-    extern def is_digit (self) Bool,
-    extern def is_alphabetic (self) Bool,
-    extern def is_uppercase (self) Bool,
-	extern def is_lowercase (self) Bool,
-    extern def is_alphanumeric (self) Bool,
-    extern def is_ascii (self) Bool,
-    extern def is_whitespace (self) Bool,
-}
-
 primitive Bool {
     extern def || (self, other: Bool) Bool,
     extern def && (self, other: Bool) Bool,
@@ -45,6 +29,30 @@ primitive Int {
     extern def min (self, other=-9223372036854775807-1) Int,
     extern def abs (self) Int,
     extern def compare (self, other: Int) Int,
+}
+
+primitive Ptr <T> {
+	extern def make <From> (val: From) Ptr<From>,
+
+	extern def Str (self) Str,
+	extern def is_null (self) Bool,
+	extern def unwrap (self) T,
+}
+
+primitive Char {
+    extern def from_int (i: Int) Char,
+
+    extern def == (self, other: Char) Bool,
+    extern def != (self, other: Char) Bool,
+    extern def Str (self) Str,
+    extern def Int (self) Int,
+    extern def is_digit (self) Bool,
+    extern def is_alphabetic (self) Bool,
+    extern def is_uppercase (self) Bool,
+	extern def is_lowercase (self) Bool,
+    extern def is_alphanumeric (self) Bool,
+    extern def is_ascii (self) Bool,
+    extern def is_whitespace (self) Bool,
 }
 
 class Str {
@@ -83,21 +91,6 @@ class Utf8Str {
     extern def Str (self) Str,
 }
 
-class Time {
-	seconds: Int,
-	microseconds: Int,
-
-    /// returns the current time in seconds from the UNIX epoch
-    extern def current_seconds () Int,
-    extern def current_microseconds () Int,
-    extern def now () Time,
-    extern def epoch () Time,
-
-	extern def - (self, other: Time) Time,
-	extern def + (self, other: Time) Time,
-	extern def Str (self) Str,
-}
-
 class Option <T> {
 	value: Int,
 	is_some: Bool,
@@ -122,14 +115,6 @@ class Result <T, E> {
 	extern def Option (self) Option<T>,
 	extern def unwrap (self) T,
 	extern def error (self) Option<E>,
-}
-
-primitive Ptr <T> {
-	extern def make <From> (val: From) Ptr<From>,
-
-	extern def Str (self) Str,
-	extern def is_null (self) Bool,
-	extern def unwrap (self) T,
 }
 
 class List <T> {
@@ -159,20 +144,6 @@ class List <T> {
 	extern def filter(self, f: Fn(T) Bool) List<T>,
 }
 
-class File {
-	handle: Ptr<Void>,
-	path: Str,
-	mode: Str,
-
-	extern def open (path: Str, mode="r") Option<File>,
-	extern def read (path: Str) Option<Str>,
-
-	extern def read_to_str (self) Str,
-	extern def write (self, data: Str),
-	extern def close (self),
-	extern def is_open (self) Bool,
-}
-
 // uses the minimum integer as a sentinel value,
 // as calling range with negative parameters is undefined
 // behaviour anyway
@@ -187,6 +158,35 @@ class Range {
 	extern def Str(self) Str,
 	extern def len (self) Int,
 	extern def at_raw (self, i: Int) Int,
+}
+
+class Time {
+	seconds: Int,
+	microseconds: Int,
+
+    /// returns the current time in seconds from the UNIX epoch
+    extern def current_seconds () Int,
+    extern def current_microseconds () Int,
+    extern def now () Time,
+    extern def epoch () Time,
+
+	extern def - (self, other: Time) Time,
+	extern def + (self, other: Time) Time,
+	extern def Str (self) Str,
+}
+
+class File {
+	handle: Ptr<Void>,
+	path: Str,
+	mode: Str,
+
+	extern def open (path: Str, mode="r") Option<File>,
+	extern def read (path: Str) Option<Str>,
+
+	extern def read_to_str (self) Str,
+	extern def write (self, data: Str),
+	extern def close (self),
+	extern def is_open (self) Bool,
 }
 
 /// Wrappers around some LibC functions so that arguments can be passed
