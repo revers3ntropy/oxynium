@@ -84,8 +84,7 @@ impl Error {
             file_name,
         } = self.source.clone().unwrap();
 
-        let mut out = format!("{}:\n  {}\n", self.name, self.message);
-        out.push('\n');
+        let mut out = format!("{}: {}\n", self.name, self.message);
 
         let lines: Vec<&str> = source_code.split('\n').collect();
 
@@ -102,25 +101,12 @@ impl Error {
 
         let max_digits_in_line_number = num_digits(end.line + 2);
 
-        if start.idx == end.idx {
-            out.push_str(&format!(
-                "{}--> {}:{}:{}\n",
-                " ".repeat(max_digits_in_line_number + 2),
-                file_name,
-                start.line + 1,
-                start.col + 1
-            ));
-        } else {
-            out.push_str(&format!(
-                "{}--> {} {}:{} to {}:{}\n",
-                " ".repeat(max_digits_in_line_number + 2),
-                file_name,
-                start.line + 1,
-                start.col + 1,
-                end.line + 1,
-                end.col + 1
-            ));
-        }
+        out.push_str(&format!(
+            "{}:{}:{}\n",
+            file_name,
+            start.line + 1,
+            start.col + 1
+        ));
 
         let mut line_idx = max(start.line - 1, 0);
         for line in line_idx..=min(end.line + 1, lines.len() as i64 - 1) {
