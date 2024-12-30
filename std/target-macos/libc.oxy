@@ -1,0 +1,35 @@
+/// Wrappers around some LibC functions so that arguments can be passed
+/// correctly, as Oxynium passes all arguments on the stack whereas
+/// libc functions expect arguments in registers
+class LibC {
+	def calloc <T> (num: Int, size: Int) Ptr<T> {
+		return #asm Ptr<T> "
+			mov rdi, qword [rbp + 16]
+			mov rsi, qword [rbp + 24]
+			sub rsp, 32
+			and rsp, -16
+			call _calloc
+			push rax
+		"
+	}
+
+	def free <T> (ptr: Ptr<T>) Void {
+		#asm Void "
+			mov rdi, qword [rbp + 16]
+			sub rsp, 32
+			and rsp, -16
+			call _free
+		"
+	}
+
+	def memcpy <T> (dest: Ptr<T>, src: Ptr<T>, size: Int) Void {
+		#asm Void "
+			mov rdi, qword [rbp + 16]
+			mov rsi, qword [rbp + 24]
+			mov rdx, qword [rbp + 32]
+			sub rsp, 32
+			and rsp, -16
+			call _memcpy
+		"
+	}
+}

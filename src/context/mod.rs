@@ -1,7 +1,7 @@
 pub mod root_ctx;
 pub mod scope;
 
-use crate::args::{Args, ExecMode};
+use crate::args::Args;
 use crate::error::Error;
 use crate::position::Interval;
 use crate::symbols::{SymbolDec, SymbolDef};
@@ -40,9 +40,6 @@ pub trait Context: Debug {
     fn global_scope(&self) -> MutRc<dyn Context>;
 
     fn get_cli_args(&self) -> Args;
-    fn exec_mode(&self) -> ExecMode;
-    fn std_asm_path(&self) -> &'static str;
-    fn allow_overrides(&self) -> bool;
 
     fn set_current_dir_path(&mut self, path: &'static Path);
     fn get_current_dir_path(&self) -> &'static Path;

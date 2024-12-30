@@ -1,4 +1,4 @@
-use crate::args::{Args, ExecMode};
+use crate::args::Args;
 use crate::context::{CallStackFrame, Context, LoopLabels};
 use crate::error::{type_error, Error};
 use crate::position::Interval;
@@ -102,16 +102,6 @@ impl Context for Scope {
         self.parent.borrow().get_cli_args()
     }
 
-    fn exec_mode(&self) -> ExecMode {
-        self.parent.borrow().exec_mode()
-    }
-    fn std_asm_path(&self) -> &'static str {
-        self.parent.borrow().std_asm_path()
-    }
-    fn allow_overrides(&self) -> bool {
-        self.parent.borrow().allow_overrides()
-    }
-
     fn set_current_dir_path(&mut self, path: &'static Path) {
         assert!(self.current_dir_path.is_none());
         self.current_dir_path = Some(path);
@@ -153,7 +143,7 @@ impl Context for Scope {
         }
 
         if let Some(original) = self.declarations.get(symbol.name.clone().as_str()) {
-            if !symbol.is_type && !self.allow_overrides() {
+            if !symbol.is_type {
                 return Err(
                     type_error(format!("symbol `{}` is already declared", symbol.name))
                         .set_interval(trace_interval),

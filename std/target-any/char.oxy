@@ -1,0 +1,55 @@
+primitive Char {
+	def from_int (i: Int) Char ->
+		#unchecked_cast(Char, i),
+	
+	def == (self, other: Char) Bool {
+		return #asm Bool "
+			mov rax, qword [rbp + 16]
+			cmp rax, qword [rbp + 24]
+			sete al
+			push rax
+		"
+	}
+	
+	def != (self, other: Char) Bool ->
+		!(self == other),
+	
+	def Str (self) Str {
+		return #asm Str "
+			mov rdi, 16
+			mov rsi, 1
+			call _LibC.calloc
+	
+			mov rdi, qword [rbp + 16]
+			mov qword [rax], rdi
+			push rax
+		"
+	}
+	
+	def Int (self) Int ->
+		#unchecked_cast(Int, self),
+
+	def is_digit (self) Bool ->
+		#unchecked_cast(Int, self) >= #unchecked_cast(Int, '0') &&
+		#unchecked_cast(Int, self) <= #unchecked_cast(Int, '9'),
+
+	def is_alphabetic (self) Bool ->
+		self.is_uppercase() || self.is_lowercase(),
+	
+	def is_uppercase (self) Bool ->
+		#unchecked_cast(Int, self) >= #unchecked_cast(Int, 'A') &&
+		#unchecked_cast(Int, self) <= #unchecked_cast(Int, 'Z'),
+
+	def is_lowercase (self) Bool ->
+		#unchecked_cast(Int, self) >= #unchecked_cast(Int, 'a') &&
+		#unchecked_cast(Int, self) <= #unchecked_cast(Int, 'z'),
+
+	def is_alphanumeric (self) Bool ->
+		self.is_alphabetic() || self.is_digit(),
+	
+	def is_ascii (self) Bool ->
+		#unchecked_cast(Int, self) < 128,
+	
+	def is_whitespace (self) Bool ->
+		self == ' ' || self == '\n' || self == '\t' || self == '\r',
+}

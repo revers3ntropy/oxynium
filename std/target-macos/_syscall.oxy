@@ -1,0 +1,29 @@
+class _Syscall {
+	def out () {
+		#asm Void "
+			mov rax, 0x02000004
+			syscall
+		"
+	}
+
+	def input () {
+		#asm Void "
+			mov rax, 0x02000003
+			syscall
+		"
+	}
+
+	def exit () {
+		#asm Void "
+			mov rax, 0x02000001
+			syscall
+		"
+	}
+
+	def microseconds () {
+		#asm Void "
+			mov rax, 0x02000116
+			syscall
+		"
+	}
+}

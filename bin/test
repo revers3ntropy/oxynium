@@ -39,7 +39,6 @@ function run_cargo_tests {
 
 function setup {
   cargo build -r
-  bin/compile_std
 }
 
 function finish_current_spec {
@@ -88,7 +87,7 @@ function execute() {
       echo "$code" > in.oxy
 
       export RUST_BACKTRACE=1
-      ./target/release/oxynium -o=test-out --std std.asm in.oxy
+      ./target/release/oxynium -o=test-out in.oxy
     } 2>&1 > /dev/null)
 
     if [ "$errors" != "" ]; then
@@ -232,7 +231,7 @@ function perf_test_comp_cpp() {
 
     errors=$({
         # in.oxy already has code in
-      ./target/release/oxynium -o=test-out --std std.asm in.oxy
+      ./target/release/oxynium -o=test-out in.oxy
     } 2>&1 > /dev/null)
 
     if [ "$errors" != "" ]; then

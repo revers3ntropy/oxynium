@@ -1,0 +1,40 @@
+// uses the minimum integer as a sentinel value,
+// as calling range with negative parameters is undefined
+// behaviour anyway
+def range(start: Int, end=0.min(), step=0.min()) Range {
+	if end == 0.min() && step == 0.min() ->
+		return new Range { start: 0, end: start, step: 1 }
+	if step == 0.min() ->
+		return new Range { start, end, step: 1 }
+	if step == 0 ->
+		panic("Range.step cannot be 0")
+	return new Range { start, end, step }
+}
+
+class Range {
+	start: Int,
+	end: Int,
+	step: Int,
+
+	def len(self) Int {
+		if self.step == 0 ->
+			panic("Range.step cannot be 0")
+		let len = (self.end - self.start) / self.step
+		if len < 1 && self.end > 0 -> return 1
+		return len
+	}
+	
+	def at_raw(self, i: Int) ->
+		self.start + i * self.step,
+	
+	def Str(self) ->
+		"Range(" + self.start.Str() + ", " + self.end.Str() + ", " + self.step.Str() + ")",
+	
+	def List(self) List<Int> {
+		let list = List.empty!<Int>()
+		for n in self {
+			list.push(n)
+		}
+		return list
+	}
+}

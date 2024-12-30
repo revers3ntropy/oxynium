@@ -52,8 +52,8 @@ pub const ANON_PREFIX: &str = "_$_";
 
 pub const STD_DATA_ASM: &str = include_str!("../../std/std-data.asm");
 
-pub const STD_ASM_MACOS: &str = include_str!("../../std/std.macos.asm");
-pub const STD_ASM_LINUX: &str = include_str!("../../std/std.linux.asm");
+pub const STD_ASM_MACOS: &str = include_str!("../../std/target-macos/std.asm");
+pub const STD_ASM_LINUX: &str = include_str!("../../std/target-linux/std.asm");
 
 pub fn std_asm(target: Target) -> &'static str {
     match target {

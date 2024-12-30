@@ -15,8 +15,7 @@ RUN apt-get update && apt-get install -y nasm curl build-essential bc gdb valgri
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH=\"/root/.cargo/bin:\${PATH}\"
 
-RUN bin/compile_std
-RUN cargo run -- -ko=res-out --std std.asm test.oxy
+RUN cargo run -- -ko=res-out test.oxy
 
 CMD [\"./res-out\"]
 

@@ -1,0 +1,401 @@
+class Str {
+	def == (self, other: Str) Bool {
+		return #asm Bool "
+			mov r14, qword [rbp + 16] ; r14 = lhs
+			mov r13, qword [rbp + 24] ; r13 = rhs
+	
+			xor rax, rax ; rax = 0 (index)
+	
+			.loop:
+				mov rcx, qword [r14 + rax * 8] ; lhs[rax]
+				mov rdx, qword [r13 + rax * 8] ; rhs[rax]
+				cmp rcx, rdx ; lhs[rax] != rhs[rax]
+				jne .not_equal
+	
+				test rcx, rcx ; lhs[rax] == 0
+				jz .are_equal ; lhs[rax] == rhs[rax] == 0
+	
+				inc rax ; rax++
+	
+				jmp .loop
+	
+			.are_equal:
+				mov rax, 1
+				mov rsp, rbp
+				pop rbp
+				ret
+	
+			.not_equal:
+				xor rax, rax
+				push rax
+		"
+	}
+	
+	def != (self, other: Str) Bool ->
+		!(self == other),
+	
+	/// returns a new string that is the concatenation of lhs and rhs
+	def + (self, other: Str) Str {
+		return #asm Str "
+			times 3 push 0             ; space for length of self and other,
+									   ; and the new string
+			push qword [rbp + 16]      ; self
+			call Str.len
+			add rsp, 8
+			mov qword [rbp - 8], rax   ; [rbp - 8] = self.len()
+	
+			push qword [rbp + 24]      ; other
+			call Str.len
+			add rsp, 8
+			mov qword [rbp - 16], rax  ; [rbp - 16] = other.len()
+	
+			add rax, qword [rbp - 8]   ; rax = other.len() + self.len()
+			inc rax                    ; rax = lhs.len() + rhs.len() + 1 (for null terminator)
+			imul rax, 8                ; rax = (lhs.len() + rhs.len() + 1) * 8
+			mov rdi, rax
+			mov rsi, 1
+			call _LibC.calloc          ; rax = calloc((lhs.len() + rhs.len() + 1) * 8, 1)
+	
+			mov qword [rbp - 24], rax  ; [rbp - 24] = new string
+	
+			mov rdx, qword [rbp - 8]   ; rcx = self.len()
+			imul rdx, 8                ; rcx = self.len() * 8
+			mov rsi, qword [rbp + 16]  ; rsi = self
+			mov rdi, qword [rbp - 24]  ; rdx = new string
+	
+			call _LibC.memcpy      ; memcpy(new string, self, self.len() * 8)
+	
+			mov rdx, qword [rbp - 16]  ; rcx = other.len()
+			imul rdx, 8                ; rcx = other.len() * 8
+			mov rsi, qword [rbp + 24]  ; rsi = other
+			mov rdi, qword [rbp - 24]  ; rdx = new string
+			mov rax, qword [rbp - 8]   ; rax = other.len()
+			imul rax, 8                ; rax = other.len() * 8
+			add rdi, rax               ; rdx = new string + other.len() * 8
+	
+			call _LibC.memcpy      ; memcpy(new string, other, other.len() * 8)
+	
+			mov rax, qword [rbp - 24]  ; rax = new string
+			push rax
+		"
+	}
+	
+	def Str (self) -> self,
+
+	def Utf8Str (self) Utf8Str {
+		let utf8_size = self.utf8_size()
+		if utf8_size == 0 {
+			return #unchecked_cast(Utf8Str, "")
+		}
+		let res = LibC.calloc!<Char>(utf8_size, 1)
+		#asm Void "
+			mov r15, qword [rbp + 16] ; r15 = self
+	
+			push r15
+			call Str.len
+			pop r15
+	
+			mov rdx, rax ; rdx = number of characters
+			imul rdx, 8  ; rdx = index of last byte
+			add rdx, r15 ; rdx = pointer to last byte
+	
+			mov r14, qword [rbp - 16]  ; r14 = res
+	
+			xor rax, rax
+			dec r15
+			.loop:
+				inc r15
+				cmp r15, rdx
+				jg .end
+				cmp byte [r15], 0
+				je .loop
+	
+				mov cl, byte [r15]
+	
+				mov byte [r14 + rax], cl
+	
+				inc rax
+	
+				jmp .loop
+	
+			.end:
+		"
+		return #unchecked_cast(Utf8Str, res)
+	}
+
+	def List (self) List<Char> {
+		let mut s = List.empty!<Char>()
+		for c in self {
+			s.push(c)
+		}
+		return s
+	}
+
+	// called by `.split("")`
+	def List_strings (self) List<Str> {
+		let mut s = List.empty!<Str>()
+		for c in self {
+			s.push(c.Str())
+		}
+		return s
+	}
+	
+	def at (self, i: Int) Option<Char> {
+		if i < 0 && i >= -self.len() ->
+			return self.at(self.len() + i)
+		if i < 0 || i >= self.len() ->
+			return Option.none!<Char>()
+		return Option.some!<Char>(self.at_raw(i))
+	}
+	
+	/// Returns the character at the given index
+	/// Does not check if index is out of bounds
+	def at_raw (self, i: Int) Char {
+		return #asm Char "
+			mov rdx, qword [rbp + 16]  ; self
+			mov r15, qword [rbp + 24]  ; index
+	
+			mov rax, qword [rdx + r15 * 8]
+			push rax
+		"
+	}
+	
+	def concat (self, other: Str) Str ->
+		self + other,
+	
+	def contains (self, other: Str) Bool ->
+		self.find(other) >= 0,
+	
+	def find (self, other: Str) Int {
+		if other.len() == 0 ->
+			return 0
+	
+		for c, i in self {
+			if c != other.at_raw(0) ->
+				continue
+			let mut j = 1
+			while j < other.len()
+				&& (i + j) < self.len()
+				&& self.at_raw(i + j) == other.at_raw(j)
+			{
+				j += 1
+			}
+			if j == other.len() ->
+				return i
+		}
+		return -1
+	}
+	
+	def len (self) Int {
+		return #asm Int "
+			mov rdx, qword [rbp + 16] ; pop string
+	
+			xor rax, rax ; string length
+	
+			; find length of string
+			_$_len_find_length:
+				mov rcx, qword [rdx]
+				test rcx, rcx
+				je _$_len_end
+				inc rax
+				add rdx, 8
+				jmp _$_len_find_length
+	
+			_$_len_end:
+				push rax
+		"
+	}
+	
+	def repeat (self, n: Int) Str {
+		if n < 1 -> return ""
+		// TODO: implement in assembly to make fast
+		return self + self.repeat(n - 1)
+	}
+	
+	def substr (self, start=0, end=9223372036854775807) Str {
+			// TODO: give the end a proper default value.
+			// This will work in all cases (end = 2^63-1 = max Int),
+			// but it's not pretty.
+		if self.len() < 1 ->
+			return ""
+	
+		if end < 0 ->
+			return self.substr(start, Int.max(self.len() + end, 0))
+	
+		if start < 0 ->
+			return self.substr(Int.max(self.len() + start, 0), end)
+	
+		if start >= end ->
+			return ""
+	
+		let actual_end = Int.min(self.len(), end)
+		let mut i = Int.max(start, 0)
+		let mut s = ""
+		while i < actual_end {
+			// use at_raw here as bounds checking has already been done
+			// and we don't want to do it again every iteration
+			s += self.at_raw(i).Str()
+			i += 1
+		}
+		return s
+	}
+	
+	def starts_with (self, other: Str) Bool {
+		if other.len() > self.len() ->
+			return false
+	
+		for c, i in other {
+			if self.at_raw(i) != c ->
+				return false
+		}
+		return true
+	}
+	
+	def ends_with (self, other: Str) Bool {
+		if other.len() > self.len() ->
+			return false
+	
+		for i in range(other.len()) {
+			if self.at_raw(self.len() - i - 1) != other.at_raw(other.len() - i - 1) ->
+				return false
+		}
+		return true
+	}
+	
+	def reversed (self) Str {
+		let mut s = ""
+		for char in self {
+			s = char.Str() + s
+		}
+		return s
+	}
+	
+	def replace (self, search: Str, replace_with="", max=-1) Str {
+		if search.len() == 0 || max == 0 ->
+			return self
+	
+		let mut i = 0
+		let mut s = ""
+		let mut replacements = 0
+		while i < self.len() {
+			if self.at_raw(i) == search.at_raw(0) {
+				let mut j = 1
+				while j < search.len() && self.at_raw(i + j) == search.at_raw(j) {
+					j += 1
+				}
+				if j == search.len() {
+					s += replace_with
+					i += j
+					replacements = replacements + 1
+					if max >= 0 && replacements >= max {
+						s += self.substr(i)
+						break
+					}
+					continue
+				}
+			}
+			s += self.at_raw(i).Str()
+			i += 1
+		}
+		return s
+	}
+	
+	def insert (self, index: Int, other: Str) Str {
+		if index < 0 ->
+			return self.insert(self.len() + index + 1, other)
+	
+		if index >= self.len() ->
+			return self + other
+	
+		return self.substr(0, index) + other + self.substr(index)
+	}
+	
+	def remove (self, index: Int, count=1) Str {
+		if index < 0 {
+			if self.len() + index < 0 ->
+				return self.substr(self.len() + index + count)
+			return self.remove(self.len() + index, count)
+		}
+		if index >= self.len() || count < 1 ->
+			return self
+		return self.substr(0, index) + self.substr(index + count)
+	}
+	
+	def utf8_size (self) Int {
+		return #asm Int "
+			mov r15, qword [rbp + 16]
+	
+			push r15
+			call Str.len
+			pop r15
+	
+			mov rdx, rax ; rdx = number of characters
+			imul rdx, 8  ; rdx = index of last byte
+			add rdx, r15 ; rdx = pointer to last byte
+	
+			xor rax, rax
+			dec r15
+			.loop:
+				inc r15
+				cmp r15, rdx
+				jg .end
+				cmp byte [r15], 0
+				je .loop
+				inc rax
+				jmp .loop
+	
+			.end:
+				push rax
+		"
+	}
+	
+	def Int (self) Result<Int, Str> {
+		let n = self.len()
+		if n == 0 ->
+			return Result.err!<Int, Str>("empty string")
+	
+		let mut i = 0
+		let mut sign = 1
+		if self.at_raw(0) == '-' {
+			sign = -1
+			i += 1
+		}
+	
+		let zero = '0'.Int()
+		let nine = '9'.Int()
+	
+		let mut result: Int = 0
+		while i < n {
+			let c = self.at_raw(i).Int()
+			if c < zero || c > nine ->
+				return Result.err!<Int, Str>("invalid character")
+	
+			result = result * 10 + (c - zero)
+			i += 1
+			if result < 0 ->
+				return Result.err!<Int, Str>("overflow")
+		}
+	
+		return Result.ok!<Int, Str>(result * sign)
+	}
+	
+	// eg: "1,2,3".split(",") -> ["1", "2", "3"]
+	//     "1,2,3".split(",2") -> ["1", ",3"]
+	def split (self, separator: Str) List<Str> {
+		if separator.len() == 0 ->
+			return self.List_strings()
+		let s = List.empty!<Str>()
+		let mut me = self
+		while me.len() >= separator.len() {
+			let j = me.find(separator)
+			if j < 0 {
+				s.push(me)
+				break
+			}
+			s.push(me.substr(0, j))
+			// TODO make this fast without pointer arithmetic
+			me = #unchecked_cast(Str, #unchecked_cast(Int, me) + (j + separator.len()) * 8)
+		}
+		return s
+	}
+}

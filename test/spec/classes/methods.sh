@@ -47,7 +47,7 @@ expect '' '
     class S {
         def f(self, a: Int) {}
     }
-    class T {
+    class C {
         def f(self, a: Int) -> a
     }
 
@@ -55,9 +55,9 @@ expect '' '
         (new S{}).f(1);
         new S.f(1);
 
-        new T{}.f(1);
-        (new T).f(1);
-        new T.f(1);
+        new C{}.f(1);
+        (new C).f(1);
+        new C.f(1);
     }
 '
 

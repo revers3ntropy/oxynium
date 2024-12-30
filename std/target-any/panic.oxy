@@ -5,7 +5,7 @@ def exit (code=0) {
 	"
 }
 
-def panic (msg="") {
-	print("PANIC: '" + msg + "'")
+def panic (msg="explicit panic") {
+	print("PANIC: " + msg)
 	exit(1)
 }

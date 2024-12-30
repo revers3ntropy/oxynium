@@ -428,7 +428,7 @@ impl Parser {
         let mut res = ParseResults::new();
         if self.current_tok().is_none() {
             res.failure(
-                syntax_error(format!("statement expected")),
+                syntax_error("statement expected".to_string()),
                 Some(self.last_tok().unwrap().start.clone()),
                 Some(self.last_tok().unwrap().end.clone()),
             );
@@ -566,7 +566,7 @@ impl Parser {
                 None,
             );
         }
-        return res;
+        res
     }
 
     fn expression(&mut self) -> ParseResults {
@@ -683,9 +683,7 @@ impl Parser {
             return res;
         }
         res.failure(
-            syntax_error(format!(
-                "can only have integers or strings as global constants"
-            )),
+            syntax_error("can only have integers or strings as global constants".to_string()),
             Some(self.current_tok().unwrap().start.clone()),
             Some(self.current_tok().unwrap().end.clone()),
         );
@@ -1789,13 +1787,13 @@ impl Parser {
         is_external: bool,
         is_exported: bool,
         is_anon: bool,
-        mut class_name: Option<String>,
+        class_name: Option<String>,
         // empty if not a method
-        mut class_generic_parameters: Vec<Token>,
+        class_generic_parameters: Vec<Token>,
     ) -> ParseResults {
         let mut res = ParseResults::new();
         let start = self.last_tok().unwrap().start;
-        let mut is_external_method = false;
+        let is_external_method = false;
 
         // `class C { export def f () {} }` not allowed
         assert!(!(is_exported && class_name.is_some()));
@@ -1817,34 +1815,6 @@ impl Parser {
                 None,
             );
             return res;
-        }
-
-        if self.next_matches(TokenType::Dot, None) || self.next_matches(TokenType::Not, None) {
-            if class_name.is_some() {
-                res.failure(
-                    syntax_error("unexpected token".to_owned()),
-                    Some(self.last_tok().unwrap().end.clone().advance(None)),
-                    None,
-                );
-                return res;
-            }
-            class_name = Some(self.current_tok().unwrap().literal.clone().unwrap());
-            self.advance(&mut res);
-            ret_on_err!(res);
-            is_external_method = true;
-
-            // parse generic parameters for class, so that we know what generic parameters the type
-            // of the 'self' parameter should have
-            if self.current_matches(TokenType::Not, None) {
-                consume!(Not, self, res);
-                consume!(LT, self, res);
-                let generic_parameters_option = res.register_result(self.generic_parameters());
-                ret_on_err!(res);
-                class_generic_parameters = generic_parameters_option.unwrap();
-                consume!(GT, self, res);
-            }
-
-            consume!(Dot, self, res);
         }
 
         let identifier: Token;

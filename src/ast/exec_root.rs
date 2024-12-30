@@ -1,4 +1,3 @@
-use crate::args::ExecMode;
 use crate::ast::STD_DATA_ASM;
 use crate::ast::{std_asm, AstNode, TypeCheckRes};
 use crate::backend::main_fn_id;
@@ -10,7 +9,7 @@ use crate::types::Type;
 use crate::util::MutRc;
 use std::collections::HashMap;
 
-const LOG_TYPE_CHECK_PASSES: bool = false;
+const LOG_TYPE_CHECK_PASSES: bool = true;
 
 static ASM_TO_GENERATE_ARGS_LIST_FOR_MAIN_FN: &'static str = "
     pop rdi        ; argc
@@ -160,22 +159,10 @@ impl AstNode for ExecRootNode {
             .collect::<Vec<String>>()
             .join("\n");
 
-        if ctx.borrow().exec_mode() == ExecMode::Lib {
-            return Ok(format!(
-                "
-                    {asm_include_directives}
-                    section .data
-                        {data}
-                    section .text
-                        {text}
-                "
-            ));
-        }
-
         if has_main && res != "" {
-            return Err(syntax_error(format!(
-                "cannot have top level statements and 'main' function"
-            ))
+            return Err(syntax_error(
+                "cannot have top level statements and 'main' function".to_string(),
+            )
             .set_interval(ctx.borrow().get_dec_from_id("main").position.clone()));
         }
 
@@ -195,9 +182,10 @@ impl AstNode for ExecRootNode {
                     // as a parameter
                     res = format!("{ASM_TO_GENERATE_ARGS_LIST_FOR_MAIN_FN}\n{res}");
                 } else {
-                    return Err(type_error(format!(
+                    return Err(type_error(
                         "`main` function must have type `Fn (args: List<Utf8Str>) Void`"
-                    ))
+                            .to_string(),
+                    )
                     .set_interval(main_decl.position.clone()));
                 }
             }
@@ -205,9 +193,9 @@ impl AstNode for ExecRootNode {
 
         if ctx.borrow().has_dec_with_id("main") {
             if !has_main {
-                return Err(syntax_error(format!(
-                    "if `main` function is declared it must be defined"
-                ))
+                return Err(syntax_error(
+                    "if `main` function is declared it must be defined".to_string(),
+                )
                 .set_interval(ctx.borrow().get_dec_from_id("main").position.clone()));
             }
         }
@@ -217,7 +205,6 @@ impl AstNode for ExecRootNode {
         Ok(format!(
             "
                 bits 64
-                %include \"{}\"
                 {asm_include_directives}
                 section .data
                     {STD_DATA_ASM}
@@ -231,8 +218,7 @@ impl AstNode for ExecRootNode {
                     {res}
                     push 0
                     call exit
-            ",
-            ctx.borrow().std_asm_path()
+            "
         ))
     }
 

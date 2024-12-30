@@ -15,7 +15,7 @@ def run_test(data: tuple[str]):
             inp = "".join(s)
             try:
                 subprocess.run(
-                    ["./target/release/oxynium", "-o=test-out", "--std=std.asm" f'-e="{inp}"'],
+                    ["./target/release/oxynium", "-o=test-out", f'-e="{inp}"'],
                     check=True,
                     capture_output=True
                 )

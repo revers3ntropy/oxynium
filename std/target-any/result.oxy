@@ -1,0 +1,33 @@
+class Result <T, E> {
+	value: Int,
+	ok: Bool,
+	
+	def err <Val, Err> (err: Err) -> new Result<Val, Err> {
+		value: #unchecked_cast(Int, err),
+		ok: false
+	},
+	
+	def ok <Val, Err> (val: Val) -> new Result<Val, Err> {
+		value: #unchecked_cast(Int, val),
+		ok: true
+	},
+	
+	def unwrap (self) T {
+		if self.ok ->
+			return #unchecked_cast(T, self.value)
+		panic("tried to unwrap a Result that was an error")
+		return #unchecked_cast(T, 0)
+	}
+	
+	def Option (self) Option<T> {
+		if self.ok ->
+			return Option.some!<T>(#unchecked_cast(T, self.value))
+		return Option.none!<T>()
+	}
+	
+	def error (self) Option<E> {
+		if self.ok ->
+			return Option.none!<T>()
+		return Option.some!<E>(#unchecked_cast(E, self.value))
+	}
+}

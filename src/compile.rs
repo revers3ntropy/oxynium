@@ -1,4 +1,4 @@
-use crate::args::{Args, ExecMode};
+use crate::args::Args;
 use crate::ast::exec_root::ExecRootNode;
 use crate::ast::statements::StatementsNode;
 use crate::ast::AstNode;
@@ -13,6 +13,7 @@ use crate::position::Position;
 use crate::post_process::format_asm::post_process;
 use crate::target::Target;
 use crate::util::{mut_rc, string_to_static_str, MutRc};
+use include_dir::{include_dir, Dir};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -20,7 +21,9 @@ use std::process::Command;
 use std::time::Instant;
 use std::{env, fs};
 
-const PRELUDE: &'static str = include_str!("../std/prelude.oxy");
+static STD_TARGET_ANY: Dir<'_> = include_dir!("std/target-any");
+static STD_TARGET_MACOS: Dir<'_> = include_dir!("std/target-macos");
+static STD_TARGET_LINUX: Dir<'_> = include_dir!("std/target-linux");
 
 pub fn generate_ast(
     args: &Args,
@@ -53,26 +56,55 @@ fn compile(
 ) -> Result<(String, MutRc<dyn Context>), Error> {
     let ctx = RootContext::new(args.clone());
 
-    ctx.borrow_mut().std_asm_path = args.std_path;
-    ctx.borrow_mut().exec_mode = args.exec_mode;
+    let mut root_ast_nodes = vec![];
 
     let ctx = Scope::new_global(ctx);
-    let prelude_source = PRELUDE.to_owned();
-    let prelude_node = match generate_ast(
-        &ctx.borrow().get_cli_args(),
-        &prelude_source,
-        "prelude.oxy".to_owned(),
-    ) {
-        // TODO remove this and get source correctly from the start
-        Err(mut err) => {
-            err.try_set_source(ErrorSource {
-                file_name: "prelude.oxy".to_string(),
-                source: prelude_source,
-            });
-            return Err(err);
-        }
-        Ok(ctx) => ctx,
-    };
+    for file in STD_TARGET_ANY.find("*.oxy").unwrap() {
+        let source = file.as_file().unwrap().contents_utf8().unwrap().to_string();
+        let file_name = file
+            .path()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
+        match generate_ast(&ctx.borrow().get_cli_args(), &source, file_name.clone()) {
+            // TODO remove this and get source correctly from the start
+            Err(mut err) => {
+                err.try_set_source(ErrorSource { file_name, source });
+                return Err(err);
+            }
+            Ok(node) => {
+                root_ast_nodes.push(node);
+            }
+        };
+    }
+    for file in (match args.target {
+        Target::MACOS => &STD_TARGET_MACOS,
+        Target::X86_64Linux => &STD_TARGET_LINUX,
+    })
+    .find("*.oxy")
+    .unwrap()
+    {
+        let source = file.as_file().unwrap().contents_utf8().unwrap().to_string();
+        let file_name = file
+            .path()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
+        match generate_ast(&ctx.borrow().get_cli_args(), &source, file_name.clone()) {
+            // TODO remove this and get source correctly from the start
+            Err(mut err) => {
+                err.try_set_source(ErrorSource { file_name, source });
+                return Err(err);
+            }
+            Ok(node) => {
+                root_ast_nodes.push(node);
+            }
+        };
+    }
 
     // TODO: Remove this hack to extend the lifetimes of the strings,
     //      so that they can be used in the context,
@@ -91,9 +123,10 @@ fn compile(
     ctx.borrow_mut().set_current_dir_path(file_dir);
 
     let program_node = generate_ast(&ctx.borrow().get_cli_args(), &input, file_name.clone())?;
+    root_ast_nodes.push(program_node);
     let mut root_node = ExecRootNode {
         statements: mut_rc(StatementsNode {
-            statements: vec![prelude_node, program_node],
+            statements: root_ast_nodes,
         }),
     };
 
@@ -159,33 +192,31 @@ fn assemble(
 
     perf!(args, start, "NASM");
 
-    if args.exec_mode == ExecMode::Bin {
-        let start = Instant::now();
+    let start = Instant::now();
 
-        let ls_out = Command::new("gcc")
-            .arg("-Wall")
-            .arg("-g")
-            .arg(match args.target {
-                Target::MACOS => "",
-                Target::X86_64Linux => "-no-pie",
-            })
-            .arg(o_out_file.clone().as_str())
-            .arg("-e")
-            .arg(match args.target {
-                Target::MACOS => "start",
-                Target::X86_64Linux => "main",
-            })
-            .arg("-o")
-            .arg(args.out.clone().as_str())
-            .output()
-            .expect("Could not assemble");
-        if !ls_out.status.success() {
-            return Err(io_error(String::from_utf8(ls_out.stderr).unwrap())
-                .set_pos(start_pos.clone(), Position::unknown()));
-        }
-
-        perf!(args, start, "gcc");
+    let ls_out = Command::new("gcc")
+        .arg("-Wall")
+        .arg("-g")
+        .arg(match args.target {
+            Target::MACOS => "",
+            Target::X86_64Linux => "-no-pie",
+        })
+        .arg(o_out_file.clone().as_str())
+        .arg("-e")
+        .arg(match args.target {
+            Target::MACOS => "start",
+            Target::X86_64Linux => "main",
+        })
+        .arg("-o")
+        .arg(args.out.clone().as_str())
+        .output()
+        .expect("Could not assemble");
+    if !ls_out.status.success() {
+        return Err(io_error(String::from_utf8(ls_out.stderr).unwrap())
+            .set_pos(start_pos.clone(), Position::unknown()));
     }
+
+    perf!(args, start, "gcc");
 
     let start = Instant::now();
 

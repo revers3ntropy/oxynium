@@ -1,0 +1,91 @@
+/// Lightweight wrappers around LibC function for faster
+/// calling from inline assembly - caller sets registers
+class _LibC {
+	def calloc () {
+		#asm Void "
+			sub rsp, 32
+			and rsp, -16
+			call calloc
+		"
+	}
+	
+	def memcpy () {
+		#asm Void "
+			sub rsp, 32
+			and rsp, -16
+			call memcpy
+		"
+	}
+	
+	def free () {
+		#asm Void "
+			sub rsp, 32
+			and rsp, -16
+			call free
+		"
+	}
+	
+	def sprintf () {
+		#asm Void "
+			sub rsp, 32
+			and rsp, -16
+			call sprintf
+		"
+	}
+	
+	def time () {
+		#asm Void "
+			sub rsp, 32
+			and rsp, -16
+			call time
+		"
+	}
+	
+	def fopen () {
+		#asm Void "
+			sub rsp, 32
+			and rsp, -16
+			call fopen
+		"
+	}
+	
+	def fseek () {
+		#asm Void "
+			sub rsp, 32
+			and rsp, -16
+			call fseek
+		"
+	}
+	
+	def fread () {
+		#asm Void "
+			sub rsp, 32
+			and rsp, -16
+			call fread
+		"
+	}
+	
+	def ftell () {
+		#asm Void "
+			sub rsp, 32
+			and rsp, -16
+			call ftell
+		"
+	}
+	
+	def fclose () {
+		#asm Void "
+			sub rsp, 32
+			and rsp, -16
+			call fclose
+		"
+	}
+	
+	def fwrite () {
+		#asm Void "
+			sub rsp, 32
+			and rsp, -16
+			call fwrite
+		"
+	}
+}

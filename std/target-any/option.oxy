@@ -1,0 +1,44 @@
+class Option<T> {
+	value: Int,
+	is_some: Bool,
+	
+	def none <From> () -> new Option<From> {
+		value: 0,
+		is_some: false,
+	}
+	
+	def some <From> (value: From) -> new Option <From> {
+		value: #unchecked_cast(Int, value),
+		is_some: true,
+	},
+	
+	def ?? (self, value: T) T {
+		if self.is_some ->
+			return #unchecked_cast(T, self.value)
+		return value
+	}
+	
+	def unwrap (self, err_message="Unwrapping None Option") T {
+		if !self.is_some ->
+			panic(err_message)
+		return #unchecked_cast(T, self.value)
+	}
+	
+	def map<U> (self, f: Fn(T) U) Option<U> {
+		if self.is_some ->
+			return Option.some!<U>(f(#unchecked_cast(T, self.value)))
+		return Option.none!<U>()
+	}
+	
+	def or (self, default_value: T) T {
+		if !self.is_some ->
+			return default_value
+		return #unchecked_cast(T, self.value)
+	}
+	
+	def is_some_and (self, f: Fn(T) Bool) Bool {
+		if self.is_some ->
+			return f(#unchecked_cast(T, self.value))
+		return false
+	}
+}

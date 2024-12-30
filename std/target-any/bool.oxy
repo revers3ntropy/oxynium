@@ -1,0 +1,22 @@
+primitive Bool {
+	def || (self, other: Bool) Bool {
+		return #asm Bool "
+			mov rax, qword [rbp + 16]
+			or rax, qword [rbp + 24]
+			push rax
+		"
+	}
+
+	def && (self, other: Bool) Bool {
+		return #asm Bool "
+			mov rax, qword [rbp + 16]
+			and rax, qword [rbp + 24]
+			push rax
+		"
+	}
+
+	def Str (self) Str {
+		if self -> return "true"
+		return "false"
+	}
+}

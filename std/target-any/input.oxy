@@ -1,3 +1,6 @@
+/// Reads from stdin until a newline is reached
+/// allocates string to heap to fit input
+/// returns pointer to string in rax
 def input (prompt="", buffer_size=1000) Str {
 	print(prompt, "")
 

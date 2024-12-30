@@ -53,17 +53,15 @@ $ oxy [input_file?] [options]
 
 ### Options
 
-| Command             | Type   | Description                                    | Default              |
-|---------------------|--------|------------------------------------------------|----------------------|
-| `-o`, `--output`    | Str    | Output assembly file path                      | `'out.asm'`          |
-| `-e`, `--eval`      | Str    | Pass the program on the CLI                    |                      |
-| `-s`, `--std`       | Str    | Path to STD asm file                           | `~/.oxynium/std.asm` |
-| `-k`, `--keep`      | Bool   | Keep outputted `.asm` and `.o` files           | `0`                  |
-| `-x`, `--exec_mode` | Int    | Exec mode (1 for library, 0 for executable)    | `0`                  |
-| `-t`, `--target`    | String | Compilation target ('x86_64-linux' or 'macos') | current system       |
-| `-O`, `--optimise`  | Int    | Optimisation level (0 or 1)                    | `1`                  |
-| `-E`, `--enable`    | String | Enable an optimisation                         |                      |
-| `-D`, `--disable`   | String | Disable an optimisation                        |                      |
+| Command            | Type   | Description                                    | Default        |
+|--------------------|--------|------------------------------------------------|----------------|
+| `-o`, `--output`   | Str    | Output assembly file path                      | `'out.asm'`    |
+| `-e`, `--eval`     | Str    | Pass the program on the CLI                    |                |
+| `-k`, `--keep`     | Bool   | Keep outputted `.asm` and `.o` files           | `0`            |
+| `-t`, `--target`   | String | Compilation target ('x86_64-linux' or 'macos') | current system |
+| `-O`, `--optimise` | Int    | Optimisation level (0 or 1)                    | `1`            |
+| `-E`, `--enable`   | String | Enable an optimisation                         |                |
+| `-D`, `--disable`  | String | Disable an optimisation                        |                |
 
 #### Note for --eval
 

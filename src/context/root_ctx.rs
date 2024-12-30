@@ -1,4 +1,4 @@
-use crate::args::{Args, ExecMode};
+use crate::args::Args;
 use crate::ast::ANON_PREFIX;
 use crate::context::{CallStackFrame, Context, LoopLabels};
 use crate::error::Error;
@@ -18,9 +18,6 @@ pub struct RootContext {
     loop_label_stack: Vec<LoopLabels>,
     call_stack: Vec<CallStackFrame>,
     anon_symbol_count: u64,
-    pub exec_mode: ExecMode,
-    pub std_asm_path: &'static str,
-    allow_overrides: bool,
     // do not allow any more declarations
     frozen: bool,
     // throw error on unknown types
@@ -37,9 +34,6 @@ impl RootContext {
             loop_label_stack: vec![],
             call_stack: vec![],
             anon_symbol_count: 0,
-            exec_mode: cli_args.exec_mode,
-            std_asm_path: cli_args.std_path,
-            allow_overrides: cli_args.allow_overrides,
             frozen: false,
             err_on_unknowns: false,
             cli_args,
@@ -97,16 +91,6 @@ impl Context for RootContext {
 
     fn get_cli_args(&self) -> Args {
         self.cli_args.clone()
-    }
-    fn exec_mode(&self) -> ExecMode {
-        self.exec_mode
-    }
-    fn std_asm_path(&self) -> &'static str {
-        self.std_asm_path
-    }
-
-    fn allow_overrides(&self) -> bool {
-        self.allow_overrides
     }
 
     fn set_current_dir_path(&mut self, _path: &'static Path) {
@@ -204,15 +188,10 @@ impl Context for RootContext {
 
     fn str(&self) -> String {
         format!(
-            "--- Root Ctx {}{}{}---",
+            "--- Root Ctx {}{}---",
             if self.is_frozen() { "(frozen) " } else { "" },
             if self.throw_on_unknowns() {
                 "(do err) "
-            } else {
-                ""
-            },
-            if self.allow_overrides() {
-                "(overrides) "
             } else {
                 ""
             },

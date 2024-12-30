@@ -117,13 +117,3 @@ expect_err 'TypeError' '
     }
     C.a(new C<Int>, 2)
 '
-expect_err 'TypeError' '
-    // only an error as --allow_overrides is not true
-    // but used in STD so should be working...
-    class C <T> {
-        extern def foo(a: T) T,
-    }
-    def C.foo(a: T) T {
-        return a
-    }
-'

@@ -1,0 +1,52 @@
+class Time {
+	seconds: Int,
+	microseconds: Int,
+
+    /// returns the current time in seconds from the UNIX epoch
+	def current_seconds () -> #asm Int "
+		xor rdi, rdi
+		call _LibC.time ; return time(NULL)
+		push rax
+	",
+	
+	def current_microseconds () -> #asm Int "
+		lea rdi, [rsp - 16]
+		xor esi, esi
+		call _Syscall.microseconds
+		mov rax, [rdi + 8]
+		push rax
+	",
+	
+	def now () -> new Time {
+		seconds: Time.current_seconds(),
+		microseconds: Time.current_microseconds()
+	},
+	
+	def epoch () -> new Time {
+		seconds: 0,
+		microseconds: 0
+	},
+
+	def - (self, other: Time) Time {
+		let self_micros = self.seconds * 1000000 + self.microseconds
+		let other_micros = other.seconds * 1000000 + other.microseconds
+		let diff_micros = self_micros - other_micros
+		return new Time {
+			seconds: diff_micros / 1000000,
+			microseconds: diff_micros % 1000000
+		}
+	}
+
+	def + (self, other: Time) Time {
+		let self_micros = self.seconds * 1000000 + self.microseconds
+		let other_micros = other.seconds * 1000000 + other.microseconds
+		let sum_micros = self_micros + other_micros
+		return new Time {
+			seconds: sum_micros / 1000000,
+			microseconds: sum_micros % 1000000
+		}
+	}
+
+	def Str (self) ->
+		self.seconds.Str() + "." + self.microseconds.Str(),
+}

@@ -1,4 +1,4 @@
-use crate::args::{check_args, get_args_cmd, get_cli_args, Args, ExecMode};
+use crate::args::{check_args, get_args_cmd, get_cli_args, Args};
 use crate::compile::compile_and_assemble;
 use crate::error::{io_error, ErrorSource};
 use crate::util::read_file;
@@ -21,19 +21,6 @@ mod types;
 mod util;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
-
-fn check_std(args: &Args) -> bool {
-    if args.exec_mode != ExecMode::Lib && !Path::new(&args.std_path).exists() {
-        io_error(format!(
-            "STD file '{}' does not exist or is not accessible\n",
-            args.std_path
-        ))
-        .print_stderr();
-        false
-    } else {
-        true
-    }
-}
 
 fn cli_exec(args: &Args) {
     let args_ = args.clone();
@@ -85,10 +72,6 @@ fn main() {
 
     if args.version {
         println!("Oxynium v{}", VERSION);
-        return;
-    }
-
-    if !check_std(&args) {
         return;
     }
 
