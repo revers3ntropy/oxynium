@@ -351,8 +351,6 @@ impl AstNode for FnCallNode {
     }
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
-        let mut asm = format!("");
-
         let CalleeType {
             fn_type,
             calling_through_instance,
@@ -376,13 +374,16 @@ impl AstNode for FnCallNode {
         let num_params = fn_type.parameters.len();
 
         // fill out default arguments
-        for i in num_args..fn_type.parameters.len() {
+        // assumes parameters with default values go after required parameters
+        for i in num_args..num_params {
             // add to end of vec
             args.insert(
                 args.len(),
                 fn_type.parameters[i].default_value.clone().unwrap(),
             );
         }
+
+        let mut asm = "".to_string();
 
         for arg in args.iter_mut().rev() {
             asm.push_str(&arg.borrow_mut().asm(ctx.clone())?);

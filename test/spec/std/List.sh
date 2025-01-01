@@ -241,3 +241,38 @@ expect '50 0 0 0' '
         print(range(0).List().filter(f).len().Str())
     }
 '
+
+
+describe 'List.index_of'
+
+expect 'false false false true true 0 1' '
+    def main () {
+        let l = List.empty!<Int>()
+        print(l.index_of(1).is_some.Str(), " ")
+        print(l.index_of(0).is_some.Str(), " ")
+
+        l.push(7)
+        l.push(8)
+
+        print(l.index_of(1).is_some.Str(), " ")
+        print(l.index_of(7).is_some.Str(), " ")
+        print(l.index_of(8).is_some.Str(), " ")
+        print(l.index_of(7).unwrap().Str(), " ")
+        print(l.index_of(8).unwrap().Str())
+    }
+'
+expect 'false true 1 true 1' '
+    def main () {
+        let s = "hello"
+        let l = List.empty!<Str>()
+        l.push("world")
+        l.push(s)
+
+        // by default compares pointers
+        print(l.index_of("hello").is_some.Str(), " ")
+        print(l.index_of(s).is_some.Str(), " ")
+        print(l.index_of(s).unwrap().Str(), " ")
+        print(l.index_of("hello", fn (a: Str, b: Str) -> a == b).is_some.Str(), " ")
+        print(l.index_of("hello", fn (a: Str, b: Str) -> a == b).unwrap().Str())
+    }
+'

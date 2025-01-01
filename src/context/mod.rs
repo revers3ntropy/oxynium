@@ -8,10 +8,8 @@ use crate::symbols::{SymbolDec, SymbolDef};
 use crate::target::Target;
 use crate::types::Type;
 use crate::util::MutRc;
-use std::cell::RefCell;
 use std::fmt::Debug;
 use std::path::Path;
-use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct CallStackFrame {
@@ -35,7 +33,6 @@ pub trait Context: Debug {
     fn is_frozen(&self) -> bool;
     fn throw_on_unknowns(&self) -> bool;
     fn finished_resolving_types(&mut self);
-    fn set_parent(&mut self, parent: Rc<RefCell<dyn Context>>);
     fn get_parent(&self) -> Option<MutRc<dyn Context>>;
     fn global_scope(&self) -> MutRc<dyn Context>;
 

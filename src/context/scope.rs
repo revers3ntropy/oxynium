@@ -6,11 +6,9 @@ use crate::symbols::{SymbolDec, SymbolDef};
 use crate::target::Target;
 use crate::types::Type;
 use crate::util::{indent, mut_rc, MutRc};
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::path::Path;
-use std::rc::Rc;
 
 pub struct Scope {
     self_: Option<MutRc<dyn Context>>,
@@ -80,10 +78,6 @@ impl Context for Scope {
     }
     fn finished_resolving_types(&mut self) {
         self.parent.borrow_mut().finished_resolving_types();
-    }
-
-    fn set_parent(&mut self, parent: Rc<RefCell<dyn Context>>) {
-        self.parent = parent;
     }
 
     fn get_parent(&self) -> Option<MutRc<dyn Context>> {

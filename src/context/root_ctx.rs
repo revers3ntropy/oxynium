@@ -7,10 +7,8 @@ use crate::symbols::{SymbolDec, SymbolDef};
 use crate::target::Target;
 use crate::types::Type;
 use crate::util::{mut_rc, MutRc};
-use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use std::path::Path;
-use std::rc::Rc;
 
 pub struct RootContext {
     self_: Option<MutRc<dyn Context>>,
@@ -75,10 +73,6 @@ impl Context for RootContext {
     fn finished_resolving_types(&mut self) {
         self.freeze();
         self.err_on_unknowns = true;
-    }
-
-    fn set_parent(&mut self, _parent: Rc<RefCell<dyn Context>>) {
-        unreachable!()
     }
 
     fn get_parent(&self) -> Option<MutRc<dyn Context>> {

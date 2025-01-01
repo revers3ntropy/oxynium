@@ -1,4 +1,5 @@
 use crate::ast::class_declaration::{method_id, operator_method_id};
+use crate::ast::pass::PassNode;
 use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::scope::Scope;
 use crate::context::CallStackFrame;
@@ -155,6 +156,13 @@ impl AstNode for FnDeclarationNode {
                 if !can_declare_with_identifier(&self.identifier.clone().literal.unwrap()) {
                     return Err(invalid_symbol(self.identifier.clone().literal.unwrap())
                         .set_interval(self.identifier.interval()));
+                }
+                if self.is_external && self.identifier.literal.clone().is_some_and(|s| s == "main")
+                {
+                    return Err(syntax_error(
+                        "cannot declare an external main function".to_string(),
+                    )
+                    .set_interval(self.identifier.interval()));
                 }
             } else {
                 // check the signature of the operator method
@@ -459,16 +467,6 @@ impl AstNode for FnDeclarationNode {
     }
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
-        self.params_scope
-            .clone()
-            .unwrap()
-            .borrow_mut()
-            .set_parent(ctx.clone());
-
-        if self.body.is_none() {
-            return Ok("".to_string());
-        }
-
         if !self.has_usage
             && o1_enabled("dead-code-elimination", &ctx.borrow().get_cli_args())
             && self
@@ -489,8 +487,7 @@ impl AstNode for FnDeclarationNode {
         }
 
         if !self.is_anon {
-            let stack_frame = ctx.borrow_mut().stack_frame_peak();
-            if let Some(stack_frame) = stack_frame {
+            if let Some(stack_frame) = ctx.borrow_mut().stack_frame_peak() {
                 let name = self.identifier.str();
                 return Err(type_error(format!(
                     "`{}` is declared inside another function",
@@ -502,18 +499,23 @@ impl AstNode for FnDeclarationNode {
                         stack_frame.name
                     )));
             }
+            if self.body.is_none() {
+                return Ok("".to_string());
+            }
         }
 
         let end_label = ctx.borrow_mut().get_anon_label();
         ctx.borrow_mut().stack_frame_push(CallStackFrame {
             name: self.id(),
-            // params: self.params.iter().map(|a| a.identifier.clone()).collect(),
             ret_lbl: end_label.clone(),
         });
 
         let body = self
             .body
-            .take()
+            .clone()
+            .or(Some(mut_rc(PassNode {
+                position: self.position.clone(),
+            })))
             .unwrap()
             .borrow_mut()
             .asm(self.params_scope.clone().unwrap())?;
@@ -536,7 +538,12 @@ impl AstNode for FnDeclarationNode {
             //+ (data_defs.len() % 2 == 1) as usize)
         ) * 8;
         let self_pos = self.pos();
-        ctx.borrow_mut().define(
+
+        // As this assumes .asm will only be called once, we need to do a little hack here:
+        // When called for the second time, we want to return the label for anon functions,
+        // but not redefine the function. Ctx.define will only return an error if the symbol
+        // is already defined, so we can just ignore the result.
+        let _ = ctx.borrow_mut().define(
             SymbolDef {
                 name: self.id(),
                 data: None,
@@ -561,7 +568,7 @@ impl AstNode for FnDeclarationNode {
                 )),
             },
             self_pos,
-        )?;
+        );
 
         ctx.borrow_mut().stack_frame_pop();
         if self.is_anon {

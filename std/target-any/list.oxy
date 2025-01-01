@@ -171,11 +171,34 @@ class List <T> {
 	}
 	
 	def filter (self, f: Fn (T) Bool) List<T> {
-		let new_list = List.empty!<T>()
+		let new_list = List.with_capacity!<T>(self.capacity)
 		for item in self {
 			if f(item) ->
 				new_list.push(item)
 		}
 		return new_list
 	}
+
+	def index_of (
+		self,
+		item: T,
+		cmp: Fn (T, T) Bool
+		   = (fn (a: T, b: T) ->
+		         #unchecked_cast(Int, a) == #unchecked_cast(Int, b))
+	) Option<Int> {
+		for i in range(0, self.length, 1) {
+			if cmp(self.at_raw(i), item) ->
+				return Option.some!<Int>(i)
+		}
+		return Option.none!<Int>()
+	}
+
+	def contains (
+		self,
+		item: T,
+		cmp: Fn (T, T) Bool
+			   = (fn (a: T, b: T) ->
+					 #unchecked_cast(Int, a) == #unchecked_cast(Int, b))
+	 ) Bool ->
+		self.index_of(item, cmp).is_some,
 }

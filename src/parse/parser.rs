@@ -1575,6 +1575,17 @@ impl Parser {
                 if self.current_matches(TokenType::CloseParen, None) {
                     break;
                 }
+                // nice error if we find a function signature (fn (a: T) B),
+                // rather than a function type signature (Fn (T) B)
+                if self.current_matches(TokenType::Colon, None) {
+                    res.failure(
+                        syntax_error("Function types do not take named parameters, expected ',' but found ':'".to_string())
+                            .hint("Use `Fn (T) U`, not `Fn (a: T) U`".to_string()),
+                        Some(self.last_tok().unwrap().start.clone()),
+                        None,
+                    );
+                    return res;
+                }
                 consume!(Comma, self, res);
             }
         }
@@ -1821,14 +1832,14 @@ impl Parser {
         if is_anon {
             // FIXME generate better unique signature for anonymous functions
             let id = format!(
-                "fn@{}#{}",
+                "fn{}@{}",
+                self.last_tok().unwrap().end.idx,
                 self.last_tok()
                     .unwrap()
                     .end
                     .file
                     .replace("/", "__")
-                    .replace(".", ""),
-                self.last_tok().unwrap().end.idx
+                    .replace(".", "")
             );
             identifier = Token::new(
                 TokenType::Identifier,
