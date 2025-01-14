@@ -1,7 +1,9 @@
 describe 'primitive Char'
 
-expect 'Char' 'print(typeof new Char)'
-expect 'Char' "print(typeof 'a')"
+expect 'Char Char' "
+print(typeof new Char, \" \")
+print(typeof 'a')
+"
 
 describe 'def Char.Str'
 
@@ -11,6 +13,8 @@ expect 'ab' "print('a'.Str() + 'b'.Str())"
 expect '💖' "print('💖'.Str())"
 expect '10' "print(#unchecked_cast(Int, '\n').Str())"
 expect '65' "print(#unchecked_cast(Int, 'A').Str())"
+expect $'\'' "print('\\''.Str())"
+expect '"' "print('\"'.Str())"
 
 describe 'def Char.is_digit'
 

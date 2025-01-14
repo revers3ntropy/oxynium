@@ -279,7 +279,7 @@ impl Lexer {
                 'n' => char = "\n".to_string(),
                 't' => char = "\t".to_string(),
                 'r' => char = "\r".to_string(),
-                '"' => char = "\"".to_string(),
+                '\'' => char = "'".to_string(),
                 '\\' => char = "\\".to_string(),
                 _ => {
                     return Err(syntax_error(format!(
