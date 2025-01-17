@@ -276,3 +276,34 @@ expect 'false true 1 true 1' '
         print(l.index_of("hello", fn (a: Str, b: Str) -> a == b).unwrap().Str())
     }
 '
+
+
+describe 'List.remove_at'
+
+expect 'false 0 1 2 3 4 true 2 4 5 6 7 11' '
+    def main () {
+        let mut l = List.empty!<Int>()
+        print(l.remove_at(1).is_some.Str(), " ")
+
+        l = range(15).List()
+
+        print(l.at(0).unwrap().Str(), " ")
+        print(l.at(1).unwrap().Str(), " ")
+        print(l.at(2).unwrap().Str(), " ")
+        print(l.at(3).unwrap().Str(), " ")
+        print(l.at(4).unwrap().Str(), " ")
+
+        print(l.remove_at(0).is_some.Str(), " ")
+        l.remove_at(0)
+        l.remove_at(1)
+        l.remove_at(l.len() - 1)
+
+        print(l.at(0).unwrap().Str(), " ")
+        print(l.at(1).unwrap().Str(), " ")
+        print(l.at(2).unwrap().Str(), " ")
+        print(l.at(3).unwrap().Str(), " ")
+        print(l.at(4).unwrap().Str(), " ")
+
+        print(l.len().Str())
+    }
+'

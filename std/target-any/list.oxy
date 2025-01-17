@@ -199,6 +199,31 @@ class List <T> {
 		cmp: Fn (T, T) Bool
 			   = (fn (a: T, b: T) ->
 					 #unchecked_cast(Int, a) == #unchecked_cast(Int, b))
-	 ) Bool ->
+	) Bool ->
 		self.index_of(item, cmp).is_some,
+
+	def remove_at (self, idx: Int) Option<T> {
+		if self.length == 0 ->
+			return Option.none!<T>()
+
+		if idx < -self.length ->
+			return Option.none!<T>()
+		if idx < 0 ->
+			return self.remove_at(self.length + idx)
+
+		if idx >= self.length ->
+			return Option.none!<T>()
+
+		let val = self.at_raw(idx)
+		LibC.memcpy!<T>(
+			#unchecked_cast(Ptr<T>, #unchecked_cast(Int, self.head) + idx * 8),
+			#unchecked_cast(Ptr<T>, #unchecked_cast(Int, self.head) + (idx + 1) * 8),
+			(self.length - idx - 1) * 8
+		)
+		self.length = self.length - 1
+		return Option.some!<T>(val)
+	}
+
+	def pop (self) Option<T> ->
+		self.remove_at(self.length - 1)
 }
