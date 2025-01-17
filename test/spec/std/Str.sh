@@ -442,3 +442,15 @@ expect '2 a c 3 1 2 3 5 h e l l o' '
         print(parts.at_raw(4).Str(), "")
     }
 '
+
+describe 'Str.join'
+
+expect 'a,b,c' '
+def main () {
+    let mut parts = List.with_capacity!<Str>(3)
+    parts.push("a")
+    parts.push("b")
+    parts.push("c")
+    print(",".join(parts).Str())
+}
+'

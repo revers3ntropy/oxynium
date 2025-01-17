@@ -398,4 +398,15 @@ class Str {
 		}
 		return s
 	}
+
+	def join(self, l: List<Str>) Str {
+		let mut s = ""
+		for e, i in l {
+			if i > 0 {
+				s += self
+			}
+			s += e
+		}
+		return s
+	}
 }
