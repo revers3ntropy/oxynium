@@ -52,7 +52,7 @@ class List <T> {
 	
 	def next_capacity (self) Int {
 		// if the list is empty, return a default capacity
-		if self.capacity == 0 ->
+		if self.capacity < 8 ->
 			return 64
 		// in the unusual case when doubling the allocated
 		// memory would result in fewer elements than we
@@ -113,7 +113,7 @@ class List <T> {
 	}
 	
 	def map <To> (self, f: Fn (T, Int) To) List<To> {
-		let new_list = List.empty!<To>()
+		let new_list = List.with_capacity!<To>(self.len() * 8)
 		for item, i in self {
 			new_list.push(f(item, i))
 		}
