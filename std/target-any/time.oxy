@@ -10,10 +10,12 @@ class Time {
 	",
 	
 	def current_microseconds () -> #asm Int "
-		lea rdi, [rsp - 16]
-		xor esi, esi
+		sub rsp, 16
+		mov rdi, rsp
+		xor rsi, rsi
 		call _Syscall.microseconds
-		mov rax, [rdi + 8]
+		mov rax, [rsp + 8]
+		add rsp, 16
 		push rax
 	",
 	
