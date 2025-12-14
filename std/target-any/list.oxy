@@ -52,7 +52,7 @@ class List <T> {
 	
 	def next_capacity (self) Int {
 		// if the list is empty, return a default capacity
-		if self.capacity == 0 ->
+		if self.capacity < 8 ->
 			return 64
 		// in the unusual case when doubling the allocated
 		// memory would result in fewer elements than we
@@ -76,9 +76,7 @@ class List <T> {
 			mov rcx, qword [rax + 8]        ; rax = self.length
 			inc qword [rax + 8]             ; self.length += 1
 		"
-		self.set_at(self.length - 1, value)
-			// TODO how should we handle this error?
-			.unwrap()
+		self.set_at_unchecked(self.length - 1, value)
 	}
 	
 	def Str (self) ->
@@ -111,11 +109,22 @@ class List <T> {
 		"
 		return Result.ok!<Void, Str>(#unchecked_cast(Void, 0))
 	}
+
+	def set_at_unchecked (self, idx: Int, val: T) {
+		#asm Void "
+			mov rax, qword [rbp + 16]      ; rax = self
+			mov rax, qword [rax]           ; rax = self.head
+			mov rdx, qword [rbp + 24]      ; rdx = idx
+			mov rsi, qword [rbp + 32]      ; rsi = val
+			mov qword [rax + rdx * 8], rsi ; self.head[idx] = val
+		"
+	}
 	
 	def map <To> (self, f: Fn (T, Int) To) List<To> {
-		let new_list = List.empty!<To>()
-		for item, i in self {
-			new_list.push(f(item, i))
+		let len = self.len()
+		let new_list = List.with_capacity!<To>(len * 8)
+		for i in range(0, len) {
+			new_list.push(f(self.at_raw(i), i))
 		}
 		return new_list
 	}
