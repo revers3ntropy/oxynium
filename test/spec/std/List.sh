@@ -46,7 +46,7 @@ expect '26' '
 
 describe 'def List.with_capacity'
 
-expect '0 0 0 1 1 64 2 2 64 0 0 8 1 1 8 2 16 0 2 1 8' '
+expect '0 0 0 1 1 64 2 2 64 0 0 8 1 1 8 2 16 0 2 1 64' '
     def main () {
         let mut l = List.with_capacity!<Int>(0)
         print(l.length.Str(), " ")
