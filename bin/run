@@ -28,7 +28,7 @@ done
 
 # compile, link and assemble the program
 export RUST_BACKTRACE=1
-cargo run -- -k -o=res-out "${compilation_args[@]}"
+cargo run -- -k -o=res-out "${compilation_args[@]}" || exit 1
 
 echo "==============================="
 
